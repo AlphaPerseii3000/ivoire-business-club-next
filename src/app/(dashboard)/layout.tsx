@@ -1,43 +1,60 @@
-import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/opportunities", label: "Opportunités" },
-  { href: "/members", label: "Annuaire" },
-  { href: "/profile", label: "Profil" },
-  { href: "/settings", label: "Paramètres" },
+const NAV_ITEMS = [
+  { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
+  { href: "/opportunities", label: "Opportunités", icon: "🎯" },
+  { href: "/members", label: "Membres", icon: "🤝" },
+  { href: "/profile", label: "Mon profil", icon: "👤" },
+  { href: "/settings", label: "Paramètres", icon: "⚙️" },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/auth/signin");
+
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-64 shrink-0 border-r bg-card md:block">
-        <div className="flex h-16 items-center justify-center border-b">
-          <Link href="/dashboard" className="text-lg font-bold text-primary">IBC</Link>
+      {/* Sidebar */}
+      <aside className="hidden md:flex w-64 flex-col border-r bg-card">
+        <div className="flex h-16 items-center px-4 border-b">
+          <a href="/dashboard" className="text-xl font-bold text-primary">IBC</a>
         </div>
-        <nav className="mt-4 space-y-1 px-3">
-          {navItems.map((item) => (
-            <Link
+        <nav className="flex-1 space-y-1 p-4">
+          {NAV_ITEMS.map((item) => (
+            <a
               key={item.href}
               href={item.href}
-              className="block rounded-md px-3 py-2 text-sm hover:bg-muted"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
             >
+              <span>{item.icon}</span>
               {item.label}
-            </Link>
+            </a>
           ))}
         </nav>
-      </aside>
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b px-6">
-          <h1 className="text-lg font-semibold">Espace Membre</h1>
+        <div className="border-t p-4">
           <form action="/api/auth/signout" method="POST">
-            <button type="submit" className="text-sm text-muted-foreground hover:text-foreground">
-              Déconnexion
+            <button type="submit" className="w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors text-left">
+              🚪 Déconnexion
             </button>
           </form>
-        </header>
-        <main className="flex-1 p-6">{children}</main>
+        </div>
+      </aside>
+
+      {/* Mobile top nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card flex justify-around py-2">
+        {NAV_ITEMS.slice(0, 4).map((item) => (
+          <a key={item.href} href={item.href} className="flex flex-col items-center text-xs">
+            <span className="text-lg">{item.icon}</span>
+            {item.label.split(" ")[0]}
+          </a>
+        ))}
       </div>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-auto pb-16 md:pb-0">
+        {children}
+      </main>
     </div>
   );
 }

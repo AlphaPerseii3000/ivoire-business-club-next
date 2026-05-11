@@ -59,8 +59,10 @@ model User {
   avatarUrl     String?
   phone         String?
   location      String?
+  country        String?
   tier          Tier      @default(AFFRANCHI)
   role          UserRole  @default(MEMBER)
+  verificationStatus VerificationStatus @default(PENDING)
   passwordHash  String?
   googleId      String?   @unique
   emailVerified Boolean   @default(false)
