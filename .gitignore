@@ -40,9 +40,13 @@ next-env.d.ts
 prisma/*.db
 prisma/*.db-journal
 
+# prisma generated
+src/generated/
+
 # IDE
 .vscode/
 .idea/
 
 # BMAD output (optional — uncomment if you don't want to track)
 # _bmad-output/
+/src/generated/prisma
