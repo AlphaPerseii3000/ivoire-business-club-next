@@ -6,8 +6,25 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Ivoire Business Club",
-  description: "Bâtir son futur en Afrique — Accède aux meilleures opportunités business en Côte d'Ivoire",
+  title: {
+    default: "Ivoire Business Club — Bâtir son futur en Afrique",
+    template: "%s | Ivoire Business Club",
+  },
+  description: "Accède aux meilleures opportunités business en Côte d'Ivoire et en Europe. Networking, investissements, partenariats.",
+  keywords: ["business", "Côte d'Ivoire", "Afrique", "investissement", "networking", "entrepreneuriat", "IBC"],
+  openGraph: {
+    title: "Ivoire Business Club — Bâtir son futur en Afrique",
+    description: "Accède aux meilleures opportunités business en Côte d'Ivoire et en Europe.",
+    siteName: "Ivoire Business Club",
+    type: "website",
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ivoire Business Club",
+    description: "Bâtir son futur en Afrique",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
