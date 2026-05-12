@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockLimit = vi.hoisted(() => vi.fn());
 const mockRatelimitConstructor = vi.hoisted(() => {
-  const ctor = vi.fn(function () { return { limit: mockLimit }; });
-  (ctor as any).slidingWindow = vi.fn((requests: number, window: string) => ({ requests, window }));
+  const ctor = vi.fn(function () { return { limit: mockLimit }; }) as unknown as {
+    slidingWindow: ReturnType<typeof vi.fn>;
+  };
+  ctor.slidingWindow = vi.fn((requests: number, window: string) => ({ requests, window }));
   return ctor;
 });
 const mockRedisConstructor = vi.hoisted(() => vi.fn());
