@@ -3,37 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { NextAuthConfig } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-export const authConfig: NextAuthConfig = {
-  pages: {
-    signIn: "/auth/signin",
-    signOut: "/auth/signout",
-    error: "/auth/error",
-    newUser: "/auth/signup",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const u = user as any;
-        token.id = user.id;
-        token.tier = u.tier ?? "AFFRANCHI";
-        token.role = u.role ?? "MEMBER";
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token.id && session.user) {
-        session.user.id = token.id as string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).tier = token.tier;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).role = token.role;
-      }
-      return session;
-    },
-  },
+// Full auth — Node.js runtime only (uses Prisma + bcrypt)
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig, {
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -70,6 +43,4 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-};
-
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+});
