@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import SignOutButton from "@/components/auth/sign-out-button";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
@@ -33,11 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           ))}
         </nav>
         <div className="border-t p-4">
-          <form action="/api/auth/signout" method="POST">
-            <button type="submit" className="w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors text-left">
-              🚪 Déconnexion
-            </button>
-          </form>
+          <SignOutButton />
         </div>
       </aside>
 

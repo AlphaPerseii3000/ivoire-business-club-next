@@ -41,3 +41,4 @@ export function createRateLimiter({ requests, windowSeconds }: RateLimiterOption
 }
 
 export const signupRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
+export const signinRateLimiter = createRateLimiter({ requests: 10, windowSeconds: 60 });

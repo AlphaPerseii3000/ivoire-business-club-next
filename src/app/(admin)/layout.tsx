@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import SignOutButton from "@/components/auth/sign-out-button";
 
 const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
@@ -32,6 +33,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span>🔙</span>Retour au site
           </a>
         </nav>
+        <div className="border-t p-4">
+          <SignOutButton />
+        </div>
       </aside>
       <main className="flex-1 overflow-auto">{children}</main>
     </div>

@@ -29,8 +29,8 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const pathname = nextUrl.pathname;
       const isLoggedIn = !!auth?.user;
-      const publicRoutes = ["/", "/pricing", "/auth/signin", "/auth/signup", "/auth/error"];
-      const isPublic = publicRoutes.some((route) => pathname.startsWith(route)) || pathname.startsWith("/api/auth");
+      const publicRoutes = ["/pricing", "/auth/signin", "/auth/signup", "/auth/error"];
+      const isPublic = pathname === "/" || publicRoutes.some((route) => pathname.startsWith(route)) || pathname.startsWith("/api/auth");
 
       if (pathname.startsWith("/admin")) {
         if (!isLoggedIn) return false;
