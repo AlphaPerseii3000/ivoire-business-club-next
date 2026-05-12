@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { getOAuthErrorMessage } from "@/lib/oauth-errors";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const displayError = error || (urlError ? getOAuthErrorMessage(urlError) : "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +56,12 @@ export default function SignUpPage() {
     }
   };
 
+  const handleGoogleSignIn = useCallback(() => {
+    setGoogleLoading(true);
+    setError("");
+    signIn("google", { callbackUrl: "/dashboard" });
+  }, [setGoogleLoading, setError]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 rounded-2xl border bg-card p-8 shadow-lg">
@@ -55,8 +69,8 @@ export default function SignUpPage() {
           <h1 className="text-2xl font-bold text-primary">Créer un compte</h1>
           <p className="mt-2 text-sm text-muted-foreground">Rejoins l&apos;Ivoire Business Club</p>
         </div>
-        {error && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        {displayError && (
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{displayError}</div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -84,9 +98,12 @@ export default function SignUpPage() {
           <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
           <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
         </div>
-        <button onClick={() => signIn("google", { callbackUrl: "/pricing" })}
-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted">
-          Continuer avec Google
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
+          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+        >
+          {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
         </button>
         <p className="text-center text-sm text-muted-foreground">
           Déjà membre ?{" "}

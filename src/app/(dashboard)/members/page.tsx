@@ -16,7 +16,7 @@ export default async function MembersPage() {
       country: true,
       tier: true,
       bio: true,
-      avatarUrl: true,
+      image: true,
     },
   });
 
