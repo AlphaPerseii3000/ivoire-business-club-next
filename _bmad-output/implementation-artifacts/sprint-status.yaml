@@ -1,0 +1,92 @@
+# generated: 2026-05-12T23:04:29Z
+# last_updated: 2026-05-12T23:04:29Z
+# project: ibc
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-05-12T23:04:29Z
+last_updated: 2026-05-13T01:10:00Z
+project: ibc
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # All epics, stories, and retrospectives in order
+  epic-1: in-progress
+  1-1-inscription-via-google-oauth: ready-for-dev
+  1-2-inscription-avec-email-et-mot-de-passe: backlog
+  1-3-connexion-session-et-roles: backlog
+  1-4-gestion-du-profil-utilisateur: backlog
+  1-5-suppression-de-compte-rgpd: backlog
+  1-6-renforcement-de-la-securite-rate-limiting-et-headers: backlog
+  1-7-configuration-deploiement-standalone-et-pm2: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: backlog
+  2-2-affichage-et-comparaison-des-tiers: backlog
+  2-3-selection-du-tier-et-instructions-de-virement: backlog
+  2-4-validation-manuelle-des-abonnements-par-ladmin: backlog
+  2-5-suivi-des-statuts-dabonnement-et-notifications: backlog
+  epic-2-retrospective: optional
+  epic-3: backlog
+  3-1-creation-et-soumission-dopportunite: backlog
+  3-2-upload-et-attachement-de-documents-juridiques: backlog
+  3-3-workflow-kanban-de-verification-admin: backlog
+  3-4-visibilite-des-opportunites-tier-et-teaser-publics: backlog
+  3-5-niveaux-de-confiance-ibc-et-doubleverification: backlog
+  epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-deep-links-whatsapp-sur-profils-et-deals: backlog
+  4-2-systeme-de-tags-profil-et-opportunites: backlog
+  4-3-matching-basique-par-tags: backlog
+  4-4-soft-commitment-et-notifications-dinteret: backlog
+  epic-4-retrospective: optional
+  epic-5: backlog
+  5-1-reviews-mutuelles-postdeal: backlog
+  5-2-score-de-fiabilite-et-badge-membre-platinum: backlog
+  5-3-affichage-public-des-reviews-sur-profil: backlog
+  epic-5-retrospective: optional
+  epic-6: backlog
+  6-1-tableau-de-bord-kanban-des-opportunites: backlog
+  6-2-metriques-cles-et-analytics-admin: backlog
+  6-3-gestion-des-documents-et-edition-des-opportunites: backlog
+  6-4-audit-logs-et-conformite: backlog
+  6-5-gestion-des-utilisateurs-et-emails-admin: backlog
+  6-6-preparation-deploiement-production: backlog
+  epic-6-retrospective: optional
+  epic-7: backlog
+  7-1-landing-page-avec-deals-teaser-et-seo: backlog
+  7-2-mur-des-succes-et-presentation-des-tiers: backlog
+  7-3-responsive-mobilefirst-et-accessibilite-finale: backlog
+  epic-7-retrospective: optional
