@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SignUpPage from "./page";
 
 const mockSignIn = vi.fn();
@@ -17,8 +17,10 @@ describe("SignUpPage", () => {
   beforeEach(() => {
     mockSignIn.mockClear();
     mockSearchParams = new URLSearchParams();
+    vi.stubGlobal("fetch", vi.fn());
   });
 
+  // ---- Story 1.1 regression tests (preserved) ----
   it("renders the signup form and Google button", () => {
     render(<SignUpPage />);
     expect(screen.getByText("Créer un compte")).toBeInTheDocument();
@@ -54,5 +56,93 @@ describe("SignUpPage", () => {
     expect(
       screen.getByText("Accès refusé. Tu as peut-être annulé la connexion.")
     ).toBeInTheDocument();
+  });
+
+  // ---- Story 1.2 new tests ----
+  it("shows Zod validation errors inline before submission", async () => {
+    render(<SignUpPage />);
+    const emailInput = screen.getByPlaceholderText("ton@email.com");
+    fireEvent.change(emailInput, { target: { value: "bad-email" } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(screen.getByText("Email invalide")).toBeInTheDocument();
+    });
+  });
+
+  it("shows password strength indicator as weak for short password", async () => {
+    render(<SignUpPage />);
+    const pwInput = screen.getByPlaceholderText("••••••••");
+    fireEvent.change(pwInput, { target: { value: "abc" } });
+    fireEvent.blur(pwInput);
+
+    await waitFor(() => {
+      expect(screen.getByText("Force : Faible")).toBeInTheDocument();
+    });
+  });
+
+  it("shows password strength indicator as strong for 12+ chars with symbols", async () => {
+    render(<SignUpPage />);
+    const pwInput = screen.getByPlaceholderText("••••••••");
+    fireEvent.change(pwInput, { target: { value: "MyP@ssw0rd!23" } });
+    fireEvent.blur(pwInput);
+
+    await waitFor(() => {
+      expect(screen.getByText("Force : Fort")).toBeInTheDocument();
+    });
+  });
+
+  it("submits form via fetch with correct payload and redirects to /dashboard on success", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: "u-1", email: "test@example.com", name: "Jean" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    mockSignIn.mockResolvedValue({ ok: true });
+
+    render(<SignUpPage />);
+    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
+    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+
+    const submitBtn = screen.getByText("Créer mon compte");
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith("/api/auth/signup", expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Jean", email: "test@example.com", password: "securePass123!" }),
+      }));
+    });
+
+    await waitFor(() => {
+      expect(mockSignIn).toHaveBeenCalledWith("credentials", {
+        email: "test@example.com",
+        password: "securePass123!",
+        redirect: false,
+      });
+    });
+  });
+
+  it("displays exact French duplicate-email error from API", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "Cet email est déjà associé à un compte." }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    render(<SignUpPage />);
+    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
+    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "dup@example.com" } });
+    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+
+    fireEvent.click(screen.getByText("Créer mon compte"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Cet email est déjà associé à un compte.")
+      ).toBeInTheDocument();
+    });
   });
 });

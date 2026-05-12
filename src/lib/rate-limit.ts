@@ -1,0 +1,43 @@
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+interface RateLimiterOptions {
+  requests: number;
+  windowSeconds: number;
+}
+
+interface LimitResult {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface RateLimiter {
+  limit: (identifier: string) => Promise<LimitResult>;
+}
+
+export function createRateLimiter({ requests, windowSeconds }: RateLimiterOptions): RateLimiter {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    console.warn("[rate-limit] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN missing. Rate limiting disabled.");
+    return {
+      limit: async () => ({ success: true, limit: requests, remaining: requests, reset: 0 }),
+    };
+  }
+
+  const redis = new Redis({ url, token });
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(requests, `${windowSeconds} s`),
+    analytics: false,
+  });
+
+  return {
+    limit: async (identifier: string) => limiter.limit(identifier),
+  };
+}
+
+export const signupRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
