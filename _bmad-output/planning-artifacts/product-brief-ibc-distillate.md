@@ -10,12 +10,12 @@ purpose: "Token-efficient context for downstream PRD creation"
 
 ## Rejected Ideas & Pourquoi
 
-- **App mobile native** → PWA/responsive web suffit pour MVP (contrainte imaginaire éliminée). Le segment cible utilise mobile money à 37,89 % mais sur navigateur mobile, pas via apps stores.
+- **App mobile native** → PWA/responsive web suffit pour MVP (contrainte imaginaire éliminée). Le segment cible utilise mobile web à 37,89 % mais sur navigateur mobile, pas via app stores.
 - **Intégration WhatsApp Business API** → Commencer par deep links `wa.me` simples (contrainte imaginaire éliminée). L'API Business est complexe à certifier ; les liens directs couvrent 80 % du besoin MVP.
 - **Matching AI complexe** → Matching basé sur règles + tags suffit pour 0–500 membres (contrainte imaginaire éliminée). Pas de ROI ML avant 500+ membres actifs.
 - **Panier de prix complexe (annual/mensuel comparé)** → 1 CTA par tier pour éviter le paradoxe du choix (SCAMPER Eliminate).
-- **Carte bancaire obligatoire pour tiers bas** → CinetPay-only onboarding pour Affranchis (SCAMPER Eliminate). La diaspora africaine utilise mobile money 4,5× plus que les banques.
-- **Paiement par virement bancaire pour Boss** → reporté post-MVP. Le virement est utile pour les montants annuels élevés mais nécessite une facturation PDF + numérotation automatique.
+- **Carte bancaire obligatoire pour tiers bas** → virement bancaire unique pour tous les tiers (SCAMPER Eliminate). Pas de provider de paiement tiers.
+- **Paiement par virement bancaire comme seul mode** → virement bancaire KS Investment pour TOUS les tiers (MVP et au-delà). Le virement élimine les frais de transaction et les risques de webhook frauduleux. Validation manuelle admin.
 
 ## Requirements Hints Capturés
 
@@ -32,10 +32,10 @@ purpose: "Token-efficient context for downstream PRD creation"
 
 ## Technical Context & Contraintes
 
-- **Stack** : Next.js 16.2.6, React 19.2.4, Prisma 7.8.0, Auth.js v5 beta, Stripe 22.1.1, CinetPay API v2, Tailwind 4.x, shadcn/ui
+- **Stack** : Next.js 16.2.6, React 19.2.4, Prisma 7.8.0, Auth.js v5 beta, virement bancaire KS Investment (validation manuelle admin), Tailwind 4.x, shadcn/ui
 - **Auth pattern** : Split config édge-compatible `auth.config.ts` + Node.js full `auth.ts`. **Manque critique** : aucun `middleware.ts` ou `proxy.ts` → routes protégées non protégées.
 - **DB** : SQLite (`better-sqlite3`) en dev → **Migration PostgreSQL requise avant production**. Prisma schema prêt : `User`, `Account`, `Session`, `VerificationToken`, `Subscription`, `Opportunity`, `Payment`.
-- **Paiement** : Stripe EUR webhook HMAC OK. CinetPay XOF webhook HMAC = placeholder `return true` → **risque fraude critique**.
+- **Paiement** : virement bancaire sur le compte KS Investment (société ivoirienne), validation manuelle admin — pas de provider de paiement tiers, pas de webhook HMAC à sécuriser, pas de conformité PCI-DSS requise
 - **Déploiement** : Infomaniak VPS Cloud recommandé (pas Node.js Site managed). Nécessite `output: 'standalone'`, PM2 ecosystem, Nginx reverse proxy.
 - **Rate limiting** : aucun sur `/api/auth/signup` → **risque brute-force**. Recommandation : `@upstash/ratelimit` (gratuit jusqu'à 10k req/jour).
 - **Stockage fichiers** : Cloudflare R2 recommandé (pas de frais de sortie) pour pitch decks et documents juridiques.
@@ -48,14 +48,15 @@ purpose: "Token-efficient context for downstream PRD creation"
 1. Découvre IBC via Instagram/TikTok ou bouche-à-oreille
 2. Atterrit sur landing, voit 2–3 deals teaser (titre + localisation + image)
 3. Clique sur un deal immobilier à Cocody, voit le score de fiabilité IBC (argent) + dossier juridique attaché
-4. S'inscrit en 3 clics : Google OAuth → choix tier Affranchis → paiement CinetPay (10 000 XOF/mois)
+4. S'inscrit : Google OAuth → choix tier Affranchis → instructions virement bancaire KS Investment affichées
+5. Effectue le virement, envoie la preuve (upload ou email), admin valide → abonnement activé
 5. Accède au deal complet : montant, promoteur vérifié, simulateur rentabilité, bouton WhatsApp
 6. Discute avec le promoteur via WhatsApp, demande une visite vidéo
 7. Post-investissement : laisse un review sur le promoteur, reçoit un reporting périodique
 
 ### Jean — Investisseur avancé (Boss)
 1. Accède via recommandation d'un membre existant
-2. Paiement annuel Stripe (990 €) — virement bancaire optionnel pour gros montants
+2. Virement bancaire annuel KS Investment (990 €) — instructions affichées, admin valide
 3. Accède à la section « Deals Boss » : opportunités non visibles par les autres tiers
 4. Utilise le matching avancé pour trouver des partenaires business dans son secteur
 5. Booking 1-1 avec un porteur de projet via le système de rendez-vous intégré
@@ -76,7 +77,7 @@ purpose: "Token-efficient context for downstream PRD creation"
 - **Daba Finance** : mobile-first BRVM/obligations, pas de networking social, pas de deals immobiliers directs
 - **LinkedIn Premium** : ~30 €/mois, échelle massive mais non segmenté Africa-focused, fatigue du créateur
 - **Tontines informelles** : équivalent culturel de la confiance par réseau — IBC doit répliquer ce mécanisme digitalement via reviews + parrainage
-- **Positionnement white space** : aucun acteur ne combine spécificité CI/UEMOA + dual membership tiers + dual currency payment + trust infrastructure + hybrid digital/offline
+- **Positionnement white space** : aucun acteur ne combine spécificité CI/UEMOA + membership tiers + virement bancaire simple + trust infrastructure + hybrid digital/offline
 
 ## Open Questions
 
@@ -92,7 +93,7 @@ purpose: "Token-efficient context for downstream PRD creation"
 
 ### IN MVP (Phase 1 — M1-M3)
 - Auth dual (Google + credentials)
-- Paiement dual Stripe + CinetPay (webhooks sécurisés)
+- Paiement par virement bancaire KS Investment (validation manuelle admin)
 - Marketplace opportunités + workflow vérification binaire
 - Système de tiers 3 niveaux
 - Deep links WhatsApp
@@ -100,7 +101,6 @@ purpose: "Token-efficient context for downstream PRD creation"
 - Dashboard admin minimal
 - CGV + clause intermédiaire non-financier
 - Rate limiting + middleware Auth.js
-- HMAC CinetPay + idempotence
 
 ### MAYBE (Phase 2 — M4-M6)
 - Matching par tags + scoring simple
@@ -121,7 +121,7 @@ purpose: "Token-efficient context for downstream PRD creation"
 - Tokenisation actifs
 - PWA + push notifications
 - Simulateur rentabilité intégré (peut être lien externe MVP)
-- Paiement par virement bancaire Boss annuel
+- Paiement par virement bancaire (MVP et au-delà — KS Investment, validation admin)
 
 ## North Star Metric Rationale
 
@@ -134,7 +134,7 @@ Pourquoi « mises en relation qualifiées par mois » et pas MRR ou nombre d'abo
 ## Architecture Decision Records (ADRs) à Formaliser
 
 1. **ADR-001** : Split Auth.js Config — validé, implémenté. Nécessite `middleware.ts` pour activation.
-2. **ADR-002** : Paiement Dual Stripe + CinetPay — validé avec modifications. HMAC + idempotence requis.
+2. **ADR-002** : Paiement par virement bancaire KS Investment — Remplace Stripe + CinetPay. Virement sur compte bancaire KS Investment (société ivoirienne), validation manuelle admin. Élimine les risques de webhook frauduleux et la conformité PCI-DSS. Avantages : zéro frais de transaction, simplicité opérationnelle, pas de dépendance fournisseur. Inconvénients : activation non immédiate (délai admin), pas d'abonnement récurrent automatique.
 3. **ADR-003** : SQLite → PostgreSQL — à décider. Recommandation : PostgreSQL managed (Supabase/Railway) pour MVP.
 4. **ADR-004** : Rate Limiting Strategy — Upstash Redis (`@upstash/ratelimit`) pour prod. Fallback in-memory Map si indisponible.
 5. **ADR-005** : Déploiement Infomaniak VPS vs Node.js Site — VPS Cloud avec PM2 + Nginx.

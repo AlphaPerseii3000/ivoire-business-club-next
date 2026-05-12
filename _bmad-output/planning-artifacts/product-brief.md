@@ -11,8 +11,6 @@ inputs:
   - market-ibc-ivoire-business-club-research-2026-05-12.md
   - technical-feasibility-ibc-2026-05-12.md
   - prisma/schema.prisma
-  - src/lib/stripe.ts
-  - src/lib/cinetpay.ts
   - src/lib/auth.config.ts
   - src/lib/auth.ts
 ---
@@ -23,7 +21,7 @@ IBC est le premier opérateur de confiance informationnel pour l'investisseur di
 
 Chaque année, la diaspora ivoirienne (1,2 million de personnes dans 140 pays) transfère ~1,4 milliard USD vers la Côte d'Ivoire. Pourtant, seulement 10 à 15 % de ces flux financent des projets productifs. Le reste alimente la consommation familiale — parce que la diaspora a peur. Peur des arnaques immobilières, peur des doubles ventes de terrains, peur de ne pas pouvoir vérifier l'identité d'un porteur de projet à 6 000 km de distance.
 
-IBC résout ce problème en combinant trois piliers inimitables à court terme : une **infrastructure de confiance** (vérification graduée, dossiers juridiques attachés, reviews post-deal), un **matching qualifié + WhatsApp natif** (algorithme par tags + deep links wa.me), et un **paiement dual EUR/XOF** (Stripe pour la diaspora, CinetPay mobile money pour le local). La plateforme est construite sur une stack moderne (Next.js 16, Prisma 7, Auth.js v5) avec un modèle à trois tiers : Affranchis, Grands Frères, Boss.
+IBC résout ce problème en combinant trois piliers inimitables à court terme : une **infrastructure de confiance** (vérification graduée, dossiers juridiques attachés, reviews post-deal), un **matching qualifié + WhatsApp natif** (algorithme par tags + deep links wa.me), et un **paiement simplifié par virement bancaire** (compte KS Investment, validation manuelle admin, zéro dépendance fournisseur). La plateforme est construite sur une stack moderne (Next.js 16, Prisma 7, Auth.js v5) avec un modèle à trois tiers : Affranchis, Grands Frères, Boss.
 
 **Pourquoi maintenant ?** Le gouvernement ivoirien a lancé en mai 2026 le forum « Diaspora for Growth » pour structurer l'investissement productif. IBC se positionne comme **l'interface privée opérationnalisant cette volonté publique**.
 
@@ -40,7 +38,7 @@ Ce scénario se répète des milliers de fois chaque jour. Les pain points sont 
 1. **Arnaques endémiques** : faux agents immobiliers, doubles ventes de terrains, escroqueries sentimentales ciblant la diaspora
 2. **Asymétrie d'information** : l'investisseur à Paris ne peut pas vérifier sur place une opportunité à Abidjan
 3. **Confiance faible dans le digital** : les groupes Facebook/WhatsApp sont bruyants, non modérés, remplis de spam
-4. **Barrière bancaire** : payer un abonnement en ligne depuis la diaspora peut être bloquant (carte requise, suspicion de fraude bancaire)
+4. **Barrière bancaire** : payer un abonnement en ligne depuis l'étranger peut être bloquant pour certains — le virement bancaire est une solution universelle accessible à toute personne avec un compte bancaire
 5. **Fracture numérique** : une partie de la cible n'est pas tech-savvy — l'UX doit être mobile-first et WhatsApp-native
 
 ### Le coût du statu quo
@@ -58,7 +56,7 @@ IBC est un club business digital à trois niveaux qui transforme l'investissemen
 Une plateforme Next.js 16 (App Router, React 19, Tailwind 4, Prisma 7) avec :
 
 - **Auth dual** : Google OAuth + credentials (bcryptjs), sécurisé par Auth.js v5 avec split config Edge/Node.js
-- **Paiement dual** : Stripe (EUR, diaspora Europe) + CinetPay (XOF, mobile money local)
+- **Inscription & paiement** : virement bancaire sur le compte de KS Investment (société ivoirienne), validation manuelle par un admin après confirmation de réception — aucun provider de paiement tiers
 - **Marketplace d'opportunités** : immobilier, business, investissement, partenariat — avec workflow de vérification
 - **Système de tiers** : Affranchis (accès deals vérifiés) → Grands Frères (deals prioritaires, events) → Boss (deals exclusifs, mentorat 1-1)
 - **Admin verification** : workflow kanban pour la modération des opportunités
@@ -68,7 +66,7 @@ Une plateforme Next.js 16 (App Router, React 19, Tailwind 4, Prisma 7) avec :
 
 1. **Découverte** : deals teaser publics (titre + localisation) sur la landing — SEO organique, pas de paywall immédiat
 2. **Vérification** : chaque deal affiche un niveau de confiance IBC (bronze/argent/or), un dossier juridique attaché (titre foncier, KYC promoteur), et un score de fiabilité
-3. **Conversion** : onboarding en 3 clics (Google auth + choix tier + paiement CinetPay ou Stripe)
+3. **Conversion** : onboarding (Google auth + choix tier + instructions virement bancaire KS Investment), activation après validation admin
 4. **Networking** : matching basé sur tags (secteur, montant, localisation) + deep link WhatsApp sur chaque profil
 5. **Post-deal** : reviews mutuelles investisseur/porteur, traçabilité réputationnelle, badge « Membre Platinum »
 
@@ -88,9 +86,9 @@ Aucun concurrent ne combine vérification multi-niveaux + dossier juridique atta
 
 La culture WhatsApp en Afrique est un avantage local que les acteurs occidentaux ne maîtrisent pas. Chaque profil et chaque deal dispose d'un bouton « Discuter sur WhatsApp » (wa.me). Le matching par tags (secteur, montant, localisation) est culturellement plus naturel qu'un algorithme black-box.
 
-### 3. Paiement Dual EUR/XOF
+### 3. Paiement par virement bancaire
 
-La diaspora paie en EUR via Stripe (abonnements récurrents, factures PDF, SCA-compliant). Les porteurs de projet locaux paient en XOF via CinetPay (mobile money, USSD fallback). Cette dualité est unique sur le créneau.
+La diaspora et les porteurs de projet paient par virement bancaire sur le compte de **KS Investment** (société ivoirienne). Un admin valide manuellement chaque abonnement après confirmation de la réception du virement. Cela élimine la dépendance aux providers de paiement tiers (Stripe, CinetPay), réduit les frais de transaction, et évite les complexités de webhook HMAC et de conformité PCI-DSS. Le RIB de KS Investment et les instructions de virement sont affichés après la sélection du tier. Un email de confirmation est envoyé une fois l'admin activé le compte.
 
 ### 4. Positionnement réglementaire clair
 
@@ -144,7 +142,7 @@ IBC est explicitement un **intermédiaire informationnel**, pas financier. Nous 
 ### Ce qui est IN pour la Phase 1 (M1-M3)
 
 - Authentification dual (Google OAuth + credentials)
-- Paiement dual Stripe + CinetPay avec webhooks sécurisés
+- Paiement par virement bancaire KS Investment avec validation manuelle admin
 - Marketplace d'opportunités avec workflow de vérification (PENDING → VERIFIED → REJECTED)
 - Système de tiers (Affranchis / Grands Frères / Boss)
 - Deep links WhatsApp sur profils et deals
@@ -162,17 +160,18 @@ IBC est explicitement un **intermédiaire informationnel**, pas financier. Nous 
 
 ### Blocages P0 à résoudre avant production
 
-1. **CinetPay HMAC** : la vérification de signature webhook est un placeholder (`return true`). Risque : fraude par notification spoofing. Action : implémenter `crypto.createHmac("sha256", secretKey)` + idempotence sur `providerRef`.
+1. **Auth.js middleware absent** : `auth.config.ts` existe avec `authorized` callback, mais aucun fichier `middleware.ts` / `proxy.ts` n'instancie Auth.js. Risque : accès non autorisé aux routes protégées. Action : créer `src/middleware.ts` avec `NextAuth(authConfig)`.
 2. **Rate limiting API** : aucune protection sur `/api/auth/signup`. Risque : brute-force account creation. Action : installer `@upstash/ratelimit` (5 inscriptions/minute/IP).
-3. **Auth.js middleware absent** : `auth.config.ts` existe mais aucun `middleware.ts` n'instancie Auth.js. Risque : accès non autorisé aux routes protégées. Action : créer `src/middleware.ts` avec `NextAuth(authConfig)`.
-4. **Configuration déploiement manquante** : pas de `output: 'standalone'` dans `next.config.ts`, pas de PM2 ecosystem. Risque : déploiement Infomaniak bloqué. Action : configurer standalone + scripts `ecosystem.config.js` + `prepare-deploy.sh`.
+3. **Configuration déploiement manquante** : pas de `output: 'standalone'` dans `next.config.ts`, pas de PM2 ecosystem. Risque : déploiement Infomaniak bloqué. Action : configurer standalone + scripts `ecosystem.config.js` + `prepare-deploy.sh`.
+4. ~~CinetPay HMAC~~ : **supprimé** — le paiement par virement bancaire KS Investment élimine tout besoin de webhook de paiement. Les fichiers `cinetpay.ts` et `stripe.ts` peuvent être retirés.
 
 ### Prérequis technique immédiats (Semaine 1)
 
-- [ ] HMAC CinetPay + idempotence webhook
-- [ ] Rate limiting signup
 - [ ] Middleware Auth.js
+- [ ] Rate limiting signup
 - [ ] `output: 'standalone'` + scripts déploiement
+- [ ] Retirer Stripe + CinetPay du codebase et des dépendances
+- [ ] Ajouter le workflow de virement bancaire (RIB KS Investment, page instructions, validation admin)
 
 ---
 
@@ -206,12 +205,11 @@ IBC devient le standard de confiance pour l'investissement diaspora en zone CFA 
 | React | 19.2.4 | ✅ Moderne |
 | Prisma | 7.8.0 | ✅ Moderne — client + adapter pattern |
 | Auth.js | 5.0.0-beta.31 | ⚠️ Beta — split config OK, middleware manquant |
-| Stripe | 22.1.1 | ✅ Webhook HMAC vérifié correctement |
-| CinetPay | API v2 | 🔴 Bloquant — HMAC non implémenté |
+| Paiement | KS Investment | ✅ Virement bancaire — validation admin, zéro webhook |
 | TailwindCSS | 4.x | ✅ OK |
 | better-sqlite3 | 12.9.0 | ⚠️ Dev only — migrer vers PostgreSQL en prod |
 
-**Architecture cible** : VPS Cloud Infomaniak (Ubuntu 24.04), PM2 cluster, Nginx reverse proxy, PostgreSQL managed (Supabase/Railway pour le MVP). Migration SQLite → PostgreSQL requise avant production.
+**Architecture cible** : VPS Cloud Infomaniak (Ubuntu 24.04), PM2 cluster, Nginx reverse proxy, PostgreSQL managed (Supabase/Railway pour le MVP). Migration SQLite → PostgreSQL requise avant production. Aucun provider de paiement — virement bancaire sur compte KS Investment avec validation manuelle admin.
 
 ---
 
