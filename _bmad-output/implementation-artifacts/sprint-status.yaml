@@ -44,8 +44,8 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 development_status:
   # All epics, stories, and retrospectives in order
   epic-1: in-progress
-  1-1-inscription-via-google-oauth: review
-  1-2-inscription-avec-email-et-mot-de-passe: backlog
+  1-1-inscription-via-google-oauth: done
+  1-2-inscription-avec-email-et-mot-de-passe: ready-for-dev
   1-3-connexion-session-et-roles: backlog
   1-4-gestion-du-profil-utilisateur: backlog
   1-5-suppression-de-compte-rgpd: backlog
