@@ -10,6 +10,10 @@ const securityHeaders: Record<string, string> = {
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';",
 };
 
+/**
+ * Apply security headers to a NextResponse.
+ * Mutates the response in place and returns it for chaining.
+ */
 export function withSecurityHeaders(response: NextResponse): NextResponse {
   for (const [key, value] of Object.entries(securityHeaders)) {
     response.headers.set(key, value);

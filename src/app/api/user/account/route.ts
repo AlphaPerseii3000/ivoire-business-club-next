@@ -18,9 +18,10 @@ export async function DELETE(req: Request) {
       getClientIdentifier(req, session.user.id)
     );
     if (!rateLimit.success) {
+      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
       return NextResponse.json(
         { error: "Trop de tentatives. Réessayez dans une minute." },
-        { status: 429 }
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
       );
     }
 

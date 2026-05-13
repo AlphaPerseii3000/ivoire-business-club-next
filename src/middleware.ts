@@ -1,15 +1,13 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
-import { NextResponse } from "next/server";
-import { withSecurityHeaders } from "@/lib/security-headers";
 
 // Middleware uses only Edge-compatible authConfig (no Prisma, no bcrypt)
+// Security headers are applied via next.config.ts headers() — covers all responses including auth redirects
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  const response = NextResponse.next();
-  withSecurityHeaders(response);
-  return response;
+  // Security headers are handled by next.config.ts headers() config,
+  // which applies to ALL responses (including auth redirects that bypass this callback).
 });
 
 export const config = {
