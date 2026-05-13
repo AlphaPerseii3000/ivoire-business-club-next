@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import DeleteAccountDialog from "@/components/features/auth/delete-account-dialog";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -75,9 +76,7 @@ export default async function SettingsPage() {
           <p className="text-sm text-muted-foreground">
             Supprimer ton compte est irréversible. Toutes tes données seront perdues.
           </p>
-          <button className="mt-4 rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">
-            Supprimer mon compte
-          </button>
+          <DeleteAccountDialog />
         </div>
       </section>
     </div>

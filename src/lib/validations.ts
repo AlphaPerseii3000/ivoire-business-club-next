@@ -38,9 +38,16 @@ export const profileUpdateSchema = z.object({
     .or(z.literal("")),
 });
 
+export const accountDeletionSchema = z.object({
+  confirmation: z.literal("SUPPRIMER", {
+    message: "Veuillez taper SUPPRIMER pour confirmer.",
+  }),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type SigninInput = z.infer<typeof signinSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
 
 export const UEMOA_COUNTRIES = [
   { code: "CI", label: "Côte d'Ivoire" },
