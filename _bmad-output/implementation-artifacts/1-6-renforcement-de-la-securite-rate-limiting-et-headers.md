@@ -1,6 +1,6 @@
 # Story 1.6: Renforcement de la Sécurité — Rate Limiting et Headers
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -568,3 +568,38 @@ moonshotai/kimi-k2
 ### Change Log
 
 - Story 1.6 implementation complete: Rate limiting extended, security headers added, log sanitization applied, all 6 ACs satisfied (2026-05-13)
+- Story 1.6 CR patches applied: P1-P5 fixed (2026-05-13)
+
+---
+
+## Review Findings
+
+**Reviewer:** BMAD Code Review (3-layer: Blind Hunter, Edge Case Hunter, Acceptance Auditor)
+**Date:** 2026-05-13
+**Commit reviewed:** `fa461dd` (parent `eaa9395`)
+**Verdict:** PASS (with patches applied)
+
+### Patched (fixed in commit `867ec73`)
+
+| ID | Sévérité | Description | Fix |
+|----|----------|-------------|-----|
+| P1 | Medium | Security headers absents des redirects auth (middleware callback n'est pas appelé quand NextAuth redirecte) | Déplacé les headers dans `next.config.ts` `headers()`, supprimé `withSecurityHeaders` du middleware |
+| P2 | Low | 4+ faux fichiers PNG contenant "undefined" dans `public/avatars/` | Supprimés — artefacts de tests |
+| P3 | Medium | Header `Retry-After` absent des réponses 429 | Ajouté `Retry-After` calculé depuis `rateLimit.reset` sur 3 routes (signup, signin, account delete) |
+| P4 | Medium | `sanitizeForLog` ne nettoie pas les objets imbriqués | Rendu récursif avec `MAX_DEPTH=5` |
+| P5 | Low | `sanitizeError` supprime `error.message` — perte d'info de debug | Inclut `error.message` tronqué à 200 chars |
+
+### Deferred (action items futurs)
+
+| ID | Description | Raison du defer |
+|----|-------------|-----------------|
+| W1 | IP spoofing via `X-Forwarded-For` | Problème infrastructure (reverse proxy config), pas un bug code |
+| W2 | Bucket partagé "unknown" pour IPs sans `X-Forwarded-For` | Optimisation future — séparer les buckets par header de priorité |
+| W3 | Instances Redis séparées pour différents rate limiters | Optimisation future — actuellement un seul Redis pour tout |
+
+### Dismissed
+
+- CSP `unsafe-inline`/`unsafe-eval` : nécessaire pour Next.js
+- HSTS `preload` : intentionnel
+- `passwordResetRateLimiter` non utilisé : prévu pour utilisation future
+- Pattern mutation+retour : style standard, pas un bug
