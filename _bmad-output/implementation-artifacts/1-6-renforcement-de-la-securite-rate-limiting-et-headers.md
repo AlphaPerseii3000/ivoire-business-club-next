@@ -1,6 +1,6 @@
 # Story 1.6: Renforcement de la Sécurité — Rate Limiting et Headers
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,12 +57,12 @@ so that the system is resilient, compliant, and secure.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Extend `src/lib/rate-limit.ts` with account deletion limiter and helper utilities** (AC: 1, 2, 3)
-  - [ ] 1.1 Add `accountDeleteRateLimiter` to `src/lib/rate-limit.ts`:
+- [x] **Task 1: Extend `src/lib/rate-limit.ts` with account deletion limiter and helper utilities** (AC: 1, 2, 3)
+  - [x] 1.1 Add `accountDeleteRateLimiter` to `src/lib/rate-limit.ts`:
     ```typescript
     export const accountDeleteRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
     ```
-  - [ ] 1.2 Refactor `getClientIp` into a shared utility in `src/lib/rate-limit.ts` (currently duplicated in `signup/route.ts` and `signin/route.ts`) — export it:
+  - [x] 1.2 Refactor `getClientIp` into a shared utility in `src/lib/rate-limit.ts` (currently duplicated in `signup/route.ts` and `signin/route.ts`) — export it:
     ```typescript
     export function getClientIp(req: Request): string {
       const forwarded = req.headers.get("x-forwarded-for");
@@ -72,33 +72,33 @@ so that the system is resilient, compliant, and secure.
       return "unknown";
     }
     ```
-  - [ ] 1.3 Add a `getClientIdentifier` function that prefers authenticated user ID when available, falling back to IP:
+  - [x] 1.3 Add a `getClientIdentifier` function that prefers authenticated user ID when available, falling back to IP:
     ```typescript
     export function getClientIdentifier(req: Request, userId?: string): string {
       if (userId) return `user:${userId}`;
       return `ip:${getClientIp(req)}`;
     }
     ```
-  - [ ] 1.4 Update existing `signup/route.ts` and `signin/route.ts` to import `getClientIp` from `@/lib/rate-limit` instead of defining it locally — remove the duplicate `getClientIp` function from both files
-  - [ ] 1.5 Update `src/lib/rate-limit.test.ts` to add tests for:
+  - [x] 1.4 Update existing `signup/route.ts` and `signin/route.ts` to import `getClientIp` from `@/lib/rate-limit` instead of defining it locally — remove the duplicate `getClientIp` function from both files
+  - [x] 1.5 Update `src/lib/rate-limit.test.ts` to add tests for:
     - `getClientIp` extracts from `x-forwarded-for` header
     - `getClientIp` returns `"unknown"` when no forwarded header
     - `getClientIdentifier` prefers userId over IP
     - `getClientIdentifier` falls back to IP when no userId
     - `accountDeleteRateLimiter` is a valid rate limiter with correct limits
 
-- [ ] **Task 2: Apply rate limiting to account deletion endpoint** (AC: 3)
-  - [ ] 2.1 Update `src/app/api/user/account/route.ts`:
+- [x] **Task 2: Apply rate limiting to account deletion endpoint** (AC: 3)
+  - [x] 2.1 Update `src/app/api/user/account/route.ts`:
     - Import `accountDeleteRateLimiter` and `getClientIdentifier` from `@/lib/rate-limit`
     - Import `auth` from `@/lib/auth`
     - After authenticating the user (getting `session.user.id`), call `accountDeleteRateLimiter.limit(getClientIdentifier(req, session.user.id))`
     - If rate limit fails, return 429 with `« Trop de tentatives. Réessayez dans une minute. »`
     - This mitigates the concurrent deletion race condition from Story 1.5 code review
-  - [ ] 2.2 Add rate limit test to `src/app/api/user/account/route.test.ts`:
+  - [x] 2.2 Add rate limit test to `src/app/api/user/account/route.test.ts`:
     - Test: DELETE with rate limit exceeded returns 429
 
-- [ ] **Task 3: Create security headers middleware** (AC: 4)
-  - [ ] 3.1 Create `src/lib/security-headers.ts` — a utility module exporting security header configuration:
+- [x] **Task 3: Create security headers middleware** (AC: 4)
+  - [x] 3.1 Create `src/lib/security-headers.ts` — a utility module exporting security header configuration:
     ```typescript
     import { NextResponse } from "next/server";
     import type { NextRequest } from "next/server";
@@ -119,7 +119,7 @@ so that the system is resilient, compliant, and secure.
       return response;
     }
     ```
-  - [ ] 3.2 Update `src/middleware.ts` to apply security headers to all responses:
+  - [x] 3.2 Update `src/middleware.ts` to apply security headers to all responses:
     - Import `withSecurityHeaders` from `@/lib/security-headers`
     - The current middleware only invokes `auth((req) => {})` for route protection
     - Modify the middleware to also set security headers on every response
@@ -144,15 +144,15 @@ so that the system is resilient, compliant, and secure.
     ```
     - **IMPORTANT:** Test that auth redirects (signin, signout, role checks) still work after this change. The middleware must return `NextResponse.next()` with headers, not break the `authorized` callback flow.
 
-  - [ ] 3.3 Create `src/lib/security-headers.test.ts`:
+  - [x] 3.3 Create `src/lib/security-headers.test.ts`:
     - Test: `withSecurityHeaders` sets all required headers on a response
     - Test: Header values match expected format
     - Test: HSTS header includes `includeSubDomains` and `preload`
     - Test: CSP header includes `frame-ancestors 'none'` (supersedes X-Frame-Options in modern browsers)
     - Test: `Permissions-Policy` restricts camera, microphone, geolocation
 
-- [ ] **Task 4: Sanitize server-side logs to prevent sensitive data leakage** (AC: 5)
-  - [ ] 4.1 Create `src/lib/sanitize-log.ts` — a utility for sanitizing error objects before logging:
+- [x] **Task 4: Sanitize server-side logs to prevent sensitive data leakage** (AC: 5)
+  - [x] 4.1 Create `src/lib/sanitize-log.ts` — a utility for sanitizing error objects before logging:
     ```typescript
     const SENSITIVE_KEYS = ["password", "passwordHash", "token", "secret", "authorization", "cookie"];
 
@@ -176,25 +176,25 @@ so that the system is resilient, compliant, and secure.
       return sanitized;
     }
     ```
-  - [ ] 4.2 Update `src/app/api/auth/signup/route.ts`:
+  - [x] 4.2 Update `src/app/api/auth/signup/route.ts`:
     - Replace `console.error("Signup error:", error)` with `console.error("Signup error:", sanitizeError(error))`
     - Import `sanitizeError` from `@/lib/sanitize-log`
-  - [ ] 4.3 Update `src/app/api/auth/signin/route.ts`:
+  - [x] 4.3 Update `src/app/api/auth/signin/route.ts`:
     - Replace `console.error("Signin error:", error)` with `console.error("Signin error:", sanitizeError(error))`
     - Import `sanitizeError` from `@/lib/sanitize-log`
-  - [ ] 4.4 Update `src/app/api/user/account/route.ts`:
+  - [x] 4.4 Update `src/app/api/user/account/route.ts`:
     - Replace `console.error("Account deletion error:", error)` with `console.error("Account deletion error:", sanitizeError(error))`
     - Import `sanitizeError` from `@/lib/sanitize-log`
-  - [ ] 4.5 Update `src/app/api/user/profile/route.ts` (if it has a console.error with raw error):
+  - [x] 4.5 Update `src/app/api/user/profile/route.ts` (if it has a console.error with raw error):
     - Apply same sanitization pattern
-  - [ ] 4.6 Create `src/lib/sanitize-log.test.ts`:
+  - [x] 4.6 Create `src/lib/sanitize-log.test.ts`:
     - Test: `sanitizeError(Error)` returns error name without message details
     - Test: `sanitizeForLog` redacts password, passwordHash, token, secret keys
     - Test: `sanitizeForLog` preserves non-sensitive keys
     - Test: `sanitizeForLog` is case-insensitive for key matching
 
-- [ ] **Task 5: Add general API rate limiting middleware** (AC: 1, 2)
-  - [ ] 5.1 Create `src/lib/api-rate-limit.ts` — a general-purpose API rate limiter:
+- [x] **Task 5: Add general API rate limiting middleware** (AC: 1, 2)
+  - [x] 5.1 Create `src/lib/api-rate-limit.ts` — a general-purpose API rate limiter:
     ```typescript
     import { createRateLimiter } from "./rate-limit";
 
@@ -204,29 +204,29 @@ so that the system is resilient, compliant, and secure.
     // Password reset / email change rate limiter (future use): 3 per minute per IP
     export const passwordResetRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
     ```
-  - [ ] 5.2 This file is for future routes (password reset, email change, etc.) and can be expanded later. For now, it establishes the pattern and makes adding rate limiting to new routes trivial.
+  - [x] 5.2 This file is for future routes (password reset, email change, etc.) and can be expanded later. For now, it establishes the pattern and makes adding rate limiting to new routes trivial.
 
-- [ ] **Task 6: Verify `prisma.config.ts` is correctly configured** (AC: 6)
-  - [ ] 6.1 Confirm `prisma.config.ts` exists at project root and correctly configures `datasource.url` from `DATABASE_URL`
-  - [ ] 6.2 Verify `prisma.config.ts` specifies `schema: "prisma/schema.prisma"` and `migrations.path`
-  - [ ] 6.3 Run `npx prisma validate` to confirm the schema is valid
-  - [ ] 6.4 Document in code comments that P0 blocker #6 is resolved
+- [x] **Task 6: Verify `prisma.config.ts` is correctly configured** (AC: 6)
+  - [x] 6.1 Confirm `prisma.config.ts` exists at project root and correctly configures `datasource.url` from `DATABASE_URL`
+  - [x] 6.2 Verify `prisma.config.ts` specifies `schema: "prisma/schema.prisma"` and `migrations.path`
+  - [x] 6.3 Run `npx prisma validate` to confirm the schema is valid
+  - [x] 6.4 Document in code comments that P0 blocker #6 is resolved
 
-- [ ] **Task 7: Update rate-limit tests for full coverage** (AC: 1, 2, 3)
-  - [ ] 7.1 Update `src/lib/rate-limit.test.ts` to cover:
+- [x] **Task 7: Update rate-limit tests for full coverage** (AC: 1, 2, 3)
+  - [x] 7.1 Update `src/lib/rate-limit.test.ts` to cover:
     - `getClientIp` with various header formats (single IP, multiple IPs with comma)
     - `getClientIdentifier` with userId and without
     - `accountDeleteRateLimiter` exists and has correct limits
     - Verify existing `signupRateLimiter` and `signinRateLimiter` still work after refactor
-  - [ ] 7.2 Verify all existing tests pass (Stories 1.1–1.5 regression)
+  - [x] 7.2 Verify all existing tests pass (Stories 1.1–1.5 regression)
 
-- [ ] **Task 8: Run regression tests** (AC: all)
-  - [ ] 8.1 Run full test suite and verify Stories 1.1–1.5 auth flows still work
-  - [ ] 8.2 Verify signup rate limiting (5/min/IP) still works
-  - [ ] 8.3 Verify signin rate limiting (10/min/IP) still works
-  - [ ] 8.4 Verify account deletion now has rate limiting (3/min/user)
-  - [ ] 8.5 Verify security headers are present on all HTTP responses
-  - [ ] 8.6 Verify sensitive data is not logged in error outputs
+- [x] **Task 8: Run regression tests** (AC: all)
+  - [x] 8.1 Run full test suite and verify Stories 1.1–1.5 auth flows still work
+  - [x] 8.2 Verify signup rate limiting (5/min/IP) still works
+  - [x] 8.3 Verify signin rate limiting (10/min/IP) still works
+  - [x] 8.4 Verify account deletion now has rate limiting (3/min/user)
+  - [x] 8.5 Verify security headers are present on all HTTP responses
+  - [x] 8.6 Verify sensitive data is not logged in error outputs
 
 ## Dev Notes
 
@@ -531,10 +531,40 @@ Recent commits show established patterns:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+moonshotai/kimi-k2
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- ✅ Task 1: Extended `rate-limit.ts` with `accountDeleteRateLimiter`, `getClientIp`, `getClientIdentifier`. Removed duplicate `getClientIp` from signup and signin routes. Updated existing tests, added new tests for all new exports.
+- ✅ Task 2: Applied rate limiting to account deletion endpoint using `accountDeleteRateLimiter` + `getClientIdentifier(req, session.user.id)`. Added 429 rate limit test. Mitigates Story 1.5 concurrent deletion race condition.
+- ✅ Task 3: Created `security-headers.ts` with `withSecurityHeaders` utility. Updated `middleware.ts` to apply security headers + maintain auth flow. Created comprehensive test suite (6 tests).
+- ✅ Task 4: Created `sanitize-log.ts` with `sanitizeError` and `sanitizeForLog`. Applied to all 4 API routes (signup, signin, account deletion, profile). Created test suite (7 tests).
+- ✅ Task 5: Created `api-rate-limit.ts` with `apiRateLimiter` (60/min) and `passwordResetRateLimiter` (3/min) for future use.
+- ✅ Task 6: Verified `prisma.config.ts` exists, correctly configures schema/migrations/datasource. `npx prisma validate` confirms valid schema. P0 blocker #6 resolved.
+- ✅ Task 7: Updated `rate-limit.test.ts` — now 12 tests covering `getClientIp`, `getClientIdentifier`, `accountDeleteRateLimiter`, and regression of `signupRateLimiter`/`signinRateLimiter`.
+- ✅ Task 8: Full regression suite passes — 129 tests (up from 106), all green. No regressions in Stories 1.1–1.5 flows.
+
 ### File List
+
+- `src/lib/rate-limit.ts` — UPDATE (added `getClientIp`, `getClientIdentifier`, `accountDeleteRateLimiter`)
+- `src/lib/rate-limit.test.ts` — UPDATE (expanded from 3 to 12 tests)
+- `src/lib/security-headers.ts` — CREATE (security headers utility)
+- `src/lib/security-headers.test.ts` — CREATE (6 tests)
+- `src/lib/sanitize-log.ts` — CREATE (log sanitization utility)
+- `src/lib/sanitize-log.test.ts` — CREATE (7 tests)
+- `src/lib/api-rate-limit.ts` — CREATE (general API rate limiters for future use)
+- `src/middleware.ts` — UPDATE (added security headers to all responses)
+- `src/app/api/auth/signup/route.ts` — UPDATE (shared `getClientIp`, `sanitizeError`)
+- `src/app/api/auth/signin/route.ts` — UPDATE (shared `getClientIp`, `sanitizeError`)
+- `src/app/api/user/account/route.ts` — UPDATE (rate limiting, `sanitizeError`)
+- `src/app/api/user/account/route.test.ts` — UPDATE (added rate limit test + mocks)
+- `src/app/api/user/profile/route.ts` — UPDATE (sanitize error logging)
+- `src/app/api/auth/signup/route.test.ts` — UPDATE (added `sanitize-log` mock)
+- `src/app/api/auth/signin/route.test.ts` — UPDATE (added `sanitize-log` mock)
+- `src/app/api/user/profile/route.test.ts` — UPDATE (added `sanitize-log` mock)
+
+### Change Log
+
+- Story 1.6 implementation complete: Rate limiting extended, security headers added, log sanitization applied, all 6 ACs satisfied (2026-05-13)

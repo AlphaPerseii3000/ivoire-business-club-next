@@ -2,16 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validations";
-import { signupRateLimiter } from "@/lib/rate-limit";
-
-function getClientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  // Next.js Request does not expose req.ip directly; fallback to a derived identifier
-  return "unknown";
-}
+import { signupRateLimiter, getClientIp } from "@/lib/rate-limit";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function POST(req: Request) {
   try {
@@ -50,7 +42,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Signup error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

@@ -2,15 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signinSchema } from "@/lib/validations";
-import { signinRateLimiter } from "@/lib/rate-limit";
-
-function getClientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  return "unknown";
-}
+import { signinRateLimiter, getClientIp } from "@/lib/rate-limit";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +51,7 @@ export async function POST(req: Request) {
       role: user.role,
     });
   } catch (error) {
-    console.error("Signin error:", error);
+    console.error("Signin error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

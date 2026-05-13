@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { profileUpdateSchema } from "@/lib/validations";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function GET() {
   try {
@@ -35,7 +36,7 @@ export async function GET() {
 
     return NextResponse.json({ data: user });
   } catch (error) {
-    console.error("Profile GET error:", error);
+    console.error("Profile GET error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ data: updatedUser });
   } catch (error) {
-    console.error("Profile update error:", error);
+    console.error("Profile update error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

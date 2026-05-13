@@ -20,6 +20,12 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/sanitize-log", () => ({
+  sanitizeError: vi.fn((e: unknown) =>
+    e instanceof Error ? `Error: ${e.name}` : "Unknown error"
+  ),
+}));
+
 function makeRequest(body: unknown) {
   return new Request("http://localhost/api/user/profile", {
     method: "POST",

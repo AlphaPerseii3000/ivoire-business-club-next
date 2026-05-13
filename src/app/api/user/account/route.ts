@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { accountDeletionSchema } from "@/lib/validations";
+import { accountDeleteRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeError } from "@/lib/sanitize-log";
 import bcrypt from "bcryptjs";
 
 export async function DELETE(req: Request) {
@@ -9,6 +11,17 @@ export async function DELETE(req: Request) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    // Rate limit per user ID to prevent concurrent deletion race condition
+    const rateLimit = await accountDeleteRateLimiter.limit(
+      getClientIdentifier(req, session.user.id)
+    );
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Trop de tentatives. Réessayez dans une minute." },
+        { status: 429 }
+      );
     }
 
     let body: unknown;
@@ -71,7 +84,7 @@ export async function DELETE(req: Request) {
       data: { message: "Compte supprimé avec succès." },
     });
   } catch (error) {
-    console.error("Account deletion error:", error);
+    console.error("Account deletion error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

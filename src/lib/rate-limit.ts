@@ -40,5 +40,19 @@ export function createRateLimiter({ requests, windowSeconds }: RateLimiterOption
   };
 }
 
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return "unknown";
+}
+
+export function getClientIdentifier(req: Request, userId?: string): string {
+  if (userId) return `user:${userId}`;
+  return `ip:${getClientIp(req)}`;
+}
+
 export const signupRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
 export const signinRateLimiter = createRateLimiter({ requests: 10, windowSeconds: 60 });
+export const accountDeleteRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });

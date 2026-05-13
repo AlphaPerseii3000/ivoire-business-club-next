@@ -8,6 +8,7 @@ const mockAuth = vi.hoisted(() =>
 const mockDeleteMany = vi.hoisted(() => vi.fn());
 const mockUserUpdate = vi.hoisted(() => vi.fn());
 const mockBcryptHash = vi.hoisted(() => vi.fn());
+const mockLimit = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -30,6 +31,33 @@ vi.mock("bcryptjs", () => ({
   default: { hash: mockBcryptHash },
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  accountDeleteRateLimiter: { limit: mockLimit },
+  getClientIdentifier: vi.fn((req: Request, userId?: string) =>
+    userId ? `user:${userId}` : `ip:unknown`
+  ),
+}));
+
+vi.mock("@/lib/sanitize-log", () => ({
+  sanitizeError: vi.fn((e: unknown) =>
+    e instanceof Error ? `Error: ${e.name}` : "Unknown error"
+  ),
+}));
+
+vi.mock("@/lib/validations", () => ({
+  accountDeletionSchema: {
+    safeParse: (data: { confirmation: string }) => {
+      if (data.confirmation === "SUPPRIMER") {
+        return { success: true, data: { confirmation: "SUPPRIMER" } };
+      }
+      return {
+        success: false,
+        error: { flatten: () => ({ fieldErrors: { confirmation: ["Invalid"] } }) },
+      };
+    },
+  },
+}));
+
 function makeDeleteRequest(body: unknown) {
   return new Request("http://localhost/api/user/account", {
     method: "DELETE",
@@ -42,6 +70,7 @@ describe("DELETE /api/user/account", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockBcryptHash.mockResolvedValue("$2a$12$hashedrandompassword");
+    mockLimit.mockResolvedValue({ success: true, limit: 3, remaining: 2, reset: 0 });
   });
 
   it("returns 401 if not authenticated", async () => {
@@ -64,6 +93,18 @@ describe("DELETE /api/user/account", () => {
 
     expect(res.status).toBe(401);
     expect(json.error).toBe("Non autorisé");
+  });
+
+  it("returns 429 if rate limit is exceeded", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockLimit.mockResolvedValueOnce({ success: false, limit: 3, remaining: 0, reset: 12345 });
+
+    const req = makeDeleteRequest({ confirmation: "SUPPRIMER" });
+    const res = await DELETE(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(429);
+    expect(json.error).toBe("Trop de tentatives. Réessayez dans une minute.");
   });
 
   it("returns 400 with wrong confirmation text", async () => {

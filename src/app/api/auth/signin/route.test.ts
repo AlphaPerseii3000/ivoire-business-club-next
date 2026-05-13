@@ -17,6 +17,17 @@ vi.mock("@/lib/rate-limit", () => ({
   signinRateLimiter: {
     limit: mockRateLimit,
   },
+  getClientIp: vi.fn((req: Request) => {
+    const forwarded = req.headers.get("x-forwarded-for");
+    if (forwarded) return forwarded.split(",")[0].trim();
+    return "unknown";
+  }),
+}));
+
+vi.mock("@/lib/sanitize-log", () => ({
+  sanitizeError: vi.fn((e: unknown) =>
+    e instanceof Error ? `Error: ${e.name}` : "Unknown error"
+  ),
 }));
 
 vi.mock("bcryptjs", () => ({
