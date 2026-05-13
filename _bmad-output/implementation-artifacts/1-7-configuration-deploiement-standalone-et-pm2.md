@@ -1,6 +1,6 @@
 # Story 1.7: Configuration Déploiement — Standalone et PM2
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -55,8 +55,8 @@ so that deployment on Infomaniak is reliable and production-ready.
       apps: [
         {
           name: "ibc-app",
-          script: "server.js",
-          cwd: "./.next/standalone",
+          script: "./.next/standalone/server.js",
+          cwd: "./",
           instances: "max",
           exec_mode: "cluster",
           autorestart: true,
@@ -326,9 +326,9 @@ so that deployment on Infomaniak is reliable and production-ready.
 
 - **CRITICAL:** Next.js standalone mode does NOT include `public/` and `.next/static/` in its output. The `prepare-deploy.sh` script MUST copy these directories separately. Missing this step is the most common deployment failure.
 
-- **CRITICAL:** PM2 `cwd` in ecosystem.config.js points to `.next/standalone` — NOT the project root. This means PM2 runs `server.js` from within the standalone directory. Environment variables like `HOSTNAME` and `PORT` must be set in the `env` section of ecosystem.config.js OR in a `.env` file in the same directory.
+- **CRITICAL:** PM2 `cwd` in ecosystem.config.js is set to `./` (project root). The `script` path is `./.next/standalone/server.js`. This ensures PM2 resolves log file paths relative to the project root, so `./logs/` correctly points to the project-root logs directory. Environment variables like `HOSTNAME` and `PORT` must be set in the `env` section of ecosystem.config.js OR in a `.env` file in the same directory.
 
-- **CRITICAL:** When running the standalone server, Next.js looks for `.next/static` relative to the `cwd`. Since `cwd` is `.next/standalone`, the static files must be in `.next/standalone/.next/static` — which is why `prepare-deploy.sh` copies `.next/static` to `deploy-dist/.next/static`.
+- **CRITICAL:** When running the standalone server, Next.js looks for `.next/static` relative to the server entry point's location (within `.next/standalone/`). Since PM2's `cwd` is `./` (project root) and `script` is `./.next/standalone/server.js`, Next.js resolves static paths from within `.next/standalone/`. This means `.next/static` must be at `.next/standalone/.next/static` — which is why `prepare-deploy.sh` copies `.next/static` to `deploy-dist/.next/static/` and it gets picked up correctly because the standalone output already has the `.next` directory structure.
 
 - **Note on HOSTNAME:** In Next.js standalone mode, the server uses the `HOSTNAME` environment variable (not `HOST`). Setting it to `0.0.0.0` allows the server to listen on all network interfaces, which is required when running behind Nginx on a VPS.
 
@@ -418,3 +418,11 @@ Recent commits confirm established patterns:
 ### Completion Notes List
 
 ### File List
+
+## Review Findings
+
+- [x] [Review][Patch] PM2 log paths resolve relative to `cwd` — `error_file` and `out_file` use `./logs/` but PM2 resolves paths relative to `cwd: "./.next/standalone"`, so logs will write to `.next/standalone/logs/` not the project-root `logs/` directory. **FIX APPLIED:** Changed `cwd` to `./` and `script` to `./.next/standalone/server.js` so logs resolve correctly to project root. — [ecosystem.config.js:8,16-17]
+- [x] [Review][Patch] Missing `logs/.gitkeep` — Spec Task 2.2 explicitly requires creating `logs/` with `.gitkeep`. File does not exist. PM2 will fail to write logs on fresh clone. **FIX APPLIED:** Created `logs/.gitkeep`. — [logs/.gitkeep]
+- [x] [Review][Patch] `.env.example` missing Stripe env vars — `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and Stripe price IDs are used in `src/lib/stripe.ts` and `src/app/api/stripe/` routes but not documented in `.env.example`. Until Stripe removal (Story 2-1), developers need these vars. **FIX APPLIED:** Added all Stripe env vars with comment noting Story 2.1 removal. — [.env.example]
+- [x] [Review][Patch] `prepare-deploy.sh` doesn't create `logs/` directory in `deploy-dist/` — PM2 needs the logs directory to exist before it can write log files. **FIX APPLIED:** Added `mkdir -p deploy-dist/logs` to the script. — [scripts/prepare-deploy.sh]
+- [x] [Review][Patch] Multiple files missing trailing newlines — `ecosystem.config.js`, `.env.example`, `src/lib/stripe.ts`, `src/app/api/stripe/checkout/route.ts` all missing final newline. POSIX convention and git hygiene. **FIX APPLIED:** Added trailing newlines to all affected files.

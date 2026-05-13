@@ -35,6 +35,10 @@ cp ecosystem.config.js deploy-dist/
 echo "📦 Copie du .env.example..."
 cp .env.example deploy-dist/
 
+# Créer le répertoire des logs pour PM2
+echo "📦 Création du répertoire logs..."
+mkdir -p deploy-dist/logs
+
 # Afficher le résumé
 echo ""
 echo "✅ Déploiement préparé dans deploy-dist/"

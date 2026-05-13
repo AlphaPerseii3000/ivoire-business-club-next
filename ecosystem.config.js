@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "ibc-app",
-      script: "server.js",
-      cwd: "./.next/standalone",
+      script: "./.next/standalone/server.js",
+      cwd: "./",
       instances: "max",
       exec_mode: "cluster",
       autorestart: true,
