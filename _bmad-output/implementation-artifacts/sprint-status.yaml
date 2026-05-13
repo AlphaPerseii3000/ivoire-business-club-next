@@ -50,7 +50,7 @@ development_status:
   1-4-gestion-du-profil-utilisateur: done
   1-5-suppression-de-compte-rgpd: done
   1-6-renforcement-de-la-securite-rate-limiting-et-headers: done
-  1-7-configuration-deploiement-standalone-et-pm2: ready-for-dev
+  1-7-configuration-deploiement-standalone-et-pm2: in-progress
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: backlog

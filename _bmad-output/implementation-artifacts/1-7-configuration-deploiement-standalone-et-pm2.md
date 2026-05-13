@@ -1,6 +1,6 @@
 # Story 1.7: Configuration Déploiement — Standalone et PM2
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

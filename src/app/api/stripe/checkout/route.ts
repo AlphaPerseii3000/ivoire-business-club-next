@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe, PLANS } from "@/lib/stripe";
+import { getStripe, PLANS } from "@/lib/stripe";
 import type { PlanKey, PlanPeriod } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Configuration Stripe manquante" }, { status: 500 });
     }
 
+    const stripe = getStripe();
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],

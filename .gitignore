@@ -40,6 +40,10 @@ next-env.d.ts
 prisma/*.db
 prisma/*.db-journal
 
+# Deployment
+deploy-dist/
+logs/*.log
+
 # prisma generated
 src/generated/
 
