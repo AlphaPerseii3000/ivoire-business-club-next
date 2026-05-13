@@ -182,6 +182,21 @@ describe("DELETE /api/user/account", () => {
     }
   });
 
+  it("returns 400 with malformed JSON body", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = new Request("http://localhost/api/user/account", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: "not-json",
+    });
+    const res = await DELETE(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Requête invalide.");
+  });
+
   it("returns 500 on unexpected error", async () => {
     mockAuth.mockRejectedValueOnce(new Error("DB down"));
 

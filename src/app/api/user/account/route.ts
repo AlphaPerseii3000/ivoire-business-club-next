@@ -11,7 +11,16 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Requête invalide." },
+        { status: 400 }
+      );
+    }
+
     const parsed = accountDeletionSchema.safeParse(body);
 
     if (!parsed.success) {

@@ -39,9 +39,7 @@ export const profileUpdateSchema = z.object({
 });
 
 export const accountDeletionSchema = z.object({
-  confirmation: z.literal("SUPPRIMER", {
-    message: "Veuillez taper SUPPRIMER pour confirmer.",
-  }),
+  confirmation: z.literal("SUPPRIMER"),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;

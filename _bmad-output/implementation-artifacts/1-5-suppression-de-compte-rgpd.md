@@ -1,6 +1,6 @@
 # Story 1.5: Suppression de Compte RGPD
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -395,3 +395,9 @@ Recent commits show established patterns:
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+- [x] [Review][Patch] Dead Zod custom message — `accountDeletionSchema` uses `z.literal("SUPPRIMER", { message: "..." })` but the route handler hardcodes the error response string, making the Zod `message` option unused dead code. Removed the unused `message` option from `z.literal`. [`src/lib/validations.ts:42-44`]
+- [x] [Review][Patch] Missing request body / malformed JSON returns 500 instead of 400 — if `DELETE /api/user/account` receives a request with no body or invalid JSON, `req.json()` throws before reaching Zod validation, falling through to the outer catch which returns 500 "Erreur interne". Added a try/catch around `req.json()` to return 400 "Requête invalide." for malformed JSON. Added corresponding test. [`src/app/api/user/account/route.ts:14`]
+- [x] [Review][Defer] Concurrent deletion race condition — two rapid DELETE requests could both pass auth and execute the transaction, potentially causing double-anonymization. This is mitigated by Story 1.6 (rate limiting) and is not a data integrity risk. Deferred to Story 1.6.
