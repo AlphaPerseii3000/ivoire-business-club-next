@@ -1,6 +1,17 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import AvatarUpload from "@/components/features/auth/avatar-upload";
+import ProfileEditForm from "@/components/features/auth/profile-edit-form";
+
+const TIER_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  AFFRANCHI: { label: "Les Affranchis", variant: "secondary" },
+  GRAND_FRERE: { label: "Les Grands Frères", variant: "outline" },
+  BOSS: { label: "Les Boss", variant: "default" },
+};
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -8,107 +19,74 @@ export default async function ProfilePage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      bio: true,
+      image: true,
+      phone: true,
+      location: true,
+      country: true,
+      tier: true,
+      role: true,
+      verificationStatus: true,
+      createdAt: true,
+    },
   });
 
   if (!user) redirect("/auth/signin");
 
+  const tierInfo = TIER_LABELS[user.tier] ?? { label: user.tier, variant: "secondary" as const };
+  const formattedDate = user.createdAt.toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+  });
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold">Mon profil</h1>
-      <p className="mt-1 text-muted-foreground">Gère tes informations personnelles</p>
+      <p className="mt-1 text-muted-foreground">
+        Gère tes informations personnelles
+      </p>
 
-      <form id="profile-form" className="mt-8 space-y-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium">Nom complet</label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            defaultValue={user.name ?? ""}
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+      {/* Profile header card */}
+      <Card className="mt-6">
+        <CardHeader className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <AvatarUpload
+            initialImage={user.image}
+            userName={user.name}
           />
-        </div>
+          <div className="flex-1 text-center sm:text-left">
+            <CardTitle className="text-xl">{user.name}</CardTitle>
+            <CardDescription className="mt-1">{user.email}</CardDescription>
+            <div className="mt-2 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+              <Badge variant={tierInfo.variant}>{tierInfo.label}</Badge>
+              {user.verificationStatus === "VERIFIED" ? (
+                <Badge variant="default" className="bg-green-600 text-white">
+                  ✅ Vérifié
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-muted-foreground">
+                  ⏳ Non vérifié
+                </Badge>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Membre depuis {formattedDate}
+            </p>
+          </div>
+        </CardHeader>
+      </Card>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            defaultValue={user.email}
-            disabled
-            className="mt-1 block w-full rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">L&apos;email ne peut pas être modifié</p>
-        </div>
+      <Separator className="my-6" />
 
-        <div>
-          <label htmlFor="bio" className="block text-sm font-medium">Bio</label>
-          <textarea
-            id="bio"
-            name="bio"
-            rows={4}
-            defaultValue={user.bio ?? ""}
-            placeholder="Décris-toi en quelques mots..."
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium">Téléphone</label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            defaultValue={user.phone ?? ""}
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
-            placeholder="+225 XX XX XX XX"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="location" className="block text-sm font-medium">Localisation</label>
-          <input
-            id="location"
-            name="location"
-            type="text"
-            defaultValue={user.location ?? ""}
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
-            placeholder="Abidjan, Côte d&apos;Ivoire"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium">Pays</label>
-          <input
-            id="country"
-            name="country"
-            type="text"
-            defaultValue={user.country ?? ""}
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
-            placeholder="Côte d&apos;Ivoire"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Vérification</label>
-          <p className="mt-1 text-sm">
-            {user.verificationStatus === "VERIFIED" ? (
-              <span className="text-accent">✅ Vérifié</span>
-            ) : (
-              <span className="text-muted-foreground">⏳ Non vérifié — <a href="/settings#verification" className="text-primary hover:underline">En savoir plus</a></span>
-            )}
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          formAction="/api/user/profile"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          Sauvegarder
-        </button>
-      </form>
+      {/* Edit form */}
+      <Card>
+        <CardContent className="pt-6">
+          <ProfileEditForm user={user} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

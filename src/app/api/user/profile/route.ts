@@ -1,6 +1,44 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { profileUpdateSchema } from "@/lib/validations";
+
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        bio: true,
+        image: true,
+        phone: true,
+        location: true,
+        country: true,
+        tier: true,
+        role: true,
+        verificationStatus: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    return NextResponse.json({ data: user });
+  } catch (error) {
+    console.error("Profile GET error:", error);
+    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -10,26 +48,47 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, bio, phone, country, location } = body as {
-      name?: string;
-      bio?: string;
-      phone?: string;
-      country?: string;
-      location?: string;
+    const parsed = profileUpdateSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Données invalides", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
+    // Convert empty strings to null for nullable fields
+    const sanitizedData = {
+      name: data.name,
+      bio: data.bio === "" ? null : data.bio,
+      phone: data.phone === "" ? null : data.phone,
+      location: data.location === "" ? null : data.location,
+      country: data.country === "" ? null : data.country,
     };
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        ...(name && { name }),
-        ...(bio !== undefined && { bio }),
-        ...(phone !== undefined && { phone }),
-        ...(country !== undefined && { country }),
-        ...(location !== undefined && { location }),
+      data: sanitizedData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        bio: true,
+        image: true,
+        phone: true,
+        location: true,
+        country: true,
+        tier: true,
+        role: true,
+        verificationStatus: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ data: updatedUser });
   } catch (error) {
     console.error("Profile update error:", error);
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
