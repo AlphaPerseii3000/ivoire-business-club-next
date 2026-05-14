@@ -188,14 +188,39 @@ Epic 2 enables members to choose a subscription tier, receive KS Investment bank
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (via Hermes delegate_task)
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes List
 
+- TierCard component created with selected/current states, badge colors (teal/amber/violet), 44px min touch targets
+- Shared tier config `src/lib/tier-config.ts` sources from `BANK_TRANSFER_CONFIG.amounts`, corrects pricing (€49 for Grands Frères, not €59)
+- Landing pricing and `/pricing` page updated to consume shared tier data
+- Profile page updated to show tier badge with color coding and membership date
+- `<a>` → `<Link>` fixes in dashboard and opportunities pages (Next.js best practice)
+- All 155 tests pass, build succeeds
+- DS subagent hit iteration limit before finalizing story status commit — orchestrator completed
+
 ### File List
+
+- src/lib/tier-config.ts (new)
+- src/lib/tier-config.test.ts (new)
+- src/components/tier-card.tsx (new)
+- src/components/tier-card.test.tsx (new)
+- src/app/(public)/pricing/page.tsx (modified)
+- src/app/(public)/pricing/page.test.tsx (new)
+- src/components/landing/pricing.tsx (modified)
+- src/components/landing/pricing.test.tsx (new)
+- src/app/(dashboard)/profile/page.tsx (modified)
+- src/app/(dashboard)/dashboard/page.tsx (modified — Link fix)
+- src/app/(dashboard)/opportunities/[id]/page.tsx (modified — Link fix)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (updated)
+- _bmad-output/implementation-artifacts/2-2-affichage-et-comparaison-des-tiers.md (updated)
 
 ### Change Log
 
 - 2026-05-14: Story context created and marked ready-for-dev.
+- 2026-05-14: Implementation completed. Status set to review.
