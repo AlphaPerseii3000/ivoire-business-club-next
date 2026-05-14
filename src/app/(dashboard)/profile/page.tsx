@@ -6,12 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import AvatarUpload from "@/components/features/auth/avatar-upload";
 import ProfileEditForm from "@/components/features/auth/profile-edit-form";
-
-const TIER_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  AFFRANCHI: { label: "Les Affranchis", variant: "secondary" },
-  GRAND_FRERE: { label: "Les Grands Frères", variant: "outline" },
-  BOSS: { label: "Les Boss", variant: "default" },
-};
+import { getTierBadgeConfig } from "@/lib/tier-config";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -37,7 +32,7 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/auth/signin");
 
-  const tierInfo = TIER_LABELS[user.tier] ?? { label: user.tier, variant: "secondary" as const };
+  const tierInfo = getTierBadgeConfig(user.tier);
   const formattedDate = user.createdAt.toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
@@ -61,7 +56,7 @@ export default async function ProfilePage() {
             <CardTitle className="text-xl">{user.name}</CardTitle>
             <CardDescription className="mt-1">{user.email}</CardDescription>
             <div className="mt-2 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-              <Badge variant={tierInfo.variant}>{tierInfo.label}</Badge>
+              <Badge variant="outline" className={tierInfo.className}>{tierInfo.label}</Badge>
               {user.verificationStatus === "VERIFIED" ? (
                 <Badge variant="default" className="bg-green-600 text-white">
                   ✅ Vérifié

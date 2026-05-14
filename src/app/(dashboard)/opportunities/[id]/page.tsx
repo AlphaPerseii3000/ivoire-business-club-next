@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
@@ -34,7 +36,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <a href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</a>
+      <Link href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
 
       <div className="mt-6">
         <div className="flex items-start justify-between">

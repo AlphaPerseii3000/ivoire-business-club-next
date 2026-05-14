@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -58,29 +60,29 @@ export default async function DashboardPage() {
           </div>
         </div>
         {(!subscription || subscription.status === "TRIAL") && (
-          <a
+          <Link
             href="/pricing"
             className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Choisir un plan
-          </a>
+          </Link>
         )}
       </div>
 
       {/* Quick actions */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <a href="/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+        <Link href="/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
           <p className="text-lg font-semibold">🎯 Opportunités</p>
           <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
-        </a>
-        <a href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+        </Link>
+        <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
           <p className="text-lg font-semibold">🤝 Membres</p>
           <p className="mt-1 text-sm text-muted-foreground">Réseau et mises en relation</p>
-        </a>
-        <a href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+        </Link>
+        <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
           <p className="text-lg font-semibold">👤 Mon profil</p>
           <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
-        </a>
+        </Link>
       </div>
     </div>
   );

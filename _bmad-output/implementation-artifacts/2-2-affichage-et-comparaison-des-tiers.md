@@ -1,6 +1,6 @@
 # Story 2.2: Affichage et Comparaison des Tiers
 
-Status: ready-for-dev
+Status: review
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
