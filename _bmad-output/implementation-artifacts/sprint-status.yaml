@@ -53,13 +53,13 @@ development_status:
   1-7-configuration-deploiement-standalone-et-pm2: done
   epic-1-retrospective: done
   2-0-consolidation-post-retrospective-epic-1: done
-  epic-2: in-progress
+  epic-2: done
   2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: done
   2-2-affichage-et-comparaison-des-tiers: done
   2-3-selection-du-tier-et-instructions-de-virement: done
   2-4-validation-manuelle-des-abonnements-par-ladmin: done
   2-5-suivi-des-statuts-dabonnement-et-notifications: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
   epic-3: backlog
   3-1-creation-et-soumission-dopportunite: backlog
   3-2-upload-et-attachement-de-documents-juridiques: backlog
