@@ -27,6 +27,12 @@ describe("authConfig authorized callback", () => {
     expect(result).toBe(false);
   });
 
+  it("does not treat protected routes as public just because / is public", () => {
+    expect(authorized(makeRequest("/dashboard"))).toBe(false);
+    expect(authorized(makeRequest("/dashboard/opportunities"))).toBe(false);
+    expect(authorized(makeRequest("/admin"))).toBe(false);
+  });
+
   it("redirects unauthenticated requests from /dashboard/opportunities to /auth/signin", () => {
     const result = authorized(makeRequest("/dashboard/opportunities"));
     expect(result).toBe(false);
@@ -45,6 +51,12 @@ describe("authConfig authorized callback", () => {
     const admin = { id: "u-1", email: "a@example.com", role: "ADMIN" };
     expect(authorized(makeRequest("/admin", admin))).toBe(true);
     expect(authorized(makeRequest("/admin/members", admin))).toBe(true);
+  });
+
+  it("allows authenticated MEMBER requests to tier-gated dashboard routes", () => {
+    const member = { id: "u-1", email: "m@example.com", role: "MEMBER" };
+    expect(authorized(makeRequest("/dashboard/deals", member))).toBe(true);
+    expect(authorized(makeRequest("/dashboard/subscription", member))).toBe(true);
   });
 
   it("redirects logged-in users away from /auth/signin to /dashboard", () => {

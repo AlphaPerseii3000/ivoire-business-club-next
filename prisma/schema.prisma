@@ -43,8 +43,7 @@ enum VerificationStatus {
 }
 
 enum PaymentProvider {
-  STRIPE
-  CINETPAY
+  BANK_TRANSFER
 }
 
 // =====================
@@ -134,8 +133,8 @@ model Subscription {
   userId      String
   tier        Tier
   period      String             // MONTHLY | ANNUAL
-  provider    PaymentProvider
-  providerRef String             // Stripe subscription ID or CinetPay ref
+  provider    PaymentProvider     @default(BANK_TRANSFER)
+  providerRef String             // External reference from the payment provider
   status      SubscriptionStatus @default(TRIAL)
   startDate   DateTime
   endDate     DateTime?
@@ -171,7 +170,7 @@ model Payment {
   userId      String
   amount      Float
   currency    String          // EUR | XOF
-  provider    PaymentProvider
+  provider    PaymentProvider @default(BANK_TRANSFER)
   providerRef String
   status      String          // succeeded | failed | pending
   createdAt   DateTime        @default(now())

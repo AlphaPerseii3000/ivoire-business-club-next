@@ -1,6 +1,6 @@
 # Story 1.4: Gestion du Profil Utilisateur
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

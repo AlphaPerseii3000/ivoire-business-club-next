@@ -1,5 +1,6 @@
 # Deferred Work
 
-## Deferred from: code review of 1-5-suppression-de-compte-rgpd (2026-05-13)
+## Deferred from: code review of story 2-0-consolidation-post-retrospective-epic-1 (2026-05-14)
 
-- Concurrent deletion race condition — two rapid DELETE requests could both pass auth and start the transaction. Rate limiting (Story 1.6) mitigates this. Not a data integrity risk since double-anonymization is idempotent.
+- avatarUrl vs image : mismatch colonne DB/schéma Prisma (pré-existant de Story 1.4) — Le schéma déclare `image String?` mais la migration initiale crée la colonne `avatarUrl`. Pas de `@map("avatarUrl")`. Bug pré-existant, hors scope de cette story. À corriger dans un story dédiée.
+- Subscription.providerRef NOT NULL sans default — Risque pour les créations de subscription sans référence immédiate. Probablement OK pour le modèle virement bancaire, mais à vérifier lors de l'implémentation Epic 2.
