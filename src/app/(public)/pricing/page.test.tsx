@@ -1,11 +1,18 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import PricingPage from "./page";
 
+const mockAuth = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/auth", () => ({
+  auth: mockAuth,
+}));
+
 describe("PricingPage", () => {
-  it("renders exactly three shared tier cards in the required order with monthly EUR prices", () => {
-    render(<PricingPage />);
+  it("renders exactly three shared tier cards in the required order with monthly EUR prices", async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    render(await PricingPage());
 
     const cards = screen.getAllByTestId("tier-card");
     expect(cards).toHaveLength(3);
@@ -18,8 +25,9 @@ describe("PricingPage", () => {
     expect(within(cards[2]!).getByText("€99/mois")).toBeInTheDocument();
   });
 
-  it("uses a mobile-first one-column then desktop three-column grid", () => {
-    render(<PricingPage />);
+  it("uses a mobile-first one-column then desktop three-column grid", async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    render(await PricingPage());
 
     expect(screen.getByTestId("pricing-tier-grid")).toHaveClass("grid-cols-1", "md:grid-cols-3");
   });

@@ -7,8 +7,10 @@ import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 
 // Full auth — Node.js runtime only (uses Prisma + bcrypt)
+// Must use JWT strategy: Credentials provider is incompatible with database sessions
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  session: { strategy: "jwt" },
   adapter: PrismaAdapter(prisma),
   providers: [
     Google({

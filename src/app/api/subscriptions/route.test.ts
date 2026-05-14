@@ -7,14 +7,18 @@ const mockAuth = vi.hoisted(() =>
 const mockSubscriptionFindMany = vi.hoisted(() => vi.fn());
 const mockSubscriptionCreate = vi.hoisted(() => vi.fn());
 const mockPaymentCreate = vi.hoisted(() => vi.fn());
-const mockTransaction = vi.hoisted(() => vi.fn((cb: Function) => cb({
-  subscription: {
-    create: mockSubscriptionCreate,
-  },
-  payment: {
-    create: mockPaymentCreate,
-  },
-})));
+const mockTransaction = vi.hoisted(() =>
+  vi.fn((cb: (tx: unknown) => unknown) =>
+    cb({
+      subscription: {
+        create: mockSubscriptionCreate,
+      },
+      payment: {
+        create: mockPaymentCreate,
+      },
+    })
+  )
+);
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -61,7 +65,7 @@ describe("GET /api/subscriptions", () => {
         tier: "AFFRANCHI",
         period: "MONTHLY",
         provider: "BANK_TRANSFER",
-        providerRef: "IBC-user-123-AFFRANCHI-123456",
+        providerRef: "IBC-user-123-AFFRANCHI",
         status: "TRIAL",
         startDate: new Date("2024-01-01"),
         createdAt: new Date("2024-01-01"),
@@ -114,41 +118,66 @@ describe("POST /api/subscriptions", () => {
     vi.clearAllMocks();
   });
 
-  it("creates TRIAL subscription and pending payment in transaction with generated providerRef", async () => {
+  it("creates TRIAL subscription and pending BANK_TRANSFER payment with displayed providerRef and tier amount", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
     const mockSub = {
       id: "sub-new",
       userId: "user-123",
       tier: "GRAND_FRERE",
-      period: "ANNUAL",
+      period: "MONTHLY",
       provider: "BANK_TRANSFER",
-      providerRef: expect.stringMatching(/^IBC-user-123-GRAND_FRERE-\d+$/),
+      providerRef: "IBC-user-123-GRAND_FRERE",
       status: "TRIAL",
-      startDate: expect.any(Date),
-      createdAt: expect.any(Date),
-      updatedAt: expect.any(Date),
+      startDate: new Date("2026-05-14"),
+      createdAt: new Date("2026-05-14"),
+      updatedAt: new Date("2026-05-14"),
+    };
+    const mockPayment = {
+      id: "pay-new",
+      userId: "user-123",
+      amount: 49,
+      currency: "EUR",
+      provider: "BANK_TRANSFER",
+      providerRef: "IBC-user-123-GRAND_FRERE",
+      status: "pending",
+      createdAt: new Date("2026-05-14"),
     };
     mockSubscriptionCreate.mockResolvedValueOnce(mockSub);
-    mockPaymentCreate.mockResolvedValueOnce({ id: "pay-new" });
-    mockTransaction.mockImplementationOnce(async (cb: Function) => cb({
-      subscription: { create: mockSubscriptionCreate },
-      payment: { create: mockPaymentCreate },
-    }));
+    mockPaymentCreate.mockResolvedValueOnce(mockPayment);
+    mockTransaction.mockImplementationOnce(async (cb: (tx: unknown) => unknown) =>
+      cb({
+        subscription: { create: mockSubscriptionCreate },
+        payment: { create: mockPaymentCreate },
+      })
+    );
 
-    const req = makeRequest({ tier: "GRAND_FRERE", period: "ANNUAL" });
+    const req = makeRequest({ tier: "GRAND_FRERE", period: "MONTHLY" });
     const res = await POST(req);
     const json = await res.json();
 
     expect(res.status).toBe(201);
-    expect(json.data).toBeDefined();
+    expect(json.data.subscription).toEqual({
+      ...mockSub,
+      startDate: "2026-05-14T00:00:00.000Z",
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    });
+    expect(json.data.payment).toEqual({
+      id: "pay-new",
+      amount: 49,
+      currency: "EUR",
+      status: "pending",
+      provider: "BANK_TRANSFER",
+      providerRef: "IBC-user-123-GRAND_FRERE",
+    });
     expect(mockSubscriptionCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           userId: "user-123",
           tier: "GRAND_FRERE",
-          period: "ANNUAL",
+          period: "MONTHLY",
           provider: "BANK_TRANSFER",
-          providerRef: expect.stringMatching(/^IBC-user-123-GRAND_FRERE-\d+$/),
+          providerRef: "IBC-user-123-GRAND_FRERE",
           status: "TRIAL",
         }),
       })
@@ -157,16 +186,54 @@ describe("POST /api/subscriptions", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           userId: "user-123",
-          amount: 0,
+          amount: 49,
           currency: "EUR",
           provider: "BANK_TRANSFER",
-          providerRef: expect.stringMatching(/^IBC-user-123-GRAND_FRERE-\d+$/),
+          providerRef: "IBC-user-123-GRAND_FRERE",
           status: "pending",
         }),
       })
     );
     expect(mockPaymentCreate.mock.calls[0][0].data.providerRef).toBe(
       mockSubscriptionCreate.mock.calls[0][0].data.providerRef
+    );
+  });
+
+  it.each([
+    ["AFFRANCHI", 29],
+    ["GRAND_FRERE", 49],
+    ["BOSS", 99],
+  ])("creates payment amount %s => %i EUR", async (tier, amount) => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockSubscriptionCreate.mockResolvedValueOnce({
+      id: "sub-new",
+      tier,
+      period: "MONTHLY",
+      provider: "BANK_TRANSFER",
+      providerRef: `IBC-user-123-${tier}`,
+      status: "TRIAL",
+    });
+    mockPaymentCreate.mockResolvedValueOnce({
+      id: "pay-new",
+      amount,
+      currency: "EUR",
+      status: "pending",
+      provider: "BANK_TRANSFER",
+      providerRef: `IBC-user-123-${tier}`,
+    });
+    mockTransaction.mockImplementationOnce(async (cb: (tx: unknown) => unknown) =>
+      cb({
+        subscription: { create: mockSubscriptionCreate },
+        payment: { create: mockPaymentCreate },
+      })
+    );
+
+    await POST(makeRequest({ tier, period: "MONTHLY" }));
+
+    expect(mockPaymentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ amount }),
+      })
     );
   });
 

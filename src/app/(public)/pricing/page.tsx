@@ -1,9 +1,12 @@
 import Link from "next/link";
 
-import { TierCard } from "@/components/tier-card";
-import { MEMBERSHIP_TIERS } from "@/lib/tier-config";
+import { PricingTierSelection } from "@/components/pricing-tier-selection";
+import { auth } from "@/lib/auth";
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const session = await auth();
+  const isAuthenticated = !!session?.user?.id;
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b bg-card">
@@ -12,12 +15,20 @@ export default function PricingPage() {
             IBC
           </Link>
           <nav className="flex items-center gap-3 text-sm sm:gap-6" aria-label="Navigation principale">
-            <Link href="/auth/signin" className="inline-flex min-h-11 items-center rounded-md px-2 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-              Connexion
-            </Link>
-            <Link href="/auth/signup" className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-              Rejoins le club
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-md px-2 font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                Tableau de bord
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/signin" className="inline-flex min-h-11 items-center rounded-md px-2 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                  Connexion
+                </Link>
+                <Link href="/auth/signup" className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                  Rejoins le club
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -29,14 +40,12 @@ export default function PricingPage() {
             Compare les trois niveaux IBC et choisis l&apos;accès qui correspond à tes objectifs.
           </p>
           <p className="mt-3 text-sm font-medium text-foreground">
-            Prix mensuels en euros : €29, €49 et €99. La sélection détaillée arrive à l&apos;étape suivante.
+            Prix mensuels en euros : €29, €49 et €99. Sélectionne une offre pour recevoir les instructions de virement.
           </p>
         </div>
 
-        <div data-testid="pricing-tier-grid" className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
-          {MEMBERSHIP_TIERS.map((tier) => (
-            <TierCard key={tier.tier} tier={tier.tier} href="/auth/signup" actionLabel={tier.ctaLabel} />
-          ))}
+        <div className="mt-12">
+          <PricingTierSelection isAuthenticated={isAuthenticated} />
         </div>
       </main>
     </div>

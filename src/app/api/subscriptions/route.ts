@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { subscriptionCreateSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { getAmountForTier } from "@/lib/bank-transfer-config";
 
 export async function GET() {
   try {
@@ -52,8 +53,8 @@ export async function POST(req: Request) {
 
     const { tier, period } = parsed.data;
     const userId = session.user.id;
-    const timestamp = Date.now();
-    const providerRef = `IBC-${userId}-${tier}-${timestamp}`;
+    const providerRef = `IBC-${userId}-${tier}`;
+    const amount = getAmountForTier(tier);
 
     const result = await prisma.$transaction(async (tx) => {
       const subscription = await tx.subscription.create({
@@ -68,10 +69,10 @@ export async function POST(req: Request) {
         },
       });
 
-      await tx.payment.create({
+      const payment = await tx.payment.create({
         data: {
           userId,
-          amount: 0,
+          amount,
           currency: "EUR",
           provider: "BANK_TRANSFER",
           providerRef,
@@ -79,7 +80,17 @@ export async function POST(req: Request) {
         },
       });
 
-      return subscription;
+      return {
+        subscription,
+        payment: {
+          id: payment.id,
+          amount: payment.amount,
+          currency: payment.currency,
+          status: payment.status,
+          provider: payment.provider,
+          providerRef: payment.providerRef,
+        },
+      };
     });
 
     return NextResponse.json({ data: result }, { status: 201 });
