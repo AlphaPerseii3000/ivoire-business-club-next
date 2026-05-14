@@ -6,6 +6,7 @@ import SignOutButton from "@/components/auth/sign-out-button";
 const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/members", label: "Membres", icon: "👥" },
+  { href: "/admin/subscriptions", label: "Abonnements", icon: "💳" },
   { href: "/admin/opportunities", label: "Opportunités", icon: "🎯" },
 ];
 

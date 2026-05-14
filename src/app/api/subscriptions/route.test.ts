@@ -66,7 +66,7 @@ describe("GET /api/subscriptions", () => {
         period: "MONTHLY",
         provider: "BANK_TRANSFER",
         providerRef: "IBC-user-123-AFFRANCHI",
-        status: "TRIAL",
+        status: "PENDING",
         startDate: new Date("2024-01-01"),
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
@@ -118,7 +118,7 @@ describe("POST /api/subscriptions", () => {
     vi.clearAllMocks();
   });
 
-  it("creates TRIAL subscription and pending BANK_TRANSFER payment with displayed providerRef and tier amount", async () => {
+  it("creates PENDING subscription and pending BANK_TRANSFER payment with displayed providerRef and tier amount", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
     const mockSub = {
       id: "sub-new",
@@ -127,7 +127,7 @@ describe("POST /api/subscriptions", () => {
       period: "MONTHLY",
       provider: "BANK_TRANSFER",
       providerRef: "IBC-user-123-GRAND_FRERE",
-      status: "TRIAL",
+      status: "PENDING",
       startDate: new Date("2026-05-14"),
       createdAt: new Date("2026-05-14"),
       updatedAt: new Date("2026-05-14"),
@@ -178,7 +178,7 @@ describe("POST /api/subscriptions", () => {
           period: "MONTHLY",
           provider: "BANK_TRANSFER",
           providerRef: "IBC-user-123-GRAND_FRERE",
-          status: "TRIAL",
+          status: "PENDING",
         }),
       })
     );
@@ -211,7 +211,7 @@ describe("POST /api/subscriptions", () => {
       period: "MONTHLY",
       provider: "BANK_TRANSFER",
       providerRef: `IBC-user-123-${tier}`,
-      status: "TRIAL",
+      status: "PENDING",
     });
     mockPaymentCreate.mockResolvedValueOnce({
       id: "pay-new",

@@ -64,7 +64,7 @@ export async function POST(req: Request) {
           period,
           provider: "BANK_TRANSFER",
           providerRef,
-          status: "TRIAL",
+          status: "PENDING",
           startDate: new Date(),
         },
       });
