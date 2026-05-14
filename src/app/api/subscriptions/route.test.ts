@@ -148,6 +148,7 @@ describe("POST /api/subscriptions", () => {
           tier: "GRAND_FRERE",
           period: "ANNUAL",
           provider: "BANK_TRANSFER",
+          providerRef: expect.stringMatching(/^IBC-user-123-GRAND_FRERE-\d+$/),
           status: "TRIAL",
         }),
       })
@@ -159,9 +160,13 @@ describe("POST /api/subscriptions", () => {
           amount: 0,
           currency: "EUR",
           provider: "BANK_TRANSFER",
+          providerRef: expect.stringMatching(/^IBC-user-123-GRAND_FRERE-\d+$/),
           status: "pending",
         }),
       })
+    );
+    expect(mockPaymentCreate.mock.calls[0][0].data.providerRef).toBe(
+      mockSubscriptionCreate.mock.calls[0][0].data.providerRef
     );
   });
 
@@ -198,6 +203,22 @@ describe("POST /api/subscriptions", () => {
     expect(res.status).toBe(400);
     expect(json.error).toBe("Données invalides");
     expect(json.details).toBeDefined();
+  });
+
+  it("returns 400 for malformed JSON", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = new Request("http://localhost/api/subscriptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{invalid-json",
+    });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(mockTransaction).not.toHaveBeenCalled();
   });
 
   it("returns 500 on unexpected error", async () => {
