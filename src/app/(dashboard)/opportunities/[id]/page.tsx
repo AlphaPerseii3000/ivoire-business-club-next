@@ -3,11 +3,31 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
+import { getUserPremiumAccess } from "@/lib/subscription-access";
+import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
   const { id } = await params;
+
+  const access = await getUserPremiumAccess(session.user.id);
+
+  if (!access.hasAccess) {
+    const exists = await prisma.opportunity.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!exists) notFound();
+
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <Link href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
+        <PremiumAccessBlockedPanel />
+      </div>
+    );
+  }
 
   const opportunity = await prisma.opportunity.findUnique({
     where: { id },
@@ -46,11 +66,11 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
         <div className="mt-4 flex gap-3">
           <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
-          {opportunity.amount && (
+          {opportunity.amount ? (
             <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
               {opportunity.amount.toLocaleString("fr-FR")} €
             </span>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-6 rounded-xl border bg-card p-6">
@@ -61,20 +81,20 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <h2 className="font-semibold">Auteur</h2>
           <p className="mt-1 text-sm">{opportunity.author.name}{opportunity.author.location ? ` — ${opportunity.author.location}` : ""}</p>
           <p className="mt-1 text-xs text-muted-foreground">Publié le {new Date(opportunity.createdAt).toLocaleDateString("fr-FR")}</p>
-          {opportunity.verifiedBy && (
+          {opportunity.verifiedBy ? (
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
-          )}
+          ) : null}
         </div>
 
-        {session.user.id === opportunity.author.id && (
+        {session.user.id === opportunity.author.id ? (
           <div className="mt-6">
             <form action={`/api/opportunities/${opportunity.id}/delete`} method="POST">
-              <button type="submit" className="rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10">
+              <button type="submit" className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 Supprimer cette opportunité
               </button>
             </form>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

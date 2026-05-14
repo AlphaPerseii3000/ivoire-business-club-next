@@ -3,6 +3,13 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { SubscriptionActivationNotice } from "@/components/subscription-activation-notice";
+
+const ACTIVATION_NOTICE_DAYS = 7;
+
+function isRecent(date: Date, days: number) {
+  return Date.now() - date.getTime() <= days * 24 * 60 * 60 * 1000;
+}
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -24,17 +31,29 @@ export default async function DashboardPage() {
 
   const statusLabel: Record<string, string> = {
     TRIAL: "Essai",
+    PENDING: "En attente",
     ACTIVE: "Actif",
     PAST_DUE: "En retard",
     CANCELLED: "Annulé",
   };
+  const showActivationNotice = subscription?.status === "ACTIVE"
+    ? isRecent(subscription.updatedAt, ACTIVATION_NOTICE_DAYS)
+    : false;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-2xl font-bold">Bienvenue, {user.name}</h1>
       <p className="mt-1 text-muted-foreground">Ton tableau de bord Ivoire Business Club</p>
 
-      {/* Subscription card */}
+      {showActivationNotice && subscription ? (
+        <SubscriptionActivationNotice
+          className="mt-8"
+          subscriptionId={subscription.id}
+          tier={subscription.tier}
+          ctaHref="/opportunities"
+        />
+      ) : null}
+
       <div className="mt-8 rounded-xl border bg-card p-6">
         <h2 className="text-lg font-semibold">Mon abonnement</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -59,17 +78,16 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
-        {(!subscription || subscription.status === "TRIAL") && (
+        {!subscription || subscription.status === "TRIAL" ? (
           <Link
             href="/pricing"
-            className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="mt-4 inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Choisir un plan
           </Link>
-        )}
+        ) : null}
       </div>
 
-      {/* Quick actions */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <Link href="/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
           <p className="text-lg font-semibold">🎯 Opportunités</p>
