@@ -2,7 +2,7 @@
 Story: "2.5"
 StoryKey: "2-5-suivi-des-statuts-dabonnement-et-notifications"
 Title: "Suivi des Statuts d'Abonnement et Notifications"
-Status: review
+Status: done
 Priority: "P0"
 Epic: "Epic 2 — Tiers et Paiement par Virement Bancaire"
 FRs: ["FR13", "FR14"]
@@ -12,7 +12,7 @@ Created: "2026-05-14"
 
 # Story 2.5: Suivi des Statuts d'Abonnement et Notifications
 
-Status: review
+Status: done
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -104,6 +104,12 @@ so that I know when I can access premium content.
   - [ ] Keep existing Story 2.4 tests green, especially admin subscription validation/refusal/suspension route tests.
   - [ ] Run `npx vitest run`.
   - [ ] Run `npm run build`.
+
+### Review Findings
+
+- [x] [Review][Patch] Activation celebration notice initialized from `window.localStorage` during render, creating an SSR/client hydration mismatch risk [src/components/subscription-activation-notice.tsx:24] — fixed by deferring storage reads to `useEffect`, rendering deterministically until hydration, and keeping dismissal functional if storage is unavailable.
+- [x] [Review][Patch] New activation notice render checks used boolean `&&` inside JSX conditions despite the Next.js 16 strict guardrail [src/app/(dashboard)/dashboard/page.tsx:48, src/app/(dashboard)/profile/page.tsx:122] — fixed by precomputing a nullable subscription and using explicit ternary rendering.
+- [x] [Review][Patch] Prisma BetterSqlite3 adapter consumed raw relative `DATABASE_URL` even though Prisma 7 adapter runtime requires an absolute SQLite file path [src/lib/prisma.ts:9] — fixed by normalizing `file:` URLs to absolute paths before adapter creation.
 
 ## Dev Notes
 
