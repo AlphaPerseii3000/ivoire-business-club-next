@@ -108,6 +108,7 @@ export default async function ProfilePage() {
   const showActivationNotice = latestSubscription?.status === "ACTIVE"
     ? isRecent(latestSubscription.updatedAt, ACTIVATION_NOTICE_DAYS)
     : false;
+  const activationNoticeSubscription = showActivationNotice ? latestSubscription : null;
   const statusCopy = latestSubscription
     ? subscriptionStatusCopy[latestSubscription.status] ?? subscriptionStatusCopy.TRIAL
     : null;
@@ -119,11 +120,11 @@ export default async function ProfilePage() {
         Gère tes informations personnelles
       </p>
 
-      {showActivationNotice && latestSubscription ? (
+      {activationNoticeSubscription ? (
         <SubscriptionActivationNotice
           className="mt-6"
-          subscriptionId={latestSubscription.id}
-          tier={latestSubscription.tier}
+          subscriptionId={activationNoticeSubscription.id}
+          tier={activationNoticeSubscription.tier}
           ctaHref="/opportunities"
         />
       ) : null}

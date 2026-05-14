@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,19 +21,27 @@ export function SubscriptionActivationNotice({
   className,
 }: SubscriptionActivationNoticeProps) {
   const storageKey = `ibc:subscription-activation-notice:${subscriptionId}`;
-  const [isDismissed, setIsDismissed] = useState(() =>
-    typeof window === "undefined"
-      ? true
-      : window.localStorage.getItem(storageKey) === "dismissed"
-  );
+  const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
   const tierBadge = getTierBadgeConfig(tier);
 
+  useEffect(() => {
+    try {
+      setIsDismissed(window.localStorage.getItem(storageKey) === "dismissed");
+    } catch {
+      setIsDismissed(false);
+    }
+  }, [storageKey]);
+
   function dismiss() {
-    window.localStorage.setItem(storageKey, "dismissed");
+    try {
+      window.localStorage.setItem(storageKey, "dismissed");
+    } catch {
+      // Keep the notice dismissible even if localStorage is unavailable.
+    }
     setIsDismissed(true);
   }
 
-  if (isDismissed) {
+  if (isDismissed !== false) {
     return null;
   }
 

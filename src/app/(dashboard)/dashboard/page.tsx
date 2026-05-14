@@ -39,17 +39,18 @@ export default async function DashboardPage() {
   const showActivationNotice = subscription?.status === "ACTIVE"
     ? isRecent(subscription.updatedAt, ACTIVATION_NOTICE_DAYS)
     : false;
+  const activationNoticeSubscription = showActivationNotice ? subscription : null;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-2xl font-bold">Bienvenue, {user.name}</h1>
       <p className="mt-1 text-muted-foreground">Ton tableau de bord Ivoire Business Club</p>
 
-      {showActivationNotice && subscription ? (
+      {activationNoticeSubscription ? (
         <SubscriptionActivationNotice
           className="mt-8"
-          subscriptionId={subscription.id}
-          tier={subscription.tier}
+          subscriptionId={activationNoticeSubscription.id}
+          tier={activationNoticeSubscription.tier}
           ctaHref="/opportunities"
         />
       ) : null}
