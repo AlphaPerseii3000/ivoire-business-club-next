@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { signinSchema, type SigninInput } from "@/lib/validations";
 import { getOAuthErrorMessage } from "@/lib/oauth-errors";
 
 export default function SignInPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
 
@@ -29,26 +30,27 @@ export default function SignInPage() {
   const onSubmit = async (data: SigninInput) => {
     setServerError("");
     try {
-      const res = await fetch("/api/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const payload = await res.json();
-        setServerError(payload.error || "Email ou mot de passe incorrect.");
-        return;
-      }
-
-      // Establish NextAuth session
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         callbackUrl: "/dashboard",
+        redirect: false,
       });
-    } catch {
-      setServerError("Erreur réseau");
+
+      if (result?.error) {
+        setServerError("Email ou mot de passe incorrect.");
+      } else if (result?.ok) {
+        router.push("/dashboard");
+      } else {
+        setServerError("Email ou mot de passe incorrect.");
+      }
+    } catch (error) {
+      // NextAuth throws an error when credentials are invalid
+      if (error && typeof error === "object" && "message" in error) {
+        setServerError("Email ou mot de passe incorrect.");
+      } else {
+        setServerError("Erreur réseau");
+      }
     }
   };
 

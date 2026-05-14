@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SignInPage from "./page";
 
 const mockSignIn = vi.fn();
+const mockPush = vi.fn();
 let mockSearchParams = new URLSearchParams();
 
 vi.mock("next-auth/react", () => ({
@@ -11,13 +12,14 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ push: mockPush }),
 }));
 
 describe("SignInPage", () => {
   beforeEach(() => {
     mockSignIn.mockClear();
+    mockPush.mockClear();
     mockSearchParams = new URLSearchParams();
-    vi.stubGlobal("fetch", vi.fn());
   });
 
   // ---- Story 1.1 regression tests (preserved) ----
@@ -70,43 +72,41 @@ describe("SignInPage", () => {
     });
   });
 
-  it("submits form via fetch to /api/auth/signin and calls signIn on success", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: "u-1", email: "test@example.com", name: "Jean", tier: "AFFRANCHI", role: "MEMBER" }),
-    });
-    vi.stubGlobal("fetch", mockFetch);
+  it("calls signIn with credentials and redirect:false on form submit", async () => {
+    mockSignIn.mockResolvedValue({ ok: true, error: undefined });
 
     render(<SignInPage />);
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
 
-    const submitBtn = screen.getByText("Se connecter");
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith("/api/auth/signin", expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ email: "test@example.com", password: "securePass123!" }),
-      }));
-    });
+    fireEvent.click(screen.getByText("Se connecter"));
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith("credentials", {
         email: "test@example.com",
         password: "securePass123!",
         callbackUrl: "/dashboard",
+        redirect: false,
       });
     });
   });
 
-  it("displays exact French 401 error from API", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: "Email ou mot de passe incorrect." }),
+  it("redirects to /dashboard on successful signIn", async () => {
+    mockSignIn.mockResolvedValue({ ok: true, error: undefined });
+
+    render(<SignInPage />);
+    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+
+    fireEvent.click(screen.getByText("Se connecter"));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
     });
-    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  it("displays error message on invalid credentials", async () => {
+    mockSignIn.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
 
     render(<SignInPage />);
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "bad@example.com" } });
@@ -121,13 +121,8 @@ describe("SignInPage", () => {
     });
   });
 
-  it("displays exact French 429 error from API", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 429,
-      json: async () => ({ error: "Trop de tentatives. Réessayez dans une minute." }),
-    });
-    vi.stubGlobal("fetch", mockFetch);
+  it("displays error message on network error", async () => {
+    mockSignIn.mockRejectedValue(new Error("Network error"));
 
     render(<SignInPage />);
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
@@ -137,15 +132,14 @@ describe("SignInPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Trop de tentatives. Réessayez dans une minute.")
+        screen.getByText("Email ou mot de passe incorrect.")
       ).toBeInTheDocument();
     });
   });
 
   it("disables submit button during form submission", async () => {
-    let resolveFetch: (value: unknown) => void;
-    const mockFetch = vi.fn().mockImplementation(() => new Promise((resolve) => { resolveFetch = resolve; }));
-    vi.stubGlobal("fetch", mockFetch);
+    let resolveSignIn: (value: unknown) => void;
+    mockSignIn.mockImplementation(() => new Promise((resolve) => { resolveSignIn = resolve; }));
 
     render(<SignInPage />);
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
@@ -158,6 +152,6 @@ describe("SignInPage", () => {
       expect(screen.getByText("Connexion...")).toBeDisabled();
     });
 
-    resolveFetch!({ ok: true, json: async () => ({}) });
+    resolveSignIn!({ ok: true, error: undefined });
   });
 });
