@@ -1,6 +1,6 @@
 # Story 2.1: Retrait des Providers de Paiement Tiers et Préparation Virement
 
-Status: review
+Status: done
 
 <!-- Note: La consolidation Story 2.0 a déjà purgé les dépendances Stripe/CinetPay du runtime et migré le schéma Prisma vers BANK_TRANSFER. Cette story se concentre sur la finalisation du modèle de données virement et la préparation des composants/API pour Epic 2. -->
 
@@ -170,10 +170,45 @@ La story de consolidation 2.0 a **déjà** accompli :
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 via Hermes subagent (DS + CR orchestrator patches)
 
 ### Debug Log References
 
+- `npx vitest run` → 17 files / 144 tests pass (after CR patch added 1 test)
+- `npm run build` → Next.js 16.2.6 production build pass
+- `grep -ri "stripe\|cinetpay" src/ prisma/ scripts/ package.json next.config.ts` → 0 active references
+
 ### Completion Notes List
 
+- Prisma schema: `providerRef` made nullable on both `Subscription` and `Payment` for TRIAL workflow. Additive migration created.
+- API `/api/subscriptions`: POST creates Subscription (TRIAL) + Payment (pending) in Prisma transaction with auto-generated `IBC-{userId}-{tier}-{timestamp}` providerRef. GET lists user subscriptions. Zod validation, auth-protected.
+- `src/lib/bank-transfer-config.ts`: constants for KS Investment (beneficiary, IBAN, BIC, bank address via env, currency EUR, tier amounts AFFRANCHI=29, GRAND_FRERE=49, BOSS=99).
+- `src/components/subscription-status-tracker.tsx`: vertical stepper TRIAL→PENDING→ACTIVE with pulsing amber for PENDING, dark mode, French text.
+- `.env.example`: added BANK_TRANSFER_IBAN, BANK_TRANSFER_BIC, BANK_TRANSFER_BANK_ADDRESS.
+- `.gitignore`: added `public/avatars/` (test artifacts).
+- TypeScript strict mode: fixed `&&` boolean expressions to ternary in SubscriptionStatusTracker.
+
 ### File List
+
+- `.env.example`
+- `.gitignore`
+- `_bmad-output/implementation-artifacts/2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `prisma/migrations/20260514095721_provider_ref_nullable/migration.sql`
+- `prisma/schema.prisma`
+- `src/app/api/subscriptions/route.ts`
+- `src/app/api/subscriptions/route.test.ts`
+- `src/components/subscription-status-tracker.tsx`
+- `src/lib/bank-transfer-config.ts`
+- `src/lib/validations.ts`
+
+### Change Log
+
+- 2026-05-14: Implemented Story 2.1 (DS) — bank transfer model, subscriptions API, status tracker scaffold
+- 2026-05-14: CR patch P-001 — malformed JSON requests now return 400 instead of 500
+
+### Review Findings
+
+- [x] [Review][Patch] P-001: Malformed JSON returned 500 instead of 400 — `await req.json()` inside broad `try` block. **Fix**: added explicit JSON parse guard returning `400 Données invalides`; added regression test. Committed as `ce927c2`.
+- [ ] [Review][Defer] P-002: Payment amount stored as `0` — The created pending `Payment` uses `amount: 0` while `bank-transfer-config.ts` defines tier prices. AC3 does not specify amount behavior for MONTHLY vs ANNUAL. Should be resolved in Story 2.3/2.4 when bank transfer instructions/admin validation consume payment amounts.
+- [x] [Review][Dismiss] P-003: Stripe/CinetPay residue — grep confirmed 0 active runtime references.
