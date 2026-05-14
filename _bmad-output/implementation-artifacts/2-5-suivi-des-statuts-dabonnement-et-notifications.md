@@ -2,7 +2,7 @@
 Story: "2.5"
 StoryKey: "2-5-suivi-des-statuts-dabonnement-et-notifications"
 Title: "Suivi des Statuts d'Abonnement et Notifications"
-Status: "ready-for-dev"
+Status: review
 Priority: "P0"
 Epic: "Epic 2 — Tiers et Paiement par Virement Bancaire"
 FRs: ["FR13", "FR14"]
@@ -12,7 +12,7 @@ Created: "2026-05-14"
 
 # Story 2.5: Suivi des Statuts d'Abonnement et Notifications
 
-Status: ready-for-dev
+Status: review
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
