@@ -47,6 +47,13 @@ export type SigninInput = z.infer<typeof signinSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
 
+export const subscriptionCreateSchema = z.object({
+  tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"]),
+  period: z.enum(["MONTHLY", "ANNUAL"]),
+});
+
+export type SubscriptionCreateInput = z.infer<typeof subscriptionCreateSchema>;
+
 export const UEMOA_COUNTRIES = [
   { code: "CI", label: "Côte d'Ivoire" },
   { code: "SN", label: "Sénégal" },

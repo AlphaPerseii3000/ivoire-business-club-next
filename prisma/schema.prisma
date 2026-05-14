@@ -24,6 +24,7 @@ enum UserRole {
 
 enum SubscriptionStatus {
   TRIAL
+  PENDING
   ACTIVE
   PAST_DUE
   CANCELLED
@@ -134,7 +135,7 @@ model Subscription {
   tier        Tier
   period      String             // MONTHLY | ANNUAL
   provider    PaymentProvider     @default(BANK_TRANSFER)
-  providerRef String             // External reference from the payment provider
+  providerRef String?             // External reference from the payment provider (nullable at TRIAL creation)
   status      SubscriptionStatus @default(TRIAL)
   startDate   DateTime
   endDate     DateTime?
@@ -171,7 +172,7 @@ model Payment {
   amount      Float
   currency    String          // EUR | XOF
   provider    PaymentProvider @default(BANK_TRANSFER)
-  providerRef String
+  providerRef String?         // External reference from the payment provider
   status      String          // succeeded | failed | pending
   createdAt   DateTime        @default(now())
 

@@ -1,6 +1,6 @@
 # Story 2.1: Retrait des Providers de Paiement Tiers et Préparation Virement
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: La consolidation Story 2.0 a déjà purgé les dépendances Stripe/CinetPay du runtime et migré le schéma Prisma vers BANK_TRANSFER. Cette story se concentre sur la finalisation du modèle de données virement et la préparation des composants/API pour Epic 2. -->
 

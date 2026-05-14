@@ -54,7 +54,7 @@ development_status:
   epic-1-retrospective: done
   2-0-consolidation-post-retrospective-epic-1: done
   epic-2: in-progress
-  2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: ready-for-dev
+  2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: review
   2-2-affichage-et-comparaison-des-tiers: backlog
   2-3-selection-du-tier-et-instructions-de-virement: backlog
   2-4-validation-manuelle-des-abonnements-par-ladmin: backlog
