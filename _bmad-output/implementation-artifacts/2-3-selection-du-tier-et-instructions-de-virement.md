@@ -2,7 +2,7 @@
 Story: "2.3"
 StoryKey: "2-3-selection-du-tier-et-instructions-de-virement"
 Title: "Sélection du Tier et Instructions de Virement"
-Status: "ready-for-dev"
+Status: "done"
 Priority: "P0"
 Epic: "Epic 2 — Tiers et Paiement par Virement Bancaire"
 FRs: ["FR9", "FR10"]
@@ -12,7 +12,7 @@ Created: "2026-05-14"
 
 # Story 2.3: Sélection du Tier et Instructions de Virement
 
-Status: review
+Status: done
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -91,6 +91,10 @@ so that I can pay my IBC subscription by bank transfer and enter the manual vali
   - [ ] Add a test that the confirmation UI renders `SubscriptionStatusTracker` in the pending/waiting visual state and shows the exact success toast copy (mock `toast` if needed).
   - [ ] Run `npx vitest run`.
   - [ ] Run `npm run build`.
+
+### Review Findings
+
+- [x] [Review][Clean] 2026-05-14 code review found no unresolved `decision_needed`, `patch`, or `defer` findings. Acceptance criteria AC1–AC3 are satisfied by the diff, and verification passed with `npx vitest run` (164/164 tests) and `npx next build`.
 
 ## Dev Notes
 

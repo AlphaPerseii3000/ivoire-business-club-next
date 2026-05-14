@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12T23:04:29Z
-last_updated: 2026-05-14T14:08:00+02:00
+last_updated: 2026-05-14T14:23:50+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -56,7 +56,7 @@ development_status:
   epic-2: in-progress
   2-1-retrait-des-providers-de-paiement-tiers-et-preparation-virement: done
   2-2-affichage-et-comparaison-des-tiers: done
-  2-3-selection-du-tier-et-instructions-de-virement: review
+  2-3-selection-du-tier-et-instructions-de-virement: done
   2-4-validation-manuelle-des-abonnements-par-ladmin: backlog
   2-5-suivi-des-statuts-dabonnement-et-notifications: backlog
   epic-2-retrospective: optional
