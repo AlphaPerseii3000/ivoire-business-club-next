@@ -2,7 +2,7 @@
 Story: "2.4"
 StoryKey: "2-4-validation-manuelle-des-abonnements-par-ladmin"
 Title: "Validation Manuelle des Abonnements par l'Admin"
-Status: "review"
+Status: "in-progress"
 Priority: "P0"
 Epic: "Epic 2 — Tiers et Paiement par Virement Bancaire"
 FRs: ["FR11", "FR12", "FR13", "FR14"]
@@ -12,7 +12,7 @@ Created: "2026-05-14"
 
 # Story 2.4: Validation Manuelle des Abonnements par l'Admin
 
-Status: review
+Status: in-progress
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -116,6 +116,11 @@ so that I can control access to the club.
   - [ ] Update existing `/api/subscriptions` tests for the `PENDING` lifecycle normalization.
   - [ ] Run `npx vitest run`.
   - [ ] Run `npm run build`.
+
+### Review Findings
+
+- [ ] [Review][Patch] Implement the specified `GET /api/admin/subscriptions` route; the current build exposes only `/api/admin/subscriptions/[id]`, so the listed admin subscriptions API contract is missing [src/app/api/admin/subscriptions/route.ts:1]
+- [ ] [Review][Patch] Replace the new boolean `&&` JSX conditional with a ternary returning `null` to satisfy the Next.js 16 strict project guardrail [src/components/admin-subscription-actions.tsx:69]
 
 ## Dev Notes
 

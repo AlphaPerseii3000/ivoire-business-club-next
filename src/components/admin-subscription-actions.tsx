@@ -66,7 +66,7 @@ export function AdminSubscriptionActions({
           </Button>
         </div>
 
-        {showRejectReason && (
+        {showRejectReason ? (
           <form
             className="space-y-2"
             onSubmit={(event) => {
@@ -99,7 +99,7 @@ export function AdminSubscriptionActions({
               {loadingAction === "reject" ? "Refus en cours..." : "Confirmer le refus"}
             </Button>
           </form>
-        )}
+        ) : null}
       </div>
     );
   }
