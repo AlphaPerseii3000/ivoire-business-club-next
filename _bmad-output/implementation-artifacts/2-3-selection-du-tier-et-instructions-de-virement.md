@@ -12,7 +12,7 @@ Created: "2026-05-14"
 
 # Story 2.3: Sélection du Tier et Instructions de Virement
 
-Status: ready-for-dev
+Status: review
 
 <!-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
