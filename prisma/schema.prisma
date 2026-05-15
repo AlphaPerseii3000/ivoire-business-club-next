@@ -154,6 +154,7 @@ model Opportunity {
   description        String
   category           OpportunityCategory
   amount             Float?
+  requiresDoubleVerification Boolean       @default(false)
   verificationStatus VerificationStatus   @default(PENDING)
   verifiedAt         DateTime?
   verifiedById       String?

@@ -36,7 +36,7 @@ export default async function OpportunitiesPage() {
             </p>
           </div>
           <Link
-            href="/opportunities/new"
+            href="/dashboard/opportunities/new"
             className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             + Publier
@@ -62,7 +62,7 @@ export default async function OpportunitiesPage() {
           </p>
         </div>
         <Link
-          href="/opportunities/new"
+          href="/dashboard/opportunities/new"
           className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
           + Publier
@@ -79,7 +79,7 @@ export default async function OpportunitiesPage() {
           {opportunities.map((opp) => (
             <a
               key={opp.id}
-              href={`/opportunities/${opp.id}`}
+              href={`/dashboard/opportunities/${opp.id}`}
               className="block rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-start justify-between">

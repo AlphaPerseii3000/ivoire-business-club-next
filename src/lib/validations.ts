@@ -54,6 +54,17 @@ export const subscriptionCreateSchema = z.object({
 
 export type SubscriptionCreateInput = z.infer<typeof subscriptionCreateSchema>;
 
+export const opportunityCreateSchema = z.object({
+  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères").max(200, "Le titre ne doit pas dépasser 200 caractères"),
+  description: z.string().min(10, "La description doit contenir au moins 10 caractères").max(5000, "La description ne doit pas dépasser 5000 caractères"),
+  category: z.enum(["INVESTISSEMENT", "BUSINESS", "PARTENARIAT", "IMMOBILIER"], {
+    message: "Catégorie invalide",
+  }),
+  amount: z.number().positive("Le montant doit être positif").nullable().optional(),
+});
+
+export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
+
 export const UEMOA_COUNTRIES = [
   { code: "CI", label: "Côte d'Ivoire" },
   { code: "SN", label: "Sénégal" },

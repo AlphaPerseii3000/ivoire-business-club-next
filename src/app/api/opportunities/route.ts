@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { opportunityCreateSchema } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
@@ -10,29 +11,28 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, description, category, amount } = body as {
-      title?: string;
-      description?: string;
-      category?: string;
-      amount?: number | null;
-    };
+    const parsed = opportunityCreateSchema.safeParse(body);
 
-    if (!title || !description || !category) {
-      return NextResponse.json({ error: "Titre, description et catégorie requis" }, { status: 400 });
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json(
+        { error: firstError?.message ?? "Données invalides" },
+        { status: 400 },
+      );
     }
 
-    const validCategories = ["INVESTISSEMENT", "BUSINESS", "PARTENARIAT", "IMMOBILIER"];
-    if (!validCategories.includes(category)) {
-      return NextResponse.json({ error: "Catégorie invalide" }, { status: 400 });
-    }
+    const { title, description, category, amount } = parsed.data;
+    const numericAmount = typeof amount === "number" ? amount : null;
+    const requiresDoubleVerification = numericAmount !== null && numericAmount > 50000;
 
     const opportunity = await prisma.opportunity.create({
       data: {
         authorId: session.user.id,
         title,
         description,
-        category: category as "INVESTISSEMENT" | "BUSINESS" | "PARTENARIAT" | "IMMOBILIER",
-        amount: amount ?? null,
+        category,
+        amount: numericAmount,
+        requiresDoubleVerification,
       },
     });
 
