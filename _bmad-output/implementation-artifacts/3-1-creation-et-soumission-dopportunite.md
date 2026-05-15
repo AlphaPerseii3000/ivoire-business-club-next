@@ -2,7 +2,7 @@
 Story: "3.1"
 StoryKey: "3-1-creation-et-soumission-dopportunite"
 Title: "Création et Soumission d'Opportunité"
-Status: review
+Status: done
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR15", "FR16", "FR22"]
@@ -13,7 +13,7 @@ Created: "2026-05-15"
 
 # Story 3.1: Création et Soumission d'Opportunité
 
-Status: review
+Status: done
 
 ## Story
 
@@ -87,21 +87,42 @@ so that I can propose it to the IBC community.
 
 ## Dev Agent Record
 
-**Agent Model:** {{agent_model_name_version}}
-**Date:** {{date}}
-**Decision Log:** {{decision_log}}
+**Agent Model:** glm-5.1 (Ollama Cloud)
+**Date:** 2026-05-15
+**Decision Log:** Existing opportunity form/API extended rather than rewritten from scratch. Zod v4 + RHF v7 resolver type incompatibility resolved with `as any` cast. `z.preprocess` used for NaN→null transform on amount field (discovered during CR).
 
 ### File List
 
-{{file_list}}
+- prisma/schema.prisma (added `requiresDoubleVerification`)
+- prisma/migrations/20260515061557_add_requires_double_verification/migration.sql (new)
+- src/lib/validations.ts (added `opportunityCreateSchema`)
+- src/app/api/opportunities/route.ts (Zod validation, requiresDoubleVerification)
+- src/app/(dashboard)/opportunities/new/page.tsx (RHF + Zod + Sonner toast)
+- src/app/(dashboard)/opportunities/page.tsx (fixed route links)
+- src/components/ui/textarea.tsx (new shadcn component)
 
 ### Change Summary
 
-{{change_summary}}
+Added `requiresDoubleVerification` field to Opportunity model with Prisma migration.
+Rewrote opportunity creation form with React Hook Form + Zod validation + Sonner toast + redirect.
+Updated API route with Zod schema validation and requiresDoubleVerification logic.
+Fixed opportunity list page route links from /opportunities to /dashboard/opportunities.
+Added shadcn Textarea component.
+CR patch: added `valueAsNumber` to amount register and `z.preprocess` for NaN handling.
 
 ### Review Findings
 
-{{review_findings}}
+**CR Verdict: PASS (all ACs met, patches applied during review)**
+
+| ID | Sévérité | Finding | Status |
+|---|---|---|---|
+| P1 | Low | `as any` cast on zodResolver — Zod v4 + RHF v7 type incompatibility | Accepted (workaround) |
+| P2 | Low | `SubmitHandler<FieldValues>` cast — same root cause as P1 | Accepted (workaround) |
+| P3 | Medium | No unit tests for new API behavior (Zod validation, requiresDoubleVerification) | Deferred to Story 3.3 |
+| P4 | Low | console.error in catch block — NFR-S8 risk | Accepted (dev-only) |
+| P5 | Medium | Amount field: `valueAsNumber` needed + `z.preprocess` to handle NaN from empty inputs | **Fixed** (committed) |
+
+All ACs verified: ✅
 
 ## Notes
 
