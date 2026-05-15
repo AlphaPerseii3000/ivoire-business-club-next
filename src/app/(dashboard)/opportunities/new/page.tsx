@@ -128,7 +128,7 @@ export default function NewOpportunityPage() {
             type="number"
             step="0.01"
             placeholder="50000"
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
           />
           {errors.amount ? (
             <p className="text-sm text-destructive">{errors.amount.message}</p>

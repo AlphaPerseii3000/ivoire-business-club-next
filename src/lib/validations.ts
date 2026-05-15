@@ -60,7 +60,10 @@ export const opportunityCreateSchema = z.object({
   category: z.enum(["INVESTISSEMENT", "BUSINESS", "PARTENARIAT", "IMMOBILIER"], {
     message: "Catégorie invalide",
   }),
-  amount: z.number().positive("Le montant doit être positif").nullable().optional(),
+  amount: z.preprocess(
+    (v) => (typeof v === "number" && isNaN(v) ? null : v),
+    z.number().positive("Le montant doit être positif").nullable().optional(),
+  ),
 });
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
