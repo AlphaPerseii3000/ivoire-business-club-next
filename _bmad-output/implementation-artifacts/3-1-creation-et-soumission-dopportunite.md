@@ -2,7 +2,7 @@
 Story: "3.1"
 StoryKey: "3-1-creation-et-soumission-dopportunite"
 Title: "Création et Soumission d'Opportunité"
-Status: ready-for-dev
+Status: review
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR15", "FR16", "FR22"]
@@ -13,7 +13,7 @@ Created: "2026-05-15"
 
 # Story 3.1: Création et Soumission d'Opportunité
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
