@@ -1,0 +1,133 @@
+import "server-only";
+
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+export const DOCUMENT_ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
+export const DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+const REQUIRED_R2_ENV = [
+  "R2_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_BUCKET_NAME",
+  "R2_PUBLIC_URL",
+] as const;
+
+type R2Config = {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+  publicUrl: string;
+};
+
+let client: S3Client | null = null;
+
+export function getMissingR2Env() {
+  return REQUIRED_R2_ENV.filter((key) => !process.env[key]);
+}
+
+export function getR2Config(): R2Config {
+  const missing = getMissingR2Env();
+  if (missing.length > 0) {
+    throw new Error(`Configuration R2 manquante: ${missing.join(", ")}`);
+  }
+
+  return {
+    accountId: process.env.R2_ACCOUNT_ID as string,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY as string,
+    bucketName: process.env.R2_BUCKET_NAME as string,
+    publicUrl: (process.env.R2_PUBLIC_URL as string).replace(/\/$/, ""),
+  };
+}
+
+export function getR2Client() {
+  if (client) return client;
+  const config = getR2Config();
+  client = new S3Client({
+    region: "auto",
+    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
+  return client;
+}
+
+export function isAllowedDocumentMimeType(mimeType: string) {
+  return DOCUMENT_ALLOWED_MIME_TYPES.includes(mimeType as (typeof DOCUMENT_ALLOWED_MIME_TYPES)[number]);
+}
+
+export function getDocumentExtension(fileName: string, mimeType: string) {
+  const safeName = fileName.toLowerCase();
+  const fromName = safeName.match(/\.([a-z0-9]+)$/)?.[1];
+  if (fromName && ["pdf", "jpg", "jpeg", "png", "webp"].includes(fromName)) {
+    return fromName === "jpeg" ? "jpg" : fromName;
+  }
+
+  if (mimeType === "application/pdf") return "pdf";
+  if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  return "bin";
+}
+
+export function createDocumentR2Key(opportunityId: string, fileName: string, mimeType: string) {
+  const extension = getDocumentExtension(fileName, mimeType);
+  const randomId = crypto.randomUUID();
+  return `opportunities/${opportunityId}/documents/${randomId}.${extension}`;
+}
+
+export function createPublicDocumentUrl(r2Key: string) {
+  const config = getR2Config();
+  return `${config.publicUrl}/${r2Key}`;
+}
+
+export async function createUploadSignedUrl(params: { key: string; mimeType: string; expiresIn?: number }) {
+  const config = getR2Config();
+  const command = new PutObjectCommand({
+    Bucket: config.bucketName,
+    Key: params.key,
+    ContentType: params.mimeType,
+  });
+
+  return getSignedUrl(getR2Client(), command, { expiresIn: params.expiresIn ?? 300 });
+}
+
+export async function createDownloadSignedUrl(params: { key: string; fileName?: string; mimeType?: string; expiresIn?: number }) {
+  const config = getR2Config();
+  const command = new GetObjectCommand({
+    Bucket: config.bucketName,
+    Key: params.key,
+    ResponseContentType: params.mimeType,
+    ResponseContentDisposition: params.fileName ? `inline; filename="${encodeURIComponent(params.fileName)}"` : "inline",
+  });
+
+  return getSignedUrl(getR2Client(), command, { expiresIn: params.expiresIn ?? 180 });
+}
+
+export async function deleteR2Object(key: string) {
+  const config = getR2Config();
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+    }),
+  );
+}
+
+export function formatFileSize(size: number) {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo`;
+  }
+  return `${Math.max(1, Math.round(size / 1024))} Ko`;
+}

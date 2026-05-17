@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12T23:04:29Z
-last_updated: 2026-05-17T17:26:00+02:00
+last_updated: 2026-05-17T17:43:41+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -62,7 +62,7 @@ development_status:
   epic-2-retrospective: done
   epic-3: in-progress
   3-1-creation-et-soumission-dopportunite: done
-  3-2-upload-et-attachement-de-documents-juridiques: ready-for-dev
+  3-2-upload-et-attachement-de-documents-juridiques: review
   3-3-workflow-kanban-de-verification-admin: backlog
   3-4-visibilite-des-opportunites-tier-et-teaser-publics: backlog
   3-5-niveaux-de-confiance-ibc-et-doubleverification: backlog

@@ -3,6 +3,7 @@
 import { useForm, type FieldValues, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { opportunityCreateSchema, type OpportunityCreateInput } from "@/lib/validations";
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DocumentUploadSection, uploadPendingLegalDocuments } from "@/components/features/deals/document-upload-section";
 
 const CATEGORIES = [
   { value: "INVESTISSEMENT", label: "Investissement" },
@@ -27,6 +29,7 @@ const CATEGORIES = [
 
 export default function NewOpportunityPage() {
   const router = useRouter();
+  const [pendingDocuments, setPendingDocuments] = useState<File[]>([]);
 
   const {
     register,
@@ -66,6 +69,19 @@ export default function NewOpportunityPage() {
         const body = await res.json();
         toast.error(body.error ?? "Erreur lors de la création");
         return;
+      }
+
+      const opportunity = (await res.json()) as { id: string };
+
+      if (pendingDocuments.length > 0) {
+        try {
+          await uploadPendingLegalDocuments(opportunity.id, pendingDocuments);
+          toast.success("Documents attachés avec succès.");
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Deal créé, mais certains documents n'ont pas été attachés.");
+          router.push(`/dashboard/opportunities/${opportunity.id}`);
+          return;
+        }
       }
 
       toast.success("Deal soumis avec succès. Notre équipe le vérifie sous 48h.");
@@ -147,6 +163,8 @@ export default function NewOpportunityPage() {
             <p className="text-sm text-destructive">{errors.description.message}</p>
           ) : null}
         </div>
+
+        <DocumentUploadSection onPendingFilesChange={setPendingDocuments} />
 
         <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? "Publication..." : "Publier l'opportunité"}

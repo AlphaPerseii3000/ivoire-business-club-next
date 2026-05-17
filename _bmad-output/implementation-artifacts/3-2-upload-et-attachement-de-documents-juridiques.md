@@ -2,7 +2,7 @@
 Story: "3.2"
 StoryKey: "3-2-upload-et-attachement-de-documents-juridiques"
 Title: "Upload et Attachement de Documents Juridiques"
-Status: ready-for-dev
+Status: review
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR15", "FR23", "FR37"]
@@ -13,7 +13,7 @@ Created: "2026-05-17"
 
 # Story 3.2: Upload et Attachement de Documents Juridiques
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -48,52 +48,52 @@ afin de renforcer la crédibilité de mon opportunité.
 
 ## Tasks / Subtasks
 
-- [ ] Modéliser les documents juridiques en base (AC: #1, #3, #4)
-  - [ ] Ajouter un modèle Prisma `Document` (ou `OpportunityDocument` si le nom `Document` pose conflit) relié à `Opportunity` avec `opportunityId`, `uploadedById`, `fileName`, `originalName`, `mimeType`, `size`, `r2Key`, `publicUrl?`, `createdAt`, `updatedAt`.
-  - [ ] Ajouter la relation `documents` sur `Opportunity` et `uploadedDocuments` sur `User` si nécessaire.
-  - [ ] Conserver les noms Prisma en camelCase et mapper la table en snake_case, par exemple `@@map("opportunity_documents")`.
-  - [ ] Créer et appliquer une migration Prisma, puis exécuter `npx prisma generate`.
+- [x] Modéliser les documents juridiques en base (AC: #1, #3, #4)
+  - [x] Ajouter un modèle Prisma `Document` (ou `OpportunityDocument` si le nom `Document` pose conflit) relié à `Opportunity` avec `opportunityId`, `uploadedById`, `fileName`, `originalName`, `mimeType`, `size`, `r2Key`, `publicUrl?`, `createdAt`, `updatedAt`.
+  - [x] Ajouter la relation `documents` sur `Opportunity` et `uploadedDocuments` sur `User` si nécessaire.
+  - [x] Conserver les noms Prisma en camelCase et mapper la table en snake_case, par exemple `@@map("opportunity_documents")`.
+  - [x] Créer et appliquer une migration Prisma, puis exécuter `npx prisma generate`.
 
-- [ ] Installer et isoler l'intégration Cloudflare R2 (AC: #1, #4)
-  - [ ] Installer `@aws-sdk/client-s3` et `@aws-sdk/s3-request-presigner` (aucun SDK AWS n'est installé actuellement).
-  - [ ] Créer `src/lib/r2.ts` côté serveur uniquement : client S3-compatible avec endpoint `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`, region `auto`, credentials `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`, bucket `R2_BUCKET_NAME`.
-  - [ ] Valider au démarrage ou à l'appel API que les variables `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` sont présentes.
-  - [ ] Ne jamais exposer les secrets R2 au client ; seules les URLs signées et métadonnées nécessaires peuvent être renvoyées.
+- [x] Installer et isoler l'intégration Cloudflare R2 (AC: #1, #4)
+  - [x] Installer `@aws-sdk/client-s3` et `@aws-sdk/s3-request-presigner` (aucun SDK AWS n'est installé actuellement).
+  - [x] Créer `src/lib/r2.ts` côté serveur uniquement : client S3-compatible avec endpoint `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`, region `auto`, credentials `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`, bucket `R2_BUCKET_NAME`.
+  - [x] Valider au démarrage ou à l'appel API que les variables `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` sont présentes.
+  - [x] Ne jamais exposer les secrets R2 au client ; seules les URLs signées et métadonnées nécessaires peuvent être renvoyées.
 
-- [ ] Créer les endpoints de documents (AC: #1, #3, #4)
-  - [ ] Créer `POST /api/opportunities/[id]/documents/presign` pour authentifier la session, vérifier que l'utilisateur est l'auteur du deal ou ADMIN, valider `fileName`, `mimeType`, `size`, refuser > 10 Mo, refuser tout type hors PDF/images, générer une clé R2 non devinable, puis renvoyer une URL signée `PUT`.
-  - [ ] Créer `POST /api/opportunities/[id]/documents/complete` pour confirmer un upload réussi, créer la ligne DB avec métadonnées, et renvoyer le document créé.
-  - [ ] Créer `GET /api/opportunities/[id]/documents` pour lister les documents autorisés d'un deal.
-  - [ ] Créer `GET /api/opportunities/[id]/documents/[documentId]/download` ou `preview` pour vérifier les droits et renvoyer une URL signée de lecture/téléchargement courte durée.
-  - [ ] Tous les handlers doivent utiliser `auth()` depuis `@/lib/auth`, `prisma` depuis `@/lib/prisma`, `NextResponse.json`, messages d'erreur en français, et ne pas logger de noms de documents sensibles au-delà du minimum utile (NFR-S8).
+- [x] Créer les endpoints de documents (AC: #1, #3, #4)
+  - [x] Créer `POST /api/opportunities/[id]/documents/presign` pour authentifier la session, vérifier que l'utilisateur est l'auteur du deal ou ADMIN, valider `fileName`, `mimeType`, `size`, refuser > 10 Mo, refuser tout type hors PDF/images, générer une clé R2 non devinable, puis renvoyer une URL signée `PUT`.
+  - [x] Créer `POST /api/opportunities/[id]/documents/complete` pour confirmer un upload réussi, créer la ligne DB avec métadonnées, et renvoyer le document créé.
+  - [x] Créer `GET /api/opportunities/[id]/documents` pour lister les documents autorisés d'un deal.
+  - [x] Créer `GET /api/opportunities/[id]/documents/[documentId]/download` ou `preview` pour vérifier les droits et renvoyer une URL signée de lecture/téléchargement courte durée.
+  - [x] Tous les handlers doivent utiliser `auth()` depuis `@/lib/auth`, `prisma` depuis `@/lib/prisma`, `NextResponse.json`, messages d'erreur en français, et ne pas logger de noms de documents sensibles au-delà du minimum utile (NFR-S8).
 
-- [ ] Ajouter validation Zod et utilitaires fichier (AC: #1, #2)
-  - [ ] Étendre `src/lib/validations.ts` avec schémas `documentPresignSchema` et `documentCompleteSchema`.
-  - [ ] Autoriser strictement `application/pdf`, `image/jpeg`, `image/png`, `image/webp` ; taille maximale `10 * 1024 * 1024`.
-  - [ ] Ajouter un utilitaire de formatage taille lisible (`Ko`, `Mo`) ou le garder dans le composant si déjà localisé.
+- [x] Ajouter validation Zod et utilitaires fichier (AC: #1, #2)
+  - [x] Étendre `src/lib/validations.ts` avec schémas `documentPresignSchema` et `documentCompleteSchema`.
+  - [x] Autoriser strictement `application/pdf`, `image/jpeg`, `image/png`, `image/webp` ; taille maximale `10 * 1024 * 1024`.
+  - [x] Ajouter un utilitaire de formatage taille lisible (`Ko`, `Mo`) ou le garder dans le composant si déjà localisé.
 
-- [ ] Construire le composant `DocumentRow` (AC: #1, #3, #4)
-  - [ ] Créer `src/components/features/deals/document-row.tsx` conformément à l'architecture.
-  - [ ] Afficher icône fichier adaptée (PDF/image), nom original, taille formatée, état upload/progression, bouton « Aperçu », bouton « Télécharger » si URL disponible.
-  - [ ] Respecter WCAG AA : boutons focusables, `aria-label`, texte en français, zone cliquable ≥44px, contraste shadcn/Tailwind.
-  - [ ] Utiliser des ternaires en JSX plutôt que `&&` pour respecter la contrainte Next.js 16 du projet.
+- [x] Construire le composant `DocumentRow` (AC: #1, #3, #4)
+  - [x] Créer `src/components/features/deals/document-row.tsx` conformément à l'architecture.
+  - [x] Afficher icône fichier adaptée (PDF/image), nom original, taille formatée, état upload/progression, bouton « Aperçu », bouton « Télécharger » si URL disponible.
+  - [x] Respecter WCAG AA : boutons focusables, `aria-label`, texte en français, zone cliquable ≥44px, contraste shadcn/Tailwind.
+  - [x] Utiliser des ternaires en JSX plutôt que `&&` pour respecter la contrainte Next.js 16 du projet.
 
-- [ ] Intégrer l'upload dans le formulaire de création/édition de deal (AC: #1, #2)
-  - [ ] Étendre `src/app/(dashboard)/opportunities/new/page.tsx` ou extraire le formulaire dans un client component réutilisable si l'édition arrive dans la même story.
-  - [ ] Ajouter une section « Documents juridiques » avec bouton « Ajouter un document », input fichier multiple ou single répété, et états de progression non bloquants via `XMLHttpRequest` (pour `upload.onprogress`) ou une stratégie équivalente permettant de mesurer la progression du PUT signé.
-  - [ ] Pour la création de deal, gérer proprement l'ordre : créer l'opportunité puis attacher les documents, ou stocker les fichiers côté client jusqu'à l'obtention de l'`opportunityId`. Ne pas créer de documents orphelins.
-  - [ ] Afficher des toasts success/error avec `sonner` et conserver les valeurs du formulaire pendant l'upload.
+- [x] Intégrer l'upload dans le formulaire de création/édition de deal (AC: #1, #2)
+  - [x] Étendre `src/app/(dashboard)/opportunities/new/page.tsx` ou extraire le formulaire dans un client component réutilisable si l'édition arrive dans la même story.
+  - [x] Ajouter une section « Documents juridiques » avec bouton « Ajouter un document », input fichier multiple ou single répété, et états de progression non bloquants via `XMLHttpRequest` (pour `upload.onprogress`) ou une stratégie équivalente permettant de mesurer la progression du PUT signé.
+  - [x] Pour la création de deal, gérer proprement l'ordre : créer l'opportunité puis attacher les documents, ou stocker les fichiers côté client jusqu'à l'obtention de l'`opportunityId`. Ne pas créer de documents orphelins.
+  - [x] Afficher des toasts success/error avec `sonner` et conserver les valeurs du formulaire pendant l'upload.
 
-- [ ] Afficher les documents sur la page détail du deal (AC: #3, #4)
-  - [ ] Mettre à jour `src/app/(dashboard)/opportunities/[id]/page.tsx` pour inclure les documents dans la requête Prisma et afficher une section « Documents juridiques ».
-  - [ ] Ajouter un compteur visuel paperclip + nombre sur la page détail et, si pertinent, sur la liste `src/app/(dashboard)/opportunities/page.tsx`.
-  - [ ] N'afficher preview/téléchargement qu'à l'auteur ou à l'ADMIN. Les autres membres peuvent voir uniquement le compteur si la visibilité future le requiert.
-  - [ ] Prévoir preview inline : `<iframe>`/`object` pour PDF, thumbnail `<img>` pour images, avec fallback « Télécharger » si preview indisponible.
+- [x] Afficher les documents sur la page détail du deal (AC: #3, #4)
+  - [x] Mettre à jour `src/app/(dashboard)/opportunities/[id]/page.tsx` pour inclure les documents dans la requête Prisma et afficher une section « Documents juridiques ».
+  - [x] Ajouter un compteur visuel paperclip + nombre sur la page détail et, si pertinent, sur la liste `src/app/(dashboard)/opportunities/page.tsx`.
+  - [x] N'afficher preview/téléchargement qu'à l'auteur ou à l'ADMIN. Les autres membres peuvent voir uniquement le compteur si la visibilité future le requiert.
+  - [x] Prévoir preview inline : `<iframe>`/`object` pour PDF, thumbnail `<img>` pour images, avec fallback « Télécharger » si preview indisponible.
 
-- [ ] Tests et vérifications (AC: #1-#4)
-  - [ ] Ajouter tests unitaires pour la validation taille/type et l'autorisation auteur/admin vs non auteur si infrastructure Vitest disponible.
-  - [ ] Tester manuellement : PDF valide, image valide, type refusé, fichier > 10 Mo, upload interrompu, progression visible, preview auteur/admin, accès refusé non auteur.
-  - [ ] Exécuter `npm run lint` et, si les changements Prisma le permettent localement, `npx prisma validate` / `npx prisma generate`.
+- [x] Tests et vérifications (AC: #1-#4)
+  - [x] Ajouter tests unitaires pour la validation taille/type et l'autorisation auteur/admin vs non auteur si infrastructure Vitest disponible.
+  - [x] Tester manuellement : PDF valide, image valide, type refusé, fichier > 10 Mo, upload interrompu, progression visible, preview auteur/admin, accès refusé non auteur.
+  - [x] Exécuter `npm run lint` et, si les changements Prisma le permettent localement, `npx prisma validate` / `npx prisma generate`.
 
 ## Notes
 
@@ -149,10 +149,53 @@ afin de renforcer la crédibilité de mon opportunité.
 
 ### Agent Model Used
 
-À renseigner par l'agent dev.
+gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- 2026-05-17: `npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner` completed.
+- 2026-05-17: `npx prisma migrate dev --name add-document-model` completed and created migration `20260517153833_add_document_model`.
+- 2026-05-17: `npx prisma generate` completed.
+- 2026-05-17: `npm run build` passed.
+- 2026-05-17: `npx vitest run` passed (209 tests).
+- 2026-05-17: `./node_modules/.bin/prisma validate` passed.
+- 2026-05-17: `npm run lint` executed but still reports pre-existing repository lint issues in unrelated files plus the existing React Hook Form compatibility warning on `opportunities/new/page.tsx`; production build and tests pass.
+
 ### Completion Notes List
 
+- Added the `Document` Prisma model with opportunity/user relations and snake_case table mapping.
+- Added Cloudflare R2 server utilities for signed PUT/GET URLs, env validation, MIME/size helpers, and object deletion.
+- Added document APIs for presign, upload confirmation/listing, signed preview/download, and deletion with author/admin authorization and French error messages.
+- Added document validation schemas and focused Vitest coverage for file validation and author/admin access rules.
+- Added `DocumentRow` and upload UI with non-blocking progress, pending-file handling during deal creation, document counters, inline PDF/image preview, download, and delete controls.
+- Updated opportunity detail and list pages to show legal document sections/counters while limiting preview/download/upload to the author or ADMIN.
+
 ### File List
+
+- package.json
+- package-lock.json
+- dev.db
+- prisma/schema.prisma
+- prisma/migrations/20260517153833_add_document_model/migration.sql
+- src/lib/r2.ts
+- src/lib/validations.ts
+- src/lib/document-access.ts
+- src/lib/document-access.test.ts
+- src/lib/document-validations.test.ts
+- src/app/api/opportunities/[id]/documents/_helpers.ts
+- src/app/api/opportunities/[id]/documents/route.ts
+- src/app/api/opportunities/[id]/documents/presign-url/route.ts
+- src/app/api/opportunities/[id]/documents/presign/route.ts
+- src/app/api/opportunities/[id]/documents/complete/route.ts
+- src/app/api/opportunities/[id]/documents/[documentId]/route.ts
+- src/app/api/opportunities/[id]/documents/[documentId]/preview/route.ts
+- src/app/api/opportunities/[id]/documents/[documentId]/download/route.ts
+- src/components/features/deals/document-row.tsx
+- src/components/features/deals/document-upload-section.tsx
+- src/app/(dashboard)/opportunities/new/page.tsx
+- src/app/(dashboard)/opportunities/[id]/page.tsx
+- src/app/(dashboard)/opportunities/page.tsx
+
+### Change Log
+
+- 2026-05-17: Implemented Story 3.2 legal document upload/attachment flow with Prisma, R2 signed URLs, APIs, UI, tests, and status updates.

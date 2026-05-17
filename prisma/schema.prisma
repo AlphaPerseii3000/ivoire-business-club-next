@@ -75,6 +75,7 @@ model User {
   payments           Payment[]
   opportunities      Opportunity[]  @relation("Author")
   verifiedBy         Opportunity[]  @relation("Verifier")
+  uploadedDocuments  Document[]
   verificationTokens VerificationToken[]
 
   @@map("users")
@@ -163,8 +164,30 @@ model Opportunity {
 
   author     User  @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
   verifiedBy User? @relation("Verifier", fields: [verifiedById], references: [id])
+  documents  Document[]
 
   @@map("opportunities")
+}
+
+model Document {
+  id            String      @id @default(cuid())
+  opportunityId String
+  uploadedById  String
+  fileName      String
+  originalName  String
+  mimeType      String
+  size          Int
+  r2Key         String      @unique
+  publicUrl     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  uploadedBy  User        @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+  @@index([uploadedById])
+  @@map("opportunity_documents")
 }
 
 model Payment {

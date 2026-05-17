@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
+import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -34,6 +35,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
     include: {
       author: { select: { name: true, id: true, location: true } },
       verifiedBy: { select: { name: true } },
+      documents: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -53,6 +55,19 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   };
 
   const status = statusLabels[opportunity.verificationStatus] ?? { text: opportunity.verificationStatus, color: "" };
+  const canManageDocuments = session.user.id === opportunity.author.id || (session.user as unknown as Record<string, unknown>).role === "ADMIN";
+  const initialDocuments = (opportunity.documents ?? []).map((document) => ({
+    id: document.id,
+    opportunityId: document.opportunityId,
+    uploadedById: document.uploadedById,
+    fileName: document.fileName,
+    originalName: document.originalName,
+    mimeType: document.mimeType,
+    size: document.size,
+    publicUrl: document.publicUrl,
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString(),
+  }));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -84,6 +99,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           {opportunity.verifiedBy ? (
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
           ) : null}
+        </div>
+
+        <div className="mt-6">
+          <DocumentUploadSection
+            opportunityId={opportunity.id}
+            initialDocuments={initialDocuments}
+            canUpload={canManageDocuments}
+            canPreview={canManageDocuments}
+          />
         </div>
 
         {session.user.id === opportunity.author.id ? (

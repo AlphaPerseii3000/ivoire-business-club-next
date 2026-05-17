@@ -68,6 +68,26 @@ export const opportunityCreateSchema = z.object({
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const DOCUMENT_ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
+export const DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const documentPresignSchema = z.object({
+  fileName: z.string().min(1, "Le nom du fichier est requis").max(255, "Le nom du fichier est trop long"),
+  mimeType: z.enum(DOCUMENT_ALLOWED_MIME_TYPES, {
+    message: "Type de fichier non supporté. Utilisez PDF, JPEG, PNG ou WebP.",
+  }),
+  size: z.number().int().positive("La taille du fichier est invalide").max(DOCUMENT_MAX_SIZE_BYTES, "Le fichier dépasse la taille maximale de 10 Mo."),
+});
+
+export const documentCompleteSchema = documentPresignSchema.extend({
+  r2Key: z.string().min(1, "La clé du document est requise"),
+  fileName: z.string().min(1, "Le nom technique du fichier est requis").max(255),
+  originalName: z.string().min(1, "Le nom du fichier est requis").max(255, "Le nom du fichier est trop long"),
+});
+
+export type DocumentPresignInput = z.infer<typeof documentPresignSchema>;
+export type DocumentCompleteInput = z.infer<typeof documentCompleteSchema>;
+
 export const UEMOA_COUNTRIES = [
   { code: "CI", label: "Côte d'Ivoire" },
   { code: "SN", label: "Sénégal" },

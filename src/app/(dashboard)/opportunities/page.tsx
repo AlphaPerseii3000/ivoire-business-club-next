@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { Paperclip } from "lucide-react";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 
@@ -49,7 +50,7 @@ export default async function OpportunitiesPage() {
 
   const opportunities = await prisma.opportunity.findMany({
     orderBy: { createdAt: "desc" },
-    include: { author: { select: { name: true, id: true } } },
+    include: { author: { select: { name: true, id: true } }, _count: { select: { documents: true } } },
   });
 
   return (
@@ -97,6 +98,10 @@ export default async function OpportunitiesPage() {
                 <span className="rounded-md bg-muted px-2 py-1">{categoryLabels[opp.category] ?? opp.category}</span>
                 <span>{statusLabels[opp.verificationStatus] ?? opp.verificationStatus}</span>
                 <span>Par {opp.author.name}</span>
+                <span className="inline-flex items-center gap-1">
+                  <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+                  {opp._count?.documents ?? 0}
+                </span>
                 <span>{new Date(opp.createdAt).toLocaleDateString("fr-FR")}</span>
               </div>
             </a>
