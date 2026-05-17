@@ -19,6 +19,7 @@ type PendingDocument = {
 type DocumentUploadSectionProps = {
   opportunityId?: string;
   initialDocuments?: LegalDocument[];
+  documentCount?: number;
   canUpload?: boolean;
   canPreview?: boolean;
   onPendingFilesChange?: (files: File[]) => void;
@@ -109,6 +110,7 @@ export async function uploadPendingLegalDocuments(opportunityId: string, files: 
 export function DocumentUploadSection({
   opportunityId,
   initialDocuments = [],
+  documentCount,
   canUpload = true,
   canPreview = true,
   onPendingFilesChange,
@@ -200,7 +202,28 @@ export function DocumentUploadSection({
     toast.success("Document supprimé.");
   };
 
-  const documentCount = documents.length + pending.length;
+  // Use server-provided count for non-authors (who don't see full metadata), local count otherwise
+  const displayCount = documentCount ?? documents.length + pending.length;
+
+  // Non-author non-admin viewers see only a counter, no upload or document list
+  if (!canUpload && !canPreview) {
+    return (
+      <section className="rounded-xl border bg-card p-6">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <Paperclip className="h-5 w-5" aria-hidden="true" />
+          Documents juridiques
+          {displayCount > 0 ? (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm text-primary">{displayCount}</span>
+          ) : null}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {displayCount > 0
+            ? `${displayCount} document${displayCount > 1 ? "s" : ""} juridique${displayCount > 1 ? "s" : ""} joint${displayCount > 1 ? "s" : ""} à cette opportunité.`
+            : "Aucun document juridique joint pour le moment."}
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-xl border bg-card p-6">
@@ -209,7 +232,7 @@ export function DocumentUploadSection({
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Paperclip className="h-5 w-5" aria-hidden="true" />
             Documents juridiques
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm text-primary">{documentCount}</span>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm text-primary">{displayCount}</span>
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">PDF, JPEG, PNG ou WebP · 10 Mo maximum par fichier</p>
         </div>
@@ -253,7 +276,7 @@ export function DocumentUploadSection({
             onDelete={canUpload ? deleteDocument : undefined}
           />
         ))}
-        {documentCount === 0 ? (
+        {displayCount === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             Aucun document juridique attaché pour le moment.
           </div>

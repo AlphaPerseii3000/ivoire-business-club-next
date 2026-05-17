@@ -53,6 +53,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const missing = getMissingR2Env();
+
+    // Validate that the r2Key matches the server-generated pattern: opportunities/{opportunityId}/documents/{uuid}.{ext}
+    const r2KeyPattern = /^opportunities\/[^/]+\/documents\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[a-z0-9]+$/;
+    if (!r2KeyPattern.test(parsed.data.r2Key)) {
+      return NextResponse.json({ error: "Clé de stockage invalide." }, { status: 400 });
+    }
+    // Ensure the r2Key belongs to this specific opportunity
+    if (!parsed.data.r2Key.startsWith(`opportunities/${id}/documents/`)) {
+      return NextResponse.json({ error: "Clé de stockage invalide." }, { status: 400 });
+    }
+
     const publicUrl = missing.length > 0 ? null : createPublicDocumentUrl(parsed.data.r2Key);
 
     const document = await prisma.document.create({
