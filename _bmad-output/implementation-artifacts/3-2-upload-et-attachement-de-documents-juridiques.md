@@ -2,7 +2,7 @@
 Story: "3.2"
 StoryKey: "3-2-upload-et-attachement-de-documents-juridiques"
 Title: "Upload et Attachement de Documents Juridiques"
-Status: in-progress
+Status: done
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR15", "FR23", "FR37"]
@@ -13,7 +13,7 @@ Created: "2026-05-17"
 
 # Story 3.2: Upload et Attachement de Documents Juridiques
 
-Status: in-progress
+Status: done
 
 ## Story
 
