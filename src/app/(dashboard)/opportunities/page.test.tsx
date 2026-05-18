@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,12 +6,14 @@ import OpportunitiesPage from "./page";
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockGetUserPremiumAccess = vi.hoisted(() => vi.fn());
 const mockOpportunityFindMany = vi.hoisted(() => vi.fn());
+const mockUserFindUnique = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({ getUserPremiumAccess: mockGetUserPremiumAccess }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     opportunity: { findMany: mockOpportunityFindMany },
+    user: { findUnique: mockUserFindUnique },
   },
 }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn((path: string) => { throw new Error(`redirect:${path}`); }) }));
@@ -21,6 +22,7 @@ describe("OpportunitiesPage premium access gating", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "member-1" } });
+    mockUserFindUnique.mockResolvedValue({ role: "MEMBER" });
   });
 
   it.each(["TRIAL", "PENDING", "CANCELLED", "PAST_DUE", "NO_SUBSCRIPTION"])(

@@ -22,6 +22,7 @@ export default async function OpportunitiesPage() {
 
   const statusLabels: Record<string, string> = {
     PENDING: "⏳ En attente",
+    EN_COURS: "🔎 En cours",
     VERIFIED: "✅ Vérifié",
     REJECTED: "❌ Refusé",
   };
@@ -48,7 +49,18 @@ export default async function OpportunitiesPage() {
     );
   }
 
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
   const opportunities = await prisma.opportunity.findMany({
+    where:
+      currentUser?.role === "ADMIN"
+        ? undefined
+        : {
+            OR: [{ verificationStatus: "VERIFIED" }, { authorId: session.user.id }],
+          },
     orderBy: { createdAt: "desc" },
     include: { author: { select: { name: true, id: true } }, _count: { select: { documents: true } } },
   });

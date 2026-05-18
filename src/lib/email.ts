@@ -11,6 +11,17 @@ type SubscriptionRejectedEmailInput = SubscriptionEmailBase & {
   reason: string;
 };
 
+type OpportunityEmailBase = {
+  to: string;
+  name?: string | null;
+  opportunityId: string;
+  title: string;
+};
+
+type OpportunityRejectedEmailInput = OpportunityEmailBase & {
+  note: string;
+};
+
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -37,6 +48,11 @@ function dashboardLine() {
   return appUrl ? `\n\nVotre espace membre : ${appUrl}/dashboard` : "";
 }
 
+function opportunityLine(opportunityId: string) {
+  const appUrl = process.env.APP_URL;
+  return appUrl ? `\n\nLien du deal : ${appUrl}/opportunities/${opportunityId}` : dashboardLine();
+}
+
 export async function sendSubscriptionActivatedEmail({ to, name, tier }: SubscriptionEmailBase) {
   const label = tierLabel(tier);
   await getResendClient().emails.send({
@@ -54,5 +70,23 @@ export async function sendSubscriptionRejectedEmail({ to, name, tier, reason }: 
     to,
     subject: "Votre demande d'abonnement IBC est refusée",
     text: `${greeting(name)}\n\nVotre demande d'abonnement IBC ${label} n'a pas pu être validée.\n\nJustification de l'administration :\n${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, contactez le support IBC.${dashboardLine()}`,
+  });
+}
+
+export async function sendOpportunityVerifiedEmail({ to, name, opportunityId, title }: OpportunityEmailBase) {
+  await getResendClient().emails.send({
+    from: getSender(),
+    to,
+    subject: "Votre deal IBC est vérifié",
+    text: `${greeting(name)}\n\nVotre deal « ${title} » est maintenant vérifié. Il peut apparaître dans les feeds membres selon les règles d'accès IBC.${opportunityLine(opportunityId)}`,
+  });
+}
+
+export async function sendOpportunityRejectedEmail({ to, name, opportunityId, title, note }: OpportunityRejectedEmailInput) {
+  await getResendClient().emails.send({
+    from: getSender(),
+    to,
+    subject: "Votre deal IBC nécessite des corrections",
+    text: `${greeting(name)}\n\nVotre deal « ${title} » n'a pas pu être validé en l'état.\n\nNote privée de l'administration :\n${note}\n\nVous pouvez corriger votre dossier depuis votre espace membre.${opportunityLine(opportunityId)}`,
   });
 }

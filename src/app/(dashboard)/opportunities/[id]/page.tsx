@@ -1,27 +1,39 @@
 import Link from "next/link";
 
+import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect, notFound } from "next/navigation";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
-import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
-import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { notFound, redirect } from "next/navigation";
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
   const { id } = await params;
 
-  const access = await getUserPremiumAccess(session.user.id);
-
-  if (!access.hasAccess) {
-    const exists = await prisma.opportunity.findUnique({
+  const [access, currentUser, opportunity] = await Promise.all([
+    getUserPremiumAccess(session.user.id),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } }),
+    prisma.opportunity.findUnique({
       where: { id },
-      select: { id: true },
-    });
+      include: {
+        author: { select: { name: true, id: true, location: true } },
+        verifiedBy: { select: { name: true } },
+        documents: { orderBy: { createdAt: "desc" } },
+      },
+    }),
+  ]);
 
-    if (!exists) notFound();
+  if (!opportunity) notFound();
 
+  const isAuthor = session.user.id === opportunity.author.id;
+  const isAdmin = currentUser?.role === "ADMIN";
+  const isPublishedToMember = opportunity.verificationStatus === "VERIFIED";
+
+  if (!isAuthor && !isAdmin && !isPublishedToMember) notFound();
+
+  if (!access.hasAccess && !isAuthor && !isAdmin) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <Link href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
@@ -29,17 +41,6 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       </div>
     );
   }
-
-  const opportunity = await prisma.opportunity.findUnique({
-    where: { id },
-    include: {
-      author: { select: { name: true, id: true, location: true } },
-      verifiedBy: { select: { name: true } },
-      documents: { orderBy: { createdAt: "desc" } },
-    },
-  });
-
-  if (!opportunity) notFound();
 
   const categoryLabels: Record<string, string> = {
     INVESTISSEMENT: "Investissement",
@@ -50,13 +51,14 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   const statusLabels: Record<string, { text: string; color: string }> = {
     PENDING: { text: "En attente de vérification", color: "text-yellow-600" },
+    EN_COURS: { text: "En cours de vérification", color: "text-blue-600" },
     VERIFIED: { text: "Vérifié ✓", color: "text-accent" },
     REJECTED: { text: "Refusé", color: "text-destructive" },
   };
 
   const status = statusLabels[opportunity.verificationStatus] ?? { text: opportunity.verificationStatus, color: "" };
-  const canManageDocuments = session.user.id === opportunity.author.id || (session.user as unknown as Record<string, unknown>).role === "ADMIN";
-  // Only expose full document metadata to author/admin; other members see just the count
+  const canManageDocuments = isAuthor || isAdmin;
+  const canSeeRejectionNote = (isAuthor || isAdmin) && opportunity.rejectionNote;
   const initialDocuments = canManageDocuments
     ? (opportunity.documents ?? []).map((document) => ({
         id: document.id,
@@ -92,6 +94,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           ) : null}
         </div>
 
+        {canSeeRejectionNote ? (
+          <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            <h2 className="font-semibold">Note privée de refus</h2>
+            <p className="mt-2 whitespace-pre-wrap">{opportunity.rejectionNote}</p>
+          </div>
+        ) : null}
+
         <div className="mt-6 rounded-xl border bg-card p-6">
           <p className="whitespace-pre-wrap">{opportunity.description}</p>
         </div>
@@ -115,7 +124,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           />
         </div>
 
-        {session.user.id === opportunity.author.id ? (
+        {isAuthor ? (
           <div className="mt-6">
             <form action={`/api/opportunities/${opportunity.id}/delete`} method="POST">
               <button type="submit" className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">

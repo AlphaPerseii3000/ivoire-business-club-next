@@ -68,6 +68,32 @@ export const opportunityCreateSchema = z.object({
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const verificationStatusSchema = z.enum(["PENDING", "EN_COURS", "VERIFIED", "REJECTED"]);
+
+export const opportunityAdminActionSchema = z
+  .discriminatedUnion("action", [
+    z.object({
+      action: z.literal("move"),
+      status: verificationStatusSchema,
+      note: z.string().max(2000, "La note ne doit pas dépasser 2000 caractères").optional(),
+    }),
+    z.object({
+      action: z.literal("verify"),
+      note: z.string().max(2000, "La note ne doit pas dépasser 2000 caractères").optional(),
+    }),
+    z.object({
+      action: z.literal("reject"),
+      note: z.string().trim().min(1, "La note est obligatoire pour refuser un deal.").max(2000, "La note ne doit pas dépasser 2000 caractères"),
+    }),
+    z.object({
+      action: z.literal("start_review"),
+      note: z.string().max(2000, "La note ne doit pas dépasser 2000 caractères").optional(),
+    }),
+  ]);
+
+export type OpportunityAdminActionInput = z.infer<typeof opportunityAdminActionSchema>;
+export type VerificationStatusInput = z.infer<typeof verificationStatusSchema>;
+
 export const DOCUMENT_ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 export const DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 

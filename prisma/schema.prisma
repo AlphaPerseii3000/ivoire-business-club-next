@@ -39,6 +39,7 @@ enum OpportunityCategory {
 
 enum VerificationStatus {
   PENDING
+  EN_COURS
   VERIFIED
   REJECTED
 }
@@ -159,6 +160,9 @@ model Opportunity {
   verificationStatus VerificationStatus   @default(PENDING)
   verifiedAt         DateTime?
   verifiedById       String?
+  rejectionNote      String?
+  reviewNotes        String?
+  adminNote          String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
