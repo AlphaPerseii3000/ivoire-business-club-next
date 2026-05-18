@@ -53,7 +53,14 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    const parsed = opportunityAdminActionSchema.safeParse(await req.json());
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Données invalides" }, { status: 400 });
+    }
+
+    const parsed = opportunityAdminActionSchema.safeParse(body);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0];
       return NextResponse.json({ error: firstError?.message ?? "Données invalides" }, { status: 400 });
@@ -162,7 +169,12 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
 export async function POST(req: Request, context: RouteContext) {
   const formData = await req.formData();
-  const action = formData.get("action") === "approve" ? "verify" : formData.get("action") === "start_review" ? "start_review" : "reject";
+  const rawAction = formData.get("action");
+  const action = rawAction === "approve" ? "verify" : rawAction === "start_review" ? "start_review" : rawAction === "reject" ? "reject" : null;
+  if (!action) {
+    return NextResponse.json({ error: "Action invalide" }, { status: 400 });
+  }
+
   const note = formData.get("note");
   const body = action === "reject" ? { action, note: typeof note === "string" ? note : "" } : { action, note: typeof note === "string" ? note : undefined };
 
