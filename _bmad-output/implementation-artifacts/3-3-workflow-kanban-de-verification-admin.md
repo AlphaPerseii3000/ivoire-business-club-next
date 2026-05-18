@@ -2,7 +2,7 @@
 Story: "3.3"
 StoryKey: "3-3-workflow-kanban-de-verification-admin"
 Title: "Workflow Kanban de Vérification Admin"
-Status: review
+Status: done
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR17", "FR18", "FR19", "FR35", "FR37", "FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-18"
 
 # Story 3.3: Workflow Kanban de Vérification Admin
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -119,6 +119,12 @@ afin de vérifier ou rejeter les deals efficacement.
   - [x] Ajouter tests de visibilité membre : feed membre ne contient que `VERIFIED`; auteur voit ses propres deals refusés avec note privée; membre non auteur ne voit pas la note.
   - [x] Ajouter tests UI Kanban si l'infrastructure React Testing Library suffit : 4 colonnes desktop, chips mobile, ouverture panneau, validation du champ note.
   - [x] Exécuter `npm run build`, `npx vitest run`, `./node_modules/.bin/prisma validate`, et si possible `npm run lint` (noter les lint préexistants sans les mélanger avec cette story).
+
+### Review Findings
+
+- [x] [Review][Patch] JSON invalide sur `PATCH /api/admin/opportunities/[id]/verify` retournait une erreur interne au lieu d’une erreur 400 contrôlée [src/app/api/admin/opportunities/[id]/verify/route.ts:56] — fixed in commit 82d3949.
+- [x] [Review][Patch] Le `POST` de compatibilité interprétait toute action inconnue comme un rejet [src/app/api/admin/opportunities/[id]/verify/route.ts:164] — fixed in commit 82d3949.
+- [x] [Review][Patch] `dev.db` contenait une modification binaire de développement dans le commit de fonctionnalité [dev.db] — reverted in commit 82d3949.
 
 ## Dev Notes
 
@@ -263,3 +269,4 @@ gpt-5.5 (openai-codex)
 ### Change Log
 
 - 2026-05-18: Implemented Story 3.3 admin kanban verification workflow and marked ready for review.
+- 2026-05-18: CR PASS — patched review findings, verified build/tests, and marked story done.
