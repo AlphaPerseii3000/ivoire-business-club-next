@@ -84,6 +84,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const status = statusLabels[opportunity.verificationStatus] ?? { text: opportunity.verificationStatus, color: "" };
   const canManageDocuments = isAuthor || isAdmin;
   const canSeeRejectionNote = (isAuthor || isAdmin) && opportunity.rejectionNote;
+  const shouldShowWhatsApp = !isAuthor && !isAdmin;
   const initialDocuments = canManageDocuments
     ? (opportunity.documents ?? []).map((document) => ({
         id: document.id,
@@ -137,7 +138,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           {opportunity.verifiedBy ? (
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
           ) : null}
-          {!isAuthor && !isAdmin ? (
+          {shouldShowWhatsApp ? (
             <div className="mt-4">
               <WhatsAppCTA
                 phoneNumber={opportunity.author.phone}
