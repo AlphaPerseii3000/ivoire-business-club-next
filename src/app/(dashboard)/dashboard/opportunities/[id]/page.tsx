@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { LockKeyhole } from "lucide-react";
 
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
+import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { notFound, redirect } from "next/navigation";
@@ -14,11 +17,11 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   const [access, currentUser, opportunity] = await Promise.all([
     getUserPremiumAccess(session.user.id),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, tier: true } }),
     prisma.opportunity.findUnique({
       where: { id },
       include: {
-        author: { select: { name: true, id: true, location: true } },
+        author: { select: { name: true, id: true, location: true, phone: true } },
         verifiedBy: { select: { name: true } },
         documents: { orderBy: { createdAt: "desc" } },
       },
@@ -36,8 +39,30 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   if (!access.hasAccess && !isAuthor && !isAdmin) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <Link href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
+        <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
         <PremiumAccessBlockedPanel />
+      </div>
+    );
+  }
+
+  const hasTierAccess = canUserAccessOpportunity(opportunity.requiredTier, currentUser?.tier);
+  if (!hasTierAccess && !isAuthor && !isAdmin) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
+        <div className="mt-8 rounded-2xl border bg-card p-8 text-center shadow-sm">
+          <LockKeyhole className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
+          <h1 className="mt-4 text-xl font-semibold">Cette opportunité nécessite un tier supérieur</h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            Votre tier actuel ne permet pas d&apos;accéder aux détails de ce deal. Passez à un tier supérieur pour débloquer plus d&apos;opportunités vérifiées.
+          </p>
+          <Link
+            href="/pricing"
+            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Voir les offres
+          </Link>
+        </div>
       </div>
     );
   }
@@ -77,15 +102,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <Link href="/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
+      <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
 
       <div className="mt-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <h1 className="text-2xl font-bold">{opportunity.title}</h1>
           <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
         </div>
 
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-wrap gap-3">
           <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
           {opportunity.amount ? (
             <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
@@ -111,6 +136,14 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <p className="mt-1 text-xs text-muted-foreground">Publié le {new Date(opportunity.createdAt).toLocaleDateString("fr-FR")}</p>
           {opportunity.verifiedBy ? (
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
+          ) : null}
+          {!isAuthor && !isAdmin ? (
+            <div className="mt-4">
+              <WhatsAppCTA
+                phoneNumber={opportunity.author.phone}
+                prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
+              />
+            </div>
           ) : null}
         </div>
 

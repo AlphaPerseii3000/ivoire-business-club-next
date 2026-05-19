@@ -24,28 +24,34 @@ vi.mock("next/navigation", () => ({
 
 const params = { params: Promise.resolve({ id: "opp-1" }) };
 
-describe("OpportunityDetailPage premium access gating", () => {
+function verifiedOpportunity(overrides = {}) {
+  return {
+    id: "opp-1",
+    title: "Terrain à Cocody",
+    description: "Dossier confidentiel premium",
+    amount: 25000,
+    requiredTier: "AFFRANCHI",
+    category: "IMMOBILIER",
+    verificationStatus: "VERIFIED",
+    createdAt: new Date("2026-05-14T00:00:00.000Z"),
+    rejectionNote: null,
+    author: { id: "author-1", name: "Koffi", location: "Abidjan", phone: "+22501020304" },
+    verifiedBy: null,
+    documents: [],
+    ...overrides,
+  };
+}
+
+describe("OpportunityDetailPage premium and tier access gating", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "member-1" } });
-    mockUserFindUnique.mockResolvedValue({ role: "MEMBER" });
+    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI" });
   });
 
   it("blocks premium deal details for non-active members", async () => {
     mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: false });
-    mockOpportunityFindUnique.mockResolvedValueOnce({
-      id: "opp-1",
-      title: "Terrain à Cocody",
-      description: "Dossier confidentiel premium",
-      amount: 25000,
-      category: "IMMOBILIER",
-      verificationStatus: "VERIFIED",
-      createdAt: new Date("2026-05-14T00:00:00.000Z"),
-      rejectionNote: null,
-      author: { id: "author-1", name: "Koffi", location: "Abidjan" },
-      verifiedBy: null,
-      documents: [],
-    });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity());
 
     render(await OpportunityDetailPage(params));
 
@@ -54,26 +60,25 @@ describe("OpportunityDetailPage premium access gating", () => {
     expect(screen.queryByText("Dossier confidentiel premium")).not.toBeInTheDocument();
   });
 
-  it("renders premium deal details for active members", async () => {
+  it("blocks active members whose tier is too low without showing details", async () => {
     mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
-    mockOpportunityFindUnique.mockResolvedValueOnce({
-      id: "opp-1",
-      title: "Terrain à Cocody",
-      description: "Dossier confidentiel premium",
-      amount: 25000,
-      category: "IMMOBILIER",
-      verificationStatus: "VERIFIED",
-      createdAt: new Date("2026-05-14T00:00:00.000Z"),
-      rejectionNote: null,
-      author: { id: "author-1", name: "Koffi", location: "Abidjan" },
-      verifiedBy: { name: "Admin IBC" },
-      documents: [],
-    });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({ requiredTier: "BOSS" }));
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.getByText("Cette opportunité nécessite un tier supérieur")).toBeInTheDocument();
+    expect(screen.queryByText("Dossier confidentiel premium")).not.toBeInTheDocument();
+  });
+
+  it("renders premium deal details for active members with sufficient tier", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({ verifiedBy: { name: "Admin IBC" } }));
 
     render(await OpportunityDetailPage(params));
 
     expect(screen.getByText("Terrain à Cocody")).toBeInTheDocument();
     expect(screen.getByText("Dossier confidentiel premium")).toBeInTheDocument();
+    expect(screen.getByText("Vérifié par Admin IBC")).toBeInTheDocument();
     expect(screen.queryByText("Votre abonnement est inactif. Renouvelez pour accéder aux deals.")).not.toBeInTheDocument();
   });
 });

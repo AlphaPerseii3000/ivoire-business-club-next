@@ -2,7 +2,7 @@
 Story: "3.4"
 StoryKey: "3-4-visibilite-des-opportunites-tier-et-teaser-publics"
 Title: "Visibilité des Opportunités — Tier et Teaser Publics"
-Status: ready-for-dev
+Status: review
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR19", "FR20", "FR21", "FR23", "FR24", "FR25", "FR41", "FR44", "FR45"]
@@ -13,7 +13,7 @@ Created: "2026-05-19"
 
 # Story 3.4: Visibilité des Opportunités — Tier et Teaser Publics
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -52,54 +52,54 @@ afin de découvrir les deals adaptés à mon tier ou les teasers publics.
 
 ## Tasks / Subtasks
 
-- [ ] Définir la règle de visibilité par tier sans casser les données existantes (AC: #2, #3)
-  - [ ] Ajouter un champ Prisma `requiredTier Tier @default(AFFRANCHI)` sur `Opportunity` si absent, avec migration et `npx prisma generate`.
-  - [ ] Backfiller les opportunités existantes en `AFFRANCHI` pour conserver leur visibilité actuelle.
-  - [ ] Créer une fonction pure de domaine, par exemple `src/lib/opportunity-visibility.ts`, avec `TIER_RANK`, `canUserAccessOpportunity(requiredTier, userTier)`, `getAccessibleTierValues(userTier)`, et `buildOpportunityVisibilityWhere(userTier)`.
-  - [ ] Ne jamais confondre `User.tier` et `Subscription.tier` : pour ce scope, la session/JWT et `User.tier` sont la source de tier, tandis que l'abonnement actif reste la source d'accès premium.
-  - [ ] Prévoir que `BOSS` accède à `BOSS`, `GRAND_FRERE`, `AFFRANCHI`; `GRAND_FRERE` à `GRAND_FRERE`, `AFFRANCHI`; `AFFRANCHI` uniquement à `AFFRANCHI`.
+- [x] Définir la règle de visibilité par tier sans casser les données existantes (AC: #2, #3)
+  - [x] Ajouter un champ Prisma `requiredTier Tier @default(AFFRANCHI)` sur `Opportunity` si absent, avec migration et `npx prisma generate`.
+  - [x] Backfiller les opportunités existantes en `AFFRANCHI` pour conserver leur visibilité actuelle.
+  - [x] Créer une fonction pure de domaine, par exemple `src/lib/opportunity-visibility.ts`, avec `TIER_RANK`, `canUserAccessOpportunity(requiredTier, userTier)`, `getAccessibleTierValues(userTier)`, et `buildOpportunityVisibilityWhere(userTier)`.
+  - [x] Ne jamais confondre `User.tier` et `Subscription.tier` : pour ce scope, la session/JWT et `User.tier` sont la source de tier, tandis que l'abonnement actif reste la source d'accès premium.
+  - [x] Prévoir que `BOSS` accède à `BOSS`, `GRAND_FRERE`, `AFFRANCHI`; `GRAND_FRERE` à `GRAND_FRERE`, `AFFRANCHI`; `AFFRANCHI` uniquement à `AFFRANCHI`.
 
-- [ ] Mettre à jour les queries serveur et API pour appliquer `VERIFIED + tier` (AC: #2, #3)
-  - [ ] Modifier `src/app/(dashboard)/opportunities/page.tsx` pour charger uniquement les opportunités `VERIFIED` dont `requiredTier` est dans les tiers accessibles au membre, plus les propres opportunités de l'auteur si le feed privé existant doit continuer à les montrer.
-  - [ ] Modifier `src/app/api/opportunities/route.ts` avec le même filtre pour les membres non-admins ; garder les admins capables de tout voir si l'API est utilisée en back-office.
-  - [ ] Modifier `src/app/(dashboard)/opportunities/[id]/page.tsx` pour bloquer (`notFound()` ou panneau français) un membre non auteur/non admin si le deal n'est pas `VERIFIED` ou si `requiredTier` dépasse son tier.
-  - [ ] Ne jamais renvoyer `description`, `amount`, documents, `rejectionNote`, notes admin, ou URLs signées R2 à un visiteur public.
-  - [ ] Garder FR18 de Story 3.3 : `REJECTED` reste visible uniquement par auteur et admins, jamais dans le feed public/membre.
+- [x] Mettre à jour les queries serveur et API pour appliquer `VERIFIED + tier` (AC: #2, #3)
+  - [x] Modifier `src/app/(dashboard)/opportunities/page.tsx` pour charger uniquement les opportunités `VERIFIED` dont `requiredTier` est dans les tiers accessibles au membre, plus les propres opportunités de l'auteur si le feed privé existant doit continuer à les montrer.
+  - [x] Modifier `src/app/api/opportunities/route.ts` avec le même filtre pour les membres non-admins ; garder les admins capables de tout voir si l'API est utilisée en back-office.
+  - [x] Modifier `src/app/(dashboard)/opportunities/[id]/page.tsx` pour bloquer (`notFound()` ou panneau français) un membre non auteur/non admin si le deal n'est pas `VERIFIED` ou si `requiredTier` dépasse son tier.
+  - [x] Ne jamais renvoyer `description`, `amount`, documents, `rejectionNote`, notes admin, ou URLs signées R2 à un visiteur public.
+  - [x] Garder FR18 de Story 3.3 : `REJECTED` reste visible uniquement par auteur et admins, jamais dans le feed public/membre.
 
-- [ ] Créer le feed public `/opportunities` et intégrer les teasers à la landing (AC: #1)
-  - [ ] Créer `src/app/(public)/opportunities/page.tsx` si la route n'existe pas, accessible sans session.
-  - [ ] Modifier `src/app/(public)/page.tsx` pour inclure une section teaser deals entre Hero/trust/pricing selon l'UX, sans transformer toute la landing.
-  - [ ] Query publique : `verificationStatus: "VERIFIED"`, champs minimum `id`, `title`, `location`, éventuellement `category`/`requiredTier` pour badges non sensibles ; pas de montant, description, auteur contact, documents, ni WhatsApp.
-  - [ ] Teaser card : afficher titre + localisation uniquement, overlay « Devenez membre pour voir les détails », CTA vers `/auth/signup` ou `/pricing`.
-  - [ ] Utiliser une limite raisonnable pour la landing (3–5 teasers) et une liste paginable ou limitée sur `/opportunities` pour éviter une landing lente (NFR-P1).
+- [x] Créer le feed public `/opportunities` et intégrer les teasers à la landing (AC: #1)
+  - [x] Créer `src/app/(public)/opportunities/page.tsx` si la route n'existe pas, accessible sans session.
+  - [x] Modifier `src/app/(public)/page.tsx` pour inclure une section teaser deals entre Hero/trust/pricing selon l'UX, sans transformer toute la landing.
+  - [x] Query publique : `verificationStatus: "VERIFIED"`, champs minimum `id`, `title`, `location`, éventuellement `category`/`requiredTier` pour badges non sensibles ; pas de montant, description, auteur contact, documents, ni WhatsApp.
+  - [x] Teaser card : afficher titre + localisation uniquement, overlay « Devenez membre pour voir les détails », CTA vers `/auth/signup` ou `/pricing`.
+  - [x] Utiliser une limite raisonnable pour la landing (3–5 teasers) et une liste paginable ou limitée sur `/opportunities` pour éviter une landing lente (NFR-P1).
 
-- [ ] Construire/réutiliser les composants DealCard, TrustBadge, WhatsAppCTA, EmptyState et CategoryFilterChips (AC: #2, #4, #5)
-  - [ ] Chercher d'abord les composants existants. `DocumentRow` existe déjà ; aucun `TrustBadge`, `DealCard`, `WhatsAppCTA`, `EmptyState` dédié n'a été trouvé dans `src/components` lors du story creation.
-  - [ ] Créer les composants dans `src/components/features/deals/` ou `src/components/shared/` selon leur réutilisabilité, en respectant les noms kebab-case existants (`deal-card.tsx`, `trust-badge.tsx`, `whatsapp-cta.tsx`, `empty-state.tsx`).
-  - [ ] `DealCard` mobile : liste verticale, thumbnail 16:9 avec placeholder si aucun modèle image n'existe, titre, localisation + montant, TrustBadge, paperclip + document count, WhatsAppCTA.
-  - [ ] `TrustBadge` MVP : pour cette story, afficher au minimum « Argent » pour `VERIFIED` par admin ; Story 3.5 affinera Bronze/Argent/Or. Ne pas implémenter la double-vérification complète hors scope.
-  - [ ] `WhatsAppCTA` : réutiliser `src/lib/whatsapp.ts` (`normalizeWhatsAppNumber`, `buildWhatsAppSupportLink`) et créer un CTA désactivé avec explication si `author.phone` est absent.
-  - [ ] `EmptyState` : props `title`, `description?`, `action?`; pour ce feed, titre exact « Aucun deal ne correspond à vos critères » et action « Réinitialiser les filtres ».
+- [x] Construire/réutiliser les composants DealCard, TrustBadge, WhatsAppCTA, EmptyState et CategoryFilterChips (AC: #2, #4, #5)
+  - [x] Chercher d'abord les composants existants. `DocumentRow` existe déjà ; aucun `TrustBadge`, `DealCard`, `WhatsAppCTA`, `EmptyState` dédié n'a été trouvé dans `src/components` lors du story creation.
+  - [x] Créer les composants dans `src/components/features/deals/` ou `src/components/shared/` selon leur réutilisabilité, en respectant les noms kebab-case existants (`deal-card.tsx`, `trust-badge.tsx`, `whatsapp-cta.tsx`, `empty-state.tsx`).
+  - [x] `DealCard` mobile : liste verticale, thumbnail 16:9 avec placeholder si aucun modèle image n'existe, titre, localisation + montant, TrustBadge, paperclip + document count, WhatsAppCTA.
+  - [x] `TrustBadge` MVP : pour cette story, afficher au minimum « Argent » pour `VERIFIED` par admin ; Story 3.5 affinera Bronze/Argent/Or. Ne pas implémenter la double-vérification complète hors scope.
+  - [x] `WhatsAppCTA` : réutiliser `src/lib/whatsapp.ts` (`normalizeWhatsAppNumber`, `buildWhatsAppSupportLink`) et créer un CTA désactivé avec explication si `author.phone` est absent.
+  - [x] `EmptyState` : props `title`, `description?`, `action?`; pour ce feed, titre exact « Aucun deal ne correspond à vos critères » et action « Réinitialiser les filtres ».
 
-- [ ] Implémenter les filtres catégories avec chips horizontaux scrollables (AC: #2, #5)
-  - [ ] Utiliser les catégories Prisma existantes : `INVESTISSEMENT`, `BUSINESS`, `PARTENARIAT`, `IMMOBILIER`.
-  - [ ] Chips en client component minimal (`"use client"`) qui met à jour l'URL (`?category=...`) ou filtre une liste déjà sérialisée ; privilégier l'URL pour préserver SSR/RSC et partager les liens.
-  - [ ] Row mobile : `overflow-x-auto`, touch targets ≥44px, état actif rempli `--primary`, focus visible.
-  - [ ] Ajouter « Toutes » et un bouton/CTA de reset qui nettoie les paramètres de filtre.
-  - [ ] Vérifier l'état vide après filtre et pas seulement quand la table est vide.
+- [x] Implémenter les filtres catégories avec chips horizontaux scrollables (AC: #2, #5)
+  - [x] Utiliser les catégories Prisma existantes : `INVESTISSEMENT`, `BUSINESS`, `PARTENARIAT`, `IMMOBILIER`.
+  - [x] Chips en client component minimal (`"use client"`) qui met à jour l'URL (`?category=...`) ou filtre une liste déjà sérialisée ; privilégier l'URL pour préserver SSR/RSC et partager les liens.
+  - [x] Row mobile : `overflow-x-auto`, touch targets ≥44px, état actif rempli `--primary`, focus visible.
+  - [x] Ajouter « Toutes » et un bouton/CTA de reset qui nettoie les paramètres de filtre.
+  - [x] Vérifier l'état vide après filtre et pas seulement quand la table est vide.
 
-- [ ] Protéger les détails et documents selon auth + subscription + tier (AC: #1-#4)
-  - [ ] Le détail premium `/dashboard/opportunities/[id]` exige une session et un abonnement actif existant (`getUserPremiumAccess`) pour les non-auteurs/non-admins.
-  - [ ] En cas d'abonnement inactif, conserver `PremiumAccessBlockedPanel`; en cas de tier insuffisant, afficher une explication française avec CTA vers `/pricing` ou `notFound()` si l'équipe préfère ne pas révéler l'existence du deal.
-  - [ ] Les documents ne doivent rester visibles/previewables que pour les utilisateurs autorisés par les endpoints Story 3.2 ; ne pas créer un second système de preview.
-  - [ ] Le feed public et les teaser cards ne doivent jamais appeler les endpoints preview/download documents.
+- [x] Protéger les détails et documents selon auth + subscription + tier (AC: #1-#4)
+  - [x] Le détail premium `/dashboard/opportunities/[id]` exige une session et un abonnement actif existant (`getUserPremiumAccess`) pour les non-auteurs/non-admins.
+  - [x] En cas d'abonnement inactif, conserver `PremiumAccessBlockedPanel`; en cas de tier insuffisant, afficher une explication française avec CTA vers `/pricing` ou `notFound()` si l'équipe préfère ne pas révéler l'existence du deal.
+  - [x] Les documents ne doivent rester visibles/previewables que pour les utilisateurs autorisés par les endpoints Story 3.2 ; ne pas créer un second système de preview.
+  - [x] Le feed public et les teaser cards ne doivent jamais appeler les endpoints preview/download documents.
 
-- [ ] Ajouter les tests et vérifications (AC: #1-#5)
-  - [ ] Tests unitaires pour `opportunity-visibility`: rang des tiers, Boss voit tiers inférieurs, Affranchi ne voit pas Boss, valeur inconnue refusée proprement.
-  - [ ] Tests page/API feed : visiteur public ne reçoit que title/location ; membre Affranchi ne voit que `VERIFIED + AFFRANCHI`; Boss voit `VERIFIED + BOSS/GRAND_FRERE/AFFRANCHI`; non-VERIFIED exclus sauf auteur/admin selon le flux privé préservé.
-  - [ ] Tests UI pour chips catégories, reset EmptyState, teaser overlay, `DealCard` document count, WhatsApp disabled si téléphone manquant.
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`, et `npm run lint` si possible. Noter les lint préexistants séparément.
-  - [ ] Respecter la guardrail Next.js 16 du projet : en JSX, utiliser `condition ? <Comp /> : null`, jamais `condition && <Comp />`.
+- [x] Ajouter les tests et vérifications (AC: #1-#5)
+  - [x] Tests unitaires pour `opportunity-visibility`: rang des tiers, Boss voit tiers inférieurs, Affranchi ne voit pas Boss, valeur inconnue refusée proprement.
+  - [x] Tests page/API feed : visiteur public ne reçoit que title/location ; membre Affranchi ne voit que `VERIFIED + AFFRANCHI`; Boss voit `VERIFIED + BOSS/GRAND_FRERE/AFFRANCHI`; non-VERIFIED exclus sauf auteur/admin selon le flux privé préservé.
+  - [x] Tests UI pour chips catégories, reset EmptyState, teaser overlay, `DealCard` document count, WhatsApp disabled si téléphone manquant.
+  - [x] Exécuter `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`, et `npm run lint` si possible. Noter les lint préexistants séparément.
+  - [x] Respecter la guardrail Next.js 16 du projet : en JSX, utiliser `condition ? <Comp /> : null`, jamais `condition && <Comp />`.
 
 ## Dev Notes
 
@@ -230,6 +230,59 @@ gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- 2026-05-19T14:19:05+02:00 — Implemented tier visibility, public teasers, member feed cards, category filters, protected detail gating, and public/member API visibility tests.
+- Validation commands run:
+  - `npx prisma generate` — PASS
+  - `./node_modules/.bin/prisma validate` — PASS
+  - `npx vitest run` — PASS (232 tests)
+  - `npm run build` — PASS
+  - `npm run lint` — FAIL due pre-existing issues outside story scope (`src/app/not-found.tsx`, auth/profile components, middleware). New story lint errors were fixed.
+- Migration application note: `npx prisma migrate deploy` could not apply to the non-empty local SQLite DB (P3005 baseline issue); `./node_modules/.bin/prisma db push` was used to sync the local dev DB only. Binary DB files were not committed.
+
 ### Completion Notes List
 
+- Added `Opportunity.requiredTier` with default/backfill semantics via Prisma schema and SQL migration; generated Prisma client.
+- Added pure tier visibility domain helpers for rank checks, accessible tier values, safe unknown-tier denial, and query where construction.
+- Moved authenticated opportunity routes to the actual `/dashboard/opportunities` URL to free `/opportunities` for public teasers and match existing links/story requirements.
+- Updated member feed and API visibility so non-admin members see only `VERIFIED` opportunities within their tier plus their own opportunities; admins retain full list visibility.
+- Added public `/opportunities` and landing teaser section using only `id`, `title`, and author `location`; no amount, description, documents, author contact, rejection/admin notes, or R2 URLs are serialized publicly.
+- Added DealCard, TrustBadge, WhatsAppCTA, EmptyState, CategoryFilterChips, public OpportunityTeasers, and category constants with mobile-first/touch-friendly behavior.
+- Added subscription + tier gating to deal details: non-auth redirects, inactive subscriptions keep `PremiumAccessBlockedPanel`, insufficient tiers get a French upgrade panel, and documents remain previewable only by author/admin through existing document components/endpoints.
+- Added unit, route, page, and UI tests for tier visibility, public teaser serialization, member feed filters, detail access blocks, category chips/reset, teaser overlay, document counts, and missing WhatsApp number disabled state.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/story-3-4-visibilite-des-opportunites-tier-et-teaser-publics.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `prisma/schema.prisma`
+- `prisma/migrations/20260519000000_add_opportunity_required_tier/migration.sql`
+- `src/lib/opportunity-visibility.ts`
+- `src/lib/opportunity-visibility.test.ts`
+- `src/lib/opportunity-categories.ts`
+- `src/app/api/opportunities/route.ts`
+- `src/app/api/opportunities/route.test.ts`
+- `src/app/(public)/page.tsx`
+- `src/app/(public)/opportunities/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/page.test.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/new/page.tsx`
+- `src/app/(dashboard)/opportunities/page.tsx` (deleted/moved)
+- `src/app/(dashboard)/opportunities/page.test.tsx` (deleted/moved)
+- `src/app/(dashboard)/opportunities/[id]/page.tsx` (deleted/moved)
+- `src/app/(dashboard)/opportunities/[id]/page.test.tsx` (deleted/moved)
+- `src/app/(dashboard)/opportunities/new/page.tsx` (deleted/moved)
+- `src/components/features/deals/category-filter-chips.tsx`
+- `src/components/features/deals/category-filter-chips.test.tsx`
+- `src/components/features/deals/deal-card.tsx`
+- `src/components/features/deals/deal-card.test.tsx`
+- `src/components/features/deals/trust-badge.tsx`
+- `src/components/features/deals/whatsapp-cta.tsx`
+- `src/components/landing/opportunity-teasers.tsx`
+- `src/components/landing/opportunity-teasers.test.tsx`
+- `src/components/shared/empty-state.tsx`
+
+### Change Log
+
+- 2026-05-19 — Implemented Story 3.4 public teaser and tier visibility functionality; moved authenticated opportunities under `/dashboard/opportunities`; added tests and validation notes.

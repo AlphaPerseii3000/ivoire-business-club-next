@@ -1,10 +1,36 @@
 import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
+import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
 import { opportunityCreateSchema } from "@/lib/validations";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const url = new URL(req.url);
+    const isPublicMode = url.searchParams.get("public") === "true";
+
+    if (isPublicMode) {
+      const publicOpportunities = await prisma.opportunity.findMany({
+        where: { verificationStatus: "VERIFIED" },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          title: true,
+          author: { select: { location: true } },
+        },
+      });
+
+      const data = publicOpportunities.map((opportunity) => ({
+        id: opportunity.id,
+        title: opportunity.title,
+        location: opportunity.author.location,
+      }));
+
+      return NextResponse.json({ data });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -13,7 +39,7 @@ export async function GET() {
     const userId = session.user.id;
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, tier: true },
     });
 
     const opportunities = await prisma.opportunity.findMany({
@@ -21,10 +47,10 @@ export async function GET() {
         currentUser?.role === "ADMIN"
           ? undefined
           : {
-              OR: [{ verificationStatus: "VERIFIED" }, { authorId: userId }],
+              OR: [buildOpportunityVisibilityWhere(currentUser?.tier), { authorId: userId }],
             },
       orderBy: { createdAt: "desc" },
-      include: { author: { select: { id: true, name: true } }, _count: { select: { documents: true } } },
+      include: { author: { select: { id: true, name: true, location: true, phone: true } }, _count: { select: { documents: true } } },
     });
 
     const data = opportunities.map((opportunity) => ({
@@ -33,6 +59,7 @@ export async function GET() {
       description: opportunity.description,
       category: opportunity.category,
       amount: opportunity.amount,
+      requiredTier: opportunity.requiredTier,
       verificationStatus: opportunity.verificationStatus,
       createdAt: opportunity.createdAt,
       author: opportunity.author,

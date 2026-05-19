@@ -156,6 +156,7 @@ model Opportunity {
   description        String
   category           OpportunityCategory
   amount             Float?
+  requiredTier       Tier                 @default(AFFRANCHI)
   requiresDoubleVerification Boolean       @default(false)
   verificationStatus VerificationStatus   @default(PENDING)
   verifiedAt         DateTime?
