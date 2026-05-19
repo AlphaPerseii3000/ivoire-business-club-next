@@ -2,7 +2,7 @@
 Story: "4.0"
 StoryKey: "4-0-consolidation-post-retrospective-epic-3"
 Title: "Consolidation post-rétrospective Epic 3 avant Epic 4"
-Status: "review"
+Status: "done"
 Priority: "P0"
 Epic: "Epic 4 — Deep Links, Tags, Matching et Soft Commitment"
 FRs: []
@@ -12,7 +12,7 @@ Created: "2026-05-19"
 
 # Story 4.0: Consolidation post-rétrospective Epic 3 avant Epic 4
 
-Status: review
+Status: done
 
 <!-- Note: Story créée suite à la rétrospective Epic 3. Cette story traite la dette technique différée et renforce les guardrails avant l'Epic 4. -->
 
@@ -220,3 +220,13 @@ gpt-5.5 (openai-codex)
 ### Change Log
 
 - 2026-05-19: Completed Story 4.0 consolidation items for Epic 3 retrospective cleanup; added Prisma avatar mapping migration, verified providerRef nullability, documented guardrails/security patterns, verified gitignore protections, documented currentAdminApproved manual test, and passed full validation suite.
+
+### Review Findings
+
+**Verdict: PASS avec 1 defer et 1 observation**
+
+- **P1 (Defer)** — Migration `20260514112346_init` perd les données `avatarUrl`. L'INSERT de cette migration ne copie PAS la colonne `avatarUrl` de l'ancienne table users vers la nouvelle. Les URLs d'avatar existantes deviennent NULL. La migration `20260519155100` restaure le nom de colonne DB à `avatarUrl`, mais les données déjà perdues ne reviennent pas. Impact minimal en dev (DB reseedée), mais critique en production. **Defer à une story corrective Epic 6 (data migration)** : modifier la migration `20260514112346_init` pour inclure `"avatarUrl"` dans l'INSERT, ou créer une migration data-seed qui restaure les avatars.
+
+- **P2 (Observation)** — Nom de migration `20260514112346_init` trompeur : c'est une migration de renommage/drop-column, pas un init. Pas de risque fonctionnel, traçabilité réduite. Aucune action.
+
+**Tous les AC passent : avatarUrl @map, providerRef nullable, guardrails documentés, .gitignore, currentAdminApproved inspecté, build+tests OK.**
