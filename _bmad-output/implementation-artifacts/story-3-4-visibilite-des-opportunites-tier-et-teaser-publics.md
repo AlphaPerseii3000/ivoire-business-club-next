@@ -2,7 +2,7 @@
 Story: "3.4"
 StoryKey: "3-4-visibilite-des-opportunites-tier-et-teaser-publics"
 Title: "Visibilité des Opportunités — Tier et Teaser Publics"
-Status: review
+Status: "done"
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR19", "FR20", "FR21", "FR23", "FR24", "FR25", "FR41", "FR44", "FR45"]
@@ -13,7 +13,7 @@ Created: "2026-05-19"
 
 # Story 3.4: Visibilité des Opportunités — Tier et Teaser Publics
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -100,6 +100,10 @@ afin de découvrir les deals adaptés à mon tier ou les teasers publics.
   - [x] Tests UI pour chips catégories, reset EmptyState, teaser overlay, `DealCard` document count, WhatsApp disabled si téléphone manquant.
   - [x] Exécuter `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`, et `npm run lint` si possible. Noter les lint préexistants séparément.
   - [x] Respecter la guardrail Next.js 16 du projet : en JSX, utiliser `condition ? <Comp /> : null`, jamais `condition && <Comp />`.
+
+### Review Findings
+
+- [x] [Review][Patch] JSX condition with `&&` — fixed by precomputing `shouldShowWhatsApp` boolean variable and using `{shouldShowWhatsApp ? (...) : null}` in JSX. Committed in fix(story-3.4) patch.
 
 ## Dev Notes
 
