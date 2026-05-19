@@ -2,7 +2,7 @@
 Story: "4.1"
 StoryKey: "4-1-deep-links-whatsapp-sur-profils-et-deals"
 Title: "Deep Links WhatsApp sur Profils et Deals"
-Status: review
+Status: done
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR24", "FR25"]
@@ -12,7 +12,7 @@ Created: "2026-05-19"
 
 # Story 4.1: Deep Links WhatsApp sur Profils et Deals
 
-Status: review
+Status: done
 
 ## Story
 
@@ -247,3 +247,25 @@ gpt-5.5 (OpenAI)
 - src/components/ui/tooltip.tsx (created — shadcn/ui tooltip component)
 - src/app/layout.tsx (modified — added TooltipProvider wrapper)
 - src/components/ui/tooltip.tsx (created by shadcn CLI)
+
+## Review Findings
+
+✅ **Clean review — all layers passed.**
+
+### Review Summary (2026-05-19)
+
+**Verdict: PASS**
+
+All three review layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor) completed. Zero findings requiring action.
+
+### Checklist Verified
+
+- [x] **JSX && Guardrail**: No `&&` patterns in JSX expression positions. All conditionals use ternaries or precomputed booleans (`shouldShowWhatsApp`, `isOwnProfile`, etc.)
+- [x] **Auth Patterns**: Member profile page uses `auth()` → `redirect("/auth/signin")` guard. Members list also authenticates before querying.
+- [x] **Prisma Queries**: Member profile uses explicit `select` (no N+1). Members list omits `phone` field from select (no unauthorized data exposure). Verified-only filter on both pages.
+- [x] **Tooltip Accessibility**: Base UI Tooltip implementation follows shadcn/ui patterns. `TooltipProvider` wraps root layout. Tooltip content visible on hover/focus. Minor note: Base UI `TooltipTrigger` does not add `aria-describedby` linking trigger to content — consistent with Base UI/shadcn ecosystem defaults.
+- [x] **WhatsApp Deep Link Security**: Phone numbers never exposed as raw text. Only rendered through wa.me URL in `<Link>`. Phone not included in members list API response.
+- [x] **Component Composition**: `WhatsAppCTA` `label` prop defaults to "Contacter sur WhatsApp". Used correctly: "Discuter sur WhatsApp" on profile, "Contacter le porteur sur WhatsApp" on deal detail, default on DealCard.
+- [x] **Member Profile Page**: Auth guard verified-only check, own-profile detection hiding CTA, correct label and prefilled message.
+- [x] **Test Coverage**: 7 WhatsAppCTA tests covering label prop, phone link generation, disabled states (null/empty), custom labels, URL encoding. DealCard tests updated for tooltip behavior. All 256 tests pass. Build succeeds.
+- [x] **Acceptance Criteria**: All 5 ACs fully satisfied (AC1 profile CTA, AC2 deal label, AC3/AC4 wa.me mobile/desktop, AC5 disabled tooltip).
