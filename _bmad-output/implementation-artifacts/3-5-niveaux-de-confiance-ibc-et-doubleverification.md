@@ -2,7 +2,7 @@
 Story: "3.5"
 StoryKey: "3-5-niveaux-de-confiance-ibc-et-doubleverification"
 Title: "Niveaux de Confiance IBC et Double-Vérification"
-Status: "review"
+Status: "done"
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR21", "FR22", "FR23"]
@@ -13,7 +13,7 @@ Created: "2026-05-19"
 
 # Story 3.5: Niveaux de Confiance IBC et Double-Vérification
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
