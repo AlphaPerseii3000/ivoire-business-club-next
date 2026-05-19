@@ -6,6 +6,7 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockOpportunityFindUnique = vi.hoisted(() => vi.fn());
 const mockOpportunityUpdate = vi.hoisted(() => vi.fn());
+const mockApprovalCreate = vi.hoisted(() => vi.fn());
 const mockSendVerified = vi.hoisted(() => vi.fn());
 const mockSendRejected = vi.hoisted(() => vi.fn());
 
@@ -18,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
     opportunity: { findUnique: mockOpportunityFindUnique, update: mockOpportunityUpdate },
+    opportunityVerificationApproval: { create: mockApprovalCreate },
   },
 }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: vi.fn(() => "Error: sanitized") }));
@@ -39,6 +41,8 @@ const pendingOpportunity = {
   reviewNotes: null,
   adminNote: null,
   author: { id: "author-1", name: "Koffi", email: "koffi@example.com" },
+  requiresDoubleVerification: false,
+  verificationApprovals: [],
 };
 
 describe("PATCH /api/admin/opportunities/[id]/verify", () => {
@@ -50,7 +54,8 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     mockOpportunityUpdate.mockImplementation(async ({ data }) => ({
       ...pendingOpportunity,
       ...data,
-      _count: { documents: 0 },
+      _count: { documents: 0, verificationApprovals: data.verificationStatus === "VERIFIED" ? 2 : 0 },
+      verificationApprovals: [],
     }));
     mockSendVerified.mockResolvedValue(undefined);
     mockSendRejected.mockResolvedValue(undefined);
@@ -103,6 +108,66 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
       opportunityId: "opp-1",
       title: "Terrain à Cocody",
     });
+  });
+
+  it("keeps a double-verification deal EN_COURS after the first admin approval without sending email", async () => {
+    mockOpportunityFindUnique.mockResolvedValueOnce({ ...pendingOpportunity, requiresDoubleVerification: true });
+
+    const res = await PATCH(request({ action: "verify", note: "Premier contrôle OK" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.pendingSecondVerification).toBe(true);
+    expect(json.data.verificationStatus).toBe("EN_COURS");
+    expect(mockApprovalCreate).toHaveBeenCalledWith({
+      data: { opportunityId: "opp-1", adminId: "admin-1", note: "Premier contrôle OK" },
+    });
+    expect(mockSendVerified).not.toHaveBeenCalled();
+  });
+
+  it("rejects a second double-verification approval from the same admin", async () => {
+    mockOpportunityFindUnique.mockResolvedValueOnce({
+      ...pendingOpportunity,
+      requiresDoubleVerification: true,
+      verificationStatus: "EN_COURS",
+      verificationApprovals: [{ adminId: "admin-1" }],
+    });
+
+    const res = await PATCH(request({ action: "verify" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.code).toBe("DOUBLE_VERIFICATION_SAME_ADMIN");
+    expect(mockOpportunityUpdate).not.toHaveBeenCalled();
+    expect(mockSendVerified).not.toHaveBeenCalled();
+  });
+
+  it("marks a double-verification deal VERIFIED after a second distinct admin approval", async () => {
+    mockOpportunityFindUnique.mockResolvedValueOnce({
+      ...pendingOpportunity,
+      requiresDoubleVerification: true,
+      verificationStatus: "EN_COURS",
+      verificationApprovals: [{ adminId: "admin-2" }],
+    });
+
+    const res = await PATCH(request({ action: "verify" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.pendingSecondVerification).toBe(false);
+    expect(json.data.verificationStatus).toBe("VERIFIED");
+    expect(mockSendVerified).toHaveBeenCalledOnce();
+  });
+
+  it("blocks direct move to VERIFIED for double-verification deals without two approvals", async () => {
+    mockOpportunityFindUnique.mockResolvedValueOnce({ ...pendingOpportunity, requiresDoubleVerification: true });
+
+    const res = await PATCH(request({ action: "move", status: "VERIFIED" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.code).toBe("DOUBLE_VERIFICATION_REQUIRED");
+    expect(mockOpportunityUpdate).not.toHaveBeenCalled();
   });
 
   it("rejects rejection without note", async () => {

@@ -67,6 +67,11 @@ function OpportunityCard({ opportunity, onOpen, onStartReview, disabled }: { opp
             <FileText className="h-3.5 w-3.5" aria-hidden="true" />
             {opportunity.documentCount} document{opportunity.documentCount > 1 ? "s" : ""}
           </p>
+          {opportunity.requiresDoubleVerification ? (
+            <p className="rounded-md bg-amber-50 px-2 py-1 font-medium text-amber-700">
+              Double vérification requise ({opportunity.approvalCount}/2)
+            </p>
+          ) : null}
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => onOpen(opportunity)}>
@@ -108,8 +113,9 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
     setError(null);
     setMutatingId(opportunity.id);
     const previousItems = items;
-    const optimisticStatus = action === "verify" ? "VERIFIED" : action === "reject" ? "REJECTED" : "EN_COURS";
-    setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, verificationStatus: optimisticStatus } : item)));
+    const optimisticStatus = action === "verify" ? (opportunity.requiresDoubleVerification && opportunity.approvalCount < 1 ? "EN_COURS" : "VERIFIED") : action === "reject" ? "REJECTED" : "EN_COURS";
+    const optimisticApprovalCount = action === "verify" && opportunity.requiresDoubleVerification ? Math.min(opportunity.approvalCount + 1, 2) : opportunity.approvalCount;
+    setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, verificationStatus: optimisticStatus, approvalCount: optimisticApprovalCount } : item)));
 
     try {
       const updated = await patchOpportunity(opportunity.id, { action, note });

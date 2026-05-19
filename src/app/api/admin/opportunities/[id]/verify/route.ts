@@ -33,6 +33,12 @@ function appendReviewNote(existing: string | null | undefined, adminId: string, 
   return existing ? `${existing}\n${entry}` : entry;
 }
 
+function appendDoubleVerificationNote(existing: string | null | undefined, adminId: string) {
+  const timestamp = new Date().toISOString();
+  const entry = `${timestamp} — ${adminId} — première validation enregistrée, en attente d'un second admin`;
+  return existing ? `${existing}\n${entry}` : entry;
+}
+
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -45,6 +51,26 @@ async function requireAdmin() {
   }
 
   return { sessionUserId: session.user.id };
+}
+
+async function sendFinalEmail(nextStatus: VerificationStatus, updated: { author: { email: string; name: string }; id: string; title: string; rejectionNote?: string | null }) {
+  if (nextStatus === "VERIFIED") {
+    await sendOpportunityVerifiedEmail({
+      to: updated.author.email,
+      name: updated.author.name,
+      opportunityId: updated.id,
+      title: updated.title,
+    });
+  }
+  if (nextStatus === "REJECTED") {
+    await sendOpportunityRejectedEmail({
+      to: updated.author.email,
+      name: updated.author.name,
+      opportunityId: updated.id,
+      title: updated.title,
+      note: updated.rejectionNote ?? "Aucune note fournie.",
+    });
+  }
 }
 
 export async function PATCH(req: Request, { params }: RouteContext) {
@@ -68,7 +94,10 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
     const opportunity = await prisma.opportunity.findUnique({
       where: { id },
-      include: { author: { select: { id: true, name: true, email: true } } },
+      include: {
+        author: { select: { id: true, name: true, email: true } },
+        verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
+      },
     });
     if (!opportunity) {
       return NextResponse.json({ error: "Opportunité introuvable" }, { status: 404 });
@@ -89,9 +118,43 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       );
     }
 
+    const approvalAdminIds = new Set(opportunity.verificationApprovals.map((approval) => approval.adminId));
+    const existingApprovalCount = approvalAdminIds.size;
+
+    if (nextStatus === "VERIFIED" && opportunity.requiresDoubleVerification && parsed.data.action === "move" && existingApprovalCount < 2) {
+      return NextResponse.json(
+        { error: "Deux validations admin distinctes sont requises avant de vérifier ce deal.", code: "DOUBLE_VERIFICATION_REQUIRED" },
+        { status: 409 },
+      );
+    }
+
+    let effectiveNextStatus = nextStatus;
+    let pendingSecondVerification = false;
+
+    if (parsed.data.action === "verify" && opportunity.requiresDoubleVerification) {
+      if (approvalAdminIds.has(authResult.sessionUserId)) {
+        return NextResponse.json(
+          { error: "Un même admin ne peut pas valider deux fois ce deal.", code: "DOUBLE_VERIFICATION_SAME_ADMIN" },
+          { status: 409 },
+        );
+      }
+
+      await prisma.opportunityVerificationApproval.create({
+        data: {
+          opportunityId: id,
+          adminId: authResult.sessionUserId,
+          note: note?.trim() ? note.trim() : null,
+        },
+      });
+
+      const approvalCount = existingApprovalCount + 1;
+      pendingSecondVerification = approvalCount < 2;
+      effectiveNextStatus = pendingSecondVerification ? "EN_COURS" : "VERIFIED";
+    }
+
     const now = new Date();
     const data =
-      nextStatus === "VERIFIED"
+      effectiveNextStatus === "VERIFIED"
         ? {
             verificationStatus: "VERIFIED" as const,
             verifiedAt: now,
@@ -99,7 +162,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
             rejectionNote: null,
             adminNote: note?.trim() ? note.trim() : opportunity.adminNote,
           }
-        : nextStatus === "REJECTED"
+        : effectiveNextStatus === "REJECTED"
           ? {
               verificationStatus: "REJECTED" as const,
               verifiedAt: null,
@@ -107,11 +170,13 @@ export async function PATCH(req: Request, { params }: RouteContext) {
               rejectionNote: note?.trim() ?? null,
               adminNote: note?.trim() ?? opportunity.adminNote,
             }
-          : nextStatus === "EN_COURS"
+          : effectiveNextStatus === "EN_COURS"
             ? {
                 verificationStatus: "EN_COURS" as const,
                 verifiedAt: null,
-                reviewNotes: appendReviewNote(opportunity.reviewNotes, authResult.sessionUserId, note),
+                reviewNotes: pendingSecondVerification
+                  ? appendDoubleVerificationNote(opportunity.reviewNotes, authResult.sessionUserId)
+                  : appendReviewNote(opportunity.reviewNotes, authResult.sessionUserId, note),
               }
             : {
                 verificationStatus: "PENDING" as const,
@@ -121,7 +186,11 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     const updated = await prisma.opportunity.update({
       where: { id },
       data,
-      include: { author: { select: { id: true, name: true, email: true } }, _count: { select: { documents: true } } },
+      include: {
+        author: { select: { id: true, name: true, email: true } },
+        verificationApprovals: { select: { adminId: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+        _count: { select: { documents: true, verificationApprovals: true } },
+      },
     });
 
     console.info("[admin-opportunity-status]", {
@@ -129,30 +198,17 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       adminId: authResult.sessionUserId,
       action: parsed.data.action,
       from: currentStatus,
-      to: nextStatus,
+      to: effectiveNextStatus,
+      pendingSecondVerification,
     });
 
     try {
-      if (nextStatus === "VERIFIED") {
-        await sendOpportunityVerifiedEmail({
-          to: updated.author.email,
-          name: updated.author.name,
-          opportunityId: updated.id,
-          title: updated.title,
-        });
-      }
-      if (nextStatus === "REJECTED") {
-        await sendOpportunityRejectedEmail({
-          to: updated.author.email,
-          name: updated.author.name,
-          opportunityId: updated.id,
-          title: updated.title,
-          note: updated.rejectionNote ?? "Aucune note fournie.",
-        });
+      if (!pendingSecondVerification) {
+        await sendFinalEmail(effectiveNextStatus, updated);
       }
     } catch (error) {
-      console.error("[admin-opportunity-email]", { opportunityId: id, status: nextStatus, error: sanitizeError(error) });
-      if (FINAL_STATUSES.includes(nextStatus as (typeof FINAL_STATUSES)[number])) {
+      console.error("[admin-opportunity-email]", { opportunityId: id, status: effectiveNextStatus, error: sanitizeError(error) });
+      if (FINAL_STATUSES.includes(effectiveNextStatus as (typeof FINAL_STATUSES)[number])) {
         return NextResponse.json(
           { error: "Le statut a été mis à jour, mais l'email n'a pas pu être envoyé.", code: "EMAIL_FAILED", data: updated },
           { status: 502 },
@@ -160,7 +216,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       }
     }
 
-    return NextResponse.json({ data: updated });
+    return NextResponse.json({ data: updated, pendingSecondVerification });
   } catch (error) {
     console.error("[admin-opportunity-status]", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });

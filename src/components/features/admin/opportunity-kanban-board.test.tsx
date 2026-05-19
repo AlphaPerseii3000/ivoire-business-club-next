@@ -25,6 +25,9 @@ const opportunities: AdminOpportunity[] = [
     author: { id: "author-1", name: "Koffi", email: "koffi@example.com", image: null },
     documents: [],
     documentCount: 0,
+    requiresDoubleVerification: true,
+    approvalCount: 1,
+    currentAdminApproved: false,
   },
 ];
 
@@ -42,6 +45,7 @@ describe("AdminOpportunityKanban", () => {
     expect(screen.getAllByText("Refusé").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "En attente (1)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "En cours (0)" })).toBeInTheDocument();
+    expect(screen.getAllByText("Double vérification requise (1/2)").length).toBeGreaterThan(0);
   });
 
   it("opens the detail sheet and requires a rejection note", async () => {

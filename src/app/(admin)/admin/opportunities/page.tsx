@@ -12,6 +12,7 @@ export default async function AdminOpportunitiesPage() {
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
   if (user?.role !== "ADMIN") redirect("/dashboard");
+  const currentAdminId = session.user.id;
 
   const opportunities = await prisma.opportunity.findMany({
     orderBy: { createdAt: "desc" },
@@ -19,7 +20,8 @@ export default async function AdminOpportunitiesPage() {
       author: { select: { id: true, name: true, email: true, image: true } },
       verifiedBy: { select: { id: true, name: true } },
       documents: { orderBy: { createdAt: "desc" } },
-      _count: { select: { documents: true } },
+      verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
+      _count: { select: { documents: true, verificationApprovals: true } },
     },
   });
 
@@ -55,6 +57,9 @@ export default async function AdminOpportunitiesPage() {
       updatedAt: document.updatedAt.toISOString(),
     })),
     documentCount: opportunity._count.documents,
+    requiresDoubleVerification: opportunity.requiresDoubleVerification,
+    approvalCount: opportunity._count.verificationApprovals,
+    currentAdminApproved: opportunity.verificationApprovals.some((approval) => approval.adminId === currentAdminId),
   }));
 
   return (

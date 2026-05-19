@@ -43,6 +43,9 @@ export type AdminOpportunity = {
   };
   documents: LegalDocument[];
   documentCount: number;
+  requiresDoubleVerification: boolean;
+  approvalCount: number;
+  currentAdminApproved: boolean;
 };
 
 type OpportunityDetailSheetProps = {
@@ -91,6 +94,11 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
   const previewUrl = previewDocument ? `/api/opportunities/${opportunity.id}/documents/${previewDocument.id}/preview` : "";
   const canStartReview = opportunity.verificationStatus === "PENDING";
   const canDecide = opportunity.verificationStatus === "PENDING" || opportunity.verificationStatus === "EN_COURS";
+  const doubleVerificationMessage = opportunity.requiresDoubleVerification
+    ? `Double vérification requise (${opportunity.approvalCount}/2)`
+    : "Vérification simple";
+  const isWaitingForSecondAdmin = opportunity.requiresDoubleVerification && opportunity.approvalCount === 1 && opportunity.verificationStatus === "EN_COURS";
+  const cannotVerifyAgain = opportunity.requiresDoubleVerification && opportunity.currentAdminApproved && opportunity.approvalCount < 2;
 
   const submitReject = form.handleSubmit(async (values) => {
     if (!values.note.trim()) {
@@ -126,7 +134,13 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
             <div className="flex flex-wrap gap-2 text-sm">
               <span className="rounded-md bg-muted px-3 py-1">{CATEGORY_LABELS[opportunity.category] ?? opportunity.category}</span>
               <span className="rounded-md bg-primary/10 px-3 py-1 font-semibold text-primary">{amount}</span>
+              <span className="rounded-md bg-amber-50 px-3 py-1 font-medium text-amber-700">{doubleVerificationMessage}</span>
             </div>
+            {isWaitingForSecondAdmin ? (
+              <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                En attente d&apos;un second admin pour finaliser la vérification.
+              </p>
+            ) : null}
             <p className="mt-4 whitespace-pre-wrap text-sm leading-6">{opportunity.description}</p>
           </section>
 
@@ -212,10 +226,19 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
                   </Button>
                 ) : null}
                 {canDecide ? (
-                  <Button type="button" className="bg-green-600 text-white hover:bg-green-700" disabled={isMutating} onClick={() => onAction(opportunity.id, "verify", note?.trim() ? note.trim() : undefined)}>
+                  <Button
+                    type="button"
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    disabled={isMutating || cannotVerifyAgain}
+                    title={cannotVerifyAgain ? "Un second admin distinct doit valider ce deal." : undefined}
+                    onClick={() => onAction(opportunity.id, "verify", note?.trim() ? note.trim() : undefined)}
+                  >
                     {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                     Vérifier
                   </Button>
+                ) : null}
+                {cannotVerifyAgain ? (
+                  <p className="basis-full text-sm text-muted-foreground">Un second admin distinct doit valider ce deal.</p>
                 ) : null}
                 {canDecide ? (
                   <Button type="submit" variant="destructive" disabled={isMutating}>

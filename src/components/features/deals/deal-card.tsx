@@ -3,6 +3,7 @@ import { MapPin, Paperclip } from "lucide-react";
 
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
 
 type DealCardDeal = {
   id: string;
@@ -11,6 +12,13 @@ type DealCardDeal = {
   location?: string | null;
   verificationStatus: string;
   documentCount: number;
+  trustLevel?: TrustLevel | null;
+  requiresDoubleVerification?: boolean;
+  approvalCount?: number;
+  authorStats?: {
+    validatedDealsCount?: number | null;
+    averageRating?: number | null;
+  } | null;
   author: { phone?: string | null };
 };
 
@@ -21,6 +29,13 @@ type DealCardProps = {
 export function DealCard({ deal }: DealCardProps) {
   const location = deal.location?.trim() ? deal.location : "Localisation non renseignée";
   const amountLabel = typeof deal.amount === "number" ? `${deal.amount.toLocaleString("fr-FR")} €` : "Montant sur demande";
+  const trustLevel = deal.trustLevel ?? getSafeTrustLevel({
+    documentCount: deal.documentCount,
+    verificationStatus: deal.verificationStatus,
+    requiresDoubleVerification: deal.requiresDoubleVerification,
+    approvalCount: deal.approvalCount,
+    authorStats: deal.authorStats,
+  });
 
   return (
     <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
@@ -39,7 +54,7 @@ export function DealCard({ deal }: DealCardProps) {
             </div>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <TrustBadge level="argent" />
+            <TrustBadge level={trustLevel} animated={trustLevel === "or"} />
             <span className="inline-flex items-center gap-1 text-sm text-muted-foreground" aria-label={`${deal.documentCount} document(s)`}>
               <Paperclip className="h-4 w-4" aria-hidden="true" />
               {deal.documentCount}

@@ -75,8 +75,16 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
           },
     orderBy: { createdAt: "desc" },
     include: {
-      author: { select: { name: true, id: true, phone: true, location: true } },
-      _count: { select: { documents: true } },
+      author: {
+        select: {
+          name: true,
+          id: true,
+          phone: true,
+          location: true,
+          opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
+        },
+      },
+      _count: { select: { documents: true, verificationApprovals: true } },
     },
   });
 
@@ -126,6 +134,9 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 location: opportunity.author.location,
                 verificationStatus: opportunity.verificationStatus,
                 documentCount: opportunity._count.documents,
+                requiresDoubleVerification: opportunity.requiresDoubleVerification,
+                approvalCount: opportunity._count.verificationApprovals,
+                authorStats: { validatedDealsCount: opportunity.author.opportunities?.length ?? 0, averageRating: null },
                 author: { phone: opportunity.author.phone },
               }}
             />

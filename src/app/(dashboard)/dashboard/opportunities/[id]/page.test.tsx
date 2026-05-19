@@ -35,9 +35,11 @@ function verifiedOpportunity(overrides = {}) {
     verificationStatus: "VERIFIED",
     createdAt: new Date("2026-05-14T00:00:00.000Z"),
     rejectionNote: null,
-    author: { id: "author-1", name: "Koffi", location: "Abidjan", phone: "+22501020304" },
+    author: { id: "author-1", name: "Koffi", location: "Abidjan", phone: "+22501020304", opportunities: [{ id: "opp-1" }] },
     verifiedBy: null,
     documents: [],
+    verificationApprovals: [],
+    requiresDoubleVerification: false,
     ...overrides,
   };
 }
@@ -79,6 +81,35 @@ describe("OpportunityDetailPage premium and tier access gating", () => {
     expect(screen.getByText("Terrain à Cocody")).toBeInTheDocument();
     expect(screen.getByText("Dossier confidentiel premium")).toBeInTheDocument();
     expect(screen.getByText("Vérifié par Admin IBC")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Niveau de confiance Argent/)).toBeInTheDocument();
+    expect(screen.getByText("Timeline de vérification")).toBeInTheDocument();
     expect(screen.queryByText("Votre abonnement est inactif. Renouvelez pour accéder aux deals.")).not.toBeInTheDocument();
+  });
+
+  it("renders legal document rows with preview and download for authorized members", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({
+      documents: [
+        {
+          id: "doc-1",
+          opportunityId: "opp-1",
+          uploadedById: "author-1",
+          fileName: "statuts.pdf",
+          originalName: "Statuts SCI.pdf",
+          mimeType: "application/pdf",
+          size: 1200,
+          publicUrl: null,
+          createdAt: new Date("2026-05-15T00:00:00.000Z"),
+          updatedAt: new Date("2026-05-15T00:00:00.000Z"),
+        },
+      ],
+    }));
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.getByText("Statuts SCI.pdf")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Aperçu de Statuts SCI\.pdf/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Télécharger/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Supprimer/ })).not.toBeInTheDocument();
   });
 });

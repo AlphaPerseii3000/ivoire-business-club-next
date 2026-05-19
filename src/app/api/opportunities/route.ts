@@ -50,7 +50,18 @@ export async function GET(req: Request) {
               OR: [buildOpportunityVisibilityWhere(currentUser?.tier), { authorId: userId }],
             },
       orderBy: { createdAt: "desc" },
-      include: { author: { select: { id: true, name: true, location: true, phone: true } }, _count: { select: { documents: true } } },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            phone: true,
+            opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
+          },
+        },
+        _count: { select: { documents: true, verificationApprovals: true } },
+      },
     });
 
     const data = opportunities.map((opportunity) => ({
@@ -62,8 +73,16 @@ export async function GET(req: Request) {
       requiredTier: opportunity.requiredTier,
       verificationStatus: opportunity.verificationStatus,
       createdAt: opportunity.createdAt,
-      author: opportunity.author,
+      author: {
+        id: opportunity.author.id,
+        name: opportunity.author.name,
+        location: opportunity.author.location,
+        phone: opportunity.author.phone,
+      },
       documentCount: opportunity._count.documents,
+      requiresDoubleVerification: opportunity.requiresDoubleVerification,
+      approvalCount: opportunity._count.verificationApprovals,
+      authorStats: { validatedDealsCount: opportunity.author.opportunities?.length ?? 0, averageRating: null },
       rejectionNote: opportunity.authorId === userId || currentUser?.role === "ADMIN" ? opportunity.rejectionNote : undefined,
     }));
 

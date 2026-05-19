@@ -22,7 +22,7 @@ describe("DealCard", () => {
     expect(screen.getByText("Terrain à Cocody")).toBeInTheDocument();
     expect(screen.getByText("Abidjan")).toBeInTheDocument();
     expect(screen.getByText(/25\s*000 €/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Niveau de confiance Argent")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Niveau de confiance Argent/)).toBeInTheDocument();
     expect(screen.getByLabelText("3 document(s)")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Contacter le porteur sur WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/22501020304"));
   });

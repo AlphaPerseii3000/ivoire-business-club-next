@@ -77,6 +77,7 @@ model User {
   opportunities      Opportunity[]  @relation("Author")
   verifiedBy         Opportunity[]  @relation("Verifier")
   uploadedDocuments  Document[]
+  verificationApprovals OpportunityVerificationApproval[]
   verificationTokens VerificationToken[]
 
   @@map("users")
@@ -170,8 +171,25 @@ model Opportunity {
   author     User  @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
   verifiedBy User? @relation("Verifier", fields: [verifiedById], references: [id])
   documents  Document[]
+  verificationApprovals OpportunityVerificationApproval[]
 
   @@map("opportunities")
+}
+
+model OpportunityVerificationApproval {
+  id            String   @id @default(cuid())
+  opportunityId String
+  adminId       String
+  note          String?
+  createdAt     DateTime @default(now())
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  admin       User        @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, adminId])
+  @@index([opportunityId])
+  @@index([adminId])
+  @@map("opportunity_verification_approvals")
 }
 
 model Document {

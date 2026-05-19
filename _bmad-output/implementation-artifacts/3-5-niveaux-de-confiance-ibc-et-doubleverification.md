@@ -2,7 +2,7 @@
 Story: "3.5"
 StoryKey: "3-5-niveaux-de-confiance-ibc-et-doubleverification"
 Title: "Niveaux de Confiance IBC et Double-Vérification"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P0"
 Epic: "Epic 3 — Marketplace d'Opportunités et Vérification"
 FRs: ["FR21", "FR22", "FR23"]
@@ -13,7 +13,7 @@ Created: "2026-05-19"
 
 # Story 3.5: Niveaux de Confiance IBC et Double-Vérification
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,68 +57,68 @@ afin d'évaluer la fiabilité de l'opportunité avant de contacter le porteur.
 
 ## Tasks / Subtasks
 
-- [ ] Étendre `TrustBadge` sans casser Story 3.4 (AC: #1, #2, #3)
-  - [ ] UPDATE `src/components/features/deals/trust-badge.tsx` pour accepter `level: "bronze" | "argent" | "or"`, `size: "sm" | "md"`, `animated?: boolean`, `showTooltip?: boolean`, `className?: string`.
-  - [ ] Conserver le comportement Story 3.4 : si aucun niveau n'est fourni dans les appels existants, le badge ne doit pas disparaître des `DealCard`; choisir une valeur sûre via helper plutôt qu'un fallback codé en dur partout.
-  - [ ] Styles requis : Bronze `text-[#B45309] bg-[#FFFBEB] border-[#FCD34D]`; Argent `text-slate-500 bg-slate-50 border-slate-300`; Or `text-[#D97706] bg-[#FEF3C7] border-[#F59E0B]`.
-  - [ ] Inclure icône + texte; ne jamais utiliser la couleur seule comme indicateur. Ajouter un `aria-label` explicite et un tooltip/description accessible expliquant le critère de niveau.
-  - [ ] L'animation pulse du niveau Or doit respecter `prefers-reduced-motion` (`motion-safe:animate-pulse` ou équivalent), et seulement au premier affichage si l'état client est implémenté.
+- [x] Étendre `TrustBadge` sans casser Story 3.4 (AC: #1, #2, #3)
+  - [x] UPDATE `src/components/features/deals/trust-badge.tsx` pour accepter `level: "bronze" | "argent" | "or"`, `size: "sm" | "md"`, `animated?: boolean`, `showTooltip?: boolean`, `className?: string`.
+  - [x] Conserver le comportement Story 3.4 : si aucun niveau n'est fourni dans les appels existants, le badge ne doit pas disparaître des `DealCard`; choisir une valeur sûre via helper plutôt qu'un fallback codé en dur partout.
+  - [x] Styles requis : Bronze `text-[#B45309] bg-[#FFFBEB] border-[#FCD34D]`; Argent `text-slate-500 bg-slate-50 border-slate-300`; Or `text-[#D97706] bg-[#FEF3C7] border-[#F59E0B]`.
+  - [x] Inclure icône + texte; ne jamais utiliser la couleur seule comme indicateur. Ajouter un `aria-label` explicite et un tooltip/description accessible expliquant le critère de niveau.
+  - [x] L'animation pulse du niveau Or doit respecter `prefers-reduced-motion` (`motion-safe:animate-pulse` ou équivalent), et seulement au premier affichage si l'état client est implémenté.
 
-- [ ] Créer une logique de domaine pour calculer le niveau de confiance (AC: #1, #2, #3)
-  - [ ] NEW recommandé `src/lib/trust-level.ts` avec type `TrustLevel = "bronze" | "argent" | "or"` et fonction pure `getOpportunityTrustLevel(input)`.
-  - [ ] Règle Bronze : `documentCount > 0` et opportunité non encore authentifiée (`verificationStatus` différent de `VERIFIED`) OU documents présents sans signal de vérification admin.
-  - [ ] Règle Argent : `verificationStatus === "VERIFIED"` et critères Or non satisfaits.
-  - [ ] Règle Or : promoteur/auteur avec au moins 3 opportunités `VERIFIED` et moyenne reviews ≥ 4,5, ET pour les deals `requiresDoubleVerification`, la double-vérification doit être complète.
-  - [ ] Ne pas implémenter tout le système de reviews de l'Epic 5 dans cette story. Préparer le helper pour consommer `authorStats.averageRating` / `authorStats.validatedDealsCount` quand les modèles de reviews existent; en attendant, utiliser des valeurs calculées disponibles (`validatedDealsCount`) et `averageRating: null` pour éviter d'afficher Or sans preuve.
-  - [ ] Ajouter tests unitaires : pas de documents → niveau minimal/aucun selon le rendu choisi; documents seuls → Bronze; VERIFIED → Argent; stats 3+ et 4,5+ → Or; double-vérification requise mais incomplète → pas Or/VERIFIED.
+- [x] Créer une logique de domaine pour calculer le niveau de confiance (AC: #1, #2, #3)
+  - [x] NEW recommandé `src/lib/trust-level.ts` avec type `TrustLevel = "bronze" | "argent" | "or"` et fonction pure `getOpportunityTrustLevel(input)`.
+  - [x] Règle Bronze : `documentCount > 0` et opportunité non encore authentifiée (`verificationStatus` différent de `VERIFIED`) OU documents présents sans signal de vérification admin.
+  - [x] Règle Argent : `verificationStatus === "VERIFIED"` et critères Or non satisfaits.
+  - [x] Règle Or : promoteur/auteur avec au moins 3 opportunités `VERIFIED` et moyenne reviews ≥ 4,5, ET pour les deals `requiresDoubleVerification`, la double-vérification doit être complète.
+  - [x] Ne pas implémenter tout le système de reviews de l'Epic 5 dans cette story. Préparer le helper pour consommer `authorStats.averageRating` / `authorStats.validatedDealsCount` quand les modèles de reviews existent; en attendant, utiliser des valeurs calculées disponibles (`validatedDealsCount`) et `averageRating: null` pour éviter d'afficher Or sans preuve.
+  - [x] Ajouter tests unitaires : pas de documents → niveau minimal/aucun selon le rendu choisi; documents seuls → Bronze; VERIFIED → Argent; stats 3+ et 4,5+ → Or; double-vérification requise mais incomplète → pas Or/VERIFIED.
 
-- [ ] Implémenter la double-vérification admin distincte pour les deals > 50 000 € (AC: #4)
-  - [ ] Confirmer que la création existe déjà : `src/app/api/opportunities/route.ts` positionne `requiresDoubleVerification = numericAmount !== null && numericAmount > 50000` et Prisma contient `Opportunity.requiresDoubleVerification Boolean @default(false)`. Préserver cette règle.
-  - [ ] Ajouter un modèle Prisma robuste pour les approbations admin distinctes, recommandé :
+- [x] Implémenter la double-vérification admin distincte pour les deals > 50 000 € (AC: #4)
+  - [x] Confirmer que la création existe déjà : `src/app/api/opportunities/route.ts` positionne `requiresDoubleVerification = numericAmount !== null && numericAmount > 50000` et Prisma contient `Opportunity.requiresDoubleVerification Boolean @default(false)`. Préserver cette règle.
+  - [x] Ajouter un modèle Prisma robuste pour les approbations admin distinctes, recommandé :
         `OpportunityVerificationApproval { id, opportunityId, adminId, note?, createdAt }` avec relations vers `Opportunity` et `User`, index `opportunityId`, et contrainte unique `[opportunityId, adminId]`.
-  - [ ] Alternative acceptable seulement si l'équipe refuse un nouveau modèle : ajouter deux champs explicites (`verifiedById`, `secondVerifiedById`, timestamps) avec relations nommées. Ne pas stocker l'identité des deux admins uniquement dans `reviewNotes`, car ce serait fragile et difficile à tester.
-  - [ ] UPDATE `src/app/api/admin/opportunities/[id]/verify/route.ts` : pour `action: "verify"` sur une opportunité `requiresDoubleVerification`, enregistrer l'approbation de l'admin courant, refuser une deuxième approbation par le même admin (`409`, message français), et ne passer à `VERIFIED` qu'après deux admins distincts.
-  - [ ] Pour une première approbation d'un deal double-vérification, garder ou mettre le statut `EN_COURS`, renseigner une note interne sécurisée, retourner `{ data, pendingSecondVerification: true }`, et ne pas envoyer l'email « deal vérifié » tant que la seconde approbation n'a pas eu lieu.
-  - [ ] Pour les deals sans double-vérification, conserver le comportement existant : `PENDING|EN_COURS → VERIFIED`, `verifiedAt`, `verifiedById`, email auteur, logs safe.
-  - [ ] Empêcher tout passage direct à `VERIFIED` via `action: "move", status: "VERIFIED"` si `requiresDoubleVerification` est true et qu'il n'y a pas deux approbations distinctes.
-  - [ ] Ajouter migration Prisma + `npx prisma generate`; ne pas committer de base SQLite binaire.
+  - [x] Alternative acceptable seulement si l'équipe refuse un nouveau modèle : ajouter deux champs explicites (`verifiedById`, `secondVerifiedById`, timestamps) avec relations nommées. Ne pas stocker l'identité des deux admins uniquement dans `reviewNotes`, car ce serait fragile et difficile à tester.
+  - [x] UPDATE `src/app/api/admin/opportunities/[id]/verify/route.ts` : pour `action: "verify"` sur une opportunité `requiresDoubleVerification`, enregistrer l'approbation de l'admin courant, refuser une deuxième approbation par le même admin (`409`, message français), et ne passer à `VERIFIED` qu'après deux admins distincts.
+  - [x] Pour une première approbation d'un deal double-vérification, garder ou mettre le statut `EN_COURS`, renseigner une note interne sécurisée, retourner `{ data, pendingSecondVerification: true }`, et ne pas envoyer l'email « deal vérifié » tant que la seconde approbation n'a pas eu lieu.
+  - [x] Pour les deals sans double-vérification, conserver le comportement existant : `PENDING|EN_COURS → VERIFIED`, `verifiedAt`, `verifiedById`, email auteur, logs safe.
+  - [x] Empêcher tout passage direct à `VERIFIED` via `action: "move", status: "VERIFIED"` si `requiresDoubleVerification` est true et qu'il n'y a pas deux approbations distinctes.
+  - [x] Ajouter migration Prisma + `npx prisma generate`; ne pas committer de base SQLite binaire.
 
-- [ ] Mettre à jour l'UI admin pour exposer la double-vérification sans réécrire le Kanban (AC: #4)
-  - [ ] UPDATE `src/app/(admin)/admin/opportunities/page.tsx`, `src/components/features/admin/opportunity-kanban-board.tsx` et `src/components/features/admin/opportunity-detail-sheet.tsx` uniquement là où nécessaire.
-  - [ ] Afficher un signal français pour les deals `requiresDoubleVerification`: « Double vérification requise » et compteur `0/2`, `1/2`, `2/2`.
-  - [ ] Dans le panneau détail admin, après la première validation, afficher clairement « En attente d'un second admin » et désactiver/empêcher la seconde validation par le même admin avec explication.
-  - [ ] Préserver les transitions Story 3.3 : `PENDING`, `EN_COURS`, `VERIFIED`, `REJECTED`; ne pas ajouter un nouveau `VerificationStatus` enum sans nécessité.
-  - [ ] Garder les notes de rejet obligatoires pour `REJECTED` et ne pas régresser les tests de transitions invalides.
+- [x] Mettre à jour l'UI admin pour exposer la double-vérification sans réécrire le Kanban (AC: #4)
+  - [x] UPDATE `src/app/(admin)/admin/opportunities/page.tsx`, `src/components/features/admin/opportunity-kanban-board.tsx` et `src/components/features/admin/opportunity-detail-sheet.tsx` uniquement là où nécessaire.
+  - [x] Afficher un signal français pour les deals `requiresDoubleVerification`: « Double vérification requise » et compteur `0/2`, `1/2`, `2/2`.
+  - [x] Dans le panneau détail admin, après la première validation, afficher clairement « En attente d'un second admin » et désactiver/empêcher la seconde validation par le même admin avec explication.
+  - [x] Préserver les transitions Story 3.3 : `PENDING`, `EN_COURS`, `VERIFIED`, `REJECTED`; ne pas ajouter un nouveau `VerificationStatus` enum sans nécessité.
+  - [x] Garder les notes de rejet obligatoires pour `REJECTED` et ne pas régresser les tests de transitions invalides.
 
-- [ ] Créer `VerificationTimeline` pour la page détail deal (AC: #6)
-  - [ ] NEW `src/components/features/deals/verification-timeline.tsx`.
-  - [ ] Props recommandées : `documentCount: number`, `verificationStatus: VerificationStatus|string`, `trustLevel: TrustLevel`, `requiresDoubleVerification?: boolean`, `approvalCount?: number`, `averageRating?: number | null`, `validatedDealsCount?: number`.
-  - [ ] Étapes fixes : « Documents uploadés » → « Vérifié par IBC » → « Reviews communautaires ».
-  - [ ] États : `complete`, `current`, `pending`. Documents complete si `documentCount > 0`; IBC complete si `VERIFIED` (ou `approvalCount >= 2` pour double vérification); Reviews complete si critères Or satisfaits.
-  - [ ] Mobile : stepper horizontal scrollable si nécessaire, labels lisibles, connecteurs visibles; desktop peut rester horizontal. Étapes complétées en vert, current en amber/teal, pending en muted.
-  - [ ] Accessibilité : utiliser une liste ordonnée ou `role="list"`, labels textuels, pas de signification par couleur seule.
+- [x] Créer `VerificationTimeline` pour la page détail deal (AC: #6)
+  - [x] NEW `src/components/features/deals/verification-timeline.tsx`.
+  - [x] Props recommandées : `documentCount: number`, `verificationStatus: VerificationStatus|string`, `trustLevel: TrustLevel`, `requiresDoubleVerification?: boolean`, `approvalCount?: number`, `averageRating?: number | null`, `validatedDealsCount?: number`.
+  - [x] Étapes fixes : « Documents uploadés » → « Vérifié par IBC » → « Reviews communautaires ».
+  - [x] États : `complete`, `current`, `pending`. Documents complete si `documentCount > 0`; IBC complete si `VERIFIED` (ou `approvalCount >= 2` pour double vérification); Reviews complete si critères Or satisfaits.
+  - [x] Mobile : stepper horizontal scrollable si nécessaire, labels lisibles, connecteurs visibles; desktop peut rester horizontal. Étapes complétées en vert, current en amber/teal, pending en muted.
+  - [x] Accessibilité : utiliser une liste ordonnée ou `role="list"`, labels textuels, pas de signification par couleur seule.
 
-- [ ] Mettre à jour la page détail membre pour afficher badge, timeline et documents consultables (AC: #1, #2, #3, #5, #6)
-  - [ ] UPDATE `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`.
-  - [ ] Calculer `documentCount`, `validatedDealsCount` de l'auteur, `averageRating` si disponible, `approvalCount` si le nouveau modèle est ajouté, puis `trustLevel` via `getOpportunityTrustLevel`.
-  - [ ] Afficher `TrustBadge` près du titre/statut et `VerificationTimeline` avant ou près de la section documents selon UX deal detail.
-  - [ ] Corriger le comportement actuel Story 3.4 qui passe `canPreview={canManageDocuments}` à `DocumentUploadSection`: pour les membres autorisés non-auteurs/non-admins, les documents juridiques doivent être visibles, prévisualisables et téléchargeables (AC #5), mais ils ne doivent pas pouvoir uploader/supprimer.
-  - [ ] Réutiliser `DocumentRow` et les endpoints/document security existants de Story 3.2; ne pas créer de second système de preview/download et ne jamais exposer documents à public/visiteur/non-abonné/tier insuffisant.
-  - [ ] Conserver les guardrails de Story 3.4 : public teaser ne voit jamais documents/montant/contact; membre non abonné garde `PremiumAccessBlockedPanel`; tier insuffisant garde le panneau upgrade; `REJECTED` visible uniquement auteur/admin.
+- [x] Mettre à jour la page détail membre pour afficher badge, timeline et documents consultables (AC: #1, #2, #3, #5, #6)
+  - [x] UPDATE `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`.
+  - [x] Calculer `documentCount`, `validatedDealsCount` de l'auteur, `averageRating` si disponible, `approvalCount` si le nouveau modèle est ajouté, puis `trustLevel` via `getOpportunityTrustLevel`.
+  - [x] Afficher `TrustBadge` près du titre/statut et `VerificationTimeline` avant ou près de la section documents selon UX deal detail.
+  - [x] Corriger le comportement actuel Story 3.4 qui passe `canPreview={canManageDocuments}` à `DocumentUploadSection`: pour les membres autorisés non-auteurs/non-admins, les documents juridiques doivent être visibles, prévisualisables et téléchargeables (AC #5), mais ils ne doivent pas pouvoir uploader/supprimer.
+  - [x] Réutiliser `DocumentRow` et les endpoints/document security existants de Story 3.2; ne pas créer de second système de preview/download et ne jamais exposer documents à public/visiteur/non-abonné/tier insuffisant.
+  - [x] Conserver les guardrails de Story 3.4 : public teaser ne voit jamais documents/montant/contact; membre non abonné garde `PremiumAccessBlockedPanel`; tier insuffisant garde le panneau upgrade; `REJECTED` visible uniquement auteur/admin.
 
-- [ ] Mettre à jour `DealCard` pour utiliser le vrai niveau de confiance (AC: #1, #2, #3)
-  - [ ] UPDATE `src/components/features/deals/deal-card.tsx` pour accepter soit `trustLevel`, soit les champs nécessaires au calcul; éviter de coder `level="argent"` en dur.
-  - [ ] UPDATE les queries feed membre dans `src/app/(dashboard)/dashboard/opportunities/page.tsx` et `src/app/api/opportunities/route.ts` pour sérialiser uniquement les signaux non sensibles nécessaires au badge (`documentCount`, `verificationStatus`, stats auteur agrégées si disponibles).
-  - [ ] Ne pas augmenter la densité de la carte au-delà des 5 signaux de Story 3.4; le détail de la confiance appartient à la page détail/timeline.
+- [x] Mettre à jour `DealCard` pour utiliser le vrai niveau de confiance (AC: #1, #2, #3)
+  - [x] UPDATE `src/components/features/deals/deal-card.tsx` pour accepter soit `trustLevel`, soit les champs nécessaires au calcul; éviter de coder `level="argent"` en dur.
+  - [x] UPDATE les queries feed membre dans `src/app/(dashboard)/dashboard/opportunities/page.tsx` et `src/app/api/opportunities/route.ts` pour sérialiser uniquement les signaux non sensibles nécessaires au badge (`documentCount`, `verificationStatus`, stats auteur agrégées si disponibles).
+  - [x] Ne pas augmenter la densité de la carte au-delà des 5 signaux de Story 3.4; le détail de la confiance appartient à la page détail/timeline.
 
-- [ ] Ajouter tests et vérifications (AC: #1-#6)
-  - [ ] Tests unitaires `trust-level.test.ts` pour toutes les règles Bronze/Argent/Or et cas double-vérification.
-  - [ ] Tests UI `trust-badge.test.tsx` pour labels, classes/variantes, aria-label, tooltip/description, reduced motion/pulse si testable.
-  - [ ] Tests UI `verification-timeline.test.tsx` pour étapes complétées/pending et texte français.
-  - [ ] Tests API admin verify : deal normal vérifié en 1 admin; deal >50k première validation reste `EN_COURS`; même admin ne peut pas valider deux fois; second admin passe `VERIFIED`; `move VERIFIED` direct est bloqué; email envoyé seulement après validation complète.
-  - [ ] Tests page détail : membre autorisé voit `DocumentRow`/preview/download, badge et timeline; public/non-abonné/tier insuffisant ne reçoit pas les documents; `REJECTED` reste caché aux autres membres.
-  - [ ] Exécuter au minimum `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`. Exécuter `npm run lint` si possible et documenter les lint préexistants séparément.
-  - [ ] Respect strict Next.js 16/TS du projet : en JSX, utiliser `condition ? <Component /> : null`, jamais `condition && <Component />`.
+- [x] Ajouter tests et vérifications (AC: #1-#6)
+  - [x] Tests unitaires `trust-level.test.ts` pour toutes les règles Bronze/Argent/Or et cas double-vérification.
+  - [x] Tests UI `trust-badge.test.tsx` pour labels, classes/variantes, aria-label, tooltip/description, reduced motion/pulse si testable.
+  - [x] Tests UI `verification-timeline.test.tsx` pour étapes complétées/pending et texte français.
+  - [x] Tests API admin verify : deal normal vérifié en 1 admin; deal >50k première validation reste `EN_COURS`; même admin ne peut pas valider deux fois; second admin passe `VERIFIED`; `move VERIFIED` direct est bloqué; email envoyé seulement après validation complète.
+  - [x] Tests page détail : membre autorisé voit `DocumentRow`/preview/download, badge et timeline; public/non-abonné/tier insuffisant ne reçoit pas les documents; `REJECTED` reste caché aux autres membres.
+  - [x] Exécuter au minimum `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`. Exécuter `npm run lint` si possible et documenter les lint préexistants séparément.
+  - [x] Respect strict Next.js 16/TS du projet : en JSX, utiliser `condition ? <Component /> : null`, jamais `condition && <Component />`.
 
 ## Dev Notes
 
@@ -244,8 +244,48 @@ gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- 2026-05-19: `./node_modules/.bin/prisma validate` passed.
+- 2026-05-19: `npx prisma generate` passed.
+- 2026-05-19: `npx vitest run` passed (249 tests).
+- 2026-05-19: `npm run build` passed; pre-existing environment warnings for missing Upstash variables and Next middleware deprecation observed.
+- 2026-05-19: `npm run lint` failed on pre-existing issues outside story scope: react-hook-form incompatible-library warnings, unused vars, no-explicit-any, set-state-in-effect, and unescaped apostrophe.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Implemented Bronze/Argent/Or trust levels with accessible TrustBadge variants, safe legacy fallback, and trust-level domain helper.
+- Added Prisma `OpportunityVerificationApproval` model and migration for distinct admin approvals.
+- Updated admin verification API to require two distinct admins for double-verification deals, block same-admin duplicate approval, block direct `move` to VERIFIED, and defer verified emails until completion.
+- Updated admin Kanban/detail sheet to show double-verification requirement and approval counters.
+- Added member detail trust badge, verification timeline, and authorized legal document preview/download without granting upload/delete to normal members.
+- Updated member deal cards and feeds to use calculated trust signals instead of hardcoded Argent.
+- Added unit/UI/API/page tests for trust rules, badges, timeline, double-verification, document visibility, and admin UI signals.
 
 ### File List
+
+- prisma/schema.prisma
+- prisma/migrations/20260519145300_add_opportunity_verification_approvals/migration.sql
+- src/lib/trust-level.ts
+- src/lib/trust-level.test.ts
+- src/components/features/deals/trust-badge.tsx
+- src/components/features/deals/trust-badge.test.tsx
+- src/components/features/deals/verification-timeline.tsx
+- src/components/features/deals/verification-timeline.test.tsx
+- src/components/features/deals/deal-card.tsx
+- src/components/features/deals/deal-card.test.tsx
+- src/app/(dashboard)/dashboard/opportunities/page.tsx
+- src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx
+- src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx
+- src/app/api/opportunities/route.ts
+- src/app/api/admin/opportunities/[id]/verify/route.ts
+- src/app/api/admin/opportunities/[id]/verify/route.test.ts
+- src/app/(admin)/admin/opportunities/page.tsx
+- src/components/features/admin/opportunity-kanban-board.tsx
+- src/components/features/admin/opportunity-kanban-board.test.tsx
+- src/components/features/admin/opportunity-detail-sheet.tsx
+- _bmad-output/implementation-artifacts/3-5-niveaux-de-confiance-ibc-et-doubleverification.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+- 2026-05-19: Implemented Story 3.5 trust levels, double-verification workflow, member/admin UI updates, Prisma migration, and tests; status moved to review.

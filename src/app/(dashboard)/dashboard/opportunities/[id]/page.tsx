@@ -2,11 +2,14 @@ import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { TrustBadge } from "@/components/features/deals/trust-badge";
+import { VerificationTimeline } from "@/components/features/deals/verification-timeline";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
+import { getOpportunityTrustLevel } from "@/lib/trust-level";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { notFound, redirect } from "next/navigation";
 
@@ -21,9 +24,18 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
     prisma.opportunity.findUnique({
       where: { id },
       include: {
-        author: { select: { name: true, id: true, location: true, phone: true } },
+        author: {
+          select: {
+            name: true,
+            id: true,
+            location: true,
+            phone: true,
+            opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
+          },
+        },
         verifiedBy: { select: { name: true } },
         documents: { orderBy: { createdAt: "desc" } },
+        verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
       },
     }),
   ]);
@@ -83,9 +95,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   const status = statusLabels[opportunity.verificationStatus] ?? { text: opportunity.verificationStatus, color: "" };
   const canManageDocuments = isAuthor || isAdmin;
+  const canViewDocuments = canManageDocuments || (access.hasAccess && hasTierAccess && isPublishedToMember);
   const canSeeRejectionNote = (isAuthor || isAdmin) && opportunity.rejectionNote;
   const shouldShowWhatsApp = !isAuthor && !isAdmin;
-  const initialDocuments = canManageDocuments
+  const initialDocuments = canViewDocuments
     ? (opportunity.documents ?? []).map((document) => ({
         id: document.id,
         opportunityId: document.opportunityId,
@@ -100,6 +113,16 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       }))
     : [];
   const documentCount = opportunity.documents?.length ?? 0;
+  const approvalCount = opportunity.verificationApprovals.length;
+  const averageRating = null;
+  const validatedDealsCount = opportunity.author.opportunities.length;
+  const trustLevel = getOpportunityTrustLevel({
+    documentCount,
+    verificationStatus: opportunity.verificationStatus,
+    requiresDoubleVerification: opportunity.requiresDoubleVerification,
+    approvalCount,
+    authorStats: { validatedDealsCount, averageRating },
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -107,7 +130,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
       <div className="mt-6">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-bold">{opportunity.title}</h1>
+          <div className="min-w-0 space-y-2">
+            <h1 className="text-2xl font-bold">{opportunity.title}</h1>
+            {trustLevel ? <TrustBadge level={trustLevel} size="md" animated={trustLevel === "or"} /> : null}
+          </div>
           <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
         </div>
 
@@ -149,12 +175,24 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         </div>
 
         <div className="mt-6">
+          <VerificationTimeline
+            documentCount={documentCount}
+            verificationStatus={opportunity.verificationStatus}
+            trustLevel={trustLevel}
+            requiresDoubleVerification={opportunity.requiresDoubleVerification}
+            approvalCount={approvalCount}
+            averageRating={averageRating}
+            validatedDealsCount={validatedDealsCount}
+          />
+        </div>
+
+        <div className="mt-6">
           <DocumentUploadSection
             opportunityId={opportunity.id}
             initialDocuments={initialDocuments}
             documentCount={documentCount}
             canUpload={canManageDocuments}
-            canPreview={canManageDocuments}
+            canPreview={canViewDocuments}
           />
         </div>
 
