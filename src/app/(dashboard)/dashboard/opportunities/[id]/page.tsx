@@ -169,6 +169,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               <WhatsAppCTA
                 phoneNumber={opportunity.author.phone}
                 prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
+                label="Contacter le porteur sur WhatsApp"
               />
             </div>
           ) : null}

@@ -24,10 +24,10 @@ describe("DealCard", () => {
     expect(screen.getByText(/25\s*000 €/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Niveau de confiance Argent/)).toBeInTheDocument();
     expect(screen.getByLabelText("3 document(s)")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Contacter le porteur sur WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/22501020304"));
+    expect(screen.getByRole("link", { name: "Contacter sur WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/22501020304"));
   });
 
-  it("disables WhatsApp when author phone is missing", () => {
+  it("shows disabled WhatsApp button with tooltip when author phone is missing", () => {
     render(
       <DealCard
         deal={{
@@ -42,7 +42,10 @@ describe("DealCard", () => {
       />,
     );
 
-    expect(screen.getByText("Le numéro WhatsApp n'est pas renseigné.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Contacter sur WhatsApp" })).toBeDisabled();
+    const button = screen.getByRole("button", { name: "Contacter sur WhatsApp" });
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveAttribute("data-slot", "tooltip-trigger");
+    expect(button.className).toContain("cursor-not-allowed");
+    expect(button.className).toContain("opacity-60");
   });
 });
