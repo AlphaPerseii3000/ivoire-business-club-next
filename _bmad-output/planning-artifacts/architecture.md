@@ -366,6 +366,27 @@ type ApiError = { error: string; code?: string; details?: Record<string, string[
 3. Middleware checks `authorized` callback on every request
 4. `/admin` routes check `role === "ADMIN"`
 
+### JSX Boolean Guardrail (Next.js 16 Strict)
+
+- Do not use `&&` in JSX, including inside ternary conditions.
+- Incorrect pattern: `{!isAuthor && !isAdmin ? <WhatsAppCTA /> : null}`.
+- Correct pattern: pre-compute compound booleans before the JSX return, for example `const shouldShowWhatsApp = !isAuthor && !isAdmin;` then render `{shouldShowWhatsApp ? <WhatsAppCTA /> : null}`.
+- Rule: pre-compute every compound boolean expression as a `const` before the JSX return.
+
+### Upload Security Patterns
+
+- Presigned URL completion endpoints MUST validate the R2 key server-side before persisting document metadata:
+  - Regex: `^opportunities/[a-zA-Z0-9-]+/documents/[a-zA-Z0-9-]+\.[a-zA-Z0-9]+$`
+  - Scope check: `key.startsWith('opportunities/{opportunityId}/documents/')`
+- Conditional metadata: never serialize full `initialDocuments` metadata to non-authors/non-admins.
+  - `documentCount` may be visible broadly.
+  - `initialDocuments` must be returned only to authorized authors/admins.
+- Source: Story 3.2 code-review findings P1 (document metadata exposure) and P2 (client-trusted R2 key).
+
+### Dev Agent Git Safety
+
+- DS agents must not use `git add -A`; use `git add -A -- . ':!dev.db' ':!*.sqlite3'` or add files explicitly.
+
 ---
 
 ## Project Structure & Boundaries

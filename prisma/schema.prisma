@@ -57,7 +57,7 @@ model User {
   email         String    @unique
   name          String
   bio           String?
-  image         String?
+  image         String?   @map("avatarUrl")
   phone         String?
   location      String?
   country        String?

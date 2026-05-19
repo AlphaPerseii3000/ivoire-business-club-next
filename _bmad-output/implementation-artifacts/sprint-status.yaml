@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12T23:04:29Z
-last_updated: 2026-05-19T17:30:00+02:00
+last_updated: 2026-05-19T15:50:47+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -68,7 +68,7 @@ development_status:
   3-5-niveaux-de-confiance-ibc-et-doubleverification: done
   epic-3-retrospective: done
   epic-4: in-progress
-  4-0-consolidation-post-retrospective-epic-3: ready-for-dev
+  4-0-consolidation-post-retrospective-epic-3: review
   4-1-deep-links-whatsapp-sur-profils-et-deals: backlog
   4-2-systeme-de-tags-profil-et-opportunites: backlog
   4-3-matching-basique-par-tags: backlog

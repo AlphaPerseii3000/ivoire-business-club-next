@@ -37,6 +37,8 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
+*.db
+*.sqlite3
 prisma/*.db
 prisma/*.db-journal
 
