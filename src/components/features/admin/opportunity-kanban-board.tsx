@@ -114,12 +114,13 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
     setMutatingId(opportunity.id);
     const previousItems = items;
     const optimisticStatus = action === "verify" ? (opportunity.requiresDoubleVerification && opportunity.approvalCount < 1 ? "EN_COURS" : "VERIFIED") : action === "reject" ? "REJECTED" : "EN_COURS";
-    const optimisticApprovalCount = action === "verify" && opportunity.requiresDoubleVerification ? Math.min(opportunity.approvalCount + 1, 2) : opportunity.approvalCount;
-    setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, verificationStatus: optimisticStatus, approvalCount: optimisticApprovalCount } : item)));
+    const optimisticApprovalCount = action === "verify" && opportunity.requiresDoubleVerification ? Math.min(opportunity.approvalCount + 1, 2) : action === "verify" ? opportunity.approvalCount : opportunity.approvalCount;
+    const optimisticCurrentAdminApproved = action === "verify" ? true : opportunity.currentAdminApproved;
+    setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, verificationStatus: optimisticStatus, approvalCount: optimisticApprovalCount, currentAdminApproved: optimisticCurrentAdminApproved } : item)));
 
     try {
       const updated = await patchOpportunity(opportunity.id, { action, note });
-      setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, ...updated } : item)));
+      setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, ...updated, currentAdminApproved: action === "verify" ? true : item.currentAdminApproved } : item)));
       toast.success("Statut du deal mis à jour.");
       if (action === "verify" || action === "reject") {
         setSelectedId(null);

@@ -120,6 +120,10 @@ afin d'évaluer la fiabilité de l'opportunité avant de contacter le porteur.
   - [x] Exécuter au minimum `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`. Exécuter `npm run lint` si possible et documenter les lint préexistants séparément.
   - [x] Respect strict Next.js 16/TS du projet : en JSX, utiliser `condition ? <Component /> : null`, jamais `condition && <Component />`.
 
+### Review Findings
+
+- [ ] [Review][Patch] Admin UI loses `currentAdminApproved` after first double-verification approval, so the same admin can reopen the detail sheet and see an enabled “Vérifier” button instead of the required disabled/explanatory state. The API response is merged directly into `AdminOpportunity` but does not include the UI fields `approvalCount`/`currentAdminApproved`; the optimistic update increments `approvalCount` but leaves `currentAdminApproved` false, and `router.refresh()` does not reset the client component `useState` initialized from props. This violates the AC #4 admin UI requirement to show “En attente d'un second admin” and disable/prevent the same admin from validating again with explanation after the first validation. [src/components/features/admin/opportunity-kanban-board.tsx:116-122, src/app/api/admin/opportunities/[id]/verify/route.ts:186-219]
+
 ## Dev Notes
 
 ### Contexte existant à préserver
