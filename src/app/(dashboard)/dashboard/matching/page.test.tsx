@@ -4,10 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import MatchingPage from "./page";
 
 const mockAuth = vi.hoisted(() => vi.fn());
+const mockGetUserPremiumAccess = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockOpportunityFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
+vi.mock("@/lib/subscription-access", () => ({ getUserPremiumAccess: mockGetUserPremiumAccess }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
@@ -22,8 +24,19 @@ describe("MatchingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "member-1" } });
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
     mockUserFindUnique.mockResolvedValue({ id: "member-1", role: "MEMBER", tier: "BOSS", tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }] });
     mockOpportunityFindMany.mockResolvedValue([]);
+  });
+
+  it("blocks access for members without premium access", async () => {
+    mockGetUserPremiumAccess.mockResolvedValueOnce({ hasAccess: false });
+
+    const { container } = render(await MatchingPage());
+
+    expect(container.textContent).toContain("Matching");
+    expect(screen.queryByText("2 tags communs")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Modifier mes tags" })).not.toBeInTheDocument();
   });
 
   it("shows an edit-tags empty state when the member has no tags", async () => {

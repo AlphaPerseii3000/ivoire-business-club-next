@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 
 import { DealCard } from "@/components/features/deals/deal-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { attachMatchMetadata } from "@/lib/matching";
 import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
+import { getUserPremiumAccess } from "@/lib/subscription-access";
 
 function editTagsAction() {
   return (
@@ -22,6 +24,21 @@ function editTagsAction() {
 export default async function MatchingPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
+
+  const access = await getUserPremiumAccess(session.user.id);
+  if (!access.hasAccess) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div>
+          <h1 className="text-2xl font-bold">Matching</h1>
+          <p className="mt-1 text-muted-foreground">Des deals priorisés selon les tags de ton profil.</p>
+        </div>
+        <div className="mt-8">
+          <PremiumAccessBlockedPanel />
+        </div>
+      </div>
+    );
+  }
 
   const currentUser = await prisma.user.findUnique({
     where: { id: session.user.id },

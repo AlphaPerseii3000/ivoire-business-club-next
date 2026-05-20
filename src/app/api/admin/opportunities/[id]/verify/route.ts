@@ -261,7 +261,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       console.error("[admin-opportunity-email]", { opportunityId: id, status: effectiveNextStatus, error: sanitizeError(error) });
     }
 
-    if (!pendingSecondVerification && effectiveNextStatus === "VERIFIED") {
+    if (!pendingSecondVerification && effectiveNextStatus === "VERIFIED" && currentStatus !== "VERIFIED") {
       try {
         await notifyMatchedMembers(updated);
       } catch (error) {

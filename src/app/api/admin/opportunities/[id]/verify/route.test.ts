@@ -259,4 +259,38 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     expect(mockNotificationCreateMany).toHaveBeenCalledOnce();
   });
 
+  it("does not send matched notifications when re-verifying an already VERIFIED opportunity", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1" } });
+    mockUserFindUnique.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockOpportunityFindUnique.mockResolvedValue({
+      id: "opp-1",
+      title: "Deal déjà vérifié",
+      authorId: "author-1",
+      verificationStatus: "VERIFIED",
+      requiresDoubleVerification: false,
+      verifiedAt: new Date("2026-05-01"),
+      tags: [{ category: "SECTEUR", value: "tech" }],
+      verificationApprovals: [],
+      author: { id: "author-1", name: "Koffi", email: "koffi@example.com" },
+      _count: { documents: 0, verificationApprovals: 0 },
+    });
+    mockOpportunityUpdate.mockResolvedValue({
+      id: "opp-1",
+      title: "Deal déjà vérifié",
+      authorId: "author-1",
+      verificationStatus: "VERIFIED",
+      requiredTier: "AFFRANCHI",
+      tags: [{ category: "SECTEUR", value: "tech" }],
+      verificationApprovals: [],
+      author: { id: "author-1", name: "Koffi", email: "koffi@example.com" },
+      _count: { documents: 0, verificationApprovals: 0 },
+    });
+
+    const res = await PATCH(request({ action: "verify" }), params);
+
+    expect(res.status).toBe(200);
+    expect(mockNotificationCreateMany).not.toHaveBeenCalled();
+    expect(mockSendMatched).not.toHaveBeenCalled();
+  });
+
 });
