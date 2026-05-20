@@ -373,6 +373,22 @@ type ApiError = { error: string; code?: string; details?: Record<string, string[
 - Correct pattern: pre-compute compound booleans before the JSX return, for example `const shouldShowWhatsApp = !isAuthor && !isAdmin;` then render `{shouldShowWhatsApp ? <WhatsAppCTA /> : null}`.
 - Rule: pre-compute every compound boolean expression as a `const` before the JSX return.
 
+### Card Component Anti-Pattern: Nested Anchors
+
+- Source: Epic 4 retrospective, Story 4.2 code-review blocker.
+- Do not render interactive sub-components that output `<a>`, `<Link>`, or button-as-link elements inside a card that is already wrapped by `<Link>`; nested anchors are invalid HTML and can break click, focus, and hydration behavior.
+- Forbidden pattern: wrapping a full `DealCard` in `<Link>` while the card body renders `TagChips` in its default interactive mode.
+- Fix pattern A: pass `interactive={false}` to sub-components such as `TagChips` whenever they are rendered inside a clickable card/link wrapper.
+- Fix pattern B: move interactive tags, buttons, or secondary links outside the parent `<Link>` wrapper and keep only non-interactive content inside the clickable card region.
+
+### Idempotent State-Transition Side Effects
+
+- Source: Epic 4 retrospective, Story 4.3 code-review major finding.
+- Transition validation such as `isAllowedTransition(...)` is not enough to decide side effects; side effects must additionally verify that the persisted status is actually changing.
+- Any side effect triggered by a status transition—matching notifications, emails, webhooks, enriched audit entries, or similar—MUST check old status vs. new status before execution.
+- Reference pattern: `if (newStatus === "VERIFIED" && currentStatus !== "VERIFIED") { ... }`.
+- Admin endpoints must remain idempotent: re-verifying or re-submitting the same status must not spam notifications, emails, or webhooks.
+
 ### Upload Security Patterns
 
 - Presigned URL completion endpoints MUST validate the R2 key server-side before persisting document metadata:
