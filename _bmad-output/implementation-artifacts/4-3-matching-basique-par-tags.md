@@ -2,7 +2,7 @@
 Story: "4.3"
 StoryKey: "4-3-matching-basique-par-tags"
 Title: "Matching Basique par Tags"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR28"]
@@ -13,7 +13,7 @@ Created: "2026-05-20"
 
 # Story 4.3: Matching Basique par Tags
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -45,61 +45,61 @@ afin de découvrir rapidement les deals pertinents pour mon profil.
 
 ## Tasks / Subtasks
 
-- [ ] **Auditer et réutiliser l'infrastructure tags existante — ne pas reconstruire Story 4.2** (AC: #1, #3, #4)
-  - [ ] Confirmer que `prisma/schema.prisma` contient déjà `TagCategory`, `UserTag`, `OpportunityTag`, `User.tags`, `Opportunity.tags`, contraintes uniques et index `[category, value]`.
-  - [ ] Réutiliser `src/lib/tags.ts` (`SelectedTag`, `getTagLabel`, `dedupeTags`, `isValidTagOption`, `getTagFilterHref`) comme source unique des valeurs/labels de tags.
-  - [ ] Réutiliser `src/components/features/tags/tag-chips.tsx` et `src/components/features/tags/tag-input.tsx` pour rendu/édition; ne pas créer un second système de chips.
-  - [ ] Préserver les tags déjà affichés dans `DealCard`, les pages opportunités, la page détail, les profils membres et `/profile/edit`.
+- [x] **Auditer et réutiliser l'infrastructure tags existante — ne pas reconstruire Story 4.2** (AC: #1, #3, #4)
+  - [x] Confirmer que `prisma/schema.prisma` contient déjà `TagCategory`, `UserTag`, `OpportunityTag`, `User.tags`, `Opportunity.tags`, contraintes uniques et index `[category, value]`.
+  - [x] Réutiliser `src/lib/tags.ts` (`SelectedTag`, `getTagLabel`, `dedupeTags`, `isValidTagOption`, `getTagFilterHref`) comme source unique des valeurs/labels de tags.
+  - [x] Réutiliser `src/components/features/tags/tag-chips.tsx` et `src/components/features/tags/tag-input.tsx` pour rendu/édition; ne pas créer un second système de chips.
+  - [x] Préserver les tags déjà affichés dans `DealCard`, les pages opportunités, la page détail, les profils membres et `/profile/edit`.
 
-- [ ] **Créer une couche de matching tag-based côté serveur** (AC: #1, #3, #4)
-  - [ ] Créer `src/lib/matching.ts` avec des helpers purs et testables :
+- [x] **Créer une couche de matching tag-based côté serveur** (AC: #1, #3, #4)
+  - [x] Créer `src/lib/matching.ts` avec des helpers purs et testables :
     - `countCommonTags(userTags, opportunityTags): number`
     - `calculateMatchPercent(commonCount, userTagCount): number` avec règle MVP déterministe : `Math.round((commonCount / userTagCount) * 100)`, bornée à `0..100`, `0` si aucun tag profil.
     - `attachMatchMetadata(opportunities, userTags)` qui ajoute `{ commonTagCount, matchPercent, matchedTags }` sans muter les objets Prisma.
-  - [ ] Définir un type exporté `OpportunityMatchMetadata` pour éviter des champs ad hoc dispersés.
-  - [ ] Trier par `commonTagCount desc`, puis `createdAt desc` pour stabilité. Les deals à `commonTagCount = 0` peuvent rester visibles dans « Opportunités » après les matches, mais le feed « Matching » doit afficher uniquement les matches.
-  - [ ] Ne pas utiliser de ML, score opaque ou librairie externe; le MVP est strictement règles + tags communs.
+  - [x] Définir un type exporté `OpportunityMatchMetadata` pour éviter des champs ad hoc dispersés.
+  - [x] Trier par `commonTagCount desc`, puis `createdAt desc` pour stabilité. Les deals à `commonTagCount = 0` peuvent rester visibles dans « Opportunités » après les matches, mais le feed « Matching » doit afficher uniquement les matches.
+  - [x] Ne pas utiliser de ML, score opaque ou librairie externe; le MVP est strictement règles + tags communs.
 
-- [ ] **Ajouter le feed Matching dédié** (AC: #1, #3, #4)
-  - [ ] Créer `src/app/(dashboard)/dashboard/matching/page.tsx` comme Server Component protégé par `auth()`.
-  - [ ] Charger le membre courant avec ses `tags` triés (`category`, `value`) et son `tier/role`.
-  - [ ] Charger les opportunités visibles via les mêmes règles que le feed opportunités : `buildOpportunityVisibilityWhere(currentUser.tier)` pour membres, accès admin plus large si nécessaire, et inclure auteurs/téléphones, tags, `_count.documents`, `_count.verificationApprovals`.
-  - [ ] Filtrer le feed matching aux opportunités avec `commonTagCount > 0`, puis trier par `commonTagCount desc`, `createdAt desc`.
-  - [ ] Si le membre n'a aucun tag profil, afficher `EmptyState` avec une explication courte et CTA « Modifier mes tags » vers `/profile/edit`.
-  - [ ] Si aucun deal ne matche, afficher `EmptyState` avec le texte exact « Aucun deal ne correspond à vos critères actuels » et CTA « Modifier mes tags » vers `/profile/edit`.
+- [x] **Ajouter le feed Matching dédié** (AC: #1, #3, #4)
+  - [x] Créer `src/app/(dashboard)/dashboard/matching/page.tsx` comme Server Component protégé par `auth()`.
+  - [x] Charger le membre courant avec ses `tags` triés (`category`, `value`) et son `tier/role`.
+  - [x] Charger les opportunités visibles via les mêmes règles que le feed opportunités : `buildOpportunityVisibilityWhere(currentUser.tier)` pour membres, accès admin plus large si nécessaire, et inclure auteurs/téléphones, tags, `_count.documents`, `_count.verificationApprovals`.
+  - [x] Filtrer le feed matching aux opportunités avec `commonTagCount > 0`, puis trier par `commonTagCount desc`, `createdAt desc`.
+  - [x] Si le membre n'a aucun tag profil, afficher `EmptyState` avec une explication courte et CTA « Modifier mes tags » vers `/profile/edit`.
+  - [x] Si aucun deal ne matche, afficher `EmptyState` avec le texte exact « Aucun deal ne correspond à vos critères actuels » et CTA « Modifier mes tags » vers `/profile/edit`.
 
-- [ ] **Prioriser les opportunités matchées dans le feed existant** (AC: #1, #3)
-  - [ ] Modifier `src/app/(dashboard)/dashboard/opportunities/page.tsx` sans casser les filtres `category`, `tagCategory`, `tagValue` existants.
-  - [ ] Charger les `User.tags`, calculer les métadonnées de match pour chaque opportunité affichée et trier en priorité par `commonTagCount desc` quand le membre a des tags.
-  - [ ] Conserver le comportement existant pour membres sans tags : tri actuel `createdAt desc` et empty state existant du feed opportunités.
-  - [ ] Préserver la visibilité premium/tier, les opportunités de l'auteur et les règles admin déjà en place.
+- [x] **Prioriser les opportunités matchées dans le feed existant** (AC: #1, #3)
+  - [x] Modifier `src/app/(dashboard)/dashboard/opportunities/page.tsx` sans casser les filtres `category`, `tagCategory`, `tagValue` existants.
+  - [x] Charger les `User.tags`, calculer les métadonnées de match pour chaque opportunité affichée et trier en priorité par `commonTagCount desc` quand le membre a des tags.
+  - [x] Conserver le comportement existant pour membres sans tags : tri actuel `createdAt desc` et empty state existant du feed opportunités.
+  - [x] Préserver la visibilité premium/tier, les opportunités de l'auteur et les règles admin déjà en place.
 
-- [ ] **Afficher le badge de match dans les cartes deals** (AC: #3)
-  - [ ] Étendre `DealCard` (`src/components/features/deals/deal-card.tsx`) avec des props optionnelles `commonTagCount?: number` et `matchPercent?: number` ou une prop `match?: OpportunityMatchMetadata`.
-  - [ ] Afficher un badge subtil uniquement si `commonTagCount > 0` : libellé recommandé `2 tags communs` pour lisibilité; `95% match` est acceptable si le pourcentage calculé est utilisé.
-  - [ ] Style : `Badge`/pill discret, touch-friendly, dark-mode safe (`border`, `bg-primary/10`, `text-primary` ou tokens existants), jamais une couleur fixe non prévue.
-  - [ ] Important : ne pas réintroduire le bug Story 4.2 des liens imbriqués. Les chips tags restent hors du lien de carte ou non interactives dans `DealCard`.
+- [x] **Afficher le badge de match dans les cartes deals** (AC: #3)
+  - [x] Étendre `DealCard` (`src/components/features/deals/deal-card.tsx`) avec des props optionnelles `commonTagCount?: number` et `matchPercent?: number` ou une prop `match?: OpportunityMatchMetadata`.
+  - [x] Afficher un badge subtil uniquement si `commonTagCount > 0` : libellé recommandé `2 tags communs` pour lisibilité; `95% match` est acceptable si le pourcentage calculé est utilisé.
+  - [x] Style : `Badge`/pill discret, touch-friendly, dark-mode safe (`border`, `bg-primary/10`, `text-primary` ou tokens existants), jamais une couleur fixe non prévue.
+  - [x] Important : ne pas réintroduire le bug Story 4.2 des liens imbriqués. Les chips tags restent hors du lien de carte ou non interactives dans `DealCard`.
 
-- [ ] **Notification de nouvelle opportunité matchée au moment de la publication** (AC: #2)
-  - [ ] Étendre le flux qui rend un deal visible/publié, pas seulement la création PENDING : priorité à `src/app/api/admin/opportunities/[id]/verify/route.ts` lorsque le statut passe à `VERIFIED`; si l'application considère aussi les deals auteur/admin comme publiés à la création, couvrir explicitement ce chemin.
-  - [ ] Après passage à `VERIFIED`, trouver les membres ayant au moins un `UserTag` commun avec les `OpportunityTag` du deal, en excluant l'auteur du deal.
-  - [ ] Respecter les règles d'accès : ne notifier que les membres qui peuvent voir le deal selon leur tier (`requiredTier`) ou admins si pertinent.
-  - [ ] Ajouter un modèle minimal `Notification` uniquement s'il n'existe toujours pas, avec champs recommandés : `id`, `userId`, `type`, `title`, `body`, `href`, `readAt`, `createdAt`, relation `User.notifications`, index `userId/readAt/createdAt`. Si l'équipe préfère email-only pour MVP, créer au moins `sendOpportunityMatchedEmail` dans `src/lib/email.ts` et documenter que la préférence utilisateur n'existe pas encore.
-  - [ ] Message exact à persister/envoyer : `Nouvelle opportunité matchée : ${opportunity.title}`.
-  - [ ] Ne pas bloquer la vérification ou création du deal si l'envoi email échoue : journaliser une erreur sanitizée et continuer. Ne pas loguer de données sensibles.
+- [x] **Notification de nouvelle opportunité matchée au moment de la publication** (AC: #2)
+  - [x] Étendre le flux qui rend un deal visible/publié, pas seulement la création PENDING : priorité à `src/app/api/admin/opportunities/[id]/verify/route.ts` lorsque le statut passe à `VERIFIED`; si l'application considère aussi les deals auteur/admin comme publiés à la création, couvrir explicitement ce chemin.
+  - [x] Après passage à `VERIFIED`, trouver les membres ayant au moins un `UserTag` commun avec les `OpportunityTag` du deal, en excluant l'auteur du deal.
+  - [x] Respecter les règles d'accès : ne notifier que les membres qui peuvent voir le deal selon leur tier (`requiredTier`) ou admins si pertinent.
+  - [x] Ajouter un modèle minimal `Notification` uniquement s'il n'existe toujours pas, avec champs recommandés : `id`, `userId`, `type`, `title`, `body`, `href`, `readAt`, `createdAt`, relation `User.notifications`, index `userId/readAt/createdAt`. Si l'équipe préfère email-only pour MVP, créer au moins `sendOpportunityMatchedEmail` dans `src/lib/email.ts` et documenter que la préférence utilisateur n'existe pas encore.
+  - [x] Message exact à persister/envoyer : `Nouvelle opportunité matchée : ${opportunity.title}`.
+  - [x] Ne pas bloquer la vérification ou création du deal si l'envoi email échoue : journaliser une erreur sanitizée et continuer. Ne pas loguer de données sensibles.
 
-- [ ] **Navigation mobile/desktop vers Matching** (AC: #1, #3)
-  - [ ] Ajouter un lien « Matching » dans le layout dashboard existant (`src/app/(dashboard)/layout.tsx`) en respectant le pattern de navigation actuel.
-  - [ ] Sur mobile, s'aligner avec UX Spec : bottom/tab bar ou lien accessible équivalent vers Accueil/Opportunités, Matching, Profil. Ne pas introduire une navigation complexe.
-  - [ ] Le lien doit pointer vers `/dashboard/matching` et rester en français.
+- [x] **Navigation mobile/desktop vers Matching** (AC: #1, #3)
+  - [x] Ajouter un lien « Matching » dans le layout dashboard existant (`src/app/(dashboard)/layout.tsx`) en respectant le pattern de navigation actuel.
+  - [x] Sur mobile, s'aligner avec UX Spec : bottom/tab bar ou lien accessible équivalent vers Accueil/Opportunités, Matching, Profil. Ne pas introduire une navigation complexe.
+  - [x] Le lien doit pointer vers `/dashboard/matching` et rester en français.
 
-- [ ] **Tests et vérification** (AC: all)
-  - [ ] Tests unitaires `src/lib/matching.test.ts` : tags communs, aucun tag profil, calcul pourcentage, tri stable, doublons ignorés.
-  - [ ] Tests `DealCard` : badge match affiché si `commonTagCount > 0`, absent sinon; WhatsAppCTA et tags existants préservés.
-  - [ ] Tests page matching : membre sans tags, aucun match, matches triés par nombre de tags communs, CTA `/profile/edit`.
-  - [ ] Tests feed opportunités : matches priorisés sans casser filtre catégorie/tag et règles visibilité tier.
-  - [ ] Tests notification : vérification d'un deal avec tags crée/envoie une notification aux membres matchés, exclut auteur et non-éligibles tier, tolère erreur email.
-  - [ ] Exécuter au minimum `npx vitest run` et `npm run build`.
+- [x] **Tests et vérification** (AC: all)
+  - [x] Tests unitaires `src/lib/matching.test.ts` : tags communs, aucun tag profil, calcul pourcentage, tri stable, doublons ignorés.
+  - [x] Tests `DealCard` : badge match affiché si `commonTagCount > 0`, absent sinon; WhatsAppCTA et tags existants préservés.
+  - [x] Tests page matching : membre sans tags, aucun match, matches triés par nombre de tags communs, CTA `/profile/edit`.
+  - [x] Tests feed opportunités : matches priorisés sans casser filtre catégorie/tag et règles visibilité tier.
+  - [x] Tests notification : vérification d'un deal avec tags crée/envoie une notification aux membres matchés, exclut auteur et non-éligibles tier, tolère erreur email.
+  - [x] Exécuter au minimum `npx vitest run` et `npm run build`.
 
 ## Dev Notes
 
@@ -196,8 +196,39 @@ GPT-5.5 (OpenAI Codex)
 
 ### Debug Log References
 
+- 2026-05-20 — Implemented tag matching helpers and tests (`src/lib/matching.ts`, `src/lib/matching.test.ts`).
+- 2026-05-20 — Added `/dashboard/matching` server feed, match badges, opportunities prioritization, nav link, and matched notification flow.
+- 2026-05-20 — Validation passed: `npx vitest run` (278 passed), `npm run build` (passed; rate-limit env warnings only), targeted ESLint on modified files (passed). Full `npm run lint` still reports pre-existing issues in unrelated files.
+
 ### Completion Notes List
 
-Ultimate context engine analysis completed - comprehensive developer guide created.
+- Reused Story 4.2 tag infrastructure (`UserTag`, `OpportunityTag`, `TagCategory`, `SelectedTag`, `TagChips`) without adding a new tag taxonomy/model.
+- Added deterministic MVP matching by exact `category:value`, with common tag count, match percent, matched tags, and stable sorting by `commonTagCount desc` then `createdAt desc`.
+- Added protected Matching feed using `auth()`, `buildOpportunityVisibilityWhere(currentUser.tier)`, exact no-match `EmptyState`, and `/profile/edit` CTA.
+- Prioritized matched opportunities in the existing opportunities feed while preserving category/tag filters, author visibility, admin behavior, premium gate, and tier visibility.
+- Added subtle DealCard match badge while keeping tags outside the card link and non-interactive to avoid nested anchors.
+- Added minimal `Notification` persistence plus matched opportunity email helper and non-blocking matched notification dispatch after admin verification.
+- Added tests covering matching helpers, DealCard badge, Matching page states/sorting, opportunities prioritization/filters, and matched notification eligibility/error tolerance.
 
 ### File List
+
+- _bmad-output/implementation-artifacts/4-3-matching-basique-par-tags.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- prisma/schema.prisma
+- prisma/migrations/20260520090000_add_notifications/migration.sql
+- src/lib/matching.ts
+- src/lib/matching.test.ts
+- src/app/(dashboard)/dashboard/matching/page.tsx
+- src/app/(dashboard)/dashboard/matching/page.test.tsx
+- src/app/(dashboard)/dashboard/opportunities/page.tsx
+- src/app/(dashboard)/dashboard/opportunities/page.test.tsx
+- src/app/(dashboard)/layout.tsx
+- src/components/features/deals/deal-card.tsx
+- src/components/features/deals/deal-card.test.tsx
+- src/lib/email.ts
+- src/app/api/admin/opportunities/[id]/verify/route.ts
+- src/app/api/admin/opportunities/[id]/verify/route.test.ts
+
+### Change Log
+
+- 2026-05-20 — Implemented Story 4.3 tag-based matching feed, prioritization, badge, matched notifications, tests, and verification updates.

@@ -4,22 +4,27 @@ import { PATCH } from "./route";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserFindMany = vi.hoisted(() => vi.fn());
 const mockOpportunityFindUnique = vi.hoisted(() => vi.fn());
 const mockOpportunityUpdate = vi.hoisted(() => vi.fn());
 const mockApprovalCreate = vi.hoisted(() => vi.fn());
+const mockNotificationCreateMany = vi.hoisted(() => vi.fn());
 const mockSendVerified = vi.hoisted(() => vi.fn());
 const mockSendRejected = vi.hoisted(() => vi.fn());
+const mockSendMatched = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/email", () => ({
   sendOpportunityVerifiedEmail: mockSendVerified,
   sendOpportunityRejectedEmail: mockSendRejected,
+  sendOpportunityMatchedEmail: mockSendMatched,
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    user: { findUnique: mockUserFindUnique },
+    user: { findUnique: mockUserFindUnique, findMany: mockUserFindMany },
     opportunity: { findUnique: mockOpportunityFindUnique, update: mockOpportunityUpdate },
     opportunityVerificationApproval: { create: mockApprovalCreate },
+    notification: { createMany: mockNotificationCreateMany },
   },
 }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: vi.fn(() => "Error: sanitized") }));
@@ -41,6 +46,9 @@ const pendingOpportunity = {
   reviewNotes: null,
   adminNote: null,
   author: { id: "author-1", name: "Koffi", email: "koffi@example.com" },
+  authorId: "author-1",
+  requiredTier: "AFFRANCHI",
+  tags: [{ category: "SECTEUR", value: "tech" }],
   requiresDoubleVerification: false,
   verificationApprovals: [],
 };
@@ -59,6 +67,9 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     }));
     mockSendVerified.mockResolvedValue(undefined);
     mockSendRejected.mockResolvedValue(undefined);
+    mockSendMatched.mockResolvedValue(undefined);
+    mockUserFindMany.mockResolvedValue([]);
+    mockNotificationCreateMany.mockResolvedValue({ count: 0 });
   });
 
   it("returns 401 for unauthenticated requests", async () => {
@@ -201,4 +212,51 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     expect(json.code).toBe("INVALID_TRANSITION");
     expect(mockOpportunityUpdate).not.toHaveBeenCalled();
   });
+
+  it("creates matched notifications on verification, excluding author and tier-ineligible members", async () => {
+    mockUserFindMany.mockResolvedValueOnce([
+      { id: "member-1", email: "member@example.com", name: "Awa", tier: "AFFRANCHI", role: "MEMBER" },
+      { id: "member-2", email: "boss@example.com", name: "Boss", tier: "BOSS", role: "MEMBER" },
+      { id: "member-3", email: "admin@example.com", name: "Admin", tier: "AFFRANCHI", role: "ADMIN" },
+    ]);
+    mockOpportunityUpdate.mockImplementationOnce(async ({ data }) => ({
+      ...pendingOpportunity,
+      ...data,
+      requiredTier: "BOSS",
+      _count: { documents: 0, verificationApprovals: 0 },
+      verificationApprovals: [],
+    }));
+
+    const res = await PATCH(request({ action: "verify" }), params);
+
+    expect(res.status).toBe(200);
+    expect(mockUserFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        id: { not: "author-1" },
+        tags: { some: { OR: [{ category: "SECTEUR", value: "tech" }] } },
+      }),
+    }));
+    expect(mockNotificationCreateMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ userId: "member-2", title: "Nouvelle opportunité matchée : Terrain à Cocody" }),
+        expect.objectContaining({ userId: "member-3", title: "Nouvelle opportunité matchée : Terrain à Cocody" }),
+      ],
+    });
+    expect(mockSendMatched).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not fail verification when matched email sending fails", async () => {
+    mockUserFindMany.mockResolvedValueOnce([
+      { id: "member-1", email: "member@example.com", name: "Awa", tier: "AFFRANCHI", role: "MEMBER" },
+    ]);
+    mockSendMatched.mockRejectedValueOnce(new Error("resend down"));
+
+    const res = await PATCH(request({ action: "verify" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.verificationStatus).toBe("VERIFIED");
+    expect(mockNotificationCreateMany).toHaveBeenCalledOnce();
+  });
+
 });

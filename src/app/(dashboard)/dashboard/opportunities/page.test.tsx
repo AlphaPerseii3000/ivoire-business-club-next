@@ -26,7 +26,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "member-1" } });
-    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI" });
+    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI", tags: [] });
   });
 
   it.each(["TRIAL", "PENDING", "CANCELLED", "PAST_DUE", "NO_SUBSCRIPTION"])(
@@ -79,7 +79,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
 
   it("queries Boss opportunities with lower tiers included", async () => {
     mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
-    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "BOSS" });
+    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "BOSS", tags: [] });
     mockOpportunityFindMany.mockResolvedValue([]);
 
     render(await OpportunitiesPage({ searchParams: Promise.resolve({ category: "BUSINESS" }) }));
@@ -100,4 +100,51 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
     expect(screen.getByText("Aucun deal ne correspond à vos critères")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Réinitialiser les filtres" })).toHaveAttribute("href", "/dashboard/opportunities");
   });
+
+  it("prioritizes matched opportunities without breaking tag filters", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockUserFindUnique.mockResolvedValue({
+      role: "MEMBER",
+      tier: "BOSS",
+      tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }],
+    });
+    mockOpportunityFindMany.mockResolvedValue([
+      {
+        id: "opp-1",
+        title: "Business récent",
+        amount: 1000,
+        category: "BUSINESS",
+        verificationStatus: "VERIFIED",
+        requiresDoubleVerification: false,
+        createdAt: new Date("2026-05-20T00:00:00.000Z"),
+        tags: [{ category: "SECTEUR", value: "tech" }],
+        author: { id: "author-1", name: "Koffi", phone: null, location: "Abidjan", opportunities: [] },
+        _count: { documents: 1, verificationApprovals: 0 },
+      },
+      {
+        id: "opp-2",
+        title: "Terrain mieux matché",
+        amount: 2000,
+        category: "BUSINESS",
+        verificationStatus: "VERIFIED",
+        requiresDoubleVerification: false,
+        createdAt: new Date("2026-05-19T00:00:00.000Z"),
+        tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }],
+        author: { id: "author-2", name: "Aya", phone: null, location: "Cocody", opportunities: [] },
+        _count: { documents: 2, verificationApprovals: 0 },
+      },
+    ]);
+
+    render(await OpportunitiesPage({ searchParams: Promise.resolve({ tagCategory: "SECTEUR", tagValue: "tech" }) }));
+
+    expect(mockOpportunityFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([{ tags: { some: { category: "SECTEUR", value: "tech" } } }]),
+      }),
+    }));
+    const titles = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
+    expect(titles).toEqual(["Terrain mieux matché", "Business récent"]);
+    expect(screen.getByText("2 tags communs")).toBeInTheDocument();
+  });
+
 });

@@ -4,11 +4,14 @@ import SignOutButton from "@/components/auth/sign-out-button";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
-  { href: "/opportunities", label: "Opportunités", icon: "🎯" },
+  { href: "/dashboard/opportunities", label: "Opportunités", icon: "🎯" },
+  { href: "/dashboard/matching", label: "Matching", icon: "✨" },
   { href: "/members", label: "Membres", icon: "🤝" },
   { href: "/profile", label: "Mon profil", icon: "👤" },
   { href: "/settings", label: "Paramètres", icon: "⚙️" },
 ];
+
+const MOBILE_NAV_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[1], NAV_ITEMS[2], NAV_ITEMS[4]];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -40,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Mobile top nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card flex justify-around py-2">
-        {NAV_ITEMS.slice(0, 4).map((item) => (
+        {MOBILE_NAV_ITEMS.map((item) => (
           <a key={item.href} href={item.href} className="flex flex-col items-center text-xs">
             <span className="text-lg">{item.icon}</span>
             {item.label.split(" ")[0]}

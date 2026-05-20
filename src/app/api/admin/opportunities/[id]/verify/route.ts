@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { sendOpportunityRejectedEmail, sendOpportunityVerifiedEmail } from "@/lib/email";
+import { sendOpportunityMatchedEmail, sendOpportunityRejectedEmail, sendOpportunityVerifiedEmail } from "@/lib/email";
+import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
+import type { SelectedTag } from "@/lib/tags";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { opportunityAdminActionSchema, type VerificationStatusInput } from "@/lib/validations";
@@ -9,8 +11,6 @@ import { opportunityAdminActionSchema, type VerificationStatusInput } from "@/li
 type RouteContext = { params: Promise<{ id: string }> };
 type VerificationStatus = VerificationStatusInput;
 type AdminAction = "verify" | "reject" | "start_review" | "move";
-
-const FINAL_STATUSES = ["VERIFIED", "REJECTED"] as const;
 
 function isAllowedTransition(current: VerificationStatus, next: VerificationStatus) {
   if (current === next) return true;
@@ -51,6 +51,55 @@ async function requireAdmin() {
   }
 
   return { sessionUserId: session.user.id };
+}
+
+async function notifyMatchedMembers(updated: {
+  id: string;
+  title: string;
+  authorId: string;
+  requiredTier: unknown;
+  tags?: Array<SelectedTag>;
+}) {
+  const opportunityTags = updated.tags ?? [];
+  if (opportunityTags.length === 0) {
+    return;
+  }
+
+  const tagOrFilters = opportunityTags.map((tag) => ({ category: tag.category, value: tag.value }));
+  const members = await prisma.user.findMany({
+    where: {
+      id: { not: updated.authorId },
+      tags: { some: { OR: tagOrFilters } },
+    },
+    select: { id: true, email: true, name: true, tier: true, role: true },
+  });
+
+  const eligibleMembers = members.filter((member) => member.role === "ADMIN" || canUserAccessOpportunity(updated.requiredTier, member.tier));
+  if (eligibleMembers.length === 0) {
+    return;
+  }
+
+  const message = `Nouvelle opportunité matchée : ${updated.title}`;
+  await prisma.notification.createMany({
+    data: eligibleMembers.map((member) => ({
+      userId: member.id,
+      type: "OPPORTUNITY_MATCHED",
+      title: message,
+      body: message,
+      href: `/dashboard/opportunities/${updated.id}`,
+    })),
+  });
+
+  const emailResults = await Promise.allSettled(eligibleMembers.map((member) => sendOpportunityMatchedEmail({
+    to: member.email,
+    name: member.name,
+    opportunityId: updated.id,
+    title: updated.title,
+  })));
+  const failedEmailCount = emailResults.filter((result) => result.status === "rejected").length;
+  if (failedEmailCount > 0) {
+    console.error("[opportunity-matched-email]", { opportunityId: updated.id, failedEmailCount });
+  }
 }
 
 async function sendFinalEmail(nextStatus: VerificationStatus, updated: { author: { email: string; name: string }; id: string; title: string; rejectionNote?: string | null }) {
@@ -96,6 +145,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       where: { id },
       include: {
         author: { select: { id: true, name: true, email: true } },
+        tags: { select: { category: true, value: true } },
         verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
       },
     });
@@ -188,6 +238,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       data,
       include: {
         author: { select: { id: true, name: true, email: true } },
+        tags: { select: { category: true, value: true } },
         verificationApprovals: { select: { adminId: true, createdAt: true }, orderBy: { createdAt: "asc" } },
         _count: { select: { documents: true, verificationApprovals: true } },
       },
@@ -208,11 +259,13 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       }
     } catch (error) {
       console.error("[admin-opportunity-email]", { opportunityId: id, status: effectiveNextStatus, error: sanitizeError(error) });
-      if (FINAL_STATUSES.includes(effectiveNextStatus as (typeof FINAL_STATUSES)[number])) {
-        return NextResponse.json(
-          { error: "Le statut a été mis à jour, mais l'email n'a pas pu être envoyé.", code: "EMAIL_FAILED", data: updated },
-          { status: 502 },
-        );
+    }
+
+    if (!pendingSecondVerification && effectiveNextStatus === "VERIFIED") {
+      try {
+        await notifyMatchedMembers(updated);
+      } catch (error) {
+        console.error("[opportunity-matched-notification]", { opportunityId: id, error: sanitizeError(error) });
       }
     }
 

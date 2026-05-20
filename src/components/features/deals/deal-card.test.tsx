@@ -69,4 +69,33 @@ describe("DealCard", () => {
     expect(button.className).toContain("cursor-not-allowed");
     expect(button.className).toContain("opacity-60");
   });
+
+  it("renders a subtle match badge only when common tags are present", () => {
+    const deal = {
+      id: "opp-1",
+      title: "Terrain à Cocody",
+      amount: 25000,
+      location: "Abidjan",
+      verificationStatus: "VERIFIED",
+      documentCount: 3,
+      tags: [{ category: "LOCALISATION" as const, value: "cocody" }],
+      author: { phone: "+225 01 02 03 04" },
+    };
+
+    const { rerender } = render(
+      <DealCard
+        deal={deal}
+        match={{ commonTagCount: 2, matchPercent: 95, matchedTags: [{ category: "LOCALISATION", value: "cocody" }] }}
+      />,
+    );
+
+    expect(screen.getByText("2 tags communs")).toBeInTheDocument();
+    expect(screen.getByText("Cocody")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Contacter sur WhatsApp" })).toBeInTheDocument();
+
+    rerender(<DealCard deal={deal} match={{ commonTagCount: 0, matchPercent: 0, matchedTags: [] }} />);
+
+    expect(screen.queryByText("2 tags communs")).not.toBeInTheDocument();
+  });
+
 });

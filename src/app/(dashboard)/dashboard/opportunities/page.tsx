@@ -6,6 +6,7 @@ import { DealCard } from "@/components/features/deals/deal-card";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { EmptyState } from "@/components/shared/empty-state";
 import { auth } from "@/lib/auth";
+import { attachMatchMetadata } from "@/lib/matching";
 import { OPPORTUNITY_CATEGORY_FILTERS } from "@/lib/opportunity-categories";
 import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
@@ -68,7 +69,11 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const currentUser = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true, tier: true },
+    select: {
+      role: true,
+      tier: true,
+      tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
+    },
   });
 
   const categoryFilter = activeCategory ? { category: activeCategory as (typeof VALID_CATEGORIES)[number] } : {};
@@ -98,6 +103,13 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
     },
   });
 
+  const matchedOpportunities = currentUser?.tags.length ? attachMatchMetadata(opportunities, currentUser.tags) : opportunities.map((opportunity) => ({
+    ...opportunity,
+    commonTagCount: 0,
+    matchPercent: 0,
+    matchedTags: [],
+  }));
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between gap-4">
@@ -117,7 +129,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
         <CategoryFilterChips activeCategory={activeCategory} />
       </div>
 
-      {opportunities.length === 0 ? (
+      {matchedOpportunities.length === 0 ? (
         <div className="mt-8">
           <EmptyState
             title="Aucun deal ne correspond à vos critères"
@@ -134,9 +146,10 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
         </div>
       ) : (
         <div className="mt-8 space-y-4">
-          {opportunities.map((opportunity) => (
+          {matchedOpportunities.map((opportunity) => (
             <DealCard
               key={opportunity.id}
+              match={{ commonTagCount: opportunity.commonTagCount, matchPercent: opportunity.matchPercent, matchedTags: opportunity.matchedTags }}
               deal={{
                 id: opportunity.id,
                 title: opportunity.title,

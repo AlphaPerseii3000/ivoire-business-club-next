@@ -4,6 +4,7 @@ import { MapPin, Paperclip } from "lucide-react";
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { TagChips } from "@/components/features/tags/tag-chips";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import type { OpportunityMatchMetadata } from "@/lib/matching";
 import type { SelectedTag } from "@/lib/tags";
 import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
 
@@ -27,9 +28,10 @@ type DealCardDeal = {
 
 type DealCardProps = {
   deal: DealCardDeal;
+  match?: OpportunityMatchMetadata;
 };
 
-export function DealCard({ deal }: DealCardProps) {
+export function DealCard({ deal, match }: DealCardProps) {
   const location = deal.location?.trim() ? deal.location : "Localisation non renseignée";
   const amountLabel = typeof deal.amount === "number" ? `${deal.amount.toLocaleString("fr-FR")} €` : "Montant sur demande";
   const trustLevel = deal.trustLevel ?? getSafeTrustLevel({
@@ -40,6 +42,9 @@ export function DealCard({ deal }: DealCardProps) {
     authorStats: deal.authorStats,
   });
   const hasTags = (deal.tags?.length ?? 0) > 0;
+  const commonTagCount = match?.commonTagCount ?? 0;
+  const shouldShowMatchBadge = commonTagCount > 0;
+  const matchBadgeLabel = commonTagCount === 1 ? "1 tag commun" : `${commonTagCount} tags communs`;
 
   return (
     <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
@@ -47,7 +52,14 @@ export function DealCard({ deal }: DealCardProps) {
         <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
         <div className="space-y-4 p-4">
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold leading-snug">{deal.title}</h2>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <h2 className="text-lg font-semibold leading-snug">{deal.title}</h2>
+              {shouldShowMatchBadge ? (
+                <span className="inline-flex min-h-7 items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  {matchBadgeLabel}
+                </span>
+              ) : null}
+            </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-4 w-4" aria-hidden="true" />

@@ -86,6 +86,7 @@ model User {
   verificationApprovals OpportunityVerificationApproval[]
   verificationTokens VerificationToken[]
   tags               UserTag[]
+  notifications      Notification[]
 
   @@map("users")
 }
@@ -247,6 +248,22 @@ model Document {
   @@index([opportunityId])
   @@index([uploadedById])
   @@map("opportunity_documents")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
 }
 
 model Payment {

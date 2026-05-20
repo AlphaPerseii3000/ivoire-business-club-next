@@ -82,6 +82,16 @@ export async function sendOpportunityVerifiedEmail({ to, name, opportunityId, ti
   });
 }
 
+export async function sendOpportunityMatchedEmail({ to, name, opportunityId, title }: OpportunityEmailBase) {
+  const message = `Nouvelle opportunité matchée : ${title}`;
+  await getResendClient().emails.send({
+    from: getSender(),
+    to,
+    subject: message,
+    text: `${greeting(name)}\n\n${message}${opportunityLine(opportunityId)}`,
+  });
+}
+
 export async function sendOpportunityRejectedEmail({ to, name, opportunityId, title, note }: OpportunityRejectedEmailInput) {
   await getResendClient().emails.send({
     from: getSender(),
