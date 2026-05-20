@@ -1,5 +1,5 @@
 # generated: 2026-05-12T23:04:29Z
-# last_updated: 2026-05-20T17:44:09+02:00
+# last_updated: 2026-05-20T18:51:41
 # project: ibc
 # project_key: NOKEY
 # tracking_system: file-system
@@ -34,8 +34,8 @@
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-05-12T23:04:29Z
-last_updated: 2026-05-20T17:44:09+02:00
+generated: 2026-05-12 23:04:29+00:00
+last_updated: 2026-05-20T18:51:41
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -60,7 +60,7 @@ development_status:
   2-4-validation-manuelle-des-abonnements-par-ladmin: done
   2-5-suivi-des-statuts-dabonnement-et-notifications: done
   epic-2-retrospective: done
-  epic-3: in-progress
+  epic-3: done
   3-1-creation-et-soumission-dopportunite: done
   3-2-upload-et-attachement-de-documents-juridiques: done
   3-3-workflow-kanban-de-verification-admin: done
@@ -76,7 +76,7 @@ development_status:
   epic-4-retrospective: done
   epic-5: in-progress
   5-0-consolidation-post-retrospective-epic-4: done
-  5-1-reviews-mutuelles-postdeal: backlog
+  5-1-reviews-mutuelles-postdeal: ready-for-dev
   5-2-score-de-fiabilite-et-badge-membre-platinum: backlog
   5-3-affichage-public-des-reviews-sur-profil: backlog
   epic-5-retrospective: optional
