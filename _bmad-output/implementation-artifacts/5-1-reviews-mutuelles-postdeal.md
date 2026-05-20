@@ -2,7 +2,7 @@
 Story: "5.1"
 StoryKey: "5-1-reviews-mutuelles-postdeal"
 Title: "Reviews Mutuelles Post-Deal"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR31", "FR34"]
@@ -12,7 +12,7 @@ Created: "2026-05-20"
 
 # Story 5.1: Reviews Mutuelles Post-Deal
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
