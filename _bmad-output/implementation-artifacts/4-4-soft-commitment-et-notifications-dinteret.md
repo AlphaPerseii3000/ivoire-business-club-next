@@ -2,7 +2,7 @@
 Story: "4.4"
 StoryKey: "4-4-soft-commitment-et-notifications-dinteret"
 Title: "Soft Commitment et Notifications d'Intérêt"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR29", "FR30"]
@@ -13,7 +13,7 @@ Created: "2026-05-20"
 
 # Story 4.4: Soft Commitment et Notifications d'Intérêt
 
-Status: review
+Status: done
 
 ## Story
 
@@ -97,6 +97,10 @@ afin de signaler au porteur de projet que je suis potentiellement intéressé.
   - [x] Tests notifications : auteur voit le message exact, lien vers `/dashboard/opportunities/[id]?highlight=interests`, non-auteurs ne voient pas la notification.
   - [x] Tests public/non-auth : clic « Intéressé(e) » ouvre la modale inscription/connexion sans appeler l'API.
   - [x] Exécuter au minimum les tests ciblés avec `npx vitest run ...`, puis `npm run build`. Noter tout lint global pré-existant séparément si hors scope.
+
+### Review Findings
+
+- [x] [Review][Patch] Dev database file was included in the story diff [`dev.db`] — removed the tracked development database from git index; `.gitignore` already excludes `*.db`.
 
 ## Dev Notes
 
