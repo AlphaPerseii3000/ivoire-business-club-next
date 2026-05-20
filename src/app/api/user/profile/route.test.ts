@@ -6,6 +6,12 @@ const mockAuth = vi.hoisted(() =>
 );
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockUserUpdate = vi.hoisted(() => vi.fn());
+const mockUserTagDeleteMany = vi.hoisted(() => vi.fn());
+const mockUserTagCreateMany = vi.hoisted(() => vi.fn());
+const mockTransaction = vi.hoisted(() => vi.fn((callback) => callback({
+  user: { update: mockUserUpdate },
+  userTag: { deleteMany: mockUserTagDeleteMany, createMany: mockUserTagCreateMany },
+})));
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -13,9 +19,14 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    $transaction: mockTransaction,
     user: {
       findUnique: mockUserFindUnique,
       update: mockUserUpdate,
+    },
+    userTag: {
+      deleteMany: mockUserTagDeleteMany,
+      createMany: mockUserTagCreateMany,
     },
   },
 }));
@@ -48,6 +59,7 @@ const mockUserData = {
   verificationStatus: "PENDING",
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
+  tags: [],
 };
 
 describe("GET /api/user/profile", () => {
@@ -180,6 +192,53 @@ describe("POST /api/user/profile", () => {
       }),
       select: expect.any(Object),
     });
+  });
+
+
+  it("saves deduplicated profile tags transactionally", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserUpdate.mockResolvedValueOnce({
+      ...mockUserData,
+      tags: [{ category: "SECTEUR", value: "tech" }],
+    });
+
+    const req = makeRequest({
+      name: "Jean Dupont",
+      bio: "Entrepreneur",
+      phone: "+225 0708091011",
+      location: "Abidjan",
+      country: "CI",
+      tags: [
+        { category: "SECTEUR", value: "tech" },
+        { category: "SECTEUR", value: "tech" },
+      ],
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockUserTagDeleteMany).toHaveBeenCalledWith({ where: { userId: "user-123" } });
+    expect(mockUserTagCreateMany).toHaveBeenCalledWith({
+      data: [{ userId: "user-123", category: "SECTEUR", value: "tech" }],
+    });
+    expect(json.data.tags).toEqual([{ category: "SECTEUR", value: "tech" }]);
+  });
+
+  it("rejects invalid profile tags", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      name: "Jean Dupont",
+      tags: [{ category: "SECTEUR", value: "inconnu" }],
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(mockUserTagCreateMany).not.toHaveBeenCalled();
   });
 
   it("returns 400 for name too short", async () => {

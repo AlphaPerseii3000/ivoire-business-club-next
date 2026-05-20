@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DocumentUploadSection, uploadPendingLegalDocuments } from "@/components/features/deals/document-upload-section";
+import { TagInput } from "@/components/features/tags/tag-input";
 
 const CATEGORIES = [
   { value: "INVESTISSEMENT", label: "Investissement" },
@@ -45,10 +46,12 @@ export default function NewOpportunityPage() {
       description: "",
       category: "BUSINESS",
       amount: undefined,
+      tags: [],
     },
   });
 
   const selectedCategory = watch("category");
+  const tagsValue = watch("tags") ?? [];
 
   const onSubmit: SubmitHandler<OpportunityCreateInput> = async (data) => {
     const numericAmount = typeof data.amount === "number" ? data.amount : null;
@@ -62,6 +65,7 @@ export default function NewOpportunityPage() {
           description: data.description,
           category: data.category,
           amount: numericAmount,
+          tags: data.tags ?? [],
         }),
       });
 
@@ -165,6 +169,12 @@ export default function NewOpportunityPage() {
         </div>
 
         <DocumentUploadSection onPendingFilesChange={setPendingDocuments} />
+
+        <TagInput
+          value={tagsValue}
+          onChange={(tags) => setValue("tags", tags, { shouldDirty: true, shouldValidate: true })}
+          description="Taguez le deal pour aider les membres à le retrouver par secteur, montant et localisation."
+        />
 
         <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? "Publication..." : "Publier l'opportunité"}

@@ -5,6 +5,7 @@ import { DocumentUploadSection } from "@/components/features/deals/document-uplo
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { VerificationTimeline } from "@/components/features/deals/verification-timeline";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import { TagChips } from "@/components/features/tags/tag-chips";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
@@ -35,6 +36,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         },
         verifiedBy: { select: { name: true } },
         documents: { orderBy: { createdAt: "desc" } },
+        tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
         verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
       },
     }),
@@ -98,6 +100,8 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const canViewDocuments = canManageDocuments || (access.hasAccess && hasTierAccess && isPublishedToMember);
   const canSeeRejectionNote = (isAuthor || isAdmin) && opportunity.rejectionNote;
   const shouldShowWhatsApp = !isAuthor && !isAdmin;
+  const opportunityTags = opportunity.tags ?? [];
+  const hasTags = opportunityTags.length > 0;
   const initialDocuments = canViewDocuments
     ? (opportunity.documents ?? []).map((document) => ({
         id: document.id,
@@ -145,6 +149,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             </span>
           ) : null}
         </div>
+
+        {hasTags ? (
+          <div className="mt-4">
+            <TagChips tags={opportunityTags} />
+          </div>
+        ) : null}
 
         {canSeeRejectionNote ? (
           <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">

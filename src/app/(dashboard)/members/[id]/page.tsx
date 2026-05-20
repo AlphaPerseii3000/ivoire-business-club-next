@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import { TagChips } from "@/components/features/tags/tag-chips";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       tier: true,
       verificationStatus: true,
       createdAt: true,
+      tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
     },
   });
 
@@ -42,6 +44,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   });
   const locationParts = [member.location, member.country].filter(Boolean);
   const locationDisplay = locationParts.length > 0 ? locationParts.join(" — ") : null;
+  const hasTags = member.tags.length > 0;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -75,6 +78,15 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         {locationDisplay ? (
           <div className="mt-4 text-sm text-muted-foreground">
             {locationDisplay}
+          </div>
+        ) : null}
+
+        {hasTags ? (
+          <div className="mt-6">
+            <h2 className="font-semibold">Tags</h2>
+            <div className="mt-2">
+              <TagChips tags={member.tags} />
+            </div>
           </div>
         ) : null}
 

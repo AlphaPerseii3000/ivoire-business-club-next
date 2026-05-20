@@ -1,4 +1,12 @@
 import { z } from "zod";
+import { TAG_CATEGORIES, isValidTagOption } from "@/lib/tags";
+
+const tagSchema = z
+  .object({
+    category: z.enum(TAG_CATEGORIES),
+    value: z.string().min(1, "Le tag est requis"),
+  })
+  .refine(isValidTagOption, "Tag invalide");
 
 export const signupSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -36,6 +44,7 @@ export const profileUpdateSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
+  tags: z.array(tagSchema).optional(),
 });
 
 export const accountDeletionSchema = z.object({
@@ -64,6 +73,7 @@ export const opportunityCreateSchema = z.object({
     (v) => (typeof v === "number" && isNaN(v) ? null : v),
     z.number().positive("Le montant doit être positif").nullable().optional(),
   ),
+  tags: z.array(tagSchema).optional(),
 });
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;

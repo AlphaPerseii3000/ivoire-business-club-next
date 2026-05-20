@@ -2,7 +2,9 @@ import Link from "next/link";
 import { MapPin, Paperclip } from "lucide-react";
 
 import { TrustBadge } from "@/components/features/deals/trust-badge";
+import { TagChips } from "@/components/features/tags/tag-chips";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import type { SelectedTag } from "@/lib/tags";
 import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
 
 type DealCardDeal = {
@@ -19,6 +21,7 @@ type DealCardDeal = {
     validatedDealsCount?: number | null;
     averageRating?: number | null;
   } | null;
+  tags?: SelectedTag[];
   author: { phone?: string | null };
 };
 
@@ -36,6 +39,7 @@ export function DealCard({ deal }: DealCardProps) {
     approvalCount: deal.approvalCount,
     authorStats: deal.authorStats,
   });
+  const hasTags = (deal.tags?.length ?? 0) > 0;
 
   return (
     <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
@@ -60,6 +64,9 @@ export function DealCard({ deal }: DealCardProps) {
               {deal.documentCount}
             </span>
           </div>
+          {hasTags ? (
+            <TagChips tags={deal.tags ?? []} />
+          ) : null}
         </div>
       </Link>
       <div className="px-4 pb-4">

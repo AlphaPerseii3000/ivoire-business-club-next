@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
+import { dedupeTags, isTagCategory, isValidTagOption } from "@/lib/tags";
 import { opportunityCreateSchema } from "@/lib/validations";
 
 export async function GET(req: Request) {
@@ -37,18 +38,25 @@ export async function GET(req: Request) {
     }
 
     const userId = session.user.id;
+    const tagCategory = url.searchParams.get("tagCategory");
+    const tagValue = url.searchParams.get("tagValue");
+    const tagFilter = tagCategory && tagValue && isTagCategory(tagCategory) && isValidTagOption({ category: tagCategory, value: tagValue })
+      ? { tags: { some: { category: tagCategory, value: tagValue } } }
+      : null;
+
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
       select: { role: true, tier: true },
     });
 
+    const memberVisibilityWhere = buildOpportunityVisibilityWhere(currentUser?.tier);
+    const memberAndFilters = tagFilter ? [tagFilter, { OR: [memberVisibilityWhere, { authorId: userId }] }] : [{ OR: [memberVisibilityWhere, { authorId: userId }] }];
+
     const opportunities = await prisma.opportunity.findMany({
       where:
         currentUser?.role === "ADMIN"
-          ? undefined
-          : {
-              OR: [buildOpportunityVisibilityWhere(currentUser?.tier), { authorId: userId }],
-            },
+          ? (tagFilter ?? {})
+          : { AND: memberAndFilters },
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -60,6 +68,7 @@ export async function GET(req: Request) {
             opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
           },
         },
+        tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
         _count: { select: { documents: true, verificationApprovals: true } },
       },
     });
@@ -73,6 +82,7 @@ export async function GET(req: Request) {
       requiredTier: opportunity.requiredTier,
       verificationStatus: opportunity.verificationStatus,
       createdAt: opportunity.createdAt,
+      tags: opportunity.tags,
       author: {
         id: opportunity.author.id,
         name: opportunity.author.name,
@@ -100,6 +110,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    const userId = session.user.id;
     const body = await req.json();
     const parsed = opportunityCreateSchema.safeParse(body);
 
@@ -112,19 +123,24 @@ export async function POST(req: Request) {
     }
 
     const { title, description, category, amount } = parsed.data;
+    const tags = dedupeTags(parsed.data.tags);
     const numericAmount = typeof amount === "number" ? amount : null;
     const requiresDoubleVerification = numericAmount !== null && numericAmount > 50000;
 
-    const opportunity = await prisma.opportunity.create({
+    const opportunity = await prisma.$transaction(async (tx) => tx.opportunity.create({
       data: {
-        authorId: session.user.id,
+        authorId: userId,
         title,
         description,
         category,
         amount: numericAmount,
         requiresDoubleVerification,
+        tags: {
+          create: tags.map((tag) => ({ category: tag.category, value: tag.value })),
+        },
       },
-    });
+      include: { tags: { select: { category: true, value: true } } },
+    }));
 
     return NextResponse.json(opportunity, { status: 201 });
   } catch (error) {

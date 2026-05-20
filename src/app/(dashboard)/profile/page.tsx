@@ -71,6 +71,10 @@ export default async function ProfilePage() {
       role: true,
       verificationStatus: true,
       createdAt: true,
+      tags: {
+        orderBy: [{ category: "asc" }, { value: "asc" }],
+        select: { category: true, value: true },
+      },
       subscriptions: {
         orderBy: { createdAt: "desc" },
         take: 1,

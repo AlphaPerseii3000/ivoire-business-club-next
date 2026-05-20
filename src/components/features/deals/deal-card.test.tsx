@@ -27,6 +27,26 @@ describe("DealCard", () => {
     expect(screen.getByRole("link", { name: "Contacter sur WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/22501020304"));
   });
 
+  it("renders tag chips without removing the WhatsApp CTA", () => {
+    render(
+      <DealCard
+        deal={{
+          id: "opp-1",
+          title: "Terrain à Cocody",
+          amount: 25000,
+          location: "Abidjan",
+          verificationStatus: "VERIFIED",
+          documentCount: 3,
+          tags: [{ category: "LOCALISATION", value: "cocody" }],
+          author: { phone: "+225 01 02 03 04" },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Cocody" })).toHaveAttribute("href", "/dashboard/opportunities?tagCategory=LOCALISATION&tagValue=cocody");
+    expect(screen.getByRole("link", { name: "Contacter sur WhatsApp" })).toBeInTheDocument();
+  });
+
   it("shows disabled WhatsApp button with tooltip when author phone is missing", () => {
     render(
       <DealCard

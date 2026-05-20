@@ -37,6 +37,12 @@ enum OpportunityCategory {
   IMMOBILIER
 }
 
+enum TagCategory {
+  SECTEUR
+  MONTANT
+  LOCALISATION
+}
+
 enum VerificationStatus {
   PENDING
   EN_COURS
@@ -79,6 +85,7 @@ model User {
   uploadedDocuments  Document[]
   verificationApprovals OpportunityVerificationApproval[]
   verificationTokens VerificationToken[]
+  tags               UserTag[]
 
   @@map("users")
 }
@@ -172,8 +179,37 @@ model Opportunity {
   verifiedBy User? @relation("Verifier", fields: [verifiedById], references: [id])
   documents  Document[]
   verificationApprovals OpportunityVerificationApproval[]
+  tags       OpportunityTag[]
 
   @@map("opportunities")
+}
+
+model UserTag {
+  id        String      @id @default(cuid())
+  userId    String
+  category  TagCategory
+  value     String
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, value])
+  @@index([category, value])
+  @@map("user_tags")
+}
+
+model OpportunityTag {
+  id            String      @id @default(cuid())
+  opportunityId String
+  category      TagCategory
+  value         String
+  createdAt     DateTime    @default(now())
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, category, value])
+  @@index([category, value])
+  @@map("opportunity_tags")
 }
 
 model OpportunityVerificationApproval {

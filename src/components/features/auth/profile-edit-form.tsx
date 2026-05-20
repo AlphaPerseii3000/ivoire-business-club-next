@@ -8,6 +8,8 @@ import { profileUpdateSchema, UEMOA_COUNTRIES, type ProfileUpdateInput } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { TagInput } from "@/components/features/tags/tag-input";
+import type { SelectedTag } from "@/lib/tags";
 import {
   Select,
   SelectContent,
@@ -24,6 +26,7 @@ interface ProfileEditFormProps {
     phone: string | null;
     location: string | null;
     country: string | null;
+    tags?: SelectedTag[];
   };
 }
 
@@ -37,7 +40,8 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
     watch,
     formState: { errors },
   } = useForm<ProfileUpdateInput>({
-    resolver: zodResolver(profileUpdateSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(profileUpdateSchema) as any,
     mode: "onBlur",
     defaultValues: {
       name: user.name,
@@ -45,10 +49,12 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
       phone: user.phone ?? "",
       location: user.location ?? "",
       country: user.country ?? "",
+      tags: user.tags ?? [],
     },
   });
 
   const countryValue = watch("country");
+  const tagsValue = watch("tags") ?? [];
 
   const onSubmit = async (data: ProfileUpdateInput) => {
     setIsSubmitting(true);
@@ -187,6 +193,12 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
           <p className="text-xs text-destructive">{errors.country.message}</p>
         )}
       </div>
+
+      <TagInput
+        value={tagsValue}
+        onChange={(tags) => setValue("tags", tags, { shouldDirty: true, shouldValidate: true })}
+        description="Ajoute tes secteurs, montants recherchés et localisations préférées."
+      />
 
       {/* Submit */}
       <Button

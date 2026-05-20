@@ -10,15 +10,30 @@ import { OPPORTUNITY_CATEGORY_FILTERS } from "@/lib/opportunity-categories";
 import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
+import { isTagCategory, isValidTagOption } from "@/lib/tags";
 
 type OpportunitiesPageProps = {
-  searchParams?: Promise<{ category?: string }>;
+  searchParams?: Promise<{ category?: string; tagCategory?: string; tagValue?: string }>;
 };
 
 const VALID_CATEGORIES = OPPORTUNITY_CATEGORY_FILTERS.map((category) => category.value);
 
 function normalizeCategory(category?: string) {
-  return category && VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number]) ? category : undefined;
+  return category ? (VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number]) ? category : undefined) : undefined;
+}
+
+function normalizeTagFilter(tagCategory?: string, tagValue?: string) {
+  if (!tagCategory || !tagValue) {
+    return null;
+  }
+
+  if (!isTagCategory(tagCategory)) {
+    return null;
+  }
+
+  return isValidTagOption({ category: tagCategory, value: tagValue })
+    ? { category: tagCategory, value: tagValue }
+    : null;
 }
 
 export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps = {}) {
@@ -27,6 +42,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeCategory = normalizeCategory(resolvedSearchParams.category);
+  const activeTag = normalizeTagFilter(resolvedSearchParams.tagCategory, resolvedSearchParams.tagValue);
 
   const access = await getUserPremiumAccess(session.user.id);
 
@@ -56,23 +72,16 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   });
 
   const categoryFilter = activeCategory ? { category: activeCategory as (typeof VALID_CATEGORIES)[number] } : {};
+  const tagFilter = activeTag ? { tags: { some: { category: activeTag.category, value: activeTag.value } } } : null;
   const memberVisibilityWhere = buildOpportunityVisibilityWhere(currentUser?.tier);
+  const adminWhere = { ...categoryFilter, ...(tagFilter ?? {}) };
+  const memberAndFilters = tagFilter ? [categoryFilter, tagFilter, { OR: [memberVisibilityWhere, { authorId: session.user.id }] }] : [categoryFilter, { OR: [memberVisibilityWhere, { authorId: session.user.id }] }];
 
   const opportunities = await prisma.opportunity.findMany({
     where:
       currentUser?.role === "ADMIN"
-        ? categoryFilter
-        : {
-            AND: [
-              categoryFilter,
-              {
-                OR: [
-                  memberVisibilityWhere,
-                  { authorId: session.user.id },
-                ],
-              },
-            ],
-          },
+        ? adminWhere
+        : { AND: memberAndFilters },
     orderBy: { createdAt: "desc" },
     include: {
       author: {
@@ -84,6 +93,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
           opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
         },
       },
+      tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
       _count: { select: { documents: true, verificationApprovals: true } },
     },
   });
@@ -137,6 +147,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 requiresDoubleVerification: opportunity.requiresDoubleVerification,
                 approvalCount: opportunity._count.verificationApprovals,
                 authorStats: { validatedDealsCount: opportunity.author.opportunities?.length ?? 0, averageRating: null },
+                tags: opportunity.tags,
                 author: { phone: opportunity.author.phone },
               }}
             />
