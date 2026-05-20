@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { InterestButton } from "@/components/features/deals/interest-button";
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { VerificationTimeline } from "@/components/features/deals/verification-timeline";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
@@ -14,10 +15,18 @@ import { getOpportunityTrustLevel } from "@/lib/trust-level";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { notFound, redirect } from "next/navigation";
 
-export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OpportunityDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ highlight?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const shouldHighlightInterests = resolvedSearchParams.highlight === "interests";
 
   const [access, currentUser, opportunity] = await Promise.all([
     getUserPremiumAccess(session.user.id),
@@ -38,6 +47,8 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         documents: { orderBy: { createdAt: "desc" } },
         tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
         verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
+        interests: { where: { userId: session.user.id }, select: { id: true } },
+        _count: { select: { interests: true } },
       },
     }),
   ]);
@@ -117,6 +128,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       }))
     : [];
   const documentCount = opportunity.documents?.length ?? 0;
+  const interestCount = opportunity._count.interests;
+  const hasCurrentUserInterest = opportunity.interests.length > 0;
+  const interestCountLabel = `${interestCount} intérêt${interestCount > 1 ? "s" : ""} enregistré${interestCount > 1 ? "s" : ""}`;
+  const interestIndicatorClassName = shouldHighlightInterests
+    ? "mt-4 inline-flex items-center rounded-full border border-primary bg-primary/10 px-3 py-1 text-sm font-semibold text-primary ring-2 ring-primary/30"
+    : "mt-4 inline-flex items-center rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground";
   const approvalCount = opportunity.verificationApprovals.length;
   const averageRating = null;
   const validatedDealsCount = opportunity.author.opportunities.length;
@@ -136,6 +153,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <h1 className="text-2xl font-bold">{opportunity.title}</h1>
+            <p className={interestIndicatorClassName} aria-live="polite" aria-current={shouldHighlightInterests ? "true" : undefined}>
+              {interestCountLabel}
+            </p>
             {trustLevel ? <TrustBadge level={trustLevel} size="md" animated={trustLevel === "or"} /> : null}
           </div>
           <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
@@ -175,11 +195,16 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
           ) : null}
           {shouldShowWhatsApp ? (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
               <WhatsAppCTA
                 phoneNumber={opportunity.author.phone}
                 prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
                 label="Contacter le porteur sur WhatsApp"
+              />
+              <InterestButton
+                opportunityId={opportunity.id}
+                isAuthenticated={true}
+                initialInterested={hasCurrentUserInterest}
               />
             </div>
           ) : null}

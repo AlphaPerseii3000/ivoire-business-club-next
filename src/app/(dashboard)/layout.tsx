@@ -6,12 +6,13 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
   { href: "/dashboard/opportunities", label: "Opportunités", icon: "🎯" },
   { href: "/dashboard/matching", label: "Matching", icon: "✨" },
+  { href: "/dashboard/notifications", label: "Notifications", icon: "🔔" },
   { href: "/members", label: "Membres", icon: "🤝" },
   { href: "/profile", label: "Mon profil", icon: "👤" },
   { href: "/settings", label: "Paramètres", icon: "⚙️" },
 ];
 
-const MOBILE_NAV_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[1], NAV_ITEMS[2], NAV_ITEMS[4]];
+const MOBILE_NAV_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[1], NAV_ITEMS[2], NAV_ITEMS[5]];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

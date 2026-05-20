@@ -1,5 +1,5 @@
 # generated: 2026-05-12T23:04:29Z
-# last_updated: 2026-05-20T16:25:08+02:00
+# last_updated: 2026-05-20T16:35:00+02:00
 # project: ibc
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12T23:04:29Z
-last_updated: 2026-05-20T16:25:08+02:00
+last_updated: 2026-05-20T16:35:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -72,7 +72,7 @@ development_status:
   4-1-deep-links-whatsapp-sur-profils-et-deals: done
   4-2-systeme-de-tags-profil-et-opportunites: done
   4-3-matching-basique-par-tags: done
-  4-4-soft-commitment-et-notifications-dinteret: ready-for-dev
+  4-4-soft-commitment-et-notifications-dinteret: review
   epic-4-retrospective: optional
   epic-5: backlog
   5-1-reviews-mutuelles-postdeal: backlog

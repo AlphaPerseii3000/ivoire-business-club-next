@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LockKeyhole, MapPin } from "lucide-react";
 
+import { InterestButton } from "@/components/features/deals/interest-button";
+
 type OpportunityTeaser = {
   id: string;
   title: string;
@@ -32,10 +34,9 @@ export function OpportunityTeasers({
             {opportunities.map((opportunity) => {
               const location = opportunity.location?.trim() ? opportunity.location : "Localisation non renseignée";
               return (
-                <Link
+                <article
                   key={opportunity.id}
-                  href="/auth/signup"
-                  className="group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md"
                 >
                   <div className="space-y-3 blur-[1px] transition group-hover:blur-0">
                     <h3 className="text-lg font-semibold">{opportunity.title}</h3>
@@ -49,9 +50,18 @@ export function OpportunityTeasers({
                       <LockKeyhole className="mx-auto h-5 w-5 text-primary" aria-hidden="true" />
                       <p className="mt-2 text-sm font-semibold">Devenez membre pour voir les détails</p>
                       <p className="mt-1 text-xs text-muted-foreground">Inscription gratuite, activation par virement.</p>
+                      <div className="mt-4 flex flex-col items-center gap-2">
+                        <InterestButton opportunityId={opportunity.id} isAuthenticated={false} />
+                        <Link
+                          href="/auth/signup"
+                          className="text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        >
+                          Voir le détail après inscription
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>

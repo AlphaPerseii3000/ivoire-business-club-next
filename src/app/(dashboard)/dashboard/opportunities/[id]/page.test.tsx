@@ -39,6 +39,9 @@ function verifiedOpportunity(overrides = {}) {
     verifiedBy: null,
     documents: [],
     verificationApprovals: [],
+    tags: [],
+    interests: [],
+    _count: { interests: 0 },
     requiresDoubleVerification: false,
     ...overrides,
   };
@@ -83,7 +86,21 @@ describe("OpportunityDetailPage premium and tier access gating", () => {
     expect(screen.getByText("Vérifié par Admin IBC")).toBeInTheDocument();
     expect(screen.getByLabelText(/Niveau de confiance Argent/)).toBeInTheDocument();
     expect(screen.getByText("Timeline de vérification")).toBeInTheDocument();
+    expect(screen.getByText("0 intérêt enregistré")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Intéressé(e)" })).toBeInTheDocument();
     expect(screen.queryByText("Votre abonnement est inactif. Renouvelez pour accéder aux deals.")).not.toBeInTheDocument();
+  });
+
+  it("highlights the interest count from notification links", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({ _count: { interests: 2 } }));
+
+    render(await OpportunityDetailPage({
+      params: Promise.resolve({ id: "opp-1" }),
+      searchParams: Promise.resolve({ highlight: "interests" }),
+    }));
+
+    expect(screen.getByText("2 intérêts enregistrés")).toHaveAttribute("aria-current", "true");
   });
 
   it("renders legal document rows with preview and download for authorized members", async () => {

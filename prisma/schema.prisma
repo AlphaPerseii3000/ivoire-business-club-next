@@ -87,6 +87,7 @@ model User {
   verificationTokens VerificationToken[]
   tags               UserTag[]
   notifications      Notification[]
+  opportunityInterests OpportunityInterest[]
 
   @@map("users")
 }
@@ -181,8 +182,24 @@ model Opportunity {
   documents  Document[]
   verificationApprovals OpportunityVerificationApproval[]
   tags       OpportunityTag[]
+  interests  OpportunityInterest[]
 
   @@map("opportunities")
+}
+
+model OpportunityInterest {
+  id            String   @id @default(cuid())
+  userId        String
+  opportunityId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, opportunityId])
+  @@index([opportunityId, createdAt])
+  @@index([userId, createdAt])
+  @@map("opportunity_interests")
 }
 
 model UserTag {

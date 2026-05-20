@@ -2,7 +2,7 @@
 Story: "4.4"
 StoryKey: "4-4-soft-commitment-et-notifications-dinteret"
 Title: "Soft Commitment et Notifications d'Intérêt"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR29", "FR30"]
@@ -13,7 +13,7 @@ Created: "2026-05-20"
 
 # Story 4.4: Soft Commitment et Notifications d'Intérêt
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -46,57 +46,57 @@ afin de signaler au porteur de projet que je suis potentiellement intéressé.
 
 ## Tasks / Subtasks
 
-- [ ] **Ajouter le modèle Prisma de soft commitment sans dupliquer les notifications existantes** (AC: #1, #2, #3)
-  - [ ] Ajouter un modèle recommandé `OpportunityInterest` dans `prisma/schema.prisma` avec `id`, `userId`, `opportunityId`, `createdAt`, relations `user` et `opportunity`, `@@unique([userId, opportunityId])`, `@@index([opportunityId, createdAt])`, `@@index([userId, createdAt])`, `@@map("opportunity_interests")`.
-  - [ ] Ajouter les relations `User.opportunityInterests` et `Opportunity.interests`.
-  - [ ] Créer une migration additive dédiée, par exemple `prisma/migrations/20260520xxxxxx_add_opportunity_interests/migration.sql`.
-  - [ ] Préserver le modèle `Notification` déjà ajouté par Story 4.3; ne pas créer une seconde table de notifications.
-  - [ ] Utiliser une contrainte unique pour rendre le clic idempotent et empêcher plusieurs intérêts du même membre sur le même deal.
+- [x] **Ajouter le modèle Prisma de soft commitment sans dupliquer les notifications existantes** (AC: #1, #2, #3)
+  - [x] Ajouter un modèle recommandé `OpportunityInterest` dans `prisma/schema.prisma` avec `id`, `userId`, `opportunityId`, `createdAt`, relations `user` et `opportunity`, `@@unique([userId, opportunityId])`, `@@index([opportunityId, createdAt])`, `@@index([userId, createdAt])`, `@@map("opportunity_interests")`.
+  - [x] Ajouter les relations `User.opportunityInterests` et `Opportunity.interests`.
+  - [x] Créer une migration additive dédiée, par exemple `prisma/migrations/20260520xxxxxx_add_opportunity_interests/migration.sql`.
+  - [x] Préserver le modèle `Notification` déjà ajouté par Story 4.3; ne pas créer une seconde table de notifications.
+  - [x] Utiliser une contrainte unique pour rendre le clic idempotent et empêcher plusieurs intérêts du même membre sur le même deal.
 
-- [ ] **Créer le flux serveur d'enregistrement d'intérêt** (AC: #1, #2)
-  - [ ] Créer une route handler ciblée, recommandée : `src/app/api/opportunities/[id]/interest/route.ts`, puisque `src/app/api/opportunities/[id]/route.ts` n'existe pas actuellement malgré les anciens hints.
-  - [ ] `POST` : exiger `auth()` depuis `@/lib/auth`; retourner `401` pour non authentifié, `404` si deal introuvable/non visible, `403` si accès premium/tier insuffisant, `409` ou succès idempotent si intérêt déjà enregistré.
-  - [ ] Vérifier que le deal est `VERIFIED` pour les membres non auteurs/non admins; auteurs/admins peuvent voir leurs propres deals mais ne doivent pas marquer leur propre intérêt.
-  - [ ] Appliquer le même gate que la page détail : `getUserPremiumAccess(session.user.id)` + `canUserAccessOpportunity(opportunity.requiredTier, currentUser.tier)` sauf auteur/admin si une exception existante est préservée.
-  - [ ] Dans une transaction Prisma, créer l'`OpportunityInterest` puis créer une `Notification` pour l'auteur avec : `type: "OPPORTUNITY_INTEREST"`, `title`/`body` contenant exactement « [Nom du membre] est intéressé(e) par votre deal [Titre] », `href: "/dashboard/opportunities/[id]?highlight=interests"`.
-  - [ ] Ne pas notifier l'auteur quand l'auteur clique sur son propre deal; retourner un message français clair.
-  - [ ] Gérer la course concurrente : si l'unique constraint est violée, ne pas créer de notification dupliquée.
+- [x] **Créer le flux serveur d'enregistrement d'intérêt** (AC: #1, #2)
+  - [x] Créer une route handler ciblée, recommandée : `src/app/api/opportunities/[id]/interest/route.ts`, puisque `src/app/api/opportunities/[id]/route.ts` n'existe pas actuellement malgré les anciens hints.
+  - [x] `POST` : exiger `auth()` depuis `@/lib/auth`; retourner `401` pour non authentifié, `404` si deal introuvable/non visible, `403` si accès premium/tier insuffisant, `409` ou succès idempotent si intérêt déjà enregistré.
+  - [x] Vérifier que le deal est `VERIFIED` pour les membres non auteurs/non admins; auteurs/admins peuvent voir leurs propres deals mais ne doivent pas marquer leur propre intérêt.
+  - [x] Appliquer le même gate que la page détail : `getUserPremiumAccess(session.user.id)` + `canUserAccessOpportunity(opportunity.requiredTier, currentUser.tier)` sauf auteur/admin si une exception existante est préservée.
+  - [x] Dans une transaction Prisma, créer l'`OpportunityInterest` puis créer une `Notification` pour l'auteur avec : `type: "OPPORTUNITY_INTEREST"`, `title`/`body` contenant exactement « [Nom du membre] est intéressé(e) par votre deal [Titre] », `href: "/dashboard/opportunities/[id]?highlight=interests"`.
+  - [x] Ne pas notifier l'auteur quand l'auteur clique sur son propre deal; retourner un message français clair.
+  - [x] Gérer la course concurrente : si l'unique constraint est violée, ne pas créer de notification dupliquée.
 
-- [ ] **Ajouter le bouton « Intéressé(e) » sur la page détail existante** (AC: #1, #3)
-  - [ ] Modifier `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` en conservant strictement : `auth()` redirect, `getUserPremiumAccess` + `PremiumAccessBlockedPanel`, visibilité tier, documents, TrustBadge, `VerificationTimeline`, `WhatsAppCTA`, suppression auteur.
-  - [ ] Charger `_count.interests` et l'intérêt du membre courant (`interests: { where: { userId: session.user.id }, select: { id: true } }`) dans la requête du deal.
-  - [ ] Afficher un indicateur lisible près des CTA ou du titre : `X intérêt(s) enregistré(s)`; si `searchParams.highlight === "interests"`, mettre l'indicateur en évidence visuellement et de façon accessible.
-  - [ ] Ajouter un client component dédié, recommandé `src/components/features/deals/interest-button.tsx`, pour gérer l'état local du bouton, l'appel `POST`, les erreurs et l'état disabled après succès.
-  - [ ] Bouton : variant secondaire ghost/outline selon les composants disponibles, label initial « Intéressé(e) », label succès « Intérêt enregistré » avec checkmark Lucide, disabled après enregistrement.
-  - [ ] Ne jamais utiliser `condition && <Component />` dans JSX; pré-calculer les booléens et rendre via ternaires.
+- [x] **Ajouter le bouton « Intéressé(e) » sur la page détail existante** (AC: #1, #3)
+  - [x] Modifier `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` en conservant strictement : `auth()` redirect, `getUserPremiumAccess` + `PremiumAccessBlockedPanel`, visibilité tier, documents, TrustBadge, `VerificationTimeline`, `WhatsAppCTA`, suppression auteur.
+  - [x] Charger `_count.interests` et l'intérêt du membre courant (`interests: { where: { userId: session.user.id }, select: { id: true } }`) dans la requête du deal.
+  - [x] Afficher un indicateur lisible près des CTA ou du titre : `X intérêt(s) enregistré(s)`; si `searchParams.highlight === "interests"`, mettre l'indicateur en évidence visuellement et de façon accessible.
+  - [x] Ajouter un client component dédié, recommandé `src/components/features/deals/interest-button.tsx`, pour gérer l'état local du bouton, l'appel `POST`, les erreurs et l'état disabled après succès.
+  - [x] Bouton : variant secondaire ghost/outline selon les composants disponibles, label initial « Intéressé(e) », label succès « Intérêt enregistré » avec checkmark Lucide, disabled après enregistrement.
+  - [x] Ne jamais utiliser `condition && <Component />` dans JSX; pré-calculer les booléens et rendre via ternaires.
 
-- [ ] **Créer/compléter l'affichage des notifications membre** (AC: #2, #3)
-  - [ ] Créer une destination dashboard simple si absente : `src/app/(dashboard)/notifications/page.tsx` ou `src/app/(dashboard)/dashboard/notifications/page.tsx` en cohérence avec la navigation existante. Recommandation : `/dashboard/notifications` pour rester sous le dashboard actuel.
-  - [ ] La page notifications doit utiliser `auth()`, `getUserPremiumAccess(session.user.id)` et `PremiumAccessBlockedPanel` comme toutes les pages dashboard.
-  - [ ] Charger les notifications du membre courant, tri `createdAt desc`, avec état lu/non lu et lien `href`.
-  - [ ] Afficher le message d'intérêt exact dans la liste; cliquer sur la notification doit naviguer vers le détail du deal et préserver le query param `?highlight=interests`.
-  - [ ] Ajouter un lien « Notifications » dans `src/app/(dashboard)/layout.tsx` sans casser la bottom nav mobile; si la bottom nav n'a que 4 slots, garder Accueil/Opportunités/Matching/Profil et ajouter Notifications dans la sidebar ou le header.
-  - [ ] Optionnel mais recommandé : créer `src/app/api/notifications/[id]/read/route.ts` ou un server action pour marquer `readAt` au clic si le pattern reste simple et testé.
+- [x] **Créer/compléter l'affichage des notifications membre** (AC: #2, #3)
+  - [x] Créer une destination dashboard simple si absente : `src/app/(dashboard)/notifications/page.tsx` ou `src/app/(dashboard)/dashboard/notifications/page.tsx` en cohérence avec la navigation existante. Recommandation : `/dashboard/notifications` pour rester sous le dashboard actuel.
+  - [x] La page notifications doit utiliser `auth()`, `getUserPremiumAccess(session.user.id)` et `PremiumAccessBlockedPanel` comme toutes les pages dashboard.
+  - [x] Charger les notifications du membre courant, tri `createdAt desc`, avec état lu/non lu et lien `href`.
+  - [x] Afficher le message d'intérêt exact dans la liste; cliquer sur la notification doit naviguer vers le détail du deal et préserver le query param `?highlight=interests`.
+  - [x] Ajouter un lien « Notifications » dans `src/app/(dashboard)/layout.tsx` sans casser la bottom nav mobile; si la bottom nav n'a que 4 slots, garder Accueil/Opportunités/Matching/Profil et ajouter Notifications dans la sidebar ou le header.
+  - [x] Optionnel mais recommandé : créer `src/app/api/notifications/[id]/read/route.ts` ou un server action pour marquer `readAt` au clic si le pattern reste simple et testé.
 
-- [ ] **Gérer le cas non connecté sans casser les routes protégées** (AC: #4)
-  - [ ] Ne pas supprimer le redirect/gate du dashboard detail page; les dashboard pages doivent rester protégées.
-  - [ ] Réutiliser le même `InterestButton` en mode `isAuthenticated={false}` dans un contexte public-safe si créé/présent (ex. teaser/detail public), ou transformer les cartes teaser publiques pour afficher une action « Intéressé(e) » qui ouvre une modale d'inscription sans exposer les détails premium.
-  - [ ] Si une page détail publique est ajoutée, elle doit exposer uniquement les champs teaser autorisés (`title`, `author.location`) et le CTA/modal; aucun montant, documents, téléphone, description complète ou tags premium.
-  - [ ] La modale doit inviter clairement à « S'inscrire » et « Se connecter », avec liens vers `/auth/signup` et `/auth/signin`, focus trap accessible et fermeture clavier `Escape` via composant Dialog/Sheet existant.
+- [x] **Gérer le cas non connecté sans casser les routes protégées** (AC: #4)
+  - [x] Ne pas supprimer le redirect/gate du dashboard detail page; les dashboard pages doivent rester protégées.
+  - [x] Réutiliser le même `InterestButton` en mode `isAuthenticated={false}` dans un contexte public-safe si créé/présent (ex. teaser/detail public), ou transformer les cartes teaser publiques pour afficher une action « Intéressé(e) » qui ouvre une modale d'inscription sans exposer les détails premium.
+  - [x] Si une page détail publique est ajoutée, elle doit exposer uniquement les champs teaser autorisés (`title`, `author.location`) et le CTA/modal; aucun montant, documents, téléphone, description complète ou tags premium.
+  - [x] La modale doit inviter clairement à « S'inscrire » et « Se connecter », avec liens vers `/auth/signup` et `/auth/signin`, focus trap accessible et fermeture clavier `Escape` via composant Dialog/Sheet existant.
 
-- [ ] **Email / side effects : garder le MVP non bloquant** (AC: #2)
-  - [ ] L'AC exige une notification consultable; persister dans `Notification` est obligatoire.
-  - [ ] Si un email est ajouté via `src/lib/email.ts`, créer `sendOpportunityInterestEmail` séparé, mais l'échec email ne doit jamais annuler l'intérêt ou la notification in-app.
-  - [ ] Journaliser seulement des erreurs sanitizées (`sanitizeError`) et jamais de données sensibles.
+- [x] **Email / side effects : garder le MVP non bloquant** (AC: #2)
+  - [x] L'AC exige une notification consultable; persister dans `Notification` est obligatoire.
+  - [x] Si un email est ajouté via `src/lib/email.ts`, créer `sendOpportunityInterestEmail` séparé, mais l'échec email ne doit jamais annuler l'intérêt ou la notification in-app.
+  - [x] Journaliser seulement des erreurs sanitizées (`sanitizeError`) et jamais de données sensibles.
 
-- [ ] **Tests et vérification** (AC: all)
-  - [ ] Tests Prisma/schema ou route : premier clic crée `OpportunityInterest` + `Notification`, second clic ne crée rien en double.
-  - [ ] Tests route intérêt : 401 non connecté, 404 deal invisible/non vérifié, 403 abonnement/tier insuffisant, refus de l'auteur, succès membre éligible.
-  - [ ] Tests bouton : label initial, loading state, succès « Intérêt enregistré » + checkmark + disabled, état déjà intéressé au chargement, erreur française affichée.
-  - [ ] Tests page détail : count d'intérêts affiché, highlight via `?highlight=interests`, `WhatsAppCTA` et documents existants préservés.
-  - [ ] Tests notifications : auteur voit le message exact, lien vers `/dashboard/opportunities/[id]?highlight=interests`, non-auteurs ne voient pas la notification.
-  - [ ] Tests public/non-auth : clic « Intéressé(e) » ouvre la modale inscription/connexion sans appeler l'API.
-  - [ ] Exécuter au minimum les tests ciblés avec `npx vitest run ...`, puis `npm run build`. Noter tout lint global pré-existant séparément si hors scope.
+- [x] **Tests et vérification** (AC: all)
+  - [x] Tests Prisma/schema ou route : premier clic crée `OpportunityInterest` + `Notification`, second clic ne crée rien en double.
+  - [x] Tests route intérêt : 401 non connecté, 404 deal invisible/non vérifié, 403 abonnement/tier insuffisant, refus de l'auteur, succès membre éligible.
+  - [x] Tests bouton : label initial, loading state, succès « Intérêt enregistré » + checkmark + disabled, état déjà intéressé au chargement, erreur française affichée.
+  - [x] Tests page détail : count d'intérêts affiché, highlight via `?highlight=interests`, `WhatsAppCTA` et documents existants préservés.
+  - [x] Tests notifications : auteur voit le message exact, lien vers `/dashboard/opportunities/[id]?highlight=interests`, non-auteurs ne voient pas la notification.
+  - [x] Tests public/non-auth : clic « Intéressé(e) » ouvre la modale inscription/connexion sans appeler l'API.
+  - [x] Exécuter au minimum les tests ciblés avec `npx vitest run ...`, puis `npm run build`. Noter tout lint global pré-existant séparément si hors scope.
 
 ## Dev Notes
 
@@ -215,14 +215,51 @@ await prisma.notification.create({
 
 ### Agent Model Used
 
-TBD by dev-story agent
+GPT-5.5 (OpenAI Codex)
 
 ### Debug Log References
 
+- 2026-05-20 — Loaded BMAD dev-story workflow, story context, sprint status, architecture notes, and existing opportunity/notification code.
+- 2026-05-20 — Ran `npx prisma migrate dev --name add-opportunity-interest` and `npx prisma generate`.
+- 2026-05-20 — Ran targeted Vitest suite for interest route, button, opportunity detail, notifications page, and public teasers: PASS (20) FAIL (0).
+- 2026-05-20 — Ran `npm run build`: PASS. Warning only: deprecated Next.js middleware convention and missing Upstash env disables rate limiting during build.
+- 2026-05-20 — Ran full `npx vitest run`: PASS (301) FAIL (0).
+- 2026-05-20 — Ran `npm run lint`: FAIL due to pre-existing issues in files outside this story scope (`new/page.tsx`, auth/profile components/tests, `not-found.tsx`, `middleware.ts`); no new story files reported.
+
 ### Completion Notes List
 
+- Added additive Prisma `OpportunityInterest` model with user/opportunity relations, uniqueness, indexes, and migration while preserving the existing `Notification` model.
+- Implemented authenticated `POST /api/opportunities/[id]/interest` with premium/tier visibility checks, self-interest refusal, idempotent duplicate handling, and transactional interest + in-app author notification creation.
+- Updated opportunity detail page to load current-user interest state and `_count.interests`, render an accessible highlighted interest count for notification deep links, and add the soft-commitment CTA next to the existing WhatsApp CTA without regressing document/trust/timeline/delete flows.
+- Added reusable `InterestButton` client component with loading, disabled success state, French errors, checkmark success label, and signup/signin modal for anonymous users.
+- Added `/dashboard/notifications` premium-gated page, read-on-click notification item, idempotent read API, and desktop sidebar navigation entry, preserving the 4-slot mobile bottom navigation.
+- Updated public opportunity teasers to expose only teaser fields while offering an anonymous interest CTA that opens the signup/signin modal without calling the API.
+- Added route, component, page, notification, and public teaser tests covering the main acceptance criteria and edge cases.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/4-4-soft-commitment-et-notifications-dinteret.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `dev.db`
+- `prisma/migrations/20260520143031_add_opportunity_interest/migration.sql`
+- `prisma/schema.prisma`
+- `src/app/(dashboard)/dashboard/notifications/page.test.tsx`
+- `src/app/(dashboard)/dashboard/notifications/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`
+- `src/app/(dashboard)/layout.tsx`
+- `src/app/api/notifications/[id]/read/route.test.ts`
+- `src/app/api/notifications/[id]/read/route.ts`
+- `src/app/api/opportunities/[id]/interest/route.test.ts`
+- `src/app/api/opportunities/[id]/interest/route.ts`
+- `src/components/features/deals/interest-button.test.tsx`
+- `src/components/features/deals/interest-button.tsx`
+- `src/components/features/notifications/notification-item.test.tsx`
+- `src/components/features/notifications/notification-item.tsx`
+- `src/components/landing/opportunity-teasers.test.tsx`
+- `src/components/landing/opportunity-teasers.tsx`
 
 ### Change Log
 
 - 2026-05-20 — CS created ready-for-dev story context for soft commitments and interest notifications.
+- 2026-05-20 — Implemented soft commitments, in-app interest notifications, dashboard notification UI, public anonymous signup/signin modal, tests, and validation updates; story ready for review.
