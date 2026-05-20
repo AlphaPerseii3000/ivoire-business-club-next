@@ -1,7 +1,7 @@
 /*
   Warnings:
 
-  - You are about to drop the column `avatarUrl` on the `users` table. All the data in the column will be lost.
+  - The legacy column `avatarUrl` is copied into `image` during the users RedefineTables step; the later avatarUrl map migration renames it back.
 
 */
 -- RedefineTables
@@ -56,7 +56,8 @@ CREATE TABLE "new_users" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
-INSERT INTO "new_users" ("bio", "country", "createdAt", "email", "emailVerified", "googleId", "id", "location", "name", "passwordHash", "phone", "role", "tier", "updatedAt", "verificationStatus") SELECT "bio", "country", "createdAt", "email", "emailVerified", "googleId", "id", "location", "name", "passwordHash", "phone", "role", "tier", "updatedAt", "verificationStatus" FROM "users";
+-- Preserve existing avatarUrl data by copying it into the interim image column; a later migration renames image back to avatarUrl for Prisma @map.
+INSERT INTO "new_users" ("bio", "country", "createdAt", "email", "emailVerified", "googleId", "id", "image", "location", "name", "passwordHash", "phone", "role", "tier", "updatedAt", "verificationStatus") SELECT "bio", "country", "createdAt", "email", "emailVerified", "googleId", "id", "avatarUrl", "location", "name", "passwordHash", "phone", "role", "tier", "updatedAt", "verificationStatus" FROM "users";
 DROP TABLE "users";
 ALTER TABLE "new_users" RENAME TO "users";
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");

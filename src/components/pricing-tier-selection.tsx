@@ -13,6 +13,8 @@ interface PricingTierSelectionProps {
 
 export function PricingTierSelection({ isAuthenticated }: PricingTierSelectionProps) {
   const [selectedTier, setSelectedTier] = useState<MembershipTier | null>(null);
+  const hasSelectedAuthenticatedTier = isAuthenticated ? selectedTier !== null : false;
+  const selectedTierHref = selectedTier ? `/pricing/virement?tier=${selectedTier}` : "/pricing";
 
   return (
     <div className="space-y-8">
@@ -29,13 +31,13 @@ export function PricingTierSelection({ isAuthenticated }: PricingTierSelectionPr
         ))}
       </div>
 
-      {isAuthenticated && selectedTier ? (
+      {hasSelectedAuthenticatedTier ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card p-5 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">
             Offre sélectionnée. Continue pour recevoir les instructions de virement KS Investment.
           </p>
           <Link
-            href={`/pricing/virement?tier=${selectedTier}`}
+            href={selectedTierHref}
             className={buttonVariants({
               className: "min-h-11 px-6 focus-visible:ring-3 focus-visible:ring-ring/50",
             })}

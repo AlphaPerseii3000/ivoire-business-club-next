@@ -127,8 +127,10 @@ describe("ProfileEditForm", () => {
     const user = userEvent.setup();
     const originalLocation = window.location;
     // Mock window.location.href setter
-    delete (window as any).location;
-    window.location = { ...originalLocation, href: "" } as Location;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, href: "" },
+    });
 
     mockFetch.mockResolvedValueOnce({
       ok: false,
@@ -146,7 +148,10 @@ describe("ProfileEditForm", () => {
     });
 
     // Restore
-    window.location = originalLocation;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   it("shows character count for bio field", () => {

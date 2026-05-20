@@ -121,8 +121,9 @@ export default function SubscriptionStatusTracker({
 
       <ol className="relative flex flex-col gap-6 pl-4" aria-label="Cycle de vie de l'abonnement">
         {STEPS.map((step, index) => {
-          const isCompleted = activeIndex >= 0 && index < activeIndex;
-          const isCurrent = activeIndex >= 0 && index === activeIndex;
+          const isCompleted = activeIndex >= 0 ? index < activeIndex : false;
+          const isCurrent = activeIndex >= 0 ? index === activeIndex : false;
+          const showPendingPulse = isCurrent ? status === "PENDING" : false;
           const stepTimestamp = formatTimestamp(timestamps[step.key]);
 
           return (
@@ -181,7 +182,7 @@ export default function SubscriptionStatusTracker({
                   )}
                 >
                   {step.label}
-                  {isCurrent && status === "PENDING" ? (
+                  {showPendingPulse ? (
                     <span className="ml-2 inline-flex h-2 w-2 rounded-full bg-amber-500 motion-safe:animate-pulse motion-reduce:animate-none dark:bg-amber-400" />
                   ) : null}
                 </span>

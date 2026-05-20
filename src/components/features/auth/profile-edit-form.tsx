@@ -100,9 +100,9 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
           className="min-h-[44px]"
           {...register("name")}
         />
-        {errors.name && (
+        {errors.name ? (
           <p className="text-xs text-destructive">{errors.name.message}</p>
-        )}
+        ) : null}
       </div>
 
       {/* Email (read-only) */}
@@ -132,9 +132,9 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
         <p className="text-xs text-muted-foreground">
           {(watch("bio")?.length ?? 0)}/500
         </p>
-        {errors.bio && (
+        {errors.bio ? (
           <p className="text-xs text-destructive">{errors.bio.message}</p>
-        )}
+        ) : null}
       </div>
 
       {/* Phone */}
@@ -148,9 +148,9 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
           className="min-h-[44px]"
           {...register("phone")}
         />
-        {errors.phone && (
+        {errors.phone ? (
           <p className="text-xs text-destructive">{errors.phone.message}</p>
-        )}
+        ) : null}
       </div>
 
       {/* Location */}
@@ -163,9 +163,9 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
           className="min-h-[44px]"
           {...register("location")}
         />
-        {errors.location && (
+        {errors.location ? (
           <p className="text-xs text-destructive">{errors.location.message}</p>
-        )}
+        ) : null}
       </div>
 
       {/* Country */}
@@ -189,9 +189,9 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
             <SelectItem value="Autre">Autre</SelectItem>
           </SelectContent>
         </Select>
-        {errors.country && (
+        {errors.country ? (
           <p className="text-xs text-destructive">{errors.country.message}</p>
-        )}
+        ) : null}
       </div>
 
       <TagInput

@@ -137,6 +137,8 @@ describe("POST /api/user/profile", () => {
     expect(res.status).toBe(200);
     expect(json.data).toBeDefined();
     expect(json.data.name).toBe("Jean Nouveau");
+    expect(mockUserTagDeleteMany).not.toHaveBeenCalled();
+    expect(mockUserTagCreateMany).not.toHaveBeenCalled();
   });
 
   it("returns 401 if not authenticated", async () => {
@@ -194,6 +196,27 @@ describe("POST /api/user/profile", () => {
     });
   });
 
+  it("clears existing profile tags when tags is an empty array", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserUpdate.mockResolvedValueOnce({ ...mockUserData, tags: [] });
+
+    const req = makeRequest({
+      name: "Jean Dupont",
+      bio: "Entrepreneur",
+      phone: "+225 0708091011",
+      location: "Abidjan",
+      country: "CI",
+      tags: [],
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockUserTagDeleteMany).toHaveBeenCalledWith({ where: { userId: "user-123" } });
+    expect(mockUserTagCreateMany).not.toHaveBeenCalled();
+    expect(json.data.tags).toEqual([]);
+  });
 
   it("saves deduplicated profile tags transactionally", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });

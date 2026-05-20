@@ -59,9 +59,9 @@ export default async function AdminMembersPage() {
                 <td className="py-3 text-muted-foreground">{new Date(m.createdAt).toLocaleDateString("fr-FR")}</td>
                 <td className="py-3">
                   <form action={`/api/admin/users/${m.id}/verify`} method="POST" style={{ display: "inline" }}>
-                    {m.verificationStatus === "PENDING" && (
+                    {m.verificationStatus === "PENDING" ? (
                       <button type="submit" name="action" value="verify" className="text-xs text-accent hover:underline">Vérifier</button>
-                    )}
+                    ) : null}
                   </form>
                 </td>
               </tr>

@@ -35,12 +35,12 @@ export default async function SettingsPage() {
               {subscription?.status === "ACTIVE" ? "Changer de plan" : "S'abonner"}
             </a>
           </div>
-          {subscription && (
+          {subscription ? (
             <div className="mt-4 text-sm text-muted-foreground">
               <p>Expire le : {subscription.endDate ? new Date(subscription.endDate).toLocaleDateString("fr-FR") : "—"}</p>
               <p>Provider : {subscription.provider}</p>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 
@@ -59,11 +59,13 @@ export default async function SettingsPage() {
               <p className="text-sm text-muted-foreground">
                 Statut actuel : {user.verificationStatus === "PENDING" ? "⏳ En cours de vérification" : "❌ Non vérifié"}
               </p>
-              {user.tier === "BOSS" && user.verificationStatus !== "PENDING" && (
-                <button className="mt-4 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">
-                  Demander la vérification
-                </button>
-              )}
+              {user.tier === "BOSS" ? (
+                user.verificationStatus !== "PENDING" ? (
+                  <button className="mt-4 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">
+                    Demander la vérification
+                  </button>
+                ) : null
+              ) : null}
             </div>
           )}
         </div>

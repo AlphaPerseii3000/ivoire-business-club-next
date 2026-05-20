@@ -67,7 +67,8 @@ export async function POST(req: Request) {
     }
 
     const data = parsed.data;
-    const tags = dedupeTags(data.tags);
+    const shouldUpdateTags = Object.prototype.hasOwnProperty.call(body, "tags");
+    const tags = shouldUpdateTags ? dedupeTags(data.tags) : null;
 
     const sanitizedData = {
       name: data.name,
@@ -78,16 +79,19 @@ export async function POST(req: Request) {
     };
 
     const updatedUser = await prisma.$transaction(async (tx) => {
-      await tx.userTag.deleteMany({ where: { userId } });
+      if (shouldUpdateTags) {
+        const updatedTags = tags ?? [];
+        await tx.userTag.deleteMany({ where: { userId } });
 
-      if (tags.length > 0) {
-        await tx.userTag.createMany({
-          data: tags.map((tag) => ({
-            userId,
-            category: tag.category,
-            value: tag.value,
-          })),
-        });
+        if (updatedTags.length > 0) {
+          await tx.userTag.createMany({
+            data: updatedTags.map((tag) => ({
+              userId,
+              category: tag.category,
+              value: tag.value,
+            })),
+          });
+        }
       }
 
       return tx.user.update({

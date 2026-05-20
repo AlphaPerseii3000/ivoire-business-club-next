@@ -41,6 +41,31 @@ async function patchOpportunity(id: string, body: Record<string, unknown>) {
   return json.data as AdminOpportunity;
 }
 
+function getOptimisticStatus(opportunity: AdminOpportunity, action: AdminAction): VerificationStatusInput {
+  if (action === "verify") {
+    if (opportunity.requiresDoubleVerification) {
+      return opportunity.approvalCount < 1 ? "EN_COURS" : "VERIFIED";
+    }
+    return "VERIFIED";
+  }
+
+  if (action === "reject") {
+    return "REJECTED";
+  }
+
+  return "EN_COURS";
+}
+
+function getOptimisticApprovalCount(opportunity: AdminOpportunity, action: AdminAction) {
+  if (action !== "verify") {
+    return opportunity.approvalCount;
+  }
+
+  return opportunity.requiresDoubleVerification
+    ? Math.min(opportunity.approvalCount + 1, 2)
+    : opportunity.approvalCount;
+}
+
 function OpportunityCard({ opportunity, onOpen, onStartReview, disabled }: { opportunity: AdminOpportunity; onOpen: (opportunity: AdminOpportunity) => void; onStartReview: (opportunity: AdminOpportunity) => void; disabled: boolean }) {
   return (
     <Card size="sm" className={cn("transition-shadow hover:shadow-md", adminOpportunityCardClass(opportunity.verificationStatus))}>
@@ -113,8 +138,8 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
     setError(null);
     setMutatingId(opportunity.id);
     const previousItems = items;
-    const optimisticStatus = action === "verify" ? (opportunity.requiresDoubleVerification && opportunity.approvalCount < 1 ? "EN_COURS" : "VERIFIED") : action === "reject" ? "REJECTED" : "EN_COURS";
-    const optimisticApprovalCount = action === "verify" && opportunity.requiresDoubleVerification ? Math.min(opportunity.approvalCount + 1, 2) : action === "verify" ? opportunity.approvalCount : opportunity.approvalCount;
+    const optimisticStatus = getOptimisticStatus(opportunity, action);
+    const optimisticApprovalCount = getOptimisticApprovalCount(opportunity, action);
     const optimisticCurrentAdminApproved = action === "verify" ? true : opportunity.currentAdminApproved;
     setItems((current) => current.map((item) => (item.id === opportunity.id ? { ...item, verificationStatus: optimisticStatus, approvalCount: optimisticApprovalCount, currentAdminApproved: optimisticCurrentAdminApproved } : item)));
 

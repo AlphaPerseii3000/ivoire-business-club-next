@@ -89,9 +89,9 @@ export default function SignUpPage() {
           <h1 className="text-2xl font-bold text-primary">Créer un compte</h1>
           <p className="mt-2 text-sm text-muted-foreground">Rejoins l&apos;Ivoire Business Club</p>
         </div>
-        {displayError && (
+        {displayError ? (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{displayError}</div>
-        )}
+        ) : null}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium">Nom complet</label>
@@ -102,9 +102,9 @@ export default function SignUpPage() {
               className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="Jean Dupont"
             />
-            {errors.name && (
+            {errors.name ? (
               <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
-            )}
+            ) : null}
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium">Email</label>
@@ -115,9 +115,9 @@ export default function SignUpPage() {
               className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="ton@email.com"
             />
-            {errors.email && (
+            {errors.email ? (
               <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
-            )}
+            ) : null}
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium">Mot de passe</label>
@@ -128,14 +128,14 @@ export default function SignUpPage() {
               className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="••••••••"
             />
-            {strength.label && (
+            {strength.label ? (
               <p className={`mt-1 text-xs font-medium ${strength.color}`}>
                 Force : {strength.label}
               </p>
-            )}
-            {errors.password && (
+            ) : null}
+            {errors.password ? (
               <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
-            )}
+            ) : null}
           </div>
           <button
             type="submit"

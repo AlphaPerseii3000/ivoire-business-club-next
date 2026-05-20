@@ -92,7 +92,7 @@ export default function AvatarUpload({
           size="lg"
           className="h-24 w-24 md:h-24 md:w-24 mx-auto"
         >
-          {imageSrc && <AvatarImage src={imageSrc} alt={userName} />}
+          {imageSrc ? <AvatarImage src={imageSrc} alt={userName} /> : null}
           <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
         </Avatar>
         {/* Overlay with camera icon */}

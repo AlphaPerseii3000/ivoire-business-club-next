@@ -37,7 +37,7 @@ export default function DeleteAccountDialog() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        await res.json();
 
         if (res.status === 400) {
           setError("Confirmation incorrecte.");
@@ -90,7 +90,7 @@ export default function DeleteAccountDialog() {
             autoComplete="off"
             className="text-center"
           />
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
 
         <DialogFooter>

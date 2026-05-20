@@ -97,8 +97,16 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
   const doubleVerificationMessage = opportunity.requiresDoubleVerification
     ? `Double vérification requise (${opportunity.approvalCount}/2)`
     : "Vérification simple";
-  const isWaitingForSecondAdmin = opportunity.requiresDoubleVerification && opportunity.approvalCount === 1 && opportunity.verificationStatus === "EN_COURS";
-  const cannotVerifyAgain = opportunity.requiresDoubleVerification && opportunity.currentAdminApproved && opportunity.approvalCount < 2;
+  const isWaitingForSecondAdmin = opportunity.requiresDoubleVerification
+    ? opportunity.approvalCount === 1
+      ? opportunity.verificationStatus === "EN_COURS"
+      : false
+    : false;
+  const cannotVerifyAgain = opportunity.requiresDoubleVerification
+    ? opportunity.currentAdminApproved
+      ? opportunity.approvalCount < 2
+      : false
+    : false;
 
   const submitReject = form.handleSubmit(async (values) => {
     if (!values.note.trim()) {
