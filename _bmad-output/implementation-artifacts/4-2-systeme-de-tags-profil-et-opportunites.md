@@ -2,7 +2,7 @@
 Story: "4.2"
 StoryKey: "4-2-systeme-de-tags-profil-et-opportunites"
 Title: "Système de Tags Profil et Opportunités"
-Status: in-progress
+Status: "done"
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR26", "FR27"]
@@ -13,7 +13,7 @@ Created: "2026-05-20"
 
 # Story 4.2: Système de Tags Profil et Opportunités
 
-Status: in-progress
+Status: done
 
 ## Story
 
