@@ -78,6 +78,13 @@ export const opportunityCreateSchema = z.object({
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const reviewCreateSchema = z.object({
+  rating: z.number().int("La note doit être un nombre entier").min(1, "La note doit être comprise entre 1 et 5").max(5, "La note doit être comprise entre 1 et 5"),
+  comment: z.string().trim().min(1, "Le commentaire est requis").max(500, "Le commentaire ne doit pas dépasser 500 caractères"),
+});
+
+export type ReviewCreateInput = z.infer<typeof reviewCreateSchema>;
+
 export const verificationStatusSchema = z.enum(["PENDING", "EN_COURS", "VERIFIED", "REJECTED"]);
 
 export const opportunityAdminActionSchema = z

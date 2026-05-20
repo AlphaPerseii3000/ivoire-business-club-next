@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   profileUpdateSchema,
+  reviewCreateSchema,
   UEMOA_COUNTRIES,
 } from "./validations";
 
@@ -128,6 +129,30 @@ describe("profileUpdateSchema", () => {
       location: "x".repeat(101),
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("reviewCreateSchema", () => {
+  it("accepts integer ratings from 1 to 5 and comments up to 500 characters", () => {
+    expect(reviewCreateSchema.safeParse({ rating: 1, comment: "Bon échange" }).success).toBe(true);
+    expect(reviewCreateSchema.safeParse({ rating: 5, comment: "x".repeat(500) }).success).toBe(true);
+  });
+
+  it("rejects ratings outside 1 to 5", () => {
+    expect(reviewCreateSchema.safeParse({ rating: 0, comment: "Bon échange" }).success).toBe(false);
+    expect(reviewCreateSchema.safeParse({ rating: 6, comment: "Bon échange" }).success).toBe(false);
+  });
+
+  it("rejects non-integer ratings", () => {
+    expect(reviewCreateSchema.safeParse({ rating: 3.5, comment: "Bon échange" }).success).toBe(false);
+  });
+
+  it("rejects empty comments after trimming", () => {
+    expect(reviewCreateSchema.safeParse({ rating: 4, comment: "   " }).success).toBe(false);
+  });
+
+  it("rejects comments longer than 500 characters", () => {
+    expect(reviewCreateSchema.safeParse({ rating: 4, comment: "x".repeat(501) }).success).toBe(false);
   });
 });
 

@@ -1,5 +1,5 @@
 # generated: 2026-05-12T23:04:29Z
-# last_updated: 2026-05-20T18:51:41
+# last_updated: 2026-05-20T19:05:13
 # project: ibc
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-05-20T18:51:41
+last_updated: 2026-05-20T19:05:13
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -76,7 +76,7 @@ development_status:
   epic-4-retrospective: done
   epic-5: in-progress
   5-0-consolidation-post-retrospective-epic-4: done
-  5-1-reviews-mutuelles-postdeal: ready-for-dev
+  5-1-reviews-mutuelles-postdeal: review
   5-2-score-de-fiabilite-et-badge-membre-platinum: backlog
   5-3-affichage-public-des-reviews-sur-profil: backlog
   epic-5-retrospective: optional

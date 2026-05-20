@@ -88,6 +88,8 @@ model User {
   tags               UserTag[]
   notifications      Notification[]
   opportunityInterests OpportunityInterest[]
+  reviewsWritten     Review[] @relation("ReviewsWritten")
+  reviewsReceived    Review[] @relation("ReviewsReceived")
 
   @@map("users")
 }
@@ -183,8 +185,29 @@ model Opportunity {
   verificationApprovals OpportunityVerificationApproval[]
   tags       OpportunityTag[]
   interests  OpportunityInterest[]
+  reviews    Review[]
 
   @@map("opportunities")
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  reviewerId    String
+  revieweeId    String
+  opportunityId String
+  rating        Int
+  comment       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviewer    User        @relation("ReviewsWritten", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee    User        @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, opportunityId])
+  @@index([revieweeId, createdAt])
+  @@index([opportunityId, createdAt])
+  @@map("reviews")
 }
 
 model OpportunityInterest {

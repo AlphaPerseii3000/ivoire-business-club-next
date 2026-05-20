@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import { ReviewList } from "@/components/features/reviews/review-list";
 import { TagChips } from "@/components/features/tags/tag-chips";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 
@@ -29,6 +30,16 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       verificationStatus: true,
       createdAt: true,
       tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
+      reviewsReceived: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          reviewer: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -99,6 +110,8 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             />
           </div>
         )}
+
+        {member.reviewsReceived.length > 0 ? <ReviewList reviews={member.reviewsReceived} /> : null}
       </div>
     </div>
   );

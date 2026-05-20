@@ -20,6 +20,7 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((path: string) => { throw new Error(`redirect:${path}`); }),
   notFound: mockNotFound,
+  useRouter: () => ({ refresh: vi.fn() }),
 }));
 
 const params = { params: Promise.resolve({ id: "opp-1" }) };
@@ -41,6 +42,7 @@ function verifiedOpportunity(overrides = {}) {
     verificationApprovals: [],
     tags: [],
     interests: [],
+    reviews: [],
     _count: { interests: 0 },
     requiresDoubleVerification: false,
     ...overrides,
@@ -128,5 +130,50 @@ describe("OpportunityDetailPage premium and tier access gating", () => {
     expect(screen.getByRole("button", { name: /Aperçu de Statuts SCI\.pdf/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Télécharger/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Supprimer/ })).not.toBeInTheDocument();
+  });
+
+
+  it("hides the review form when the member has no interest", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity());
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.queryByRole("heading", { name: "Laisser un avis" })).not.toBeInTheDocument();
+  });
+
+  it("hides the review form before the 7-day delay", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({
+      interests: [{ id: "interest-1", createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }],
+    }));
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.queryByRole("heading", { name: "Laisser un avis" })).not.toBeInTheDocument();
+  });
+
+  it("hides the review form after an existing review", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({
+      interests: [{ id: "interest-1", createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) }],
+      reviews: [{ id: "review-1" }],
+    }));
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.queryByRole("heading", { name: "Laisser un avis" })).not.toBeInTheDocument();
+  });
+
+  it("shows the review form after the 7-day delay when no review exists", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockOpportunityFindUnique.mockResolvedValueOnce(verifiedOpportunity({
+      interests: [{ id: "interest-1", createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) }],
+    }));
+
+    render(await OpportunityDetailPage(params));
+
+    expect(screen.getByRole("heading", { name: "Laisser un avis" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Soumettre mon avis" })).toBeInTheDocument();
   });
 });

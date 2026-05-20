@@ -2,7 +2,7 @@
 Story: "5.1"
 StoryKey: "5-1-reviews-mutuelles-postdeal"
 Title: "Reviews Mutuelles Post-Deal"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR31", "FR34"]
@@ -12,7 +12,7 @@ Created: "2026-05-20"
 
 # Story 5.1: Reviews Mutuelles Post-Deal
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -62,56 +62,56 @@ so that transparency and trust inside IBC increase after each qualified relation
 
 ## Tasks / Subtasks
 
-- [ ] **AC1/AC2: Add Review data model and migration**
-  - [ ] Extend `prisma/schema.prisma` with a new `Review` model; there is currently no Review model.
-  - [ ] Add `receivedReviews` and `writtenReviews` relations to `User`, and `reviews` relation to `Opportunity`.
-  - [ ] Use the existing brownfield naming conventions: Prisma PascalCase model, camelCase fields, `@@map("reviews")`, indexes on reviewee/date and opportunity/date.
-  - [ ] Enforce duplicate prevention with `@@unique([reviewerId, opportunityId])`; this allows mutual reviews because the author and investor have different `reviewerId` values for the same opportunity.
-  - [ ] Keep cascade delete behavior consistent with existing models (`OpportunityInterest`, `Document`, `Notification`) unless Prisma requires a safer relation strategy.
-  - [ ] Generate a migration with `prisma migrate dev --name add_reviews` or the project-standard equivalent; never hand-edit generated SQL unless needed and documented.
+- [x] **AC1/AC2: Add Review data model and migration**
+  - [x] Extend `prisma/schema.prisma` with a new `Review` model; there is currently no Review model.
+  - [x] Add `receivedReviews` and `writtenReviews` relations to `User`, and `reviews` relation to `Opportunity`.
+  - [x] Use the existing brownfield naming conventions: Prisma PascalCase model, camelCase fields, `@@map("reviews")`, indexes on reviewee/date and opportunity/date.
+  - [x] Enforce duplicate prevention with `@@unique([reviewerId, opportunityId])`; this allows mutual reviews because the author and investor have different `reviewerId` values for the same opportunity.
+  - [x] Keep cascade delete behavior consistent with existing models (`OpportunityInterest`, `Document`, `Notification`) unless Prisma requires a safer relation strategy.
+  - [x] Generate a migration with `prisma migrate dev --name add_reviews` or the project-standard equivalent; never hand-edit generated SQL unless needed and documented.
 
-- [ ] **AC2/AC4: Add validation and mutation endpoint**
-  - [ ] Add a `reviewCreateSchema` in `src/lib/validations.ts` with `rating: int 1..5` and `comment: string.trim().min(1).max(500)`.
-  - [ ] Create `src/app/api/opportunities/[id]/reviews/route.ts` for authenticated review submission.
-  - [ ] Use `auth()` from `@/lib/auth`; never import Prisma/bcrypt into `auth.config.ts` or middleware.
-  - [ ] Verify premium access with `getUserPremiumAccess(userId)` and tier access with `canUserAccessOpportunity(opportunity.requiredTier, currentUser.tier)` before allowing the mutation.
-  - [ ] Verify the opportunity exists, is `VERIFIED`, and the reviewer is not reviewing themselves.
-  - [ ] Verify eligibility from `OpportunityInterest`: current user must have an interest record for the opportunity and `interest.createdAt <= now - 7 days`.
-  - [ ] Compute `revieweeId` as the opportunity author for an interested investor review. If author-to-investor mutual reviews are implemented in this story, require an explicit eligible interested member target and validate that target has an interest on the same opportunity; never trust a raw `revieweeId` without this check.
-  - [ ] Use a Prisma transaction or safe create path that handles Prisma `P2002` unique constraint errors and returns the exact duplicate message.
-  - [ ] Return structured errors with project format `{ error, code?, details? }`; log unexpected errors with `sanitizeError` to avoid sensitive data in logs.
-  - [ ] Revalidate `/dashboard/opportunities/[id]` or use a client refresh after success so the duplicate prevention state is reflected immediately.
+- [x] **AC2/AC4: Add validation and mutation endpoint**
+  - [x] Add a `reviewCreateSchema` in `src/lib/validations.ts` with `rating: int 1..5` and `comment: string.trim().min(1).max(500)`.
+  - [x] Create `src/app/api/opportunities/[id]/reviews/route.ts` for authenticated review submission.
+  - [x] Use `auth()` from `@/lib/auth`; never import Prisma/bcrypt into `auth.config.ts` or middleware.
+  - [x] Verify premium access with `getUserPremiumAccess(userId)` and tier access with `canUserAccessOpportunity(opportunity.requiredTier, currentUser.tier)` before allowing the mutation.
+  - [x] Verify the opportunity exists, is `VERIFIED`, and the reviewer is not reviewing themselves.
+  - [x] Verify eligibility from `OpportunityInterest`: current user must have an interest record for the opportunity and `interest.createdAt <= now - 7 days`.
+  - [x] Compute `revieweeId` as the opportunity author for an interested investor review. If author-to-investor mutual reviews are implemented in this story, require an explicit eligible interested member target and validate that target has an interest on the same opportunity; never trust a raw `revieweeId` without this check.
+  - [x] Use a Prisma transaction or safe create path that handles Prisma `P2002` unique constraint errors and returns the exact duplicate message.
+  - [x] Return structured errors with project format `{ error, code?, details? }`; log unexpected errors with `sanitizeError` to avoid sensitive data in logs.
+  - [x] Revalidate `/dashboard/opportunities/[id]` or use a client refresh after success so the duplicate prevention state is reflected immediately.
 
-- [ ] **AC1: Add review form on the deal detail page**
-  - [ ] Create a client component such as `src/components/features/deals/review-form.tsx` using existing UI primitives and no new form library unless already present patterns require React Hook Form.
-  - [ ] Render 5 accessible star buttons (`aria-label` per rating) and a max-500-character textarea/counter.
-  - [ ] Disable submit while pending; show inline validation and server errors in French.
-  - [ ] In `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`, include the current user interest `createdAt` and any existing review by the current user for this opportunity.
-  - [ ] Precompute booleans before JSX, e.g. `const canShowReviewForm = ...`; render with `{canShowReviewForm ? <ReviewForm ... /> : null}`.
-  - [ ] Preserve existing premium gate, tier gate, document access rules, WhatsApp CTA, interest button, and trust badge behavior.
-  - [ ] Do not introduce nested anchors; keep interactive controls outside any parent `Link` wrapper.
+- [x] **AC1: Add review form on the deal detail page**
+  - [x] Create a client component such as `src/components/features/deals/review-form.tsx` using existing UI primitives and no new form library unless already present patterns require React Hook Form.
+  - [x] Render 5 accessible star buttons (`aria-label` per rating) and a max-500-character textarea/counter.
+  - [x] Disable submit while pending; show inline validation and server errors in French.
+  - [x] In `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`, include the current user interest `createdAt` and any existing review by the current user for this opportunity.
+  - [x] Precompute booleans before JSX, e.g. `const canShowReviewForm = ...`; render with `{canShowReviewForm ? <ReviewForm ... /> : null}`.
+  - [x] Preserve existing premium gate, tier gate, document access rules, WhatsApp CTA, interest button, and trust badge behavior.
+  - [x] Do not introduce nested anchors; keep interactive controls outside any parent `Link` wrapper.
 
-- [ ] **AC3: Display received reviews on profiles**
-  - [ ] Update `src/app/(dashboard)/members/[id]/page.tsx` to query received reviews ordered newest-first.
-  - [ ] Add `Avis reçus` section with stars, comment, reviewer name, and `toLocaleDateString("fr-FR")` date formatting.
-  - [ ] Render an empty state only if needed for this story; Story 5.3 will expand public review display, average rating, pagination, and `Avis et Réputation` public section.
-  - [ ] If also displaying on the current user's own `/profile` page, reuse a shared display component to avoid duplicate UI logic.
-  - [ ] Preserve the verified-profile guard: non-verified member profiles still call `notFound()`.
+- [x] **AC3: Display received reviews on profiles**
+  - [x] Update `src/app/(dashboard)/members/[id]/page.tsx` to query received reviews ordered newest-first.
+  - [x] Add `Avis reçus` section with stars, comment, reviewer name, and `toLocaleDateString("fr-FR")` date formatting.
+  - [x] Render an empty state only if needed for this story; Story 5.3 will expand public review display, average rating, pagination, and `Avis et Réputation` public section.
+  - [x] If also displaying on the current user's own `/profile` page, reuse a shared display component to avoid duplicate UI logic.
+  - [x] Preserve the verified-profile guard: non-verified member profiles still call `notFound()`.
 
-- [ ] **AC4/AC5: Add comprehensive tests for branch coverage**
-  - [ ] Add route tests for `POST /api/opportunities/[id]/reviews`: unauthenticated, inactive subscription, tier too low, opportunity missing, not verified, author self-review blocked, no interest, interest younger than 7 days, valid create, duplicate `P2002` path.
-  - [ ] Add validation tests for rating bounds, integer-only rating, empty comment, max 500 characters.
-  - [ ] Add component/page tests covering form hidden before 7 days and visible after 7 days.
-  - [ ] Add profile page tests covering `Avis reçus` rendered when reviews exist and hidden/empty when none exist.
-  - [ ] Ensure tests assert no duplicate notification/email side effects are created; this story does not require notifications for reviews unless explicitly added later.
+- [x] **AC4/AC5: Add comprehensive tests for branch coverage**
+  - [x] Add route tests for `POST /api/opportunities/[id]/reviews`: unauthenticated, inactive subscription, tier too low, opportunity missing, not verified, author self-review blocked, no interest, interest younger than 7 days, valid create, duplicate `P2002` path.
+  - [x] Add validation tests for rating bounds, integer-only rating, empty comment, max 500 characters.
+  - [x] Add component/page tests covering form hidden before 7 days and visible after 7 days.
+  - [x] Add profile page tests covering `Avis reçus` rendered when reviews exist and hidden/empty when none exist.
+  - [x] Ensure tests assert no duplicate notification/email side effects are created; this story does not require notifications for reviews unless explicitly added later.
 
-- [ ] **AC5: Validation and final hygiene**
-  - [ ] Run `./node_modules/.bin/prisma validate`.
-  - [ ] Run targeted tests for the new review route/components/pages.
-  - [ ] Run `npx vitest run`.
-  - [ ] Run `npm run build`.
-  - [ ] Run a JSX guardrail check such as `grep -rn '&&' src/ --include='*.tsx'` and confirm no new `&&` JSX render guards were introduced.
-  - [ ] Stage explicitly; do not use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
+- [x] **AC5: Validation and final hygiene**
+  - [x] Run `./node_modules/.bin/prisma validate`.
+  - [x] Run targeted tests for the new review route/components/pages.
+  - [x] Run `npx vitest run`.
+  - [x] Run `npm run build`.
+  - [x] Run a JSX guardrail check such as `grep -rn '&&' src/ --include='*.tsx'` and confirm no new `&&` JSX render guards were introduced.
+  - [x] Stage explicitly; do not use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
 
 ## Dev Notes
 
@@ -276,16 +276,43 @@ Recent commits show the current work pattern: story status commits, targeted tes
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (Hermes Agent)
 
 ### Debug Log References
 
+- `npx prisma generate` — passed.
+- `./node_modules/.bin/prisma validate` — passed.
+- Targeted review tests — passed (48 tests).
+- `npx vitest run` — passed (330 tests).
+- `npm run build` — passed.
+- JSX guardrail grep reviewed for new review/opportunity/member files; no JSX `&&` conditional rendering introduced.
+
 ### Completion Notes List
 
-- Story context created via bmad-create-story workflow; status set to ready-for-dev.
-- The dev agent must implement the Review model, review form/API, profile display, duplicate prevention, and branch tests.
+- Added persisted `Review` model with reviewer/reviewee/opportunity relations, indexes, cascade behavior, and unique duplicate prevention per reviewer/opportunity.
+- Added validated review submission API with auth, premium, tier, verified-opportunity, self-review, interest-age, duplicate, and P2002 guard coverage.
+- Added eligible post-deal review form on the opportunity detail page after the 7-day interest delay, with 5 stars, 500-character comment, French validation/server errors, and refresh/revalidation behavior.
+- Added received reviews display on verified member profiles with minimal field selection, newest-first ordering, stars, comment, reviewer name, and French date formatting.
+- Added route, validation, component, opportunity page, and profile page tests covering allowed and blocked branches; no review notification/email side effects were introduced.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/5-1-reviews-mutuelles-postdeal.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `prisma/schema.prisma`
+- `prisma/migrations/20260520190000_add_reviews/migration.sql`
+- `src/lib/validations.ts`
+- `src/lib/validations.test.ts`
+- `src/app/api/opportunities/[id]/reviews/route.ts`
+- `src/app/api/opportunities/[id]/reviews/route.test.ts`
+- `src/components/features/deals/review-form.tsx`
+- `src/components/features/deals/review-form.test.tsx`
+- `src/components/features/reviews/review-list.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx`
+- `src/app/(dashboard)/members/[id]/page.tsx`
+- `src/app/(dashboard)/members/[id]/page.test.tsx`
+
+### Change Log
+
+- 2026-05-20 — Implemented Story 5.1 reviews mutuelles post-deal and marked ready for review.

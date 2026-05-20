@@ -3,6 +3,7 @@ import { LockKeyhole } from "lucide-react";
 
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
 import { InterestButton } from "@/components/features/deals/interest-button";
+import { ReviewForm } from "@/components/features/deals/review-form";
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { VerificationTimeline } from "@/components/features/deals/verification-timeline";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
@@ -47,7 +48,8 @@ export default async function OpportunityDetailPage({
         documents: { orderBy: { createdAt: "desc" } },
         tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
         verificationApprovals: { select: { adminId: true }, orderBy: { createdAt: "asc" } },
-        interests: { where: { userId: session.user.id }, select: { id: true } },
+        interests: { where: { userId: session.user.id }, select: { id: true, createdAt: true } },
+        reviews: { where: { reviewerId: session.user.id }, select: { id: true } },
         _count: { select: { interests: true } },
       },
     }),
@@ -130,6 +132,12 @@ export default async function OpportunityDetailPage({
   const documentCount = opportunity.documents?.length ?? 0;
   const interestCount = opportunity._count.interests;
   const hasCurrentUserInterest = opportunity.interests.length > 0;
+  const currentUserInterest = opportunity.interests[0] ?? null;
+  const hasExistingReview = opportunity.reviews.length > 0;
+  const reviewDelayElapsed = currentUserInterest
+    ? currentUserInterest.createdAt.getTime() <= Date.now() - 7 * 24 * 60 * 60 * 1000
+    : false;
+  const canShowReviewForm = !isAuthor && !isAdmin && isPublishedToMember && access.hasAccess && hasTierAccess && hasCurrentUserInterest && reviewDelayElapsed && !hasExistingReview;
   const interestCountLabel = `${interestCount} intérêt${interestCount > 1 ? "s" : ""} enregistré${interestCount > 1 ? "s" : ""}`;
   const interestIndicatorClassName = shouldHighlightInterests
     ? "mt-4 inline-flex items-center rounded-full border border-primary bg-primary/10 px-3 py-1 text-sm font-semibold text-primary ring-2 ring-primary/30"
@@ -231,6 +239,8 @@ export default async function OpportunityDetailPage({
             canPreview={canViewDocuments}
           />
         </div>
+
+        {canShowReviewForm ? <ReviewForm opportunityId={opportunity.id} /> : null}
 
         {isAuthor ? (
           <div className="mt-6">
