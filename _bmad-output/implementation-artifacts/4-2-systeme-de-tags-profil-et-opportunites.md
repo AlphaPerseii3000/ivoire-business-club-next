@@ -2,7 +2,7 @@
 Story: "4.2"
 StoryKey: "4-2-systeme-de-tags-profil-et-opportunites"
 Title: "Système de Tags Profil et Opportunités"
-Status: review
+Status: in-progress
 Priority: "P1"
 Epic: "Epic 4 — Networking, Matching et WhatsApp"
 FRs: ["FR26", "FR27"]
@@ -13,7 +13,7 @@ Created: "2026-05-20"
 
 # Story 4.2: Système de Tags Profil et Opportunités
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -281,3 +281,36 @@ GPT-5.5 (OpenAI Codex)
 ### Change Log
 
 - 2026-05-20: Implemented Story 4.2 tags system for profiles and opportunities; validated with full Vitest suite and production build.
+
+## Review Findings
+
+### Review Summary (2026-05-20)
+
+**Verdict: FAIL**
+
+Review executed against `git diff HEAD~1` for commit `d986268 feat(story-4.2): système de tags profil et opportunités`.
+
+Validation commands:
+- `npm run build` — PASS.
+- `npx vitest run` — PASS (265), FAIL (0).
+- `grep -rn '&&' src/ --include='*.tsx'` — existing project-wide JSX `&&` occurrences still present; the Story 4.2 additions use ternaries in JSX, with only non-JSX `&&` additions in guard/helper logic.
+
+### Blocking Findings
+
+- [ ] [Review][Patch][P1] `DealCard` now renders clickable tag links inside the card-level `<Link>`, creating nested anchors. Evidence: `src/components/features/deals/deal-card.tsx:46-69` wraps the card body in a Next `<Link>` to `/dashboard/opportunities/${deal.id}`, and the new `<TagChips tags={deal.tags ?? []} />` renders each chip as its own `<Link>` in `src/components/features/tags/tag-chips.tsx:29-32`. This violates valid HTML/React composition and can break hydration, click behavior, and accessibility. Fix by restructuring `DealCard` so tag chips are outside the enclosing deal link, or by making only non-chip card sections link to the deal while preserving chip filter links.
+
+### Non-blocking Observations
+
+- [ ] [Review][Defer] Project-wide pre-existing JSX `&&` patterns remain outside the Story 4.2 diff. They should be cleaned in a separate hardening pass, but they are not newly introduced by this story.
+- [ ] [Review][Defer] `POST /api/user/profile` deletes and recreates tags even when the optional `tags` field is omitted. The current UI always sends tags, so AC1 is covered, but API clients that omit `tags` during profile updates would clear existing tags. Consider preserving existing tags when `tags` is absent in a future API robustness pass.
+
+### Acceptance Criteria Audit
+
+- AC1 Tags profil: Implemented via `TagInput`, `/profile/edit` redirect to `/profile`, profile GET/POST persistence.
+- AC2 Ajout responsive: Implemented mobile bottom sheet and desktop select.
+- AC3 Tags opportunité: Implemented in opportunity form and POST route with strict tag validation.
+- AC4 Affichage/filtrage chips: Partially implemented, but blocked by nested link composition in `DealCard` tag chips.
+
+### Status
+
+Story moved back to `in-progress`; do not mark `done` until the blocking `DealCard` nested-link issue is fixed and re-reviewed.

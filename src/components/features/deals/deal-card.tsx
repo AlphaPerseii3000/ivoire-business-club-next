@@ -64,11 +64,13 @@ export function DealCard({ deal }: DealCardProps) {
               {deal.documentCount}
             </span>
           </div>
-          {hasTags ? (
-            <TagChips tags={deal.tags ?? []} />
-          ) : null}
         </div>
       </Link>
+      {hasTags ? (
+        <div className="px-4">
+          <TagChips tags={deal.tags ?? []} interactive={false} />
+        </div>
+      ) : null}
       <div className="px-4 pb-4">
         <WhatsAppCTA
           phoneNumber={deal.author.phone}

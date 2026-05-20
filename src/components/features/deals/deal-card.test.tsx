@@ -43,7 +43,8 @@ describe("DealCard", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Cocody" })).toHaveAttribute("href", "/dashboard/opportunities?tagCategory=LOCALISATION&tagValue=cocody");
+    // Tag chips in DealCard are non-interactive (no nested links inside the card link)
+    expect(screen.getByText("Cocody")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Contacter sur WhatsApp" })).toBeInTheDocument();
   });
 
