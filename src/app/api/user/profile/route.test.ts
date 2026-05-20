@@ -196,6 +196,30 @@ describe("POST /api/user/profile", () => {
     });
   });
 
+  it("preserves existing tags when tags field is omitted from payload", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserUpdate.mockResolvedValueOnce({
+      ...mockUserData,
+      tags: [{ category: "SECTEUR", value: "tech" }],
+    });
+
+    const req = makeRequest({
+      name: "Jean Dupont",
+      bio: "Entrepreneur",
+      phone: "+225 0708091011",
+      location: "Abidjan",
+      country: "CI",
+      // tags omitted — should preserve existing tags
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockUserTagDeleteMany).not.toHaveBeenCalled();
+    expect(mockUserTagCreateMany).not.toHaveBeenCalled();
+  });
+
   it("clears existing profile tags when tags is an empty array", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
     mockUserUpdate.mockResolvedValueOnce({ ...mockUserData, tags: [] });
