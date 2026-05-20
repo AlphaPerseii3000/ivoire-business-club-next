@@ -2,7 +2,7 @@
 Story: "5.0"
 StoryKey: "5-0-consolidation-post-retrospective-epic-4"
 Title: "Consolidation post-rétrospective Epic 4 avant Epic 5"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P0"
 Epic: "Epic 5 — Réputation, Reviews et Fiabilité"
 FRs: []
@@ -12,7 +12,7 @@ Created: "2026-05-20"
 
 # Story 5.0: Consolidation post-rétrospective Epic 4 avant Epic 5
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Story créée suite à la rétrospective Epic 4. Cette story traite les items de dette technique bloquants avant Epic 5 et ajoute deux guardrails architecture issus des CR Epic 4. -->
 
@@ -78,51 +78,51 @@ so that l'Epic 5 démarre sans régression connue sur JSX, tags profil, migratio
 
 ## Tasks / Subtasks
 
-- [ ] **AC1 : Nettoyer les JSX `&&` résiduels**
-  - [ ] Remplacer dans `src/components/features/auth/avatar-upload.tsx` : `{imageSrc && <AvatarImage ... />}` → `{imageSrc ? <AvatarImage ... /> : null}`.
-  - [ ] Remplacer dans `src/components/features/auth/delete-account-dialog.tsx` : `{error && <p ...>}` → `{error ? <p ...> : null}`.
-  - [ ] Inspecter `src/components/subscription-status-tracker.tsx` et pré-calculer les booléens composés si nécessaire; convertir tout rendu JSX `&&` restant en ternaires.
-  - [ ] Inspecter `src/components/features/admin/opportunity-detail-sheet.tsx`; pré-calculer `isWaitingForSecondAdmin`, `cannotVerifyAgain`, et tout booléen composé hors JSX; remplacer les rendus conditionnels `&&` restants.
-  - [ ] Inspecter `src/components/features/admin/opportunity-kanban-board.tsx`; extraire les ternaires trop complexes (`optimisticStatus`, `optimisticApprovalCount`) en helpers/consts lisibles si utile; remplacer les rendus conditionnels `&&` restants.
-  - [ ] Exécuter `grep -rn '&&' src/ --include='*.tsx'` et distinguer les occurrences acceptables hors JSX (`if`, logique pure, tests) des occurrences à corriger; corriger toutes celles en JSX ou `cn()` conditionnel dans le scope.
+- [x] **AC1 : Nettoyer les JSX `&&` résiduels**
+  - [x] Remplacer dans `src/components/features/auth/avatar-upload.tsx` : `{imageSrc && <AvatarImage ... />}` → `{imageSrc ? <AvatarImage ... /> : null}`.
+  - [x] Remplacer dans `src/components/features/auth/delete-account-dialog.tsx` : `{error && <p ...>}` → `{error ? <p ...> : null}`.
+  - [x] Inspecter `src/components/subscription-status-tracker.tsx` et pré-calculer les booléens composés si nécessaire; convertir tout rendu JSX `&&` restant en ternaires.
+  - [x] Inspecter `src/components/features/admin/opportunity-detail-sheet.tsx`; pré-calculer `isWaitingForSecondAdmin`, `cannotVerifyAgain`, et tout booléen composé hors JSX; remplacer les rendus conditionnels `&&` restants.
+  - [x] Inspecter `src/components/features/admin/opportunity-kanban-board.tsx`; extraire les ternaires trop complexes (`optimisticStatus`, `optimisticApprovalCount`) en helpers/consts lisibles si utile; remplacer les rendus conditionnels `&&` restants.
+  - [x] Exécuter `grep -rn '&&' src/ --include='*.tsx'` et distinguer les occurrences acceptables hors JSX (`if`, logique pure, tests) des occurrences à corriger; corriger toutes celles en JSX ou `cn()` conditionnel dans le scope.
 
-- [ ] **AC2 : Durcir `POST /api/user/profile` pour `tags === undefined`**
-  - [ ] Modifier `src/app/api/user/profile/route.ts` pour préserver le comportement existant quand `tags` est fourni.
-  - [ ] Utiliser un guard explicite basé sur la présence du champ dans le body brut, par exemple `const shouldUpdateTags = Object.prototype.hasOwnProperty.call(body, "tags")`, afin de distinguer `tags` absent de `tags: []`.
-  - [ ] Calculer `const tags = shouldUpdateTags ? dedupeTags(data.tags) : null` ou équivalent; ne jamais appeler `dedupeTags(data.tags)` comme signal implicite si cela rend `undefined` indistinguable de `[]`.
-  - [ ] Dans la transaction, exécuter `deleteMany` puis `createMany` uniquement si `shouldUpdateTags === true`.
-  - [ ] Préserver `profileSelect.tags` dans la réponse afin que les clients UI existants continuent de recevoir les tags triés.
+- [x] **AC2 : Durcir `POST /api/user/profile` pour `tags === undefined`**
+  - [x] Modifier `src/app/api/user/profile/route.ts` pour préserver le comportement existant quand `tags` est fourni.
+  - [x] Utiliser un guard explicite basé sur la présence du champ dans le body brut, par exemple `const shouldUpdateTags = Object.prototype.hasOwnProperty.call(body, "tags")`, afin de distinguer `tags` absent de `tags: []`.
+  - [x] Calculer `const tags = shouldUpdateTags ? dedupeTags(data.tags) : null` ou équivalent; ne jamais appeler `dedupeTags(data.tags)` comme signal implicite si cela rend `undefined` indistinguable de `[]`.
+  - [x] Dans la transaction, exécuter `deleteMany` puis `createMany` uniquement si `shouldUpdateTags === true`.
+  - [x] Préserver `profileSelect.tags` dans la réponse afin que les clients UI existants continuent de recevoir les tags triés.
 
-- [ ] **AC2 : Ajouter les tests profil tags absents**
-  - [ ] Identifier l'emplacement de test existant le plus proche (`src/lib/validations.test.ts`, tests API route existants, ou nouveau test co-localisé pour `src/app/api/user/profile/route.ts`).
-  - [ ] Ajouter un test qui simule un payload sans propriété `tags` et vérifie que `tx.userTag.deleteMany` n'est pas appelé.
-  - [ ] Ajouter un test qui simule `tags: []` et vérifie que `deleteMany` est appelé et que `createMany` ne l'est pas.
-  - [ ] Ajouter un test qui simule un tableau avec doublons et vérifie que `dedupeTags` + `createMany` conservent le comportement attendu.
+- [x] **AC2 : Ajouter les tests profil tags absents**
+  - [x] Identifier l'emplacement de test existant le plus proche (`src/lib/validations.test.ts`, tests API route existants, ou nouveau test co-localisé pour `src/app/api/user/profile/route.ts`).
+  - [x] Ajouter un test qui simule un payload sans propriété `tags` et vérifie que `tx.userTag.deleteMany` n'est pas appelé.
+  - [x] Ajouter un test qui simule `tags: []` et vérifie que `deleteMany` est appelé et que `createMany` ne l'est pas.
+  - [x] Ajouter un test qui simule un tableau avec doublons et vérifie que `dedupeTags` + `createMany` conservent le comportement attendu.
 
-- [ ] **AC3 : Traiter le risque migration `avatarUrl`**
-  - [ ] Inspecter `prisma/migrations/20260514112346_init/migration.sql` et confirmer que la ligne `INSERT INTO "new_users"` omet `"avatarUrl"`.
-  - [ ] Vérifier l'historique de migrations postérieur (`20260519155100_add_avatar_url_map` notamment) pour comprendre l'état local actuel.
-  - [ ] Décider et documenter la stratégie : correction de migration non appliquée prod, migration corrective, ou note explicite de risque prod si aucun data source ne permet de restaurer les avatars.
-  - [ ] Si une migration corrective est créée, la nommer clairement (ex: `preserve_avatar_url_data`) et éviter tout `DROP` destructif sans copie préalable.
-  - [ ] Documenter dans les Completion Notes le risque exact et la décision prise.
+- [x] **AC3 : Traiter le risque migration `avatarUrl`**
+  - [x] Inspecter `prisma/migrations/20260514112346_init/migration.sql` et confirmer que la ligne `INSERT INTO "new_users"` omet `"avatarUrl"`.
+  - [x] Vérifier l'historique de migrations postérieur (`20260519155100_add_avatar_url_map` notamment) pour comprendre l'état local actuel.
+  - [x] Décider et documenter la stratégie : correction de migration non appliquée prod, migration corrective, ou note explicite de risque prod si aucun data source ne permet de restaurer les avatars.
+  - [x] Si une migration corrective est créée, la nommer clairement (ex: `preserve_avatar_url_data`) et éviter tout `DROP` destructif sans copie préalable.
+  - [x] Documenter dans les Completion Notes le risque exact et la décision prise.
 
-- [ ] **AC4 : Ajouter le guardrail nested anchors dans `architecture.md`**
-  - [ ] Ajouter une section `### Card Component Anti-Pattern: Nested Anchors` près de `### JSX Boolean Guardrail` / `### Upload Security Patterns`.
-  - [ ] Inclure les exemples interdit et autorisé : `DealCard` wrappé dans `<Link>` + `TagChips interactive` interdit; `TagChips interactive={false}` ou tags hors lien autorisé.
-  - [ ] Mentionner la source : Epic 4 rétro, Story 4.2 CR blocker.
+- [x] **AC4 : Ajouter le guardrail nested anchors dans `architecture.md`**
+  - [x] Ajouter une section `### Card Component Anti-Pattern: Nested Anchors` près de `### JSX Boolean Guardrail` / `### Upload Security Patterns`.
+  - [x] Inclure les exemples interdit et autorisé : `DealCard` wrappé dans `<Link>` + `TagChips interactive` interdit; `TagChips interactive={false}` ou tags hors lien autorisé.
+  - [x] Mentionner la source : Epic 4 rétro, Story 4.2 CR blocker.
 
-- [ ] **AC5 : Ajouter le guardrail side effects idempotents dans `architecture.md`**
-  - [ ] Ajouter une section `### Idempotent State-Transition Side Effects`.
-  - [ ] Préciser que la validation de transition (`isAllowedTransition`) ne suffit pas : les side effects doivent vérifier ancien statut vs nouveau statut.
-  - [ ] Inclure les exemples : notifications matching sur passage à `VERIFIED`, emails, webhooks, audit enrichi.
-  - [ ] Mentionner la source : Epic 4 rétro, Story 4.3 CR major.
+- [x] **AC5 : Ajouter le guardrail side effects idempotents dans `architecture.md`**
+  - [x] Ajouter une section `### Idempotent State-Transition Side Effects`.
+  - [x] Préciser que la validation de transition (`isAllowedTransition`) ne suffit pas : les side effects doivent vérifier ancien statut vs nouveau statut.
+  - [x] Inclure les exemples : notifications matching sur passage à `VERIFIED`, emails, webhooks, audit enrichi.
+  - [x] Mentionner la source : Epic 4 rétro, Story 4.3 CR major.
 
-- [ ] **AC6 : Validation complète**
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`.
-  - [ ] Exécuter `npx vitest run`.
-  - [ ] Exécuter `npm run build`.
-  - [ ] Exécuter `grep -rn '&&' src/ --include='*.tsx'` et documenter les résultats résiduels; aucun résidu JSX dans les fichiers ciblés n'est acceptable.
-  - [ ] Ne pas utiliser `git add -A` sans exclusions; ajouter explicitement les fichiers modifiés.
+- [x] **AC6 : Validation complète**
+  - [x] Exécuter `./node_modules/.bin/prisma validate`.
+  - [x] Exécuter `npx vitest run`.
+  - [x] Exécuter `npm run build`.
+  - [x] Exécuter `grep -rn '&&' src/ --include='*.tsx'` et documenter les résultats résiduels; aucun résidu JSX dans les fichiers ciblés n'est acceptable.
+  - [x] Ne pas utiliser `git add -A` sans exclusions; ajouter explicitement les fichiers modifiés.
 
 ## Dev Notes
 
@@ -185,14 +185,49 @@ Le CR Story 4.0 a identifié un defer P1 : `20260514112346_init` omet `avatarUrl
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- 2026-05-20: Added failing API route assertion for payloads without `tags`; confirmed red with `npx vitest run src/app/api/user/profile/route.test.ts` before implementation.
+- 2026-05-20: Validation commands run: `./node_modules/.bin/prisma validate`, `npx vitest run`, `npm run build`, `npm run lint -- --format stylish`, and `grep -rn '&&' src/ --include='*.tsx'`.
+
 ### Completion Notes List
 
+- Cleaned JSX conditional rendering in the targeted TSX files and removed additional `condition && <JSX>` render patterns found by the global grep. Residual `&&` occurrences are pure logic/test expressions; targeted files have no residual `&&` occurrences.
+- Hardened `POST /api/user/profile` with an explicit `hasOwnProperty` guard for `tags`, preserving existing tag associations when the field is omitted while keeping `tags: []` as intentional deletion and non-empty tags as deduped replacement.
+- Added route tests covering omitted `tags`, empty `tags`, and deduped non-empty `tags` transaction behavior.
+- Inspected `prisma/migrations/20260514112346_init/migration.sql` and confirmed `avatarUrl` was omitted from the users RedefineTables copy. Corrected the migration to copy legacy `avatarUrl` into the interim `image` column before the later `20260519155100_add_avatar_url_map` migration renames `image` back to `avatarUrl`.
+- Production deployment risk: if `20260514112346_init` has already been applied to a production database, editing this historical migration will not restore already-lost avatar data. Before production deployment, verify migration history and restore avatars from backup/object-storage metadata if the destructive migration was ever applied. Local/dev impact is ephemeral.
+- Added architecture guardrails for nested anchors in clickable cards and idempotent state-transition side effects.
+- Validation passed: Prisma schema valid; Vitest `302` tests passed; Next build completed successfully. ESLint completed with warnings only (`react-hooks/incompatible-library` and existing unused-arg style warnings), no errors.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-0-consolidation-post-retrospective-epic-4.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/planning-artifacts/architecture.md`
+- `prisma/migrations/20260514112346_init/migration.sql`
+- `src/app/(admin)/admin/members/page.tsx`
+- `src/app/(dashboard)/settings/page.tsx`
+- `src/app/api/user/profile/route.test.ts`
+- `src/app/api/user/profile/route.ts`
+- `src/app/auth/signin/page.tsx`
+- `src/app/auth/signup/page.tsx`
+- `src/app/not-found.tsx`
+- `src/components/features/admin/opportunity-detail-sheet.tsx`
+- `src/components/features/admin/opportunity-kanban-board.tsx`
+- `src/components/features/auth/avatar-upload.tsx`
+- `src/components/features/auth/delete-account-dialog.tsx`
+- `src/components/features/auth/profile-edit-form.test.tsx`
+- `src/components/features/auth/profile-edit-form.tsx`
+- `src/components/pricing-tier-selection.tsx`
+- `src/components/subscription-activation-notice.tsx`
+- `src/components/subscription-status-tracker.tsx`
+- `src/components/ui/dialog.tsx`
+- `src/components/ui/sheet.tsx`
 
 ### Change Log
 
 - 2026-05-20: Story context created from Epic 4 retrospective action items; status set to ready-for-dev.
+- 2026-05-20: Implemented story 5.0 consolidation fixes, architecture guardrails, validation, and status moved to review.
