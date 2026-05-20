@@ -2,7 +2,7 @@
 Story: "5.0"
 StoryKey: "5-0-consolidation-post-retrospective-epic-4"
 Title: "Consolidation post-rétrospective Epic 4 avant Epic 5"
-Status: "review"
+Status: "done"
 Priority: "P0"
 Epic: "Epic 5 — Réputation, Reviews et Fiabilité"
 FRs: []
@@ -12,7 +12,7 @@ Created: "2026-05-20"
 
 # Story 5.0: Consolidation post-rétrospective Epic 4 avant Epic 5
 
-Status: review
+Status: done
 
 <!-- Note: Story créée suite à la rétrospective Epic 4. Cette story traite les items de dette technique bloquants avant Epic 5 et ajoute deux guardrails architecture issus des CR Epic 4. -->
 
