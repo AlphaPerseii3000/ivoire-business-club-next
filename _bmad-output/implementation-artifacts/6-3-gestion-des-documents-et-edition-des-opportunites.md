@@ -2,7 +2,7 @@
 Story: "6.3"
 StoryKey: "6-3-gestion-des-documents-et-edition-des-opportunites"
 Title: "Gestion des Documents et Édition des Opportunités"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR37", "FR38", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-21"
 
 # Story 6.3: Gestion des Documents et Édition des Opportunités
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: Story 3.2 already delivered R2 document upload/preview/delete endpoints and reusable DocumentRow/DocumentUploadSection. Story 3.3/6.1 already delivered the admin opportunity kanban and detail sheet. Implement only the admin-management deltas below. -->
 
@@ -97,53 +97,53 @@ afin de maintenir la qualité et la conformité du catalogue.
 
 ## Tasks / Subtasks
 
-- [ ] **AC1/AC2: Réutiliser et intégrer la gestion documentaire existante dans le panneau admin**
-  - [ ] Auditer avant modification : `src/components/features/admin/opportunity-detail-sheet.tsx`, `src/components/features/deals/document-upload-section.tsx`, `src/components/features/deals/document-row.tsx`, `src/app/api/opportunities/[id]/documents/**`.
-  - [ ] Remplacer ou compléter la section documents actuelle du `OpportunityDetailSheet` pour réutiliser `DocumentUploadSection` en mode admin (`canUpload=true`, `canPreview=true`) ou extraire une variante admin qui appelle les mêmes endpoints.
-  - [ ] Ajouter une confirmation avant suppression de document si l'implémentation actuelle supprime immédiatement.
-  - [ ] Préserver les endpoints existants : `presign-url`, `POST /documents`, `GET /documents/[documentId]/preview`, `download`, `DELETE /documents/[documentId]`; ne pas créer un second système R2.
-  - [ ] Vérifier que `DocumentUploadSection` ne reçoit des métadonnées complètes que dans les contextes auteur/admin.
+- [x] **AC1/AC2: Réutiliser et intégrer la gestion documentaire existante dans le panneau admin**
+  - [x] Auditer avant modification : `src/components/features/admin/opportunity-detail-sheet.tsx`, `src/components/features/deals/document-upload-section.tsx`, `src/components/features/deals/document-row.tsx`, `src/app/api/opportunities/[id]/documents/**`.
+  - [x] Remplacer ou compléter la section documents actuelle du `OpportunityDetailSheet` pour réutiliser `DocumentUploadSection` en mode admin (`canUpload=true`, `canPreview=true`) ou extraire une variante admin qui appelle les mêmes endpoints.
+  - [x] Ajouter une confirmation avant suppression de document si l'implémentation actuelle supprime immédiatement.
+  - [x] Préserver les endpoints existants : `presign-url`, `POST /documents`, `GET /documents/[documentId]/preview`, `download`, `DELETE /documents/[documentId]`; ne pas créer un second système R2.
+  - [x] Vérifier que `DocumentUploadSection` ne reçoit des métadonnées complètes que dans les contextes auteur/admin.
 
-- [ ] **AC3/AC4: Ajouter l'édition admin inline**
-  - [ ] Créer `opportunityAdminUpdateSchema` dans `src/lib/validations.ts` ou réutiliser `opportunityCreateSchema` avec champs adaptés (`title`, `description`, `category`, `amount`, éventuellement `requiredTier`).
-  - [ ] Ajouter un mode édition dans `OpportunityDetailSheet` avec React Hook Form + `zodResolver`, valeurs initiales depuis l'opportunité sélectionnée, bouton « Éditer », « Enregistrer », « Annuler ».
-  - [ ] Préserver l'affichage lecture seule actuel quand `isEditing === false`.
-  - [ ] À la sauvegarde, appeler l'endpoint admin update, mettre à jour l'état local du kanban (`items`) et conserver `router.refresh()` comme dans les actions de statut.
-  - [ ] Recalculer `requiresDoubleVerification` côté serveur, pas côté client seulement.
-  - [ ] Si `requiredTier` est inclus, utiliser l'enum Prisma `AFFRANCHI | GRAND_FRERE | BOSS` et des labels français cohérents.
+- [x] **AC3/AC4: Ajouter l'édition admin inline**
+  - [x] Créer `opportunityAdminUpdateSchema` dans `src/lib/validations.ts` ou réutiliser `opportunityCreateSchema` avec champs adaptés (`title`, `description`, `category`, `amount`, éventuellement `requiredTier`).
+  - [x] Ajouter un mode édition dans `OpportunityDetailSheet` avec React Hook Form + `zodResolver`, valeurs initiales depuis l'opportunité sélectionnée, bouton « Éditer », « Enregistrer », « Annuler ».
+  - [x] Préserver l'affichage lecture seule actuel quand `isEditing === false`.
+  - [x] À la sauvegarde, appeler l'endpoint admin update, mettre à jour l'état local du kanban (`items`) et conserver `router.refresh()` comme dans les actions de statut.
+  - [x] Recalculer `requiresDoubleVerification` côté serveur, pas côté client seulement.
+  - [x] Si `requiredTier` est inclus, utiliser l'enum Prisma `AFFRANCHI | GRAND_FRERE | BOSS` et des labels français cohérents.
 
-- [ ] **AC5/AC6: Créer les endpoints admin update/delete**
-  - [ ] Ajouter `src/app/api/admin/opportunities/[id]/route.ts` avec `PATCH` et `DELETE` ou justifier explicitement une extension de route existante si choisie.
-  - [ ] Utiliser `auth()` depuis `@/lib/auth`, vérifier le rôle `ADMIN` via Prisma, retourner `401/403/404/400` structurés en français.
-  - [ ] Pour `PATCH`, parser `await req.json()` dans un `try/catch` dédié pour retourner `400` sur JSON invalide avant Zod.
-  - [ ] Mettre à jour uniquement les champs autorisés; ne jamais permettre la modification de `authorId`, `verifiedById`, `verifiedAt`, `reviewNotes`, `rejectionNote`, `createdAt`, ou relations via ce endpoint.
-  - [ ] Pour `DELETE`, charger les documents avant suppression pour connaître les objets R2 à supprimer après la mutation DB; ne pas exposer les clés R2 dans la réponse.
-  - [ ] Après suppression DB, tenter `deleteR2Object` pour chaque document si la config R2 est présente; gérer les erreurs sans annuler la suppression DB déjà faite.
+- [x] **AC5/AC6: Créer les endpoints admin update/delete**
+  - [x] Ajouter `src/app/api/admin/opportunities/[id]/route.ts` avec `PATCH` et `DELETE` ou justifier explicitement une extension de route existante si choisie.
+  - [x] Utiliser `auth()` depuis `@/lib/auth`, vérifier le rôle `ADMIN` via Prisma, retourner `401/403/404/400` structurés en français.
+  - [x] Pour `PATCH`, parser `await req.json()` dans un `try/catch` dédié pour retourner `400` sur JSON invalide avant Zod.
+  - [x] Mettre à jour uniquement les champs autorisés; ne jamais permettre la modification de `authorId`, `verifiedById`, `verifiedAt`, `reviewNotes`, `rejectionNote`, `createdAt`, ou relations via ce endpoint.
+  - [x] Pour `DELETE`, charger les documents avant suppression pour connaître les objets R2 à supprimer après la mutation DB; ne pas exposer les clés R2 dans la réponse.
+  - [x] Après suppression DB, tenter `deleteR2Object` pour chaque document si la config R2 est présente; gérer les erreurs sans annuler la suppression DB déjà faite.
 
-- [ ] **AC5/AC7: Ajouter la confirmation de suppression d'opportunité côté UI**
-  - [ ] Utiliser le `Dialog` shadcn existant (`src/components/ui/dialog` si disponible) ou l'ajouter selon les conventions shadcn du projet.
-  - [ ] Afficher clairement le titre du deal et un message de risque : « Cette action supprimera le deal et ses documents attachés. »
-  - [ ] Garder le bouton destructif désactivé pendant la mutation et afficher un spinner accessible.
-  - [ ] Après succès, retirer l'opportunité de `items`, fermer le `Sheet`, fermer le `Dialog`, afficher `toast.success("Opportunité supprimée.")`.
-  - [ ] En cas d'erreur, conserver le panneau ouvert, rollback l'état local et afficher un toast d'erreur français.
+- [x] **AC5/AC7: Ajouter la confirmation de suppression d'opportunité côté UI**
+  - [x] Utiliser le `Dialog` shadcn existant (`src/components/ui/dialog` si disponible) ou l'ajouter selon les conventions shadcn du projet.
+  - [x] Afficher clairement le titre du deal et un message de risque : « Cette action supprimera le deal et ses documents attachés. »
+  - [x] Garder le bouton destructif désactivé pendant la mutation et afficher un spinner accessible.
+  - [x] Après succès, retirer l'opportunité de `items`, fermer le `Sheet`, fermer le `Dialog`, afficher `toast.success("Opportunité supprimée.")`.
+  - [x] En cas d'erreur, conserver le panneau ouvert, rollback l'état local et afficher un toast d'erreur français.
 
-- [ ] **AC7: UX/accessibilité et règle JSX**
-  - [ ] Desktop : conserver le layout `Sheet` existant, sections arrondies, `max-w-2xl`, boutons groupés, aucun débordement horizontal.
-  - [ ] Mobile : boutons pleine largeur si nécessaire, `min-h-11`, formulaire lisible, Dialog focus-trapped, fermeture possible par « Annuler ».
-  - [ ] Tous les nouveaux textes UI en français; pas de jargon technique exposé.
-  - [ ] Pré-calculer les booléens composés (`canShowEditForm`, `shouldShowDeleteDialog`, etc.) avant le JSX.
-  - [ ] Remplacer tout `condition && <Component />` touché par des ternaires.
+- [x] **AC7: UX/accessibilité et règle JSX**
+  - [x] Desktop : conserver le layout `Sheet` existant, sections arrondies, `max-w-2xl`, boutons groupés, aucun débordement horizontal.
+  - [x] Mobile : boutons pleine largeur si nécessaire, `min-h-11`, formulaire lisible, Dialog focus-trapped, fermeture possible par « Annuler ».
+  - [x] Tous les nouveaux textes UI en français; pas de jargon technique exposé.
+  - [x] Pré-calculer les booléens composés (`canShowEditForm`, `shouldShowDeleteDialog`, etc.) avant le JSX.
+  - [x] Remplacer tout `condition && <Component />` touché par des ternaires.
 
-- [ ] **AC8: Tests ciblés et validation complète**
-  - [ ] Ajouter `src/app/api/admin/opportunities/[id]/route.test.ts` couvrant auth, role, JSON invalide, validation Zod, update montant/double vérification, delete avec documents.
-  - [ ] Ajouter/mettre à jour `src/components/features/admin/opportunity-detail-sheet.test.tsx` pour édition, annulation, sauvegarde, suppression document confirmée, suppression opportunité confirmée.
-  - [ ] Ajouter/mettre à jour `src/components/features/admin/opportunity-kanban-board.test.tsx` pour propagation de l'update/delete dans l'état local.
-  - [ ] Garder ou ajouter des tests documents (`document-access`, routes documents) pour vérifier qu'un non-auteur non-admin ne reçoit que le compteur côté dashboard.
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`.
-  - [ ] Exécuter les tests ciblés ajoutés/modifiés.
-  - [ ] Exécuter `npx vitest run`.
-  - [ ] Exécuter `npm run build`.
-  - [ ] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
+- [x] **AC8: Tests ciblés et validation complète**
+  - [x] Ajouter `src/app/api/admin/opportunities/[id]/route.test.ts` couvrant auth, role, JSON invalide, validation Zod, update montant/double vérification, delete avec documents.
+  - [x] Ajouter/mettre à jour `src/components/features/admin/opportunity-detail-sheet.test.tsx` pour édition, annulation, sauvegarde, suppression document confirmée, suppression opportunité confirmée.
+  - [x] Ajouter/mettre à jour `src/components/features/admin/opportunity-kanban-board.test.tsx` pour propagation de l'update/delete dans l'état local.
+  - [x] Garder ou ajouter des tests documents (`document-access`, routes documents) pour vérifier qu'un non-auteur non-admin ne reçoit que le compteur côté dashboard.
+  - [x] Exécuter `./node_modules/.bin/prisma validate`.
+  - [x] Exécuter les tests ciblés ajoutés/modifiés.
+  - [x] Exécuter `npx vitest run`.
+  - [x] Exécuter `npm run build`.
+  - [x] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
 
 ## Dev Notes
 
@@ -314,6 +314,31 @@ Hermes Agent (gpt-5.5)
 
 ### Debug Log References
 
+- 2026-05-21: Loaded BMAD workflow, story, architecture, sprint status, and audited existing admin/detail/document code before implementation.
+- 2026-05-21: Validations run: `./node_modules/.bin/prisma validate`; targeted `npx vitest run src/app/api/admin/opportunities/[id]/route.test.ts src/components/features/admin/opportunity-kanban-board.test.tsx`; full `npx vitest run`; `npm run build`.
+
 ### Completion Notes List
 
+- Integrated admin document management in the opportunity detail Sheet by reusing `DocumentUploadSection` with upload, preview, download, and confirmed deletion via existing Story 3.2 document endpoints.
+- Added admin inline edit flow using React Hook Form + Zod, French labels/errors, loading states, local kanban update propagation, and server-side double-verification recalculation.
+- Added `PATCH`/`DELETE /api/admin/opportunities/[id]` with auth/admin checks, malformed JSON handling, Zod validation, scoped field updates, hard delete, cascade reliance, and generic R2 cleanup logging.
+- Added destructive confirmation dialog for opportunity deletion with optimistic local removal, rollback on error, Sheet close on success, and French toasts.
+- Preserved document metadata security boundaries: no new public document endpoint; admin uses existing authorized document endpoints, dashboard files untouched.
+- Added/expanded tests for admin route auth/validation/update/delete, amount threshold/compliance preservation, inline editing success/error, opportunity deletion, and document deletion confirmation true/false paths.
+
 ### File List
+
+- _bmad-output/implementation-artifacts/6-3-gestion-des-documents-et-edition-des-opportunites.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- src/app/(admin)/admin/opportunities/page.tsx
+- src/app/api/admin/opportunities/[id]/route.ts
+- src/app/api/admin/opportunities/[id]/route.test.ts
+- src/components/features/admin/opportunity-detail-sheet.tsx
+- src/components/features/admin/opportunity-kanban-board.tsx
+- src/components/features/admin/opportunity-kanban-board.test.tsx
+- src/components/features/deals/document-upload-section.tsx
+- src/lib/validations.ts
+
+### Change Log
+
+- 2026-05-21: Implemented Story 6.3 admin document management, opportunity edit/delete endpoints and UI, regression tests, and validation updates.

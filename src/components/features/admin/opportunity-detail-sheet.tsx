@@ -1,26 +1,34 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, Loader2, Play, X } from "lucide-react";
-import Image from "next/image";
+import { Edit3, Loader2, Play, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
+import { OpportunityStatusBadge } from "@/components/features/admin/opportunity-status-badge";
+import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import type { LegalDocument } from "@/components/features/deals/document-row";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { DocumentRow, type LegalDocument } from "@/components/features/deals/document-row";
-import { OpportunityStatusBadge } from "@/components/features/admin/opportunity-status-badge";
 import { cn } from "@/lib/utils";
-import type { VerificationStatusInput } from "@/lib/validations";
+import { opportunityAdminUpdateSchema, type VerificationStatusInput } from "@/lib/validations";
 
 const noteSchema = z.object({
   note: z.string().max(2000, "La note ne doit pas dépasser 2000 caractères"),
 });
 
+const adminEditFormSchema = opportunityAdminUpdateSchema.extend({
+  amount: z.coerce.number().positive("Le montant doit être positif").nullable().optional(),
+});
+
 type NoteForm = z.infer<typeof noteSchema>;
+type AdminEditFormInput = z.input<typeof adminEditFormSchema>;
+type AdminEditForm = z.output<typeof adminEditFormSchema>;
 
 export type AdminOpportunity = {
   id: string;
@@ -28,6 +36,7 @@ export type AdminOpportunity = {
   description: string;
   category: string;
   amount: number | null;
+  requiredTier?: "AFFRANCHI" | "GRAND_FRERE" | "BOSS";
   verificationStatus: VerificationStatusInput;
   createdAt: string;
   updatedAt: string;
@@ -55,6 +64,8 @@ type OpportunityDetailSheetProps = {
   error?: string | null;
   onOpenChange: (open: boolean) => void;
   onAction: (id: string, action: "verify" | "reject" | "start_review", note?: string) => Promise<void>;
+  onUpdate: (id: string, values: AdminEditForm) => Promise<boolean>;
+  onDelete: (id: string) => Promise<void>;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -62,6 +73,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   BUSINESS: "Business",
   PARTENARIAT: "Partenariat",
   IMMOBILIER: "Immobilier",
+};
+
+const REQUIRED_TIER_LABELS: Record<string, string> = {
+  AFFRANCHI: "Affranchi",
+  GRAND_FRERE: "Grand Frère",
+  BOSS: "Boss",
 };
 
 const amountFormatter = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -75,25 +92,48 @@ function initials(name: string) {
     .join("") || "IB";
 }
 
-export function OpportunityDetailSheet({ opportunity, open, isMutating, error, onOpenChange, onAction }: OpportunityDetailSheetProps) {
-  const [previewDocument, setPreviewDocument] = useState<LegalDocument | null>(null);
-  const form = useForm<NoteForm>({
+export function OpportunityDetailSheet({ opportunity, open, isMutating, error, onOpenChange, onAction, onUpdate, onDelete }: OpportunityDetailSheetProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const noteForm = useForm<NoteForm>({
     resolver: zodResolver(noteSchema),
     defaultValues: { note: "" },
   });
+  const editForm = useForm<AdminEditFormInput, unknown, AdminEditForm>({
+    resolver: zodResolver(adminEditFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "BUSINESS",
+      amount: null,
+      requiredTier: "AFFRANCHI",
+    },
+  });
 
-  const note = useWatch({ control: form.control, name: "note" });
+  const note = useWatch({ control: noteForm.control, name: "note" });
 
   useEffect(() => {
-    form.reset({ note: opportunity?.rejectionNote ?? "" });
-  }, [form, opportunity?.id, opportunity?.rejectionNote]);
+    noteForm.reset({ note: opportunity?.rejectionNote ?? "" });
+    editForm.reset({
+      title: opportunity?.title ?? "",
+      description: opportunity?.description ?? "",
+      category: (opportunity?.category ?? "BUSINESS") as AdminEditFormInput["category"],
+      amount: opportunity?.amount ?? null,
+      requiredTier: opportunity?.requiredTier ?? "AFFRANCHI",
+    });
+    setIsEditing(false);
+    setDeleteDialogOpen(false);
+  }, [editForm, noteForm, opportunity?.amount, opportunity?.category, opportunity?.description, opportunity?.id, opportunity?.rejectionNote, opportunity?.requiredTier, opportunity?.title]);
 
   if (!opportunity) return null;
 
   const amount = opportunity.amount !== null ? amountFormatter.format(opportunity.amount) : "Montant non précisé";
-  const previewUrl = previewDocument ? `/api/opportunities/${opportunity.id}/documents/${previewDocument.id}/preview` : "";
   const canStartReview = opportunity.verificationStatus === "PENDING";
   const canDecide = opportunity.verificationStatus === "PENDING" || opportunity.verificationStatus === "EN_COURS";
+  const isSaving = editForm.formState.isSubmitting;
+  const isDeleting = isMutating;
+  const canShowReadOnlySummary = !isEditing;
+  const canShowEditForm = isEditing;
   const doubleVerificationMessage = opportunity.requiresDoubleVerification
     ? `Double vérification requise (${opportunity.approvalCount}/2)`
     : "Vérification simple";
@@ -108,19 +148,25 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
       : false
     : false;
 
-  const submitReject = form.handleSubmit(async (values) => {
+  const submitReject = noteForm.handleSubmit(async (values) => {
     if (!values.note.trim()) {
-      form.setError("note", { message: "La note est obligatoire pour refuser un deal." });
+      noteForm.setError("note", { message: "La note est obligatoire pour refuser un deal." });
       return;
     }
     await onAction(opportunity.id, "reject", values.note.trim());
+  });
+
+  const submitEdit = editForm.handleSubmit(async (values) => {
+    const updated = await onUpdate(opportunity.id, values);
+    if (updated) {
+      setIsEditing(false);
+    }
   });
 
   return (
     <Sheet
       open={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) setPreviewDocument(null);
         onOpenChange(nextOpen);
       }}
     >
@@ -139,17 +185,91 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
 
         <div className="space-y-6 p-5">
           <section className="rounded-xl border bg-card p-4">
-            <div className="flex flex-wrap gap-2 text-sm">
-              <span className="rounded-md bg-muted px-3 py-1">{CATEGORY_LABELS[opportunity.category] ?? opportunity.category}</span>
-              <span className="rounded-md bg-primary/10 px-3 py-1 font-semibold text-primary">{amount}</span>
-              <span className="rounded-md bg-amber-50 px-3 py-1 font-medium text-amber-700">{doubleVerificationMessage}</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="rounded-md bg-muted px-3 py-1">{CATEGORY_LABELS[opportunity.category] ?? opportunity.category}</span>
+                <span className="rounded-md bg-primary/10 px-3 py-1 font-semibold text-primary">{amount}</span>
+                <span className="rounded-md bg-muted px-3 py-1">Accès {REQUIRED_TIER_LABELS[opportunity.requiredTier ?? "AFFRANCHI"]}</span>
+                <span className="rounded-md bg-amber-50 px-3 py-1 font-medium text-amber-700">{doubleVerificationMessage}</span>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button type="button" variant="outline" className="min-h-11" onClick={() => setIsEditing(true)}>
+                  <Edit3 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Éditer
+                </Button>
+                <Button type="button" variant="destructive" className="min-h-11" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Supprimer
+                </Button>
+              </div>
             </div>
             {isWaitingForSecondAdmin ? (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                 En attente d&apos;un second admin pour finaliser la vérification.
               </p>
             ) : null}
-            <p className="mt-4 whitespace-pre-wrap text-sm leading-6">{opportunity.description}</p>
+            {canShowReadOnlySummary ? (
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-6">{opportunity.description}</p>
+            ) : null}
+            {canShowEditForm ? (
+              <form className="mt-4 space-y-4 rounded-xl border bg-background p-4" onSubmit={submitEdit}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label htmlFor="admin-title" className="text-sm font-medium">Titre</label>
+                    <Input id="admin-title" className="mt-2 min-h-11" {...editForm.register("title")} />
+                    {editForm.formState.errors.title ? (
+                      <p className="mt-1 text-sm text-destructive">{editForm.formState.errors.title.message}</p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <label htmlFor="admin-category" className="text-sm font-medium">Catégorie</label>
+                    <select id="admin-category" className="mt-2 min-h-11 w-full rounded-md border bg-background px-3 text-sm" {...editForm.register("category")}>
+                      <option value="INVESTISSEMENT">Investissement</option>
+                      <option value="BUSINESS">Business</option>
+                      <option value="PARTENARIAT">Partenariat</option>
+                      <option value="IMMOBILIER">Immobilier</option>
+                    </select>
+                    {editForm.formState.errors.category ? (
+                      <p className="mt-1 text-sm text-destructive">{editForm.formState.errors.category.message}</p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <label htmlFor="admin-amount" className="text-sm font-medium">Montant</label>
+                    <Input id="admin-amount" type="number" min="0" step="1" className="mt-2 min-h-11" {...editForm.register("amount")} />
+                    {editForm.formState.errors.amount ? (
+                      <p className="mt-1 text-sm text-destructive">{editForm.formState.errors.amount.message}</p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <label htmlFor="admin-required-tier" className="text-sm font-medium">Tier requis</label>
+                    <select id="admin-required-tier" className="mt-2 min-h-11 w-full rounded-md border bg-background px-3 text-sm" {...editForm.register("requiredTier")}>
+                      <option value="AFFRANCHI">Affranchi</option>
+                      <option value="GRAND_FRERE">Grand Frère</option>
+                      <option value="BOSS">Boss</option>
+                    </select>
+                    {editForm.formState.errors.requiredTier ? (
+                      <p className="mt-1 text-sm text-destructive">{editForm.formState.errors.requiredTier.message}</p>
+                    ) : null}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="admin-description" className="text-sm font-medium">Description</label>
+                    <Textarea id="admin-description" className="mt-2 min-h-32" {...editForm.register("description")} />
+                    {editForm.formState.errors.description ? (
+                      <p className="mt-1 text-sm text-destructive">{editForm.formState.errors.description.message}</p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                  <Button type="button" variant="outline" className="min-h-11" disabled={isSaving} onClick={() => setIsEditing(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="min-h-11" disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                    Enregistrer
+                  </Button>
+                </div>
+              </form>
+            ) : null}
           </section>
 
           <section className="rounded-xl border bg-card p-4">
@@ -166,50 +286,14 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
             </div>
           </section>
 
-          <section className="rounded-xl border bg-card p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-semibold">Documents juridiques</h3>
-              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
-                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                {opportunity.documentCount}
-              </span>
-            </div>
-            {opportunity.documents.length > 0 ? (
-              <div className="mt-3 space-y-3">
-                {opportunity.documents.map((document) => (
-                  <DocumentRow
-                    key={document.id}
-                    document={document}
-                    onPreview={(doc) => setPreviewDocument(doc)}
-                    onDownload={(doc) => window.open(`/api/opportunities/${opportunity.id}/documents/${doc.id}/download`, "_blank", "noopener,noreferrer")}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="mt-3 rounded-lg bg-muted p-4 text-sm text-muted-foreground">Aucun document juridique joint.</p>
-            )}
-
-            {previewDocument ? (
-              <div className="mt-4 rounded-xl border bg-background p-3">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-medium">Aperçu — {previewDocument.originalName}</p>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setPreviewDocument(null)}>
-                    <X className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Fermer
-                  </Button>
-                </div>
-                {previewDocument.mimeType.startsWith("image/") ? (
-                  <Image src={previewUrl} alt={previewDocument.originalName} width={900} height={520} unoptimized className="max-h-[520px] w-full rounded-lg object-contain" />
-                ) : previewDocument.mimeType === "application/pdf" ? (
-                  <iframe src={previewUrl} title={`Aperçu ${previewDocument.originalName}`} className="h-[520px] w-full rounded-lg border" />
-                ) : (
-                  <Button type="button" variant="outline" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
-                    Ouvrir l&apos;aperçu
-                  </Button>
-                )}
-              </div>
-            ) : null}
-          </section>
+          <DocumentUploadSection
+            key={opportunity.id}
+            opportunityId={opportunity.id}
+            initialDocuments={opportunity.documents}
+            documentCount={opportunity.documentCount}
+            canUpload
+            canPreview
+          />
 
           <section className="rounded-xl border bg-card p-4">
             <h3 className="font-semibold">Actions de vérification</h3>
@@ -218,9 +302,9 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
                 <label htmlFor="rejection-note" className="text-sm font-medium">
                   Note admin / justification du refus
                 </label>
-                <Textarea id="rejection-note" className="mt-2 min-h-28" placeholder="Expliquez les corrections attendues avant publication…" {...form.register("note")} />
-                {form.formState.errors.note ? (
-                  <p className="mt-1 text-sm text-destructive">{form.formState.errors.note.message}</p>
+                <Textarea id="rejection-note" className="mt-2 min-h-28" placeholder="Expliquez les corrections attendues avant publication…" {...noteForm.register("note")} />
+                {noteForm.formState.errors.note ? (
+                  <p className="mt-1 text-sm text-destructive">{noteForm.formState.errors.note.message}</p>
                 ) : null}
               </div>
 
@@ -228,7 +312,7 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
 
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 {canStartReview ? (
-                  <Button type="button" variant="outline" disabled={isMutating} onClick={() => onAction(opportunity.id, "start_review", note?.trim() ? note.trim() : undefined)}>
+                  <Button type="button" variant="outline" className="min-h-11" disabled={isMutating} onClick={() => onAction(opportunity.id, "start_review", note?.trim() ? note.trim() : undefined)}>
                     {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <Play className="mr-2 h-4 w-4" aria-hidden="true" />}
                     Marquer en cours
                   </Button>
@@ -236,7 +320,7 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
                 {canDecide ? (
                   <Button
                     type="button"
-                    className="bg-green-600 text-white hover:bg-green-700"
+                    className="min-h-11 bg-green-600 text-white hover:bg-green-700"
                     disabled={isMutating || cannotVerifyAgain}
                     title={cannotVerifyAgain ? "Un second admin distinct doit valider ce deal." : undefined}
                     onClick={() => onAction(opportunity.id, "verify", note?.trim() ? note.trim() : undefined)}
@@ -249,12 +333,12 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
                   <p className="basis-full text-sm text-muted-foreground">Un second admin distinct doit valider ce deal.</p>
                 ) : null}
                 {canDecide ? (
-                  <Button type="submit" variant="destructive" disabled={isMutating}>
+                  <Button type="submit" variant="destructive" className="min-h-11" disabled={isMutating}>
                     {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                     Rejeter
                   </Button>
                 ) : null}
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>
                   Fermer
                 </Button>
               </div>
@@ -269,6 +353,25 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
           ) : null}
         </div>
       </SheetContent>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer l&apos;opportunité ?</DialogTitle>
+            <DialogDescription>
+              Vous allez supprimer définitivement « {opportunity.title} ». Cette action supprimera le deal et ses documents attachés.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" className="min-h-11" disabled={isDeleting} onClick={() => setDeleteDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="button" variant="destructive" className="min-h-11" disabled={isDeleting} onClick={() => onDelete(opportunity.id)}>
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              Supprimer définitivement
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }

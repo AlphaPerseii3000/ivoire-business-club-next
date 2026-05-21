@@ -78,6 +78,17 @@ export const opportunityCreateSchema = z.object({
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const opportunityAdminUpdateSchema = opportunityCreateSchema
+  .pick({ title: true, description: true, category: true, amount: true })
+  .extend({
+    requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+      message: "Tier requis invalide",
+    }).optional(),
+  })
+  .strict();
+
+export type OpportunityAdminUpdateInput = z.infer<typeof opportunityAdminUpdateSchema>;
+
 export const reviewCreateSchema = z.object({
   rating: z.number().int("La note doit être un nombre entier").min(1, "La note doit être comprise entre 1 et 5").max(5, "La note doit être comprise entre 1 et 5"),
   comment: z.string().trim().min(1, "Le commentaire est requis").max(500, "Le commentaire ne doit pas dépasser 500 caractères"),

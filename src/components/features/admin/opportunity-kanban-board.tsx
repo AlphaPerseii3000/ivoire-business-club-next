@@ -41,6 +41,29 @@ async function patchOpportunity(id: string, body: Record<string, unknown>) {
   return json.data as AdminOpportunity;
 }
 
+async function updateOpportunity(id: string, body: Record<string, unknown>) {
+  const response = await fetch(`/api/admin/opportunities/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = typeof json.error === "string" ? json.error : "Mise à jour impossible pour le moment.";
+    throw new Error(message);
+  }
+  return json.data as AdminOpportunity;
+}
+
+async function deleteOpportunity(id: string) {
+  const response = await fetch(`/api/admin/opportunities/${id}`, { method: "DELETE" });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = typeof json.error === "string" ? json.error : "Suppression impossible pour le moment.";
+    throw new Error(message);
+  }
+}
+
 function getOptimisticStatus(opportunity: AdminOpportunity, action: AdminAction): VerificationStatusInput {
   if (action === "verify") {
     if (opportunity.requiresDoubleVerification) {
@@ -161,6 +184,47 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
     }
   }
 
+  async function runUpdate(id: string, values: Record<string, unknown>): Promise<boolean> {
+    setError(null);
+    setMutatingId(id);
+    const previousItems = items;
+    try {
+      const updated = await updateOpportunity(id, values);
+      setItems((current) => current.map((item) => (item.id === id ? { ...item, ...updated } : item)));
+      toast.success("Opportunité mise à jour.");
+      startTransition(() => router.refresh());
+      return true;
+    } catch (updateError) {
+      setItems(previousItems);
+      const message = updateError instanceof Error ? updateError.message : "Mise à jour impossible pour le moment.";
+      setError(message);
+      toast.error(message);
+      return false;
+    } finally {
+      setMutatingId(null);
+    }
+  }
+
+  async function runDelete(id: string) {
+    setError(null);
+    setMutatingId(id);
+    const previousItems = items;
+    setItems((current) => current.filter((item) => item.id !== id));
+    try {
+      await deleteOpportunity(id);
+      setSelectedId(null);
+      toast.success("Opportunité supprimée.");
+      startTransition(() => router.refresh());
+    } catch (deleteError) {
+      setItems(previousItems);
+      const message = deleteError instanceof Error ? deleteError.message : "Suppression impossible pour le moment.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setMutatingId(null);
+    }
+  }
+
   const visibleMobileItems = grouped[activeStatus];
 
   return (
@@ -236,6 +300,8 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
             await runAction(opportunity, action, note);
           }
         }}
+        onUpdate={runUpdate}
+        onDelete={runDelete}
       />
     </div>
   );

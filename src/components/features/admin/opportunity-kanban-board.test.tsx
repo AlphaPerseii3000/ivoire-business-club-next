@@ -16,6 +16,7 @@ function makeOpportunity(overrides: Partial<AdminOpportunity> = {}): AdminOpport
     description: "Dossier complet avec documents juridiques.",
     category: "IMMOBILIER",
     amount: 25000,
+    requiredTier: "AFFRANCHI",
     verificationStatus: "PENDING",
     createdAt: "2026-05-14T00:00:00.000Z",
     updatedAt: "2026-05-14T00:00:00.000Z",
@@ -112,5 +113,102 @@ describe("AdminOpportunityKanban", () => {
 
     await user.click(screen.getByRole("button", { name: "Rejeter" }));
     expect(await screen.findByText("La note est obligatoire pour refuser un deal.")).toBeInTheDocument();
+  });
+
+  it("updates an opportunity from the inline edit form and refreshes local state", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: makeOpportunity({ title: "Deal édité", amount: 75000, requiresDoubleVerification: true, requiredTier: "BOSS" }) }),
+    } as Response);
+
+    render(<AdminOpportunityKanban opportunities={opportunities} />);
+
+    await user.click(screen.getAllByRole("button", { name: "Détails" })[0]);
+    await user.click(await screen.findByRole("button", { name: "Éditer" }));
+    await user.clear(screen.getByLabelText("Titre"));
+    await user.type(screen.getByLabelText("Titre"), "Deal édité");
+    await user.clear(screen.getByLabelText("Montant"));
+    await user.type(screen.getByLabelText("Montant"), "75000");
+    await user.selectOptions(screen.getByLabelText("Tier requis"), "BOSS");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/admin/opportunities/opp-1", expect.objectContaining({ method: "PATCH" }));
+    });
+    expect(toast.success).toHaveBeenCalledWith("Opportunité mise à jour.");
+    expect(await screen.findAllByText("Deal édité")).not.toHaveLength(0);
+  });
+
+  it("keeps the edit form open and shows an error toast when update fails", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "Données invalides" }),
+    } as Response);
+
+    render(<AdminOpportunityKanban opportunities={opportunities} />);
+
+    await user.click(screen.getAllByRole("button", { name: "Détails" })[0]);
+    await user.click(await screen.findByRole("button", { name: "Éditer" }));
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Données invalides");
+    });
+    expect(screen.getByLabelText("Titre")).toBeInTheDocument();
+  });
+
+  it("deletes an opportunity after explicit confirmation", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ok: true } }) } as Response);
+
+    render(<AdminOpportunityKanban opportunities={opportunities} />);
+
+    await user.click(screen.getAllByRole("button", { name: "Détails" })[0]);
+    await user.click(await screen.findByRole("button", { name: "Supprimer" }));
+    await user.click(await screen.findByRole("button", { name: "Supprimer définitivement" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/admin/opportunities/opp-1", { method: "DELETE" });
+    });
+    expect(toast.success).toHaveBeenCalledWith("Opportunité supprimée.");
+  });
+
+  it("does not delete a document when the document confirmation is cancelled", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    const confirmMock = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirmMock);
+    const docs = [{ id: "doc-1", originalName: "Contrat.pdf", fileName: "doc.pdf", mimeType: "application/pdf", size: 1200 }];
+
+    render(<AdminOpportunityKanban opportunities={[makeOpportunity({ documents: docs, documentCount: 1 })]} />);
+
+    await user.click(screen.getAllByRole("button", { name: "Détails" })[0]);
+    await user.click(await screen.findByRole("button", { name: "Supprimer Contrat.pdf" }));
+
+    expect(confirmMock).toHaveBeenCalledWith("Supprimer définitivement le document « Contrat.pdf » ?");
+    expect(fetchMock).not.toHaveBeenCalledWith("/api/opportunities/opp-1/documents/doc-1", expect.anything());
+  });
+
+  it("deletes a document when the document confirmation is accepted", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ok: true } }) } as Response);
+    const docs = [{ id: "doc-1", originalName: "Contrat.pdf", fileName: "doc.pdf", mimeType: "application/pdf", size: 1200 }];
+
+    render(<AdminOpportunityKanban opportunities={[makeOpportunity({ documents: docs, documentCount: 1 })]} />);
+
+    await user.click(screen.getAllByRole("button", { name: "Détails" })[0]);
+    await user.click(await screen.findByRole("button", { name: "Supprimer Contrat.pdf" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/opportunities/opp-1/documents/doc-1", { method: "DELETE" });
+    });
+    expect(toast.success).toHaveBeenCalledWith("Document supprimé.");
   });
 });

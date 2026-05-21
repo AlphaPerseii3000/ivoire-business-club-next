@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paperclip, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -120,6 +120,11 @@ export function DocumentUploadSection({
   const [pending, setPending] = useState<PendingDocument[]>([]);
   const [preview, setPreview] = useState<{ document: LegalDocument; url: string } | null>(null);
 
+  useEffect(() => {
+    setDocuments(initialDocuments);
+    setPreview(null);
+  }, [initialDocuments, opportunityId]);
+
   const syncPending = (next: PendingDocument[]) => {
     setPending(next);
     onPendingFilesChange?.(next.filter((item) => item.status === "pending").map((item) => item.file));
@@ -167,9 +172,9 @@ export function DocumentUploadSection({
     }
   };
 
-  const requestDocumentUrl = async (document: LegalDocument) => {
+  const requestDocumentUrl = async (document: LegalDocument, action: "preview" | "download") => {
     if (!opportunityId) return null;
-    const res = await fetch(`/api/opportunities/${opportunityId}/documents/${document.id}/preview`);
+    const res = await fetch(`/api/opportunities/${opportunityId}/documents/${document.id}/${action}`);
     const body = (await res.json()) as { data?: { signedUrl: string }; error?: string };
     if (!res.ok || !body.data) {
       toast.error(body.error ?? "Aperçu indisponible");
@@ -179,19 +184,21 @@ export function DocumentUploadSection({
   };
 
   const openPreview = async (document: LegalDocument) => {
-    const signedUrl = await requestDocumentUrl(document);
+    const signedUrl = await requestDocumentUrl(document, "preview");
     if (!signedUrl) return;
     setPreview({ document, url: signedUrl });
   };
 
   const downloadDocument = async (document: LegalDocument) => {
-    const signedUrl = await requestDocumentUrl(document);
+    const signedUrl = await requestDocumentUrl(document, "download");
     if (!signedUrl) return;
     window.open(signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const deleteDocument = async (document: LegalDocument) => {
     if (!opportunityId) return;
+    const confirmed = window.confirm(`Supprimer définitivement le document « ${document.originalName} » ?`);
+    if (!confirmed) return;
     const res = await fetch(`/api/opportunities/${opportunityId}/documents/${document.id}`, { method: "DELETE" });
     if (!res.ok) {
       const body = (await res.json()) as { error?: string };
