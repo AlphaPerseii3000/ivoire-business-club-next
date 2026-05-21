@@ -2,7 +2,7 @@
 Story: "6.2"
 StoryKey: "6-2-metriques-cles-et-analytics-admin"
 Title: "Métriques Clés et Analytics Admin"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR36", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-21"
 
 # Story 6.2: Métriques Clés et Analytics Admin
 
-Status: review
+Status: done
 
 <!-- Note: Story brownfield/delta. Le dashboard admin existe déjà sur `/admin`; cette story remplace ses cartes génériques par les métriques FR36 et ajoute l'alias `/admin/dashboard` sans casser la navigation existante. -->
 
