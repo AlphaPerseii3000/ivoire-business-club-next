@@ -131,8 +131,8 @@ export default async function AdminSubscriptionsPage() {
             Contrôlez les virements bancaires reçus, activez les membres validés et suspendez les accès premium si nécessaire.
           </p>
         </div>
-        <a href="/admin" className="min-h-11 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          ← Retour
+        <a href="/admin/dashboard" className="min-h-11 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          ← Retour au tableau de bord
         </a>
       </div>
 

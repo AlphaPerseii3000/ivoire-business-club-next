@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const adminNav = [
-  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/dashboard", label: "Tableau de bord" },
   { href: "/admin/members", label: "Membres" },
   { href: "/admin/subscriptions", label: "Abonnements" },
   { href: "/admin/opportunities", label: "Opportunités" },
@@ -12,11 +12,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen">
       <aside className="hidden w-64 shrink-0 border-r bg-destructive/5 md:block">
         <div className="flex h-16 items-center justify-center border-b">
-          <Link href="/admin" className="text-lg font-bold text-destructive">IBC Admin</Link>
+          <Link href="/admin/dashboard" className="text-lg font-bold text-destructive">IBC Admin</Link>
         </div>
         <nav className="mt-4 space-y-1 px-3">
           {adminNav.map((item) => (
-            <Link key={item.href} href={item.href} className="block rounded-md px-3 py-2 text-sm hover:bg-muted">
+            <Link key={item.href} href={item.href} className="block min-h-11 rounded-md px-3 py-2 text-sm hover:bg-muted">
               {item.label}
             </Link>
           ))}

@@ -71,8 +71,8 @@ export default async function AdminOpportunitiesPage() {
             Suivez les deals de la soumission à la décision finale.
           </p>
         </div>
-        <Link href="/admin" className="text-sm text-muted-foreground hover:text-primary">
-          ← Retour
+        <Link href="/admin/dashboard" className="min-h-11 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          ← Retour au tableau de bord
         </Link>
       </div>
 
