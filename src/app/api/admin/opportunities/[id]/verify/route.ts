@@ -178,6 +178,18 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       );
     }
 
+    if (currentStatus === nextStatus) {
+      console.info("[admin-opportunity-status]", {
+        opportunityId: id,
+        adminId: authResult.sessionUserId,
+        action: parsed.data.action,
+        from: currentStatus,
+        to: nextStatus,
+        idempotent: true,
+      });
+      return NextResponse.json({ data: opportunity, pendingSecondVerification: false });
+    }
+
     let effectiveNextStatus = nextStatus;
     let pendingSecondVerification = false;
 

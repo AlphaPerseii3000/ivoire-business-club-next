@@ -203,9 +203,9 @@ export function AdminOpportunityKanban({ opportunities }: AdminOpportunityKanban
               <h2 id={`kanban-${status}`} className="font-semibold">
                 {OPPORTUNITY_STATUS_LABELS[status]}
               </h2>
-              <span className="rounded-full bg-background px-2 py-1 text-xs text-muted-foreground">{grouped[status].length}</span>
+              <span data-testid={`kanban-counter-${status}`} className="rounded-full bg-background px-2 py-1 text-xs text-muted-foreground">{grouped[status].length}</span>
             </div>
-            <div className="max-h-[calc(100vh-260px)] space-y-3 overflow-y-auto pr-1">
+            <div data-testid={`kanban-scroll-${status}`} className="max-h-[calc(100vh-260px)] space-y-3 overflow-y-auto pr-1">
               {grouped[status].length > 0 ? (
                 grouped[status].map((opportunity) => (
                   <OpportunityCard

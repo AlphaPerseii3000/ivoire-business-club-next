@@ -259,7 +259,27 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     expect(mockNotificationCreateMany).toHaveBeenCalledOnce();
   });
 
-  it("does not send matched notifications when re-verifying an already VERIFIED opportunity", async () => {
+  it("does not re-trigger side effects for an idempotent EN_COURS transition", async () => {
+    mockOpportunityFindUnique.mockResolvedValueOnce({
+      ...pendingOpportunity,
+      verificationStatus: "EN_COURS",
+      reviewNotes: "note existante",
+    });
+
+    const res = await PATCH(request({ action: "start_review", note: "nouvelle note" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.verificationStatus).toBe("EN_COURS");
+    expect(json.data.reviewNotes).toBe("note existante");
+    expect(mockOpportunityUpdate).not.toHaveBeenCalled();
+    expect(mockApprovalCreate).not.toHaveBeenCalled();
+    expect(mockSendVerified).not.toHaveBeenCalled();
+    expect(mockSendRejected).not.toHaveBeenCalled();
+    expect(mockNotificationCreateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not send matched notifications or emails when re-verifying an already VERIFIED opportunity", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1" } });
     mockUserFindUnique.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockOpportunityFindUnique.mockResolvedValue({
@@ -289,6 +309,8 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     const res = await PATCH(request({ action: "verify" }), params);
 
     expect(res.status).toBe(200);
+    expect(mockOpportunityUpdate).not.toHaveBeenCalled();
+    expect(mockSendVerified).not.toHaveBeenCalled();
     expect(mockNotificationCreateMany).not.toHaveBeenCalled();
     expect(mockSendMatched).not.toHaveBeenCalled();
   });
