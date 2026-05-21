@@ -1,5 +1,5 @@
 # generated: 2026-05-12T23:04:29Z
-# last_updated: 2026-05-21T12:00:00+02:00
+# last_updated: 2026-05-21T12:55:09+02:00
 # project: ibc
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-05-21T12:00:00+02:00
+last_updated: 2026-05-21T12:55:09+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -81,7 +81,7 @@ development_status:
   5-3-affichage-public-des-reviews-sur-profil: done
   epic-5-retrospective: done
   epic-6: in-progress
-  6-1-tableau-de-bord-kanban-des-opportunites: backlog
+  6-1-tableau-de-bord-kanban-des-opportunites: review
   6-2-metriques-cles-et-analytics-admin: backlog
   6-3-gestion-des-documents-et-edition-des-opportunites: backlog
   6-4-audit-logs-et-conformite: backlog
