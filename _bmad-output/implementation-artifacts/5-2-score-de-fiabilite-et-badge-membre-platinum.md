@@ -2,7 +2,7 @@
 Story: "5.2"
 StoryKey: "5-2-score-de-fiabilite-et-badge-membre-platinum"
 Title: "Score de Fiabilité et Badge Membre Platinum"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR32", "FR33"]
@@ -12,7 +12,7 @@ Created: "2026-05-21"
 
 # Story 5.2: Score de Fiabilité et Badge Membre Platinum
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -76,75 +76,75 @@ so that other members can assess my credibility before contacting or working wit
 
 ## Tasks / Subtasks
 
-- [ ] **AC1: Add centralized reputation calculation helpers**
-  - [ ] Create `src/lib/reputation.ts` (or equivalent) with pure functions for:
+- [x] **AC1: Add centralized reputation calculation helpers**
+  - [x] Create `src/lib/reputation.ts` (or equivalent) with pure functions for:
     - `calculateReliabilityScore(reviews)` returning `{ averageRating, reviewCount }`.
     - `roundReliabilityScore(value)` rounding to one decimal for display and threshold checks.
     - `isPlatinumEligible({ validatedDealsCount, averageRating })` using `validatedDealsCount >= 3 && averageRating >= 4.5`.
     - `getPlatinumDisplayState({ awardedAt, averageRating })` returning `none | active | maintain`.
-  - [ ] Treat the MVP “weighted average” as equal weight per received review because no PRD/architecture artifact defines amount, tier, or recency weights. Implement the helper as an explicit weighted-average function with default weight `1` per review so future weighting can be added without changing page code.
-  - [ ] Use only `review.rating` values from `Review` rows where the member is the `reviewee`; never include `reviewsWritten`.
-  - [ ] Add `src/lib/reputation.test.ts` covering: no reviews, one review, multiple reviews, one-decimal rounding, threshold at exactly `4.5`, below threshold (`4.49`), and equal-weight behavior.
+  - [x] Treat the MVP “weighted average” as equal weight per received review because no PRD/architecture artifact defines amount, tier, or recency weights. Implement the helper as an explicit weighted-average function with default weight `1` per review so future weighting can be added without changing page code.
+  - [x] Use only `review.rating` values from `Review` rows where the member is the `reviewee`; never include `reviewsWritten`.
+  - [x] Add `src/lib/reputation.test.ts` covering: no reviews, one review, multiple reviews, one-decimal rounding, threshold at exactly `4.5`, below threshold (`4.49`), and equal-weight behavior.
 
-- [ ] **AC2/AC3: Persist first Platinum award state safely**
-  - [ ] Extend `prisma/schema.prisma` `User` with persistent Platinum fields. Recommended minimal shape:
+- [x] **AC2/AC3: Persist first Platinum award state safely**
+  - [x] Extend `prisma/schema.prisma` `User` with persistent Platinum fields. Recommended minimal shape:
     ```prisma
     platinumAwardedAt DateTime?
     platinumUpdatedAt DateTime?
     ```
     Use existing Prisma naming conventions and let `@@map("users")` keep the mapped table.
-  - [ ] Generate a migration with the project-standard Prisma command; do not hand-edit generated SQL unless necessary and documented.
-  - [ ] Implement `ensurePlatinumAwarded(userId, stats)` in `src/lib/reputation.ts` or `src/lib/platinum.ts`.
-  - [ ] Persistence side effect must be idempotent: update only when eligible and `platinumAwardedAt === null`; never overwrite first award timestamp.
-  - [ ] Do not remove/clear `platinumAwardedAt` when the score drops below 4.5; display `À maintenir` instead.
-  - [ ] If adding audit/notification entries for the award, guard them with the same persisted-state transition (`null -> timestamp`) so repeated page loads do not duplicate side effects. Audit/notification is optional unless an existing local pattern is trivial to reuse.
-  - [ ] Add tests for: newly eligible persists once, already awarded does not update timestamp, below threshold does not award, previously awarded below threshold returns maintain state.
+  - [x] Generate a migration with the project-standard Prisma command; do not hand-edit generated SQL unless necessary and documented.
+  - [x] Implement `ensurePlatinumAwarded(userId, stats)` in `src/lib/reputation.ts` or `src/lib/platinum.ts`.
+  - [x] Persistence side effect must be idempotent: update only when eligible and `platinumAwardedAt === null`; never overwrite first award timestamp.
+  - [x] Do not remove/clear `platinumAwardedAt` when the score drops below 4.5; display `À maintenir` instead.
+  - [x] If adding audit/notification entries for the award, guard them with the same persisted-state transition (`null -> timestamp`) so repeated page loads do not duplicate side effects. Audit/notification is optional unless an existing local pattern is trivial to reuse.
+  - [x] Add tests for: newly eligible persists once, already awarded does not update timestamp, below threshold does not award, previously awarded below threshold returns maintain state.
 
-- [ ] **AC1/AC2/AC3: Build reusable score and badge UI components**
-  - [ ] Add `src/components/features/reputation/reliability-score.tsx` for stars + numeric value + review count.
-  - [ ] Add `src/components/features/reputation/platinum-badge.tsx` for active/maintain states.
-  - [ ] Add `src/components/features/reputation/platinum-confetti.tsx` only if needed for first-unlock animation; prefer CSS/keyframes and existing UI primitives over adding a new dependency.
-  - [ ] Use French UI copy:
+- [x] **AC1/AC2/AC3: Build reusable score and badge UI components**
+  - [x] Add `src/components/features/reputation/reliability-score.tsx` for stars + numeric value + review count.
+  - [x] Add `src/components/features/reputation/platinum-badge.tsx` for active/maintain states.
+  - [x] Add `src/components/features/reputation/platinum-confetti.tsx` only if needed for first-unlock animation; prefer CSS/keyframes and existing UI primitives over adding a new dependency.
+  - [x] Use French UI copy:
     - `Score de fiabilité IBC`
     - `Pas encore d'avis reçus` for no-score state if rendered.
     - `Membre Platinum`
     - `À maintenir`
     - Tooltip: `Membre distingué : 3+ deals validés et excellentes reviews`.
-  - [ ] Use accessible star text (`aria-label="4,7 sur 5 étoiles"`) and ensure color is not the only signal for Platinum/maintain state.
-  - [ ] Use ternaries, not `&&`, in all JSX.
-  - [ ] Add component tests for rendered score, no-score state, active Platinum, maintain Platinum, and reduced-motion-safe confetti rendering.
+  - [x] Use accessible star text (`aria-label="4,7 sur 5 étoiles"`) and ensure color is not the only signal for Platinum/maintain state.
+  - [x] Use ternaries, not `&&`, in all JSX.
+  - [x] Add component tests for rendered score, no-score state, active Platinum, maintain Platinum, and reduced-motion-safe confetti rendering.
 
-- [ ] **AC1/AC2/AC3: Update member profile reputation display**
-  - [ ] Update `src/app/(dashboard)/members/[id]/page.tsx` to fetch the minimum required fields:
+- [x] **AC1/AC2/AC3: Update member profile reputation display**
+  - [x] Update `src/app/(dashboard)/members/[id]/page.tsx` to fetch the minimum required fields:
     - member `platinumAwardedAt`,
     - received review ratings/count for score,
     - count of validated deals authored by the member (`Opportunity` rows with `authorId = member.id` and `verificationStatus = "VERIFIED"`).
-  - [ ] Keep the existing verified-profile guard: non-verified member profiles still call `notFound()`.
-  - [ ] Preserve existing profile UI: back link, tier badge, verified badge, bio, location, tags, WhatsApp CTA, and `ReviewList`.
-  - [ ] Display the reliability score near the header card before the detailed `Avis reçus` list.
-  - [ ] Show `Membre Platinum` next to the name/tier only when `platinumAwardedAt` exists or the member qualifies and persistence succeeds.
-  - [ ] Show `À maintenir` when `platinumAwardedAt` exists and current average is below 4.5.
-  - [ ] Trigger the first-unlock confetti only when this request newly awards Platinum; do not show confetti just because the user is already Platinum.
-  - [ ] If the current profile page is treated as a dashboard route, it must keep its auth redirect. If a new dashboard/public profile page is created, it must call `getUserPremiumAccess()` and render `PremiumAccessBlockedPanel` for non-subscribers unless explicitly public in route design.
-  - [ ] Add page tests for: score visible with reviews, no fake score without reviews, active Platinum, maintain Platinum, no badge when not awarded/not eligible, confetti only on first award, and profile remains `notFound()` for unverified members.
+  - [x] Keep the existing verified-profile guard: non-verified member profiles still call `notFound()`.
+  - [x] Preserve existing profile UI: back link, tier badge, verified badge, bio, location, tags, WhatsApp CTA, and `ReviewList`.
+  - [x] Display the reliability score near the header card before the detailed `Avis reçus` list.
+  - [x] Show `Membre Platinum` next to the name/tier only when `platinumAwardedAt` exists or the member qualifies and persistence succeeds.
+  - [x] Show `À maintenir` when `platinumAwardedAt` exists and current average is below 4.5.
+  - [x] Trigger the first-unlock confetti only when this request newly awards Platinum; do not show confetti just because the user is already Platinum.
+  - [x] If the current profile page is treated as a dashboard route, it must keep its auth redirect. If a new dashboard/public profile page is created, it must call `getUserPremiumAccess()` and render `PremiumAccessBlockedPanel` for non-subscribers unless explicitly public in route design.
+  - [x] Add page tests for: score visible with reviews, no fake score without reviews, active Platinum, maintain Platinum, no badge when not awarded/not eligible, confetti only on first award, and profile remains `notFound()` for unverified members.
 
-- [ ] **AC4/AC5: Update deal detail author reputation display**
-  - [ ] Update `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` author include/query to get the author's received-review ratings and existing Platinum fields.
-  - [ ] Replace the current `const averageRating = null;` with the real average from received reviews.
-  - [ ] Preserve the existing `validatedDealsCount = opportunity.author.opportunities.length` pattern for authored verified opportunities.
-  - [ ] Pass the real average to `getOpportunityTrustLevel` and `VerificationTimeline`.
-  - [ ] Render the reusable `ReliabilityScore` and `PlatinumBadge` in the author card.
-  - [ ] Do not expose deal details, documents, or author-only controls to users blocked by premium/tier/unpublished guards.
-  - [ ] Do not change review form eligibility from Story 5.1; `canShowReviewForm` remains based on verified opportunity, premium access, tier access, interest age >=7 days, and no duplicate review.
-  - [ ] Add page tests for: author score shown on deal page, `averageRating` passed into trust-level/gold criteria, blocked premium/tier users still see blocked panels instead of reputation internals, and existing review form branches still behave.
+- [x] **AC4/AC5: Update deal detail author reputation display**
+  - [x] Update `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` author include/query to get the author's received-review ratings and existing Platinum fields.
+  - [x] Replace the current `const averageRating = null;` with the real average from received reviews.
+  - [x] Preserve the existing `validatedDealsCount = opportunity.author.opportunities.length` pattern for authored verified opportunities.
+  - [x] Pass the real average to `getOpportunityTrustLevel` and `VerificationTimeline`.
+  - [x] Render the reusable `ReliabilityScore` and `PlatinumBadge` in the author card.
+  - [x] Do not expose deal details, documents, or author-only controls to users blocked by premium/tier/unpublished guards.
+  - [x] Do not change review form eligibility from Story 5.1; `canShowReviewForm` remains based on verified opportunity, premium access, tier access, interest age >=7 days, and no duplicate review.
+  - [x] Add page tests for: author score shown on deal page, `averageRating` passed into trust-level/gold criteria, blocked premium/tier users still see blocked panels instead of reputation internals, and existing review form branches still behave.
 
-- [ ] **AC5/AC6: Integrate with trust-level tests and validation**
-  - [ ] Update `src/lib/trust-level.test.ts` only if helper signatures change; preserve existing expectations that `validatedDealsCount >= 3 && averageRating >= 4.5` can yield `or` when the opportunity is verified and double verification is complete.
-  - [ ] Add a regression test showing an author with `averageRating = 4.49` does not produce `or`/Platinum eligibility.
-  - [ ] Add a regression test showing an already-awarded Platinum member with current `averageRating = 4.49` displays `À maintenir` but is not de-awarded.
-  - [ ] Run `grep -rn '&&' src/ --include='*.tsx'` or equivalent and verify no new JSX conditional rendering uses `&&`.
-  - [ ] Run required validation commands and record results in the Dev Agent Record.
-  - [ ] Stage explicitly; never use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
+- [x] **AC5/AC6: Integrate with trust-level tests and validation**
+  - [x] Update `src/lib/trust-level.test.ts` only if helper signatures change; preserve existing expectations that `validatedDealsCount >= 3 && averageRating >= 4.5` can yield `or` when the opportunity is verified and double verification is complete.
+  - [x] Add a regression test showing an author with `averageRating = 4.49` does not produce `or`/Platinum eligibility.
+  - [x] Add a regression test showing an already-awarded Platinum member with current `averageRating = 4.49` displays `À maintenir` but is not de-awarded.
+  - [x] Run `grep -rn '&&' src/ --include='*.tsx'` or equivalent and verify no new JSX conditional rendering uses `&&`.
+  - [x] Run required validation commands and record results in the Dev Agent Record.
+  - [x] Stage explicitly; never use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
 
 ## Dev Notes
 
@@ -339,14 +339,46 @@ Use the pinned project stack; do not upgrade dependencies as part of this story:
 - `src/app/(dashboard)/members/[id]/page.tsx` — profile page to extend.
 - `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` — deal detail page to extend.
 
+## Change Log
+
+- 2026-05-21: Implemented reliability score helpers, Platinum persistence, reusable reputation UI, member profile/deal page integrations, Prisma migration, and test coverage for Story 5.2.
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- `./node_modules/.bin/prisma migrate dev --name add_platinum_award_fields --create-only` — attempted; halted because local `prisma/dev.db` reported a previously applied migration drift/reset requirement, so the minimal additive SQL migration was recreated manually without resetting or committing dev DB artifacts.
+- `./node_modules/.bin/prisma validate` — passed (schema valid).
+- `npx vitest run src/lib/reputation.test.ts src/components/features/reputation/reputation-components.test.tsx src/app/'(dashboard)'/members/'[id]'/page.test.tsx src/app/'(dashboard)'/dashboard/opportunities/'[id]'/page.test.tsx src/lib/trust-level.test.ts` — passed (43 tests).
+- `grep -rn '&&' src/ --include='*.tsx'` — reviewed; no new JSX conditional `&&` rendering introduced by Story 5.2 components/pages.
+- `npx vitest run` — passed (355 tests).
+- `npm run build` — passed; build warnings limited to existing middleware deprecation and missing Upstash env fallback messages.
+
 ### Completion Notes List
 
+- Added centralized received-review reliability score helpers with one-decimal rounding, explicit weighted-average shape, Platinum eligibility/display-state helpers, and idempotent first-award persistence guarded by `platinumAwardedAt: null`.
+- Added persistent `User.platinumAwardedAt` and `User.platinumUpdatedAt` fields plus migration `20260521084815_add_platinum_award_fields`.
+- Added reusable French reputation UI: `ReliabilityScore`, `PlatinumBadge`, and reduced-motion-safe `PlatinumConfetti`.
+- Updated member profiles to display score, active/maintain Platinum badge, first-unlock confetti only on newly persisted awards, and preserved verified-profile/auth/WhatsApp/review-list behavior.
+- Updated deal detail author card to use the same score/badge components, replace `averageRating = null` with real received-review average, and feed trust-level/verification timeline with real author reputation while preserving premium/tier/unpublished/review-form guards.
+- Added regression coverage for no-score states, active/maintain/no badge branches, idempotent Platinum persistence, premium/tier blocking, real gold trust criteria, and below-threshold behavior.
+
 ### File List
+
+- `prisma/schema.prisma`
+- `prisma/migrations/20260521084815_add_platinum_award_fields/migration.sql`
+- `src/lib/reputation.ts`
+- `src/lib/reputation.test.ts`
+- `src/lib/trust-level.test.ts`
+- `src/components/features/reputation/reliability-score.tsx`
+- `src/components/features/reputation/platinum-badge.tsx`
+- `src/components/features/reputation/platinum-confetti.tsx`
+- `src/components/features/reputation/reputation-components.test.tsx`
+- `src/app/(dashboard)/members/[id]/page.tsx`
+- `src/app/(dashboard)/members/[id]/page.test.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx`
