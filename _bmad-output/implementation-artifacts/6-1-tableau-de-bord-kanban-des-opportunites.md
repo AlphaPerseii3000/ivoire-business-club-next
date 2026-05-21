@@ -2,7 +2,7 @@
 Story: "6.1"
 StoryKey: "6-1-tableau-de-bord-kanban-des-opportunites"
 Title: "Tableau de Bord Kanban des Opportunités"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR35", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-21"
 
 # Story 6.1: Tableau de Bord Kanban des Opportunités
 
-Status: review
+Status: done
 
 <!-- Note: DELTA story. Story 3.3 already delivered most of the admin opportunity kanban. Implement only the gaps and regression hardening listed below. -->
 
@@ -204,3 +204,25 @@ Hermes Agent (gpt-5.5)
 
 - 2026-05-21: Story created as ready-for-dev with delta scope focused on existing Story 3.3 kanban hardening.
 - 2026-05-21: Implemented delta hardening for idempotent transitions, kanban regression tests, validation/build verification; status moved to review.
+
+### Review Findings
+
+**Verdict: PASS**
+
+- **AC1 — PASS:** `/admin/opportunities` preserves ADMIN role gating, redirects unauthenticated/non-admin users appropriately, loads all opportunities server-side with required relations/counts, serializes dates, and preserves status order `PENDING`, `EN_COURS`, `VERIFIED`, `REJECTED`.
+- **AC2 — PASS:** The `PENDING → EN_COURS` button path still sends `PATCH /api/admin/opportunities/[id]/verify` with `{ action: "start_review" }`; the API validates input, persists `EN_COURS`, and now returns early for `currentStatus === nextStatus` without update, review-note append, approval creation, email, notification, or matched-member side effects.
+- **AC3 — PASS:** Mobile chips/list are preserved with French labels, counters, `min-h-11` touch target class, filter switching coverage, and no drag-and-drop requirement.
+- **AC4 — PASS:** Desktop columns preserve visible counters, per-column scroll containers with constrained height and `overflow-y-auto`, and empty states; the new test covers 21 pending deals.
+- **AC5 — PASS:** Admin subscriptions navigation remains a link in the existing admin layout; no subscription kanban or out-of-scope workflow was introduced.
+- **AC6 — PASS:** Targeted and full validation passed. New JSX in the reviewed diff does not introduce JSX `&&`; no binary DB files are included in `ed964fd..9336eec`; code and BMAD status changes follow the expected two-commit pattern (`e9f8459` code, `9336eec` status).
+
+Validation run during review:
+
+- `./node_modules/.bin/prisma validate` — PASS.
+- `npx vitest run src/components/features/admin/opportunity-kanban-board.test.tsx src/app/api/admin/opportunities/[id]/verify/route.test.ts` — PASS (20 tests).
+- `npx vitest run` — PASS (374 tests).
+- `npm run build` — PASS (Next.js build completed; only existing informational warnings about middleware convention and missing rate-limit env vars).
+
+Blockers: none.
+
+Next BMAD step: Story 6.1 is done; proceed to Story 6.2.
