@@ -2,7 +2,7 @@
 Story: "6.2"
 StoryKey: "6-2-metriques-cles-et-analytics-admin"
 Title: "Métriques Clés et Analytics Admin"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR36", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-21"
 
 # Story 6.2: Métriques Clés et Analytics Admin
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Story brownfield/delta. Le dashboard admin existe déjà sur `/admin`; cette story remplace ses cartes génériques par les métriques FR36 et ajoute l'alias `/admin/dashboard` sans casser la navigation existante. -->
 
@@ -79,48 +79,48 @@ afin de prendre des décisions éclairées sur la croissance et la qualité.
 
 ## Tasks / Subtasks
 
-- [ ] **AC1: Préserver et étendre le routage admin brownfield**
-  - [ ] Auditer `src/app/(admin)/layout.tsx`, `src/app/(admin)/admin/layout.tsx` et `src/app/(admin)/admin/page.tsx` avant modification.
-  - [ ] Créer ou réutiliser une implémentation partagée pour le dashboard afin que `/admin/dashboard` satisfasse l'AC sans dupliquer toute la logique.
-  - [ ] Préserver le contrôle d'accès admin : `auth()` depuis `@/lib/auth`, lookup Prisma du rôle, redirect `/auth/signin` si non authentifié, redirect `/dashboard` si non admin.
-  - [ ] Mettre à jour la navigation admin visible pour libeller « Tableau de bord » en français et pointer vers `/admin/dashboard` ou préserver `/admin` comme alias cohérent.
-  - [ ] Ne pas utiliser `getUserPremiumAccess()`, `PremiumAccessBlockedPanel`, ni une logique de tier premium membre dans les routes admin.
+- [x] **AC1: Préserver et étendre le routage admin brownfield**
+  - [x] Auditer `src/app/(admin)/layout.tsx`, `src/app/(admin)/admin/layout.tsx` et `src/app/(admin)/admin/page.tsx` avant modification.
+  - [x] Créer ou réutiliser une implémentation partagée pour le dashboard afin que `/admin/dashboard` satisfasse l'AC sans dupliquer toute la logique.
+  - [x] Préserver le contrôle d'accès admin : `auth()` depuis `@/lib/auth`, lookup Prisma du rôle, redirect `/auth/signin` si non authentifié, redirect `/dashboard` si non admin.
+  - [x] Mettre à jour la navigation admin visible pour libeller « Tableau de bord » en français et pointer vers `/admin/dashboard` ou préserver `/admin` comme alias cohérent.
+  - [x] Ne pas utiliser `getUserPremiumAccess()`, `PremiumAccessBlockedPanel`, ni une logique de tier premium membre dans les routes admin.
 
-- [ ] **AC2: Implémenter les calculs analytics côté serveur**
-  - [ ] Créer `src/lib/admin-analytics.ts` avec des fonctions pures et testables pour calculer MRR, membres actifs 7j, conversion, churn, variation et tendance.
-  - [ ] Calculer le MRR à partir des `Subscription` en statut `ACTIVE`; utiliser `getAmountForTier(subscription.tier)` plutôt que réintroduire Stripe/CinetPay ou ajouter un champ montant hors scope.
-  - [ ] Calculer les périodes avec des bornes explicites : période actuelle = 30 derniers jours pour MRR/churn/conversion, période précédente = les 30 jours avant; membres actifs = 7 derniers jours vs 7 jours précédents.
-  - [ ] Protéger tous les diviseurs à zéro avec helpers (`safePercent`, `safeVariationPercent`) pour éviter `NaN`, `Infinity`, ou erreurs de rendu.
-  - [ ] Utiliser uniquement Prisma via `src/lib/prisma.ts`; ne pas instancier un nouveau client.
+- [x] **AC2: Implémenter les calculs analytics côté serveur**
+  - [x] Créer `src/lib/admin-analytics.ts` avec des fonctions pures et testables pour calculer MRR, membres actifs 7j, conversion, churn, variation et tendance.
+  - [x] Calculer le MRR à partir des `Subscription` en statut `ACTIVE`; utiliser `getAmountForTier(subscription.tier)` plutôt que réintroduire Stripe/CinetPay ou ajouter un champ montant hors scope.
+  - [x] Calculer les périodes avec des bornes explicites : période actuelle = 30 derniers jours pour MRR/churn/conversion, période précédente = les 30 jours avant; membres actifs = 7 derniers jours vs 7 jours précédents.
+  - [x] Protéger tous les diviseurs à zéro avec helpers (`safePercent`, `safeVariationPercent`) pour éviter `NaN`, `Infinity`, ou erreurs de rendu.
+  - [x] Utiliser uniquement Prisma via `src/lib/prisma.ts`; ne pas instancier un nouveau client.
 
-- [ ] **AC2/AC3: Construire les composants de métriques**
-  - [ ] Créer `src/components/features/admin/admin-metrics-cards.tsx` ou équivalent dans `components/features/admin/`.
-  - [ ] Chaque carte doit afficher : titre, valeur formatée, aide courte, variation vs période précédente, mini-tendance accessible.
-  - [ ] Utiliser `Card`, `Badge`/styles existants et `lucide-react` si utile; ne pas ajouter de librairie de charts.
-  - [ ] Pour la mini-tendance, utiliser une micro-visualisation simple (3–5 barres SVG/divs avec `aria-label`) ou une icône de tendance; pas de données personnelles dans les props.
-  - [ ] Tous les libellés visibles doivent être en français : « MRR », « Membres actifs (7j) », « Conversion onboarding → signup », « Churn mensuel », « vs période précédente ».
+- [x] **AC2/AC3: Construire les composants de métriques**
+  - [x] Créer `src/components/features/admin/admin-metrics-cards.tsx` ou équivalent dans `components/features/admin/`.
+  - [x] Chaque carte doit afficher : titre, valeur formatée, aide courte, variation vs période précédente, mini-tendance accessible.
+  - [x] Utiliser `Card`, `Badge`/styles existants et `lucide-react` si utile; ne pas ajouter de librairie de charts.
+  - [x] Pour la mini-tendance, utiliser une micro-visualisation simple (3–5 barres SVG/divs avec `aria-label`) ou une icône de tendance; pas de données personnelles dans les props.
+  - [x] Tous les libellés visibles doivent être en français : « MRR », « Membres actifs (7j) », « Conversion onboarding → signup », « Churn mensuel », « vs période précédente ».
 
-- [ ] **AC4: Revalidation et fraîcheur des données**
-  - [ ] Ajouter `export const revalidate = 300` sur la page Server Component analytics ou une alternative équivalente compatible Next.js 16.
-  - [ ] Ne pas implémenter de temps réel WebSocket/SSE dans cette story; si une action abonnement revalide déjà des paths, ajouter `/admin/dashboard` seulement si le pattern existant le permet simplement.
-  - [ ] Vérifier que `PATCH /api/admin/subscriptions/[id]` continue de fonctionner sans changement fonctionnel hors scope.
+- [x] **AC4: Revalidation et fraîcheur des données**
+  - [x] Ajouter `export const revalidate = 300` sur la page Server Component analytics ou une alternative équivalente compatible Next.js 16.
+  - [x] Ne pas implémenter de temps réel WebSocket/SSE dans cette story; si une action abonnement revalide déjà des paths, ajouter `/admin/dashboard` seulement si le pattern existant le permet simplement.
+  - [x] Vérifier que `PATCH /api/admin/subscriptions/[id]` continue de fonctionner sans changement fonctionnel hors scope.
 
-- [ ] **AC5: UX responsive et accessibilité**
-  - [ ] Desktop : grille `sm:grid-cols-2 lg:grid-cols-4` ou équivalent, largeur max alignée avec les pages admin existantes (`max-w-7xl`).
-  - [ ] Mobile : cartes empilées, texte non tronqué pour les valeurs critiques, aides lisibles, pas de table obligatoire.
-  - [ ] Ajouter `aria-label` aux tendances visuelles et ne jamais utiliser la couleur comme seul indicateur de hausse/baisse/stabilité.
-  - [ ] Vérifier les cibles tactiles des liens/actions admin (`min-h-11` ou padding équivalent).
-  - [ ] Remplacer le libellé anglais « Dashboard » dans la navigation si touché par « Tableau de bord ».
+- [x] **AC5: UX responsive et accessibilité**
+  - [x] Desktop : grille `sm:grid-cols-2 lg:grid-cols-4` ou équivalent, largeur max alignée avec les pages admin existantes (`max-w-7xl`).
+  - [x] Mobile : cartes empilées, texte non tronqué pour les valeurs critiques, aides lisibles, pas de table obligatoire.
+  - [x] Ajouter `aria-label` aux tendances visuelles et ne jamais utiliser la couleur comme seul indicateur de hausse/baisse/stabilité.
+  - [x] Vérifier les cibles tactiles des liens/actions admin (`min-h-11` ou padding équivalent).
+  - [x] Remplacer le libellé anglais « Dashboard » dans la navigation si touché par « Tableau de bord ».
 
-- [ ] **AC6: Tests et validation**
-  - [ ] Ajouter `src/lib/admin-analytics.test.ts` pour MRR par tier, membres actifs 7j, conversion proxy, churn, variation positive/négative/stable, et diviseurs à zéro.
-  - [ ] Ajouter/mettre à jour un test de page ou composant (`src/app/(admin)/admin/dashboard/page.test.tsx` ou composant partagé) pour vérifier les 4 cartes, textes français, format euros, aides proxy et role-gating.
-  - [ ] Vérifier qu'aucun nouveau JSX conditionnel n'utilise `&&`; pré-calculer les booléens composés avant `return`.
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`.
-  - [ ] Exécuter les tests ciblés analytics/admin.
-  - [ ] Exécuter `npx vitest run`.
-  - [ ] Exécuter `npm run build`.
-  - [ ] Documenter les résultats dans le Dev Agent Record.
+- [x] **AC6: Tests et validation**
+  - [x] Ajouter `src/lib/admin-analytics.test.ts` pour MRR par tier, membres actifs 7j, conversion proxy, churn, variation positive/négative/stable, et diviseurs à zéro.
+  - [x] Ajouter/mettre à jour un test de page ou composant (`src/app/(admin)/admin/dashboard/page.test.tsx` ou composant partagé) pour vérifier les 4 cartes, textes français, format euros, aides proxy et role-gating.
+  - [x] Vérifier qu'aucun nouveau JSX conditionnel n'utilise `&&`; pré-calculer les booléens composés avant `return`.
+  - [x] Exécuter `./node_modules/.bin/prisma validate`.
+  - [x] Exécuter les tests ciblés analytics/admin.
+  - [x] Exécuter `npx vitest run`.
+  - [x] Exécuter `npm run build`.
+  - [x] Documenter les résultats dans le Dev Agent Record.
 
 ## Dev Notes
 
@@ -212,14 +212,41 @@ Story 6.1 a durci le kanban opportunités et a passé `prisma validate`, tests c
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Hermes Agent (gpt-5.5)
 
 ### Debug Log References
 
+- `npx vitest run src/lib/admin-analytics.test.ts src/components/features/admin/admin-metrics-cards.test.tsx 'src/app/(admin)/admin/dashboard/page.test.tsx'` — PASS (12)
+- `./node_modules/.bin/prisma validate` — PASS
+- `npm run lint` — FAIL préexistant hors scope : erreurs/avertissements dans des fichiers non modifiés (`src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx`, `src/app/(dashboard)/dashboard/opportunities/new/page.tsx`, `src/app/api/user/profile/route.test.ts`, `src/app/auth/signup/page.tsx`, `src/components/features/auth/profile-edit-form.tsx`, `src/middleware.ts`)
+- `npx vitest run` — PASS (386)
+- `npm run build` — PASS (avertissements existants : convention `middleware` dépréciée et variables Upstash absentes en environnement local)
+
 ### Completion Notes List
 
+- Added a protected `/admin/dashboard` Server Component route with `revalidate = 300`, preserving `/admin` as an explicit redirect alias to the analytics dashboard.
+- Implemented pure/testable admin analytics helpers for MRR, active server sessions, conversion proxy, churn, safe percentages, variation labels and trend direction without introducing real-time tooling or new analytics dependencies.
+- Added responsive French metric cards with accessible trend labels and no JSX `&&`, plus tests covering calculations, zero denominators, French formatting, four cards, proxy help text, revalidation and ADMIN role gating.
+- Updated admin navigation/return links to use « Tableau de bord » and `/admin/dashboard`, while preserving subscriptions and opportunities workflows.
+
 ### File List
+
+- `src/app/(admin)/layout.tsx`
+- `src/app/(admin)/admin/layout.tsx`
+- `src/app/(admin)/admin/page.tsx`
+- `src/app/(admin)/admin/dashboard/page.tsx`
+- `src/app/(admin)/admin/dashboard/page.test.tsx`
+- `src/app/(admin)/admin/subscriptions/page.tsx`
+- `src/app/(admin)/admin/opportunities/page.tsx`
+- `src/components/features/admin/admin-dashboard.tsx`
+- `src/components/features/admin/admin-metrics-cards.tsx`
+- `src/components/features/admin/admin-metrics-cards.test.tsx`
+- `src/lib/admin-analytics.ts`
+- `src/lib/admin-analytics.test.ts`
+- `_bmad-output/implementation-artifacts/6-2-metriques-cles-et-analytics-admin.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ### Change Log
 
 - 2026-05-21: Story créée en `ready-for-dev` avec scope delta brownfield et garde-fous analytics/admin.
+- 2026-05-21: Implemented protected admin analytics dashboard, metrics calculations/cards, route alias, navigation updates, tests and validation; status moved to review.
