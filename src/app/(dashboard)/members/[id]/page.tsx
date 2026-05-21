@@ -10,7 +10,7 @@ import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
 import { PlatinumBadge } from "@/components/features/reputation/platinum-badge";
 import { PlatinumConfetti } from "@/components/features/reputation/platinum-confetti";
 import { ReliabilityScore } from "@/components/features/reputation/reliability-score";
-import { ReviewList } from "@/components/features/reviews/review-list";
+import { PublicReviewSection } from "@/components/features/reviews/review-list";
 import { TagChips } from "@/components/features/tags/tag-chips";
 import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
@@ -53,14 +53,16 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       createdAt: true,
       opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
       tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
+      _count: { select: { reviewsReceived: true } },
       reviewsReceived: {
         orderBy: { createdAt: "desc" },
+        take: 5,
         select: {
           id: true,
           rating: true,
           comment: true,
           createdAt: true,
-          reviewer: { select: { name: true } },
+          reviewer: { select: { name: true, image: true } },
         },
       },
     },
@@ -69,6 +71,11 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   if (!member || member.verificationStatus !== "VERIFIED") {
     notFound();
   }
+
+  const reviewRatings = await prisma.review.findMany({
+    where: { revieweeId: member.id },
+    select: { rating: true },
+  });
 
   const isOwnProfile = session.user.id === member.id;
   const tierInfo = getTierBadgeConfig(member.tier);
@@ -79,7 +86,8 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   const locationParts = [member.location, member.country].filter(Boolean);
   const locationDisplay = locationParts.length > 0 ? locationParts.join(" — ") : null;
   const hasTags = member.tags.length > 0;
-  const reliabilityScore = calculateReliabilityScore(member.reviewsReceived);
+  const reliabilityScore = calculateReliabilityScore(reviewRatings);
+  const totalReviewCount = member._count.reviewsReceived;
   const validatedDealsCount = member.opportunities.length;
   const platinumAward = await ensurePlatinumAwarded(member.id, {
     validatedDealsCount,
@@ -87,6 +95,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
     platinumAwardedAt: member.platinumAwardedAt,
   });
   const shouldShowPlatinumBadge = platinumAward.displayState !== "none";
+  const allReviewsHref = `/members/${member.id}/reviews`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -151,7 +160,12 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {member.reviewsReceived.length > 0 ? <ReviewList reviews={member.reviewsReceived} /> : null}
+        <PublicReviewSection
+          reviews={member.reviewsReceived}
+          averageRating={reliabilityScore.averageRating}
+          totalReviewCount={totalReviewCount}
+          allReviewsHref={allReviewsHref}
+        />
       </div>
     </div>
   );

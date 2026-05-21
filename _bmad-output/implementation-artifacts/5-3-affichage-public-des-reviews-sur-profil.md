@@ -2,7 +2,7 @@
 Story: "5.3"
 StoryKey: "5-3-affichage-public-des-reviews-sur-profil"
 Title: "Affichage Public des Reviews sur Profil"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR34"]
@@ -12,7 +12,7 @@ Created: "2026-05-21"
 
 # Story 5.3: Affichage Public des Reviews sur Profil
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -64,51 +64,51 @@ so that I can evaluate their reputation before contacting them.
 
 ## Tasks / Subtasks
 
-- [ ] **AC1/AC2: Replace the legacy profile review block with a public review section**
-  - [ ] Audit `src/app/(dashboard)/members/[id]/page.tsx` before editing; preserve auth redirect, premium gate, verified-profile `notFound()`, profile header, tier badge, verified badge, Platinum badge, reliability score, bio/location/tags, and WhatsApp CTA behavior.
-  - [ ] Replace the current tail render `{member.reviewsReceived.length > 0 ? <ReviewList ... /> : null}` with a reusable public section that always covers the reviews area: populated state for reviews, required `EmptyState` for no reviews.
-  - [ ] Rename/rework display copy from legacy `Avis reçus` to required `Avis et Réputation` for this public profile section.
-  - [ ] Reuse Story 5.2 `calculateReliabilityScore` / `ReliabilityScore` for average/count where it fits; do not duplicate average calculation in the page or component.
-  - [ ] Ensure the preview section renders at most 5 newest reviews, even if the page query fetches more for counting.
-  - [ ] If keeping `ReviewList`, evolve it into a presentational component that can accept title, limit, avatar data, comment truncation, and empty-state behavior; otherwise create `src/components/features/reviews/public-review-section.tsx` and keep `ReviewList` only if still used elsewhere.
+- [x] **AC1/AC2: Replace the legacy profile review block with a public review section**
+  - [x] Audit `src/app/(dashboard)/members/[id]/page.tsx` before editing; preserve auth redirect, premium gate, verified-profile `notFound()`, profile header, tier badge, verified badge, Platinum badge, reliability score, bio/location/tags, and WhatsApp CTA behavior.
+  - [x] Replace the current tail render `{member.reviewsReceived.length > 0 ? <ReviewList ... /> : null}` with a reusable public section that always covers the reviews area: populated state for reviews, required `EmptyState` for no reviews.
+  - [x] Rename/rework display copy from legacy `Avis reçus` to required `Avis et Réputation` for this public profile section.
+  - [x] Reuse Story 5.2 `calculateReliabilityScore` / `ReliabilityScore` for average/count where it fits; do not duplicate average calculation in the page or component.
+  - [x] Ensure the preview section renders at most 5 newest reviews, even if the page query fetches more for counting.
+  - [x] If keeping `ReviewList`, evolve it into a presentational component that can accept title, limit, avatar data, comment truncation, and empty-state behavior; otherwise create `src/components/features/reviews/public-review-section.tsx` and keep `ReviewList` only if still used elsewhere.
 
-- [ ] **AC1: Fetch only review data required for public display**
-  - [ ] Update the profile Prisma select for `reviewsReceived` to select newest-first preview fields only: `id`, `rating`, `comment`, `createdAt`, and `reviewer: { select: { name: true, image: true } }`.
-  - [ ] Fetch or compute the total review count reliably. Preferred options:
+- [x] **AC1: Fetch only review data required for public display**
+  - [x] Update the profile Prisma select for `reviewsReceived` to select newest-first preview fields only: `id`, `rating`, `comment`, `createdAt`, and `reviewer: { select: { name: true, image: true } }`.
+  - [x] Fetch or compute the total review count reliably. Preferred options:
     - select all ratings only for score/count plus a separate `take: 5` preview query, or
     - use `_count: { select: { reviewsReceived: true } }` plus a ratings-only aggregate/query if needed by `calculateReliabilityScore`.
-  - [ ] Avoid loading every full comment solely to display 5 previews if a member has many reviews; keep full comments for the preview/full-list rows only.
-  - [ ] Confirm the query still uses `revieweeId = member.id` semantics via the `reviewsReceived` relation.
+  - [x] Avoid loading every full comment solely to display 5 previews if a member has many reviews; keep full comments for the preview/full-list rows only.
+  - [x] Confirm the query still uses `revieweeId = member.id` semantics via the `reviewsReceived` relation.
 
-- [ ] **AC1: Implement reviewer avatar, rating, truncated comment, and date display**
-  - [ ] Use existing `src/components/ui/avatar.tsx` primitives for reviewer image/fallback. Fallback should use the reviewer name initial or a safe placeholder.
-  - [ ] Render rating with accessible star text, e.g. `aria-label="5 sur 5 étoiles"`; preserve French copy.
-  - [ ] Truncate comments in the 5-review preview with a deterministic helper or CSS line clamp. If using string truncation, add tests for comments below/above the limit and avoid breaking multi-byte text.
-  - [ ] Display dates with `toLocaleDateString("fr-FR")` and a machine-readable `<time dateTime={createdAt.toISOString()}>`.
-  - [ ] Do not render reviewer email, phone, tier, subscription status, or any admin-only fields.
+- [x] **AC1: Implement reviewer avatar, rating, truncated comment, and date display**
+  - [x] Use existing `src/components/ui/avatar.tsx` primitives for reviewer image/fallback. Fallback should use the reviewer name initial or a safe placeholder.
+  - [x] Render rating with accessible star text, e.g. `aria-label="5 sur 5 étoiles"`; preserve French copy.
+  - [x] Truncate comments in the 5-review preview with a deterministic helper or CSS line clamp. If using string truncation, add tests for comments below/above the limit and avoid breaking multi-byte text.
+  - [x] Display dates with `toLocaleDateString("fr-FR")` and a machine-readable `<time dateTime={createdAt.toISOString()}>`.
+  - [x] Do not render reviewer email, phone, tier, subscription status, or any admin-only fields.
 
-- [ ] **AC1/AC4: Add `Voir tous les avis` behavior for >5 reviews**
-  - [ ] Precompute `const hasMoreReviews = totalReviewCount > 5;` before JSX.
-  - [ ] Render `Voir tous les avis` only when `hasMoreReviews` is true.
-  - [ ] Preferred route: create `src/app/(dashboard)/members/[id]/reviews/page.tsx` for the full list, unless a cleaner existing route pattern is discovered during implementation.
-  - [ ] Full list page must call `auth()` and `getUserPremiumAccess()` before exposing review data; render `PremiumAccessBlockedPanel` for inactive non-admin subscribers unless an existing admin bypass pattern is already present and tested.
-  - [ ] Full list page must call `notFound()` for missing/non-verified profile members, use newest-first ordering, and paginate with a safe `page` query (`page >= 1`, fixed page size such as 10).
-  - [ ] Full list page must include a back link to `/members/[id]`, show the same aggregate average/count, and reuse the same review-row component as the profile preview.
+- [x] **AC1/AC4: Add `Voir tous les avis` behavior for >5 reviews**
+  - [x] Precompute `const hasMoreReviews = totalReviewCount > 5;` before JSX.
+  - [x] Render `Voir tous les avis` only when `hasMoreReviews` is true.
+  - [x] Preferred route: create `src/app/(dashboard)/members/[id]/reviews/page.tsx` for the full list, unless a cleaner existing route pattern is discovered during implementation.
+  - [x] Full list page must call `auth()` and `getUserPremiumAccess()` before exposing review data; render `PremiumAccessBlockedPanel` for inactive non-admin subscribers unless an existing admin bypass pattern is already present and tested.
+  - [x] Full list page must call `notFound()` for missing/non-verified profile members, use newest-first ordering, and paginate with a safe `page` query (`page >= 1`, fixed page size such as 10).
+  - [x] Full list page must include a back link to `/members/[id]`, show the same aggregate average/count, and reuse the same review-row component as the profile preview.
 
-- [ ] **AC2: Use required EmptyState for no-review profiles**
-  - [ ] Import `EmptyState` from `src/components/shared/empty-state.tsx`.
-  - [ ] Render `EmptyState` with its `title` set to the exact visible copy: `Pas encore d'avis. Soyez le premier à collaborer avec ce membre.`
-  - [ ] Do not split the required sentence across separate title/description assertions unless tests still verify the exact full sentence as visible text.
-  - [ ] Ensure the no-review state is shown where the `Avis et Réputation` section belongs, not as a global page replacement.
+- [x] **AC2: Use required EmptyState for no-review profiles**
+  - [x] Import `EmptyState` from `src/components/shared/empty-state.tsx`.
+  - [x] Render `EmptyState` with its `title` set to the exact visible copy: `Pas encore d'avis. Soyez le premier à collaborer avec ce membre.`
+  - [x] Do not split the required sentence across separate title/description assertions unless tests still verify the exact full sentence as visible text.
+  - [x] Ensure the no-review state is shown where the `Avis et Réputation` section belongs, not as a global page replacement.
 
-- [ ] **AC3: Preserve Story 5.2 Platinum behavior without duplication**
-  - [ ] Keep `PlatinumBadge`, `PlatinumConfetti`, `calculateReliabilityScore`, and `ensurePlatinumAwarded` usage as established by Story 5.2 unless a bug is discovered.
-  - [ ] Do not add new Platinum fields, new migrations, new eligibility thresholds, or a second badge component.
-  - [ ] Ensure the badge remains beside the name/tier/verified header area. The existing `PlatinumBadge` already exposes the required active tooltip text; preserve it.
-  - [ ] Preserve maintain-state behavior (`À maintenir`) for already-awarded members whose current average drops below 4.5.
+- [x] **AC3: Preserve Story 5.2 Platinum behavior without duplication**
+  - [x] Keep `PlatinumBadge`, `PlatinumConfetti`, `calculateReliabilityScore`, and `ensurePlatinumAwarded` usage as established by Story 5.2 unless a bug is discovered.
+  - [x] Do not add new Platinum fields, new migrations, new eligibility thresholds, or a second badge component.
+  - [x] Ensure the badge remains beside the name/tier/verified header area. The existing `PlatinumBadge` already exposes the required active tooltip text; preserve it.
+  - [x] Preserve maintain-state behavior (`À maintenir`) for already-awarded members whose current average drops below 4.5.
 
-- [ ] **AC5: Add focused tests and run validation**
-  - [ ] Update `src/app/(dashboard)/members/[id]/page.test.tsx` for:
+- [x] **AC5: Add focused tests and run validation**
+  - [x] Update `src/app/(dashboard)/members/[id]/page.test.tsx` for:
     - section title `Avis et Réputation` when reviews exist,
     - average/count displayed from received reviews,
     - newest 5 reviews rendered and 6th hidden in preview,
@@ -118,11 +118,11 @@ so that I can evaluate their reputation before contacting them.
     - exact no-review `EmptyState` copy,
     - premium-blocked users do not trigger member/reputation queries,
     - Platinum badge still visible when applicable.
-  - [ ] Add component tests for the new/reworked review display component.
-  - [ ] Add `src/app/(dashboard)/members/[id]/reviews/page.test.tsx` if the full list route is created, covering auth redirect, premium block, non-verified `notFound()`, page bounds, paginated row rendering, and no private field rendering.
-  - [ ] Run `grep -rn '&&' src/ --include='*.tsx'` and verify no new JSX conditional `&&` was introduced.
-  - [ ] Run `./node_modules/.bin/prisma validate`, targeted tests, `npx vitest run`, and `npm run build`; record results in the Dev Agent Record.
-  - [ ] Stage explicitly; do not use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
+  - [x] Add component tests for the new/reworked review display component.
+  - [x] Add `src/app/(dashboard)/members/[id]/reviews/page.test.tsx` if the full list route is created, covering auth redirect, premium block, non-verified `notFound()`, page bounds, paginated row rendering, and no private field rendering.
+  - [x] Run `grep -rn '&&' src/ --include='*.tsx'` and verify no new JSX conditional `&&` was introduced.
+  - [x] Run `./node_modules/.bin/prisma validate`, targeted tests, `npx vitest run`, and `npm run build`; record results in the Dev Agent Record.
+  - [x] Stage explicitly; do not use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
 
 ## Dev Notes
 
@@ -271,15 +271,39 @@ Minimum branch coverage:
 ## Change Log
 
 - 2026-05-21: Story context created for Story 5.3 with status ready-for-dev.
+- 2026-05-21: Implemented public profile reviews display and moved story to review.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- 2026-05-21: Targeted Vitest for profile reviews/full reviews/components passed (`npx vitest run src/components/features/reviews/review-list.test.tsx src/app/(dashboard)/members/[id]/page.test.tsx src/app/(dashboard)/members/[id]/reviews/page.test.tsx`) — 22 passed.
+- 2026-05-21: Prisma validation passed (`./node_modules/.bin/prisma validate`).
+- 2026-05-21: Full Vitest passed (`npx vitest run`) — 370 passed.
+- 2026-05-21: Production build passed (`npm run build`).
+- 2026-05-21: JSX guardrail grep run (`grep -rn '&&' src/ --include='*.tsx'`); no new `&&` occurrences in files changed for Story 5.3. Existing unrelated occurrences remain elsewhere.
+- 2026-05-21: `npm run lint` was run; it reported pre-existing unrelated warnings/errors outside Story 5.3 files.
+
 ### Completion Notes List
 
+- Implemented the `Avis et Réputation` public review section on member profiles, replacing the legacy `Avis reçus` tail block.
+- Profile page now fetches only 5 newest received review previews with reviewer name/image and uses a ratings-only query plus `_count` for aggregate score/count.
+- Added reviewer avatar/fallback, accessible star labels, French `<time>` dates, deterministic multibyte-safe comment truncation, and required EmptyState copy.
+- Added `/members/[id]/reviews` authenticated/premium-gated full reviews route with verified-member guard, newest-first ordering, safe page query handling, and pagination links.
+- Preserved Story 5.2 reliability score, Platinum badge/tooltip, confetti, maintain state, premium gate order, and WhatsApp/profile behavior.
+- Added focused profile, full-route, and component tests covering populated, empty, pagination, access, guard, avatar, truncation, and Platinum branches.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-3-affichage-public-des-reviews-sur-profil.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/app/(dashboard)/members/[id]/page.tsx`
+- `src/app/(dashboard)/members/[id]/page.test.tsx`
+- `src/app/(dashboard)/members/[id]/reviews/page.tsx`
+- `src/app/(dashboard)/members/[id]/reviews/page.test.tsx`
+- `src/components/features/reviews/review-list.tsx`
+- `src/components/features/reviews/review-list.test.tsx`
