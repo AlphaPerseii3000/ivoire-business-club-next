@@ -6,9 +6,11 @@ import MemberProfilePage from "./page";
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockUserUpdateMany = vi.hoisted(() => vi.fn());
+const mockGetUserPremiumAccess = vi.hoisted(() => vi.fn());
 const mockNotFound = vi.hoisted(() => vi.fn(() => { throw new Error("notFound"); }));
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
+vi.mock("@/lib/subscription-access", () => ({ getUserPremiumAccess: mockGetUserPremiumAccess }));
 vi.mock("@/lib/prisma", () => ({
   prisma: { user: { findUnique: mockUserFindUnique, updateMany: mockUserUpdateMany } },
 }));
@@ -43,8 +45,20 @@ describe("MemberProfilePage reputation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "viewer-1" } });
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
     mockUserFindUnique.mockResolvedValue(verifiedMember());
     mockUserUpdateMany.mockResolvedValue({ count: 1 });
+  });
+
+  it("blocks member profile reputation for users without premium access", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: false });
+
+    render(await MemberProfilePage(params));
+
+    expect(screen.getByText("Accès réservé aux membres actifs")).toBeInTheDocument();
+    expect(screen.queryByText("Score de fiabilité IBC")).not.toBeInTheDocument();
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockUserUpdateMany).not.toHaveBeenCalled();
   });
 
   it("does not render Avis reçus when there are no reviews and does not show a fake score", async () => {

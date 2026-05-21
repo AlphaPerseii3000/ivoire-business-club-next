@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
+import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
 import { PlatinumBadge } from "@/components/features/reputation/platinum-badge";
 import { PlatinumConfetti } from "@/components/features/reputation/platinum-confetti";
@@ -12,6 +13,7 @@ import { ReliabilityScore } from "@/components/features/reputation/reliability-s
 import { ReviewList } from "@/components/features/reviews/review-list";
 import { TagChips } from "@/components/features/tags/tag-chips";
 import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
+import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +21,21 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   if (!session?.user?.id) redirect("/auth/signin");
 
   const { id } = await params;
+
+  const access = await getUserPremiumAccess(session.user.id);
+  if (!access.hasAccess) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Retour aux membres
+        </Link>
+        <div className="mt-6">
+          <PremiumAccessBlockedPanel />
+        </div>
+      </div>
+    );
+  }
 
   const member = await prisma.user.findUnique({
     where: { id },

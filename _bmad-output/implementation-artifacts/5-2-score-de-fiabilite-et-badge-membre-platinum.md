@@ -2,7 +2,7 @@
 Story: "5.2"
 StoryKey: "5-2-score-de-fiabilite-et-badge-membre-platinum"
 Title: "Score de Fiabilité et Badge Membre Platinum"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR32", "FR33"]
@@ -12,7 +12,7 @@ Created: "2026-05-21"
 
 # Story 5.2: Score de Fiabilité et Badge Membre Platinum
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
@@ -145,6 +145,10 @@ so that other members can assess my credibility before contacting or working wit
   - [x] Run `grep -rn '&&' src/ --include='*.tsx'` or equivalent and verify no new JSX conditional rendering uses `&&`.
   - [x] Run required validation commands and record results in the Dev Agent Record.
   - [x] Stage explicitly; never use unsafe `git add -A` that can include `dev.db` or SQLite artifacts.
+
+### Review Findings
+
+- [x] [Review][Patch] Member profile dashboard route missing premium access gate [src/app/(dashboard)/members/[id]/page.tsx:23] — The modified `(dashboard)/members/[id]` page loaded member reputation and could persist Platinum awards without first calling `getUserPremiumAccess()` / rendering `PremiumAccessBlockedPanel` for inactive members. Fixed by adding the premium access guard before member lookup and adding branch coverage that verifies blocked users do not see reputation internals and do not trigger Platinum persistence.
 
 ## Dev Notes
 
