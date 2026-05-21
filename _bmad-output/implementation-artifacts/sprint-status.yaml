@@ -79,7 +79,7 @@ development_status:
   5-1-reviews-mutuelles-postdeal: done
   5-2-score-de-fiabilite-et-badge-membre-platinum: done
   5-3-affichage-public-des-reviews-sur-profil: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
   epic-6: backlog
   6-1-tableau-de-bord-kanban-des-opportunites: backlog
   6-2-metriques-cles-et-analytics-admin: backlog
