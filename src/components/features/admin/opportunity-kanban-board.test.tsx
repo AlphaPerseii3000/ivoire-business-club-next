@@ -210,5 +210,7 @@ describe("AdminOpportunityKanban", () => {
       expect(fetchMock).toHaveBeenCalledWith("/api/opportunities/opp-1/documents/doc-1", { method: "DELETE" });
     });
     expect(toast.success).toHaveBeenCalledWith("Document supprimé.");
+    expect(screen.getAllByText("0").length).toBeGreaterThan(0);
+    expect(screen.getByText("Aucun document juridique attaché pour le moment.")).toBeInTheDocument();
   });
 });

@@ -209,11 +209,14 @@ export function DocumentUploadSection({
     toast.success("Document supprimé.");
   };
 
-  // Use server-provided count for non-authors (who don't see full metadata), local count otherwise
-  const displayCount = documentCount ?? documents.length + pending.length;
+  const isMetadataHidden = !canUpload && !canPreview;
+
+  // Use server-provided count only when full metadata is intentionally hidden; otherwise
+  // keep the visible counter in sync with local upload/delete state.
+  const displayCount = isMetadataHidden ? documentCount ?? 0 : documents.length + pending.length;
 
   // Non-author non-admin viewers see only a counter, no upload or document list
-  if (!canUpload && !canPreview) {
+  if (isMetadataHidden) {
     return (
       <section className="rounded-xl border bg-card p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold">

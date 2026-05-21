@@ -2,7 +2,7 @@
 Story: "6.3"
 StoryKey: "6-3-gestion-des-documents-et-edition-des-opportunites"
 Title: "Gestion des Documents et Édition des Opportunités"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR37", "FR38", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-21"
 
 # Story 6.3: Gestion des Documents et Édition des Opportunités
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: Story 3.2 already delivered R2 document upload/preview/delete endpoints and reusable DocumentRow/DocumentUploadSection. Story 3.3/6.1 already delivered the admin opportunity kanban and detail sheet. Implement only the admin-management deltas below. -->
 
@@ -144,6 +144,10 @@ afin de maintenir la qualité et la conformité du catalogue.
   - [x] Exécuter `npx vitest run`.
   - [x] Exécuter `npm run build`.
   - [x] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
+
+### Review Findings
+
+- [x] [Review][Patch] Compteur documents admin figé après ajout/suppression [`src/components/features/deals/document-upload-section.tsx:212`] — corrigé pendant la revue : le compteur utilise désormais `documentCount` uniquement lorsque les métadonnées sont masquées (`!canUpload && !canPreview`), et utilise l'état local `documents.length + pending.length` pour les vues auteur/admin afin de rester synchronisé après upload/delete. Test ajouté dans `src/components/features/admin/opportunity-kanban-board.test.tsx`.
 
 ## Dev Notes
 
