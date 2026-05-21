@@ -2,7 +2,7 @@
 Story: "5.3"
 StoryKey: "5-3-affichage-public-des-reviews-sur-profil"
 Title: "Affichage Public des Reviews sur Profil"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 5 — Reviews, Réputation et Confiance"
 FRs: ["FR34"]
@@ -12,7 +12,7 @@ Created: "2026-05-21"
 
 # Story 5.3: Affichage Public des Reviews sur Profil
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. -->
 
