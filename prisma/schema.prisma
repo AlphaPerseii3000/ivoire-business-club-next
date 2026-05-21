@@ -73,6 +73,8 @@ model User {
   passwordHash  String?
   googleId      String?   @unique
   emailVerified Boolean   @default(false)
+  platinumAwardedAt DateTime?
+  platinumUpdatedAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

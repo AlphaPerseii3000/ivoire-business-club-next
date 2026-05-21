@@ -19,6 +19,10 @@ describe("getOpportunityTrustLevel", () => {
     expect(getOpportunityTrustLevel({ documentCount: 2, verificationStatus: "VERIFIED", authorStats: { validatedDealsCount: 3, averageRating: 4.5 } })).toBe("or");
   });
 
+  it("does not return or when averageRating is below the Platinum threshold", () => {
+    expect(getOpportunityTrustLevel({ documentCount: 2, verificationStatus: "VERIFIED", authorStats: { validatedDealsCount: 3, averageRating: 4.49 } })).toBe("argent");
+  });
+
   it("does not return or when double verification is required but incomplete", () => {
     expect(getOpportunityTrustLevel({ documentCount: 2, verificationStatus: "VERIFIED", requiresDoubleVerification: true, approvalCount: 1, authorStats: { validatedDealsCount: 4, averageRating: 4.8 } })).toBe("argent");
   });

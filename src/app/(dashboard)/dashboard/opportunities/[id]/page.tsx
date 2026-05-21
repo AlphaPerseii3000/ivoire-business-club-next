@@ -4,6 +4,8 @@ import { LockKeyhole } from "lucide-react";
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
 import { InterestButton } from "@/components/features/deals/interest-button";
 import { ReviewForm } from "@/components/features/deals/review-form";
+import { PlatinumBadge } from "@/components/features/reputation/platinum-badge";
+import { ReliabilityScore } from "@/components/features/reputation/reliability-score";
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { VerificationTimeline } from "@/components/features/deals/verification-timeline";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
@@ -12,6 +14,7 @@ import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-p
 import { auth } from "@/lib/auth";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
+import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getOpportunityTrustLevel } from "@/lib/trust-level";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { notFound, redirect } from "next/navigation";
@@ -41,7 +44,9 @@ export default async function OpportunityDetailPage({
             id: true,
             location: true,
             phone: true,
+            platinumAwardedAt: true,
             opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
+            reviewsReceived: { select: { rating: true } },
           },
         },
         verifiedBy: { select: { name: true } },
@@ -143,8 +148,15 @@ export default async function OpportunityDetailPage({
     ? "mt-4 inline-flex items-center rounded-full border border-primary bg-primary/10 px-3 py-1 text-sm font-semibold text-primary ring-2 ring-primary/30"
     : "mt-4 inline-flex items-center rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground";
   const approvalCount = opportunity.verificationApprovals.length;
-  const averageRating = null;
+  const authorReliabilityScore = calculateReliabilityScore(opportunity.author.reviewsReceived);
+  const averageRating = authorReliabilityScore.averageRating;
   const validatedDealsCount = opportunity.author.opportunities.length;
+  const authorPlatinumAward = await ensurePlatinumAwarded(opportunity.author.id, {
+    validatedDealsCount,
+    averageRating,
+    platinumAwardedAt: opportunity.author.platinumAwardedAt,
+  });
+  const shouldShowAuthorPlatinumBadge = authorPlatinumAward.displayState !== "none";
   const trustLevel = getOpportunityTrustLevel({
     documentCount,
     verificationStatus: opportunity.verificationStatus,
@@ -197,8 +209,16 @@ export default async function OpportunityDetailPage({
 
         <div className="mt-6 rounded-xl border bg-card p-6">
           <h2 className="font-semibold">Auteur</h2>
-          <p className="mt-1 text-sm">{opportunity.author.name}{opportunity.author.location ? ` — ${opportunity.author.location}` : ""}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-sm">{opportunity.author.name}{opportunity.author.location ? ` — ${opportunity.author.location}` : ""}</p>
+            {shouldShowAuthorPlatinumBadge ? <PlatinumBadge state={authorPlatinumAward.displayState} /> : null}
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">Publié le {new Date(opportunity.createdAt).toLocaleDateString("fr-FR")}</p>
+          <ReliabilityScore
+            averageRating={authorReliabilityScore.averageRating}
+            reviewCount={authorReliabilityScore.reviewCount}
+            className="mt-4"
+          />
           {opportunity.verifiedBy ? (
             <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
           ) : null}

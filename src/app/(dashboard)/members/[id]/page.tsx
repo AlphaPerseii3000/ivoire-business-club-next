@@ -6,8 +6,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppCTA } from "@/components/features/deals/whatsapp-cta";
+import { PlatinumBadge } from "@/components/features/reputation/platinum-badge";
+import { PlatinumConfetti } from "@/components/features/reputation/platinum-confetti";
+import { ReliabilityScore } from "@/components/features/reputation/reliability-score";
 import { ReviewList } from "@/components/features/reviews/review-list";
 import { TagChips } from "@/components/features/tags/tag-chips";
+import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,7 +32,9 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       country: true,
       tier: true,
       verificationStatus: true,
+      platinumAwardedAt: true,
       createdAt: true,
+      opportunities: { where: { verificationStatus: "VERIFIED" }, select: { id: true } },
       tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
       reviewsReceived: {
         orderBy: { createdAt: "desc" },
@@ -56,6 +62,14 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   const locationParts = [member.location, member.country].filter(Boolean);
   const locationDisplay = locationParts.length > 0 ? locationParts.join(" — ") : null;
   const hasTags = member.tags.length > 0;
+  const reliabilityScore = calculateReliabilityScore(member.reviewsReceived);
+  const validatedDealsCount = member.opportunities.length;
+  const platinumAward = await ensurePlatinumAwarded(member.id, {
+    validatedDealsCount,
+    averageRating: reliabilityScore.averageRating,
+    platinumAwardedAt: member.platinumAwardedAt,
+  });
+  const shouldShowPlatinumBadge = platinumAward.displayState !== "none";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -74,10 +88,19 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <Badge variant="outline" className={tierInfo.className}>{tierInfo.label}</Badge>
               <Badge variant="default" className="bg-green-600 text-white">✅ Vérifié</Badge>
+              {shouldShowPlatinumBadge ? <PlatinumBadge state={platinumAward.displayState} /> : null}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">Membre depuis {memberSince}</p>
           </div>
         </div>
+
+        <PlatinumConfetti show={platinumAward.newlyAwarded} />
+
+        <ReliabilityScore
+          averageRating={reliabilityScore.averageRating}
+          reviewCount={reliabilityScore.reviewCount}
+          className="mt-6"
+        />
 
         {member.bio ? (
           <div className="mt-6">
