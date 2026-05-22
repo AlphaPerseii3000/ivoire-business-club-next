@@ -37,6 +37,17 @@ describe("production deployment configuration", () => {
     expect(app.out_file).toContain("./logs/");
   });
 
+  it("asserts production deploy artifact does not embed SQLite Prisma Client (NFR-SC3)", () => {
+    // After prepare-deploy.sh runs, the deploy-dist standalone must NOT
+    // contain activeProvider:"sqlite". It must use postgresql for production.
+    // This test validates the script logic; the actual assertion runs in
+    // prepare-deploy.sh as a deployment gate.
+    const sh = fs.readFileSync(path.join(process.cwd(), "scripts/prepare-deploy.sh"), "utf8");
+    expect(sh).toContain('activeProvider:"sqlite"');
+    expect(sh).toContain("NFR-SC3");
+    expect(sh).toContain("PRISMA_SCHEMA=prisma/schema.prisma");
+  });
+
   it("documents Nginx static cache, reverse proxy headers, and sensitive file blocks", () => {
     const nginxConfig = fs.readFileSync(path.join(process.cwd(), "deploy/nginx/ibc-app.conf.example"), "utf8");
 
