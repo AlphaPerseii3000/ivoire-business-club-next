@@ -2,7 +2,7 @@
 Story: "6.6"
 StoryKey: "6-6-preparation-deploiement-production"
 Title: "Préparation Déploiement Production"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P0"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: []
@@ -12,7 +12,7 @@ Created: "2026-05-22"
 
 # Story 6.6: Préparation Déploiement Production
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Story brownfield/delta: une partie du socle déploiement existe déjà depuis Story 1.7 (`output: "standalone"`, `ecosystem.config.js`, `scripts/prepare-deploy.sh`, `npm run prepare-deploy`). Cette story doit finaliser/adapter pour la production Infomaniak, Nginx/Certbot et PostgreSQL; ne pas réinventer ce qui fonctionne déjà. -->
 
@@ -76,49 +76,49 @@ afin de garantir la stabilité et la scalabilité en production.
 
 ## Tasks / Subtasks
 
-- [ ] **AC1: Vérifier et préserver le build standalone existant**
-  - [ ] Lire `next.config.ts` avant modification; conserver `output: "standalone"` et la fonction `headers()` avec HSTS/CSP/X-Frame-Options/X-Content-Type-Options.
-  - [ ] Exécuter `npm run build` et vérifier explicitement l'existence de `.next/standalone/server.js`.
-  - [ ] Documenter la taille du standalone (`du -sh .next/standalone`) et investiguer seulement si elle dépasse un seuil raisonnable; éviter les refactors hors scope.
+- [x] **AC1: Vérifier et préserver le build standalone existant**
+  - [x] Lire `next.config.ts` avant modification; conserver `output: "standalone"` et la fonction `headers()` avec HSTS/CSP/X-Frame-Options/X-Content-Type-Options.
+  - [x] Exécuter `npm run build` et vérifier explicitement l'existence de `.next/standalone/server.js`.
+  - [x] Documenter la taille du standalone (`du -sh .next/standalone`) et investiguer seulement si elle dépasse un seuil raisonnable; éviter les refactors hors scope.
 
-- [ ] **AC2/AC3: Aligner PM2 et le paquet `deploy-dist/`**
-  - [ ] Lire `ecosystem.config.js` et `scripts/prepare-deploy.sh` complètement avant modification.
-  - [ ] Corriger `max_memory_restart` de `512M` vers `500M` pour satisfaire l'AC source, sauf justification explicite acceptée dans les notes dev.
-  - [ ] Clarifier le chemin PM2: soit `script: "server.js"` avec copie/placement du serveur à la racine attendue du paquet, soit `script: "./.next/standalone/server.js"` si le paquet conserve cette arborescence; dans tous les cas, documenter le `cwd` exact et tester le démarrage.
-  - [ ] S'assurer que `prepare-deploy.sh` copie `.next/standalone/`, `.next/static/`, `public/`, `ecosystem.config.js`, `.env.example` (optionnel), crée `logs/`, et exclut secrets/DB binaires.
-  - [ ] Vérifier que la structure des assets statiques correspond au mode standalone Next.js et à la config Nginx (`/_next/static/`).
-  - [ ] Exécuter `npm run prepare-deploy` et vérifier les chemins attendus dans `deploy-dist/`.
+- [x] **AC2/AC3: Aligner PM2 et le paquet `deploy-dist/`**
+  - [x] Lire `ecosystem.config.js` et `scripts/prepare-deploy.sh` complètement avant modification.
+  - [x] Corriger `max_memory_restart` de `512M` vers `500M` pour satisfaire l'AC source, sauf justification explicite acceptée dans les notes dev.
+  - [x] Clarifier le chemin PM2: soit `script: "server.js"` avec copie/placement du serveur à la racine attendue du paquet, soit `script: "./.next/standalone/server.js"` si le paquet conserve cette arborescence; dans tous les cas, documenter le `cwd` exact et tester le démarrage.
+  - [x] S'assurer que `prepare-deploy.sh` copie `.next/standalone/`, `.next/static/`, `public/`, `ecosystem.config.js`, `.env.example` (optionnel), crée `logs/`, et exclut secrets/DB binaires.
+  - [x] Vérifier que la structure des assets statiques correspond au mode standalone Next.js et à la config Nginx (`/_next/static/`).
+  - [x] Exécuter `npm run prepare-deploy` et vérifier les chemins attendus dans `deploy-dist/`.
 
-- [ ] **AC4/AC5: Ajouter la configuration Nginx + Certbot production**
-  - [ ] Créer un fichier de configuration exemple versionné, recommandé `scripts/nginx/ibc-app.conf.example` ou `deploy/nginx/ibc-app.conf`, sans domaine/chemin secret hardcodé au-delà de placeholders explicites (`example.com`, `/var/www/ibc/current`).
-  - [ ] Configurer `location /_next/static/` avec `alias` ou `root` cohérent vers le dossier `.next/static`, `expires 365d`, `Cache-Control "public, max-age=31536000, immutable"`, et `try_files` sûr.
-  - [ ] Configurer `location /` vers `proxy_pass http://127.0.0.1:3000` avec headers proxy standard et timeouts raisonnables.
-  - [ ] Bloquer l'accès aux fichiers sensibles (`.env`, fichiers cachés, `.sqlite`, `.db`, dossiers internes si exposés par erreur).
-  - [ ] Documenter installation Nginx, activation site, `nginx -t`, reload, installation Certbot, émission certificat, redirection HTTPS, et `certbot renew --dry-run`.
+- [x] **AC4/AC5: Ajouter la configuration Nginx + Certbot production**
+  - [x] Créer un fichier de configuration exemple versionné, recommandé `scripts/nginx/ibc-app.conf.example` ou `deploy/nginx/ibc-app.conf`, sans domaine/chemin secret hardcodé au-delà de placeholders explicites (`example.com`, `/var/www/ibc/current`).
+  - [x] Configurer `location /_next/static/` avec `alias` ou `root` cohérent vers le dossier `.next/static`, `expires 365d`, `Cache-Control "public, max-age=31536000, immutable"`, et `try_files` sûr.
+  - [x] Configurer `location /` vers `proxy_pass http://127.0.0.1:3000` avec headers proxy standard et timeouts raisonnables.
+  - [x] Bloquer l'accès aux fichiers sensibles (`.env`, fichiers cachés, `.sqlite`, `.db`, dossiers internes si exposés par erreur).
+  - [x] Documenter installation Nginx, activation site, `nginx -t`, reload, installation Certbot, émission certificat, redirection HTTPS, et `certbot renew --dry-run`.
 
-- [ ] **AC6: Migrer le runtime production Prisma vers PostgreSQL**
-  - [ ] Auditer `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/prisma.ts`, `package.json`, `.env.example`, tests et migrations existantes.
-  - [ ] Remplacer le provider Prisma de production par `postgresql` conformément au PRD/architecture; si un support SQLite dev/test est conservé, le documenter sans laisser SQLite comme chemin production.
-  - [ ] Ajouter la dépendance adapter PostgreSQL Prisma 7 appropriée (ex: `@prisma/adapter-pg`/driver compatible) et retirer l'usage production de `@prisma/adapter-better-sqlite3` dans `src/lib/prisma.ts`.
-  - [ ] S'assurer que `DATABASE_URL` attendu en production est une URL PostgreSQL (`postgresql://` ou `postgres://`) et mettre à jour `.env.example` avec un commentaire clair, sans secret réel.
-  - [ ] Vérifier/générer les migrations pour PostgreSQL. Les migrations existantes créées pour SQLite peuvent nécessiter une stratégie propre (`prisma migrate diff`, baseline ou nouvelle migration PostgreSQL) : ne pas faire de conversion superficielle non testée.
-  - [ ] Exécuter `prisma validate` et une validation de migration contre une base PostgreSQL locale/temporaire ou documenter précisément le blocage si aucun PostgreSQL n'est disponible.
+- [x] **AC6: Migrer le runtime production Prisma vers PostgreSQL**
+  - [x] Auditer `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/prisma.ts`, `package.json`, `.env.example`, tests et migrations existantes.
+  - [x] Remplacer le provider Prisma de production par `postgresql` conformément au PRD/architecture; si un support SQLite dev/test est conservé, le documenter sans laisser SQLite comme chemin production.
+  - [x] Ajouter la dépendance adapter PostgreSQL Prisma 7 appropriée (ex: `@prisma/adapter-pg`/driver compatible) et retirer l'usage production de `@prisma/adapter-better-sqlite3` dans `src/lib/prisma.ts`.
+  - [x] S'assurer que `DATABASE_URL` attendu en production est une URL PostgreSQL (`postgresql://` ou `postgres://`) et mettre à jour `.env.example` avec un commentaire clair, sans secret réel.
+  - [x] Vérifier/générer les migrations pour PostgreSQL. Les migrations existantes créées pour SQLite peuvent nécessiter une stratégie propre (`prisma migrate diff`, baseline ou nouvelle migration PostgreSQL) : ne pas faire de conversion superficielle non testée.
+  - [x] Exécuter `prisma validate` et une validation de migration contre une base PostgreSQL locale/temporaire ou documenter précisément le blocage si aucun PostgreSQL n'est disponible.
 
-- [ ] **AC7: Runbook de déploiement et rollback**
-  - [ ] Créer/mettre à jour `scripts/DEPLOY.md` avec étapes complètes: prérequis VPS Ubuntu 24.04, Node/npm, PM2, Nginx, Certbot, variables d'environnement, PostgreSQL, build/package/rsync, migrations, PM2, logs, health checks.
-  - [ ] Inclure les commandes de vérification: `npm run build`, `npm run prepare-deploy`, `pm2 start/reload ecosystem.config.js --env production`, `pm2 status`, `pm2 logs`, `nginx -t`, `systemctl status nginx`, `certbot renew --dry-run`.
-  - [ ] Inclure rollback minimal et troubleshooting: logs PM2/Nginx, problème `DATABASE_URL`, assets 404, certificat, port 3000 occupé, permissions `/var/www/ibc`.
+- [x] **AC7: Runbook de déploiement et rollback**
+  - [x] Créer/mettre à jour `scripts/DEPLOY.md` avec étapes complètes: prérequis VPS Ubuntu 24.04, Node/npm, PM2, Nginx, Certbot, variables d'environnement, PostgreSQL, build/package/rsync, migrations, PM2, logs, health checks.
+  - [x] Inclure les commandes de vérification: `npm run build`, `npm run prepare-deploy`, `pm2 start/reload ecosystem.config.js --env production`, `pm2 status`, `pm2 logs`, `nginx -t`, `systemctl status nginx`, `certbot renew --dry-run`.
+  - [x] Inclure rollback minimal et troubleshooting: logs PM2/Nginx, problème `DATABASE_URL`, assets 404, certificat, port 3000 occupé, permissions `/var/www/ibc`.
 
-- [ ] **Tests et validation finale**
-  - [ ] `npm run build` passe.
-  - [ ] `.next/standalone/server.js` existe.
-  - [ ] `npm run prepare-deploy` passe et produit `deploy-dist/` complet.
-  - [ ] `test -f deploy-dist/.next/standalone/server.js`, `test -d deploy-dist/.next/static`, `test -d deploy-dist/public`, `test -f deploy-dist/ecosystem.config.js` passent.
-  - [ ] Démarrage standalone/PM2 testé localement si possible avec variables minimales non secrètes; sinon documenter la limite.
-  - [ ] `./node_modules/.bin/prisma validate` passe.
-  - [ ] Validation PostgreSQL/migration réalisée ou blocage technique explicite documenté.
-  - [ ] La config Nginx exemple passe une revue syntaxique/documentaire; si test local possible, `nginx -t` avec chemins temporaires.
-  - [ ] `git status` vérifié: aucun `.env`, `.env.local`, `dev.db`, `*.sqlite`, `*.sqlite3`, `deploy-dist/` ou log runtime ne doit être committé.
+- [x] **Tests et validation finale**
+  - [x] `npm run build` passe.
+  - [x] `.next/standalone/server.js` existe.
+  - [x] `npm run prepare-deploy` passe et produit `deploy-dist/` complet.
+  - [x] `test -f deploy-dist/.next/standalone/server.js`, `test -d deploy-dist/.next/static`, `test -d deploy-dist/public`, `test -f deploy-dist/ecosystem.config.js` passent.
+  - [x] Démarrage standalone/PM2 testé localement si possible avec variables minimales non secrètes; sinon documenter la limite.
+  - [x] `./node_modules/.bin/prisma validate` passe.
+  - [x] Validation PostgreSQL/migration réalisée ou blocage technique explicite documenté.
+  - [x] La config Nginx exemple passe une revue syntaxique/documentaire; si test local possible, `nginx -t` avec chemins temporaires.
+  - [x] `git status` vérifié: aucun `.env`, `.env.local`, `dev.db`, `*.sqlite`, `*.sqlite3`, `deploy-dist/` ou log runtime ne doit être committé.
 
 ## Dev Notes
 
@@ -295,6 +295,49 @@ GPT-5.5 Codex (Hermes Agent)
 
 ### Debug Log References
 
+- 2026-05-22 — `npm install @prisma/adapter-pg pg`
+- 2026-05-22 — `npx vitest run src/lib/prisma-runtime.test.ts src/lib/deployment-config.test.ts` (PASS 7/7 after red/green fix on SQLite path resolution)
+- 2026-05-22 — `npx prisma generate` (PASS)
+- 2026-05-22 — `npm run build` (PASS; `.next/standalone/server.js` present; standalone size 72M)
+- 2026-05-22 — `bash scripts/prepare-deploy.sh` then explicit `deploy-dist/` path/secret checks (PASS; package size 76M)
+- 2026-05-22 — Standalone runtime smoke test: `node deploy-dist/.next/standalone/server.js` on port 3010 + `curl -I /auth/signin` (PASS 200 with security headers)
+- 2026-05-22 — Nginx syntax test skipped locally: `nginx_not_installed`; config reviewed by automated Vitest assertions and documented for VPS `nginx -t`
+- 2026-05-22 — `npm run lint` after removing ignored `deploy-dist/` (FAIL: 3 errors / 5 warnings pre-existing outside story scope in dashboard/auth/profile/middleware files); story-scoped lint `npx eslint src/lib/prisma-runtime.ts src/lib/prisma-runtime.test.ts src/lib/deployment-config.test.ts src/lib/prisma.ts` PASS
+- 2026-05-22 — `npx vitest run` (PASS 451/451)
+- 2026-05-22 — `./node_modules/.bin/prisma validate` with SQLite dev schema (PASS)
+- 2026-05-22 — `DATABASE_URL=postgresql://... ./node_modules/.bin/prisma validate` with production schema (PASS)
+
 ### Completion Notes List
 
+- AC1: Preserved `next.config.ts` standalone output and security headers; verified production build creates `.next/standalone/server.js` and measured `.next/standalone` at 72M.
+- AC2/AC3: Aligned PM2 memory restart to `500M`; kept and documented `cwd=./` + `script=./.next/standalone/server.js`; hardened `prepare-deploy.sh` to recreate `deploy-dist/`, copy required assets/configs/logs, and defensively delete any traced `.env` or SQLite DB files.
+- AC4/AC5: Added versioned Nginx template with immutable `/_next/static/` cache, reverse proxy headers/WebSocket upgrade, sensitive file blocks, and a Certbot/renewal runbook.
+- AC6: Switched production Prisma schema to PostgreSQL, kept `prisma/schema.dev.prisma` for SQLite dev/test, added `@prisma/adapter-pg` + `pg`, added PostgreSQL runtime adapter selection, and created a PostgreSQL baseline migration directory.
+- AC7: Updated `scripts/DEPLOY.md` with build/package/rsync/env/migrate/PM2/Nginx/Certbot/health-check/rollback steps and validation commands.
+- PostgreSQL `migrate deploy` against a live database was not executed because no PostgreSQL server is available in this local workspace; production migration SQL was generated from the PostgreSQL schema and both dev/prod schemas validate. The runbook documents the exact VPS command.
+- `npm run lint` remains blocked by pre-existing issues outside this story; no story-scoped ESLint issues were introduced.
+
 ### File List
+
+- `.env.example`
+- `_bmad-output/implementation-artifacts/6-6-preparation-deploiement-production.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `deploy/nginx/ibc-app.conf.example`
+- `ecosystem.config.js`
+- `package-lock.json`
+- `package.json`
+- `prisma.config.ts`
+- `prisma/migrations-postgresql/20260522130000_init_postgresql/migration.sql`
+- `prisma/schema.dev.prisma`
+- `prisma/schema.prisma`
+- `scripts/DEPLOY.md`
+- `scripts/prepare-deploy.sh`
+- `src/lib/deployment-config.test.ts`
+- `src/lib/prisma-runtime.test.ts`
+- `src/lib/prisma-runtime.ts`
+- `src/lib/prisma.ts`
+
+### Change Log
+
+- 2026-05-22 — Implemented story 6.6 production deployment preparation: PM2/package hardening, Nginx/Certbot runbook, PostgreSQL production Prisma path, tests, and validation evidence.
+

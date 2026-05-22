@@ -1,56 +1,70 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🚀 IBC — Préparation du déploiement..."
+printf "🚀 IBC — Préparation du déploiement production...\n"
 
-# Vérifier que le build a été exécuté
-if [ ! -d ".next/standalone" ]; then
-  echo "❌ Erreur : .next/standalone n'existe pas. Exécutez 'npm run build' d'abord."
+if [ ! -f ".next/standalone/server.js" ]; then
+  printf "❌ Erreur : .next/standalone/server.js n'existe pas. Exécutez 'npm run build' d'abord.\n" >&2
   exit 1
 fi
 
-# Nettoyer le dossier de déploiement précédent
+if [ ! -d ".next/static" ]; then
+  printf "❌ Erreur : .next/static n'existe pas. Exécutez 'npm run build' d'abord.\n" >&2
+  exit 1
+fi
+
 rm -rf deploy-dist
-mkdir -p deploy-dist
+mkdir -p deploy-dist/.next/standalone deploy-dist/.next/static deploy-dist/logs
 
-# Copier le standalone
-echo "📦 Copie du standalone..."
-mkdir -p deploy-dist/.next/standalone
-cp -r .next/standalone/. deploy-dist/.next/standalone/
+printf "📦 Copie du runtime standalone...\n"
+cp -a .next/standalone/. deploy-dist/.next/standalone/
 
-# Copier les static assets (nécessaires séparément en standalone mode)
-echo "📦 Copie des assets statiques..."
-mkdir -p deploy-dist/.next/static
-cp -r .next/static/. deploy-dist/.next/static/
+printf "📦 Copie des assets Next statiques...\n"
+cp -a .next/static/. deploy-dist/.next/static/
 
-# Copier les dossiers publics
-echo "📦 Copie des fichiers publics..."
-cp -r public deploy-dist/
+printf "📦 Copie du dossier public...\n"
+if [ -d "public" ]; then
+  cp -a public deploy-dist/
+else
+  mkdir -p deploy-dist/public
+fi
 
-# Copier le fichier ecosystem.config.js
-echo "📦 Copie du ecosystem.config.js..."
+printf "📦 Copie des fichiers de configuration non secrets...\n"
 cp ecosystem.config.js deploy-dist/
-
-# Copier le .env.example pour référence
-echo "📦 Copie du .env.example..."
+cp prisma.config.ts deploy-dist/
+cp package.json package-lock.json deploy-dist/
 cp .env.example deploy-dist/
+mkdir -p deploy-dist/prisma
+cp prisma/schema.prisma deploy-dist/prisma/schema.prisma
+cp -a prisma/migrations-postgresql deploy-dist/prisma/migrations-postgresql
 
-# Créer le répertoire des logs pour PM2
-echo "📦 Création du répertoire logs..."
-mkdir -p deploy-dist/logs
+printf "🧹 Suppression défensive des secrets et bases locales éventuellement inclus par le tracing standalone...\n"
+find deploy-dist -type f \( -name '.env' -o -name '.env.local' -o -name '.env.*.local' -o -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) -delete
 
-# Afficher le résumé
-echo ""
-echo "✅ Déploiement préparé dans deploy-dist/"
-echo ""
-echo "📁 Structure :"
-find deploy-dist -maxdepth 3 -type f | head -30
-echo ""
-echo "📊 Taille totale :"
+printf "🔒 Vérification absence de secrets et bases SQLite dans deploy-dist/...\n"
+if find deploy-dist -type f \( -name '.env' -o -name '.env.local' -o -name '.env.*.local' -o -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) | grep -q .; then
+  printf "❌ Erreur : deploy-dist contient un secret ou une base SQLite.\n" >&2
+  find deploy-dist -type f \( -name '.env' -o -name '.env.local' -o -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) >&2
+  exit 1
+fi
+
+printf "\n✅ Paquet recréé dans deploy-dist/\n\n"
+printf "📁 Contrôles principaux :\n"
+for required_path in \
+  "deploy-dist/.next/standalone/server.js" \
+  "deploy-dist/.next/static" \
+  "deploy-dist/public" \
+  "deploy-dist/ecosystem.config.js" \
+  "deploy-dist/.env.example" \
+  "deploy-dist/prisma/schema.prisma" \
+  "deploy-dist/prisma/migrations-postgresql" \
+  "deploy-dist/prisma.config.ts" \
+  "deploy-dist/logs"; do
+  test -e "$required_path"
+  printf "  ✓ %s\n" "$required_path"
+done
+
+printf "\n📊 Taille totale :\n"
 du -sh deploy-dist/
-echo ""
-echo "🎯 Prochaines étapes :"
-echo "  1. rsync -avz deploy-dist/ user@vps:/var/www/ibc/"
-echo "  2. Sur le VPS : cd /var/www/ibc && cp .env.example .env && éditer .env"
-echo "  3. pm2 start ecosystem.config.js"
-echo "  4. pm2 save && pm2 startup"
+printf "\n🎯 Runtime PM2 documenté : cwd=deploy-dist, script=./.next/standalone/server.js, PORT=3000, HOSTNAME=0.0.0.0\n"
+printf "📚 Voir scripts/DEPLOY.md pour rsync, migrations PostgreSQL, PM2, Nginx et Certbot.\n"

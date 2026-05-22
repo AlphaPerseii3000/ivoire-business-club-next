@@ -7,7 +7,7 @@ module.exports = {
       instances: "max",
       exec_mode: "cluster",
       autorestart: true,
-      max_memory_restart: "512M",
+      max_memory_restart: "500M",
       env: {
         NODE_ENV: "production",
         PORT: 3000,

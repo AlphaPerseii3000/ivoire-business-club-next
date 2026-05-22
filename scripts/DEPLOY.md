@@ -1,167 +1,170 @@
-# Déploiement IBC — Guide VPS (Infomaniak)
+# Runbook de déploiement production IBC
 
-Ce document décrit le processus complet pour déployer l'application IBC sur un VPS avec PM2 et Nginx.
+Cible: VPS Cloud Infomaniak Ubuntu 24.04, Next.js standalone, PM2 cluster, Nginx reverse proxy, HTTPS Let's Encrypt, PostgreSQL.
 
-## Prérequis
-
-- **Node.js** 20+ (LTS recommandé)
-- **PM2** installé globalement (`npm install -g pm2`)
-- **Nginx** installé et configuré
-- **PostgreSQL** (base de données production)
-- **Certbot** pour SSL (Let's Encrypt)
-
-## Variables d'environnement requises
-
-Copiez `.env.example` en `.env` et renseignez toutes les variables :
+## 1. Préparer la release localement
 
 ```bash
-cp .env.example .env
-nano .env
-```
-
-| Variable | Description | Obligatoire |
-|----------|-------------|-------------|
-| `NEXTAUTH_URL` | URL publique de l'application (ex: `https://ibc.example.com`) | ✅ |
-| `NEXTAUTH_SECRET` | Secret JWT (générer avec `openssl rand -base64 32`) | ✅ |
-| `GOOGLE_CLIENT_ID` | ID client Google OAuth | ✅ |
-| `GOOGLE_CLIENT_SECRET` | Secret client Google OAuth | ✅ |
-| `DATABASE_URL` | URL de connexion PostgreSQL | ✅ |
-| `UPSTASH_REDIS_REST_URL` | URL Redis Upstash (rate limiting) | ⚠️ Optionnel |
-| `UPSTASH_REDIS_REST_TOKEN` | Token Redis Upstash | ⚠️ Optionnel |
-| `R2_ACCOUNT_ID` | ID compte Cloudflare R2 | ⚠️ Optionnel (futur) |
-| `R2_ACCESS_KEY_ID` | Clé d'accès R2 | ⚠️ Optionnel (futur) |
-| `R2_SECRET_ACCESS_KEY` | Clé secrète R2 | ⚠️ Optionnel (futur) |
-| `R2_BUCKET_NAME` | Nom du bucket R2 | ⚠️ Optionnel (futur) |
-| `R2_PUBLIC_URL` | URL publique du bucket R2 | ⚠️ Optionnel (futur) |
-| `RESEND_API_KEY` | Clé API Resend (emails) | ⚠️ Optionnel (futur) |
-| `APP_URL` | URL publique (même que NEXTAUTH_URL) | ✅ |
-
-## Commandes de build et déploiement
-
-### Build et préparation
-
-```bash
-# Build complet + assemblage du dossier deploy-dist/
+npm ci
+npx prisma validate
+npm run build
+test -f .next/standalone/server.js
+du -sh .next/standalone
 npm run prepare-deploy
 ```
 
-Ou manuellement :
+Le paquet `deploy-dist/` doit contenir:
+
+- `.next/standalone/server.js`
+- `.next/static/`
+- `public/`
+- `ecosystem.config.js`
+- `prisma.config.ts`, `prisma/schema.prisma`, `prisma/migrations-postgresql/`
+- `package.json`, `package-lock.json` pour les commandes Prisma opérationnelles
+- `.env.example`
+- `logs/`
+
+Le script refuse les fichiers `.env`, `.env.local`, `*.db`, `*.sqlite` et `*.sqlite3` dans le paquet.
+
+## 2. Transférer vers le VPS
+
+Exemple avec un répertoire de releases atomiques:
 
 ```bash
-# 1. Build de production
-npm run build
-
-# 2. Assembler le dossier de déploiement
-bash scripts/prepare-deploy.sh
+RELEASE=$(date +%Y%m%d%H%M%S)
+ssh deploy@example.com "mkdir -p /var/www/ibc/releases/$RELEASE"
+rsync -az --delete deploy-dist/ deploy@example.com:/var/www/ibc/releases/$RELEASE/
+ssh deploy@example.com "ln -sfn /var/www/ibc/releases/$RELEASE /var/www/ibc/current"
 ```
 
-### Transfert vers le VPS
+## 3. Configurer l'environnement production
+
+Sur le VPS:
 
 ```bash
-rsync -avz deploy-dist/ user@vps:/var/www/ibc/
-```
-
-### Sur le VPS
-
-```bash
-cd /var/www/ibc
-
-# 1. Configurer les variables d'environnement
+cd /var/www/ibc/current
 cp .env.example .env
-nano .env  # Renseigner les variables
-
-# 2. Démarrer avec PM2
-pm2 start ecosystem.config.js
-
-# 3. Sauvegarder la configuration PM2
-pm2 save
-pm2 startup
+nano .env
+chmod 600 .env
 ```
 
-## Configuration PM2
-
-L'application utilise PM2 en mode cluster. La configuration est dans `ecosystem.config.js` :
-
-- **Mode** : Cluster (1 processus par cœur CPU)
-- **Mémoire max** : 512M par processus (redémarrage automatique)
-- **Auto-restart** : Activé
-- **Logs** : Structurés JSON avec horodatage
-
-### Commandes utiles PM2
+Variables critiques:
 
 ```bash
-pm2 status              # Voir le statut des processus
-pm2 logs ibc-app        # Voir les logs en temps réel
-pm2 restart ibc-app     # Redémarrer l'application
-pm2 stop ibc-app        # Arrêter l'application
-pm2 delete ibc-app      # Supprimer le processus
-pm2 monit               # Monitoring en temps réel
-pm2 describe ibc-app    # Détails du processus
+NODE_ENV=production
+PORT=3000
+HOSTNAME=0.0.0.0
+NEXTAUTH_URL=https://example.com
+APP_URL=https://example.com
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DB?schema=public
+```
 
-# Rotation des logs (installer une fois)
+Production doit utiliser PostgreSQL (`postgresql://` ou `postgres://`). SQLite `file:` est réservé au dev/test local.
+
+## 4. Installer les dépendances système
+
+```bash
+sudo apt update
+sudo apt install -y nginx certbot python3-certbot-nginx
+sudo npm install -g pm2
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:max_size 10M
-pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:retain 14
 pm2 set pm2-logrotate:compress true
 ```
 
-## Configuration Nginx (Reverse Proxy)
+## 5. Appliquer les migrations PostgreSQL
 
-Créer la configuration Nginx :
-
-```bash
-sudo nano /etc/nginx/sites-available/ibc
-```
-
-```nginx
-server {
-    listen 80;
-    server_name ibc.example.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
+Depuis le répertoire release avec `DATABASE_URL` PostgreSQL configuré:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/ibc /etc/nginx/sites-enabled/
+cd /var/www/ibc/current
+npx prisma validate
+npx prisma migrate deploy
+```
+
+Le fichier `prisma.config.ts` sélectionne `prisma/schema.prisma` et `prisma/migrations-postgresql` quand `DATABASE_URL` est PostgreSQL.
+
+## 6. Démarrer ou recharger PM2
+
+Le paquet utilise `cwd=deploy-dist/current` et `script=./.next/standalone/server.js`.
+
+```bash
+cd /var/www/ibc/current
+mkdir -p logs
+pm2 start ecosystem.config.js --env production
+# ou, si l'app existe déjà:
+pm2 reload ibc-app --update-env
+pm2 save
+pm2 startup systemd
+pm2 logs ibc-app --lines 100
+```
+
+Contrat PM2 attendu:
+
+- app: `ibc-app`
+- mode: cluster
+- instances: `max`
+- `PORT=3000`
+- `HOSTNAME=0.0.0.0`
+- `NODE_ENV=production`
+- `max_memory_restart=500M`
+
+## 7. Configurer Nginx
+
+```bash
+sudo cp deploy/nginx/ibc-app.conf.example /etc/nginx/sites-available/ibc-app
+sudo nano /etc/nginx/sites-available/ibc-app  # remplacer example.com et /var/www/ibc/current si besoin
+sudo ln -sfn /etc/nginx/sites-available/ibc-app /etc/nginx/sites-enabled/ibc-app
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## SSL avec Certbot
+La configuration sert `/_next/static/` depuis `/var/www/ibc/current/.next/static/` avec cache immutable 365 jours, bloque les fichiers sensibles et proxifie le reste vers `http://127.0.0.1:3000` avec headers proxy standards.
+
+## 8. Activer HTTPS Let's Encrypt / Certbot
+
+Le domaine doit déjà pointer vers le VPS.
 
 ```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d ibc.example.com
+sudo certbot --nginx -d example.com -d www.example.com
+sudo systemctl list-timers | grep certbot
+sudo certbot renew --dry-run
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-Certbot configure automatiquement le renouvellement SSL.
+Les headers HSTS/CSP/X-Frame-Options/X-Content-Type-Options restent définis côté Next.js; Nginx termine TLS et transmet `X-Forwarded-Proto`.
 
-## Mise à jour de l'application
+## 9. Vérifications finales
 
 ```bash
-# Sur la machine de développement
-npm run prepare-deploy
-rsync -avz deploy-dist/ user@vps:/var/www/ibc/
-
-# Sur le VPS
-pm2 restart ibc-app
+curl -I https://example.com/
+curl -I https://example.com/_next/static/CHUNK_A_REMPLACER.js
+pm2 status ibc-app
+pm2 logs ibc-app --lines 100
+sudo tail -n 100 /var/log/nginx/error.log
 ```
 
-## Dépannage
+Vérifier aussi une connexion Auth.js, une page publique, une page dashboard premium et une page admin avec compte actif.
 
-- **L'application ne démarre pas** : Vérifier que `HOSTNAME=0.0.0.0` est dans l'env PM2 ou `.env`
-- **Erreur de base de données** : Vérifier `DATABASE_URL` et que PostgreSQL est accessible
-- **Logs vides** : Vérifier que le dossier `logs/` existe et est accessible en écriture
-- **Port déjà utilisé** : Vérifier qu'aucun autre processus n'utilise le port 3000 (`lsof -i :3000`)
-- **Assets statiques manquants** : Vérifier que `.next/static` et `public/` sont bien copiés
+## 10. Rollback minimal
+
+Si la nouvelle release échoue:
+
+```bash
+PREVIOUS=/var/www/ibc/releases/<release-precedente>
+ln -sfn "$PREVIOUS" /var/www/ibc/current
+cd /var/www/ibc/current
+pm2 reload ibc-app --update-env
+sudo nginx -t && sudo systemctl reload nginx
+pm2 logs ibc-app --lines 200
+sudo tail -n 200 /var/log/nginx/error.log
+```
+
+Si seul le process Node est instable:
+
+```bash
+pm2 restart ibc-app --update-env
+pm2 logs ibc-app --lines 200
+```
