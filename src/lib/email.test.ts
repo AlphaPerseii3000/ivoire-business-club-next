@@ -34,4 +34,23 @@ describe("email helpers", () => {
       text: expect.stringContaining("Votre abonnement IBC Grands Frères est activé. Bienvenue dans le club !"),
     });
   });
+
+  it("sends the admin confirmation email with the exact required subject", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    const { sendAdminSubscriptionConfirmationEmail } = await import("./email");
+
+    await sendAdminSubscriptionConfirmationEmail({
+      to: "member@example.com",
+      name: "Awa",
+      tier: "BOSS",
+    });
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith({
+      from: "IBC <noreply@example.com>",
+      to: "member@example.com",
+      subject: "Votre abonnement IBC est confirmé",
+      text: expect.stringContaining("Votre espace membre : https://ivoirebusinessclub.test/dashboard"),
+    });
+  });
 });

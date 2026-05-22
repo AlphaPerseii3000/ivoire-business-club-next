@@ -2,7 +2,7 @@
 Story: "6.5"
 StoryKey: "6-5-gestion-des-utilisateurs-et-emails-admin"
 Title: "Gestion des Utilisateurs et Emails Admin"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR7", "FR40", "FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-22"
 
 # Story 6.5: Gestion des Utilisateurs et Emails Admin
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: admin route group, `/admin/members` page, user tier/verification admin routes, Resend utilities, and Story 6.4 audit trail already exist. Extend existing code; do not rebuild admin auth, subscriptions, audit, dashboard, or email infrastructure. -->
 
@@ -107,66 +107,66 @@ afin d'assurer le support et la modération de la communauté.
 
 ## Tasks / Subtasks
 
-- [ ] **AC3: Ajouter un statut compte utilisateur distinct**
-  - [ ] Auditer `prisma/schema.prisma`; confirmer que `User` n'a actuellement que `verificationStatus` et aucun `status` compte.
-  - [ ] Ajouter un enum Prisma dédié, par exemple `UserStatus { ACTIVE SUSPENDED }`, et un champ `status UserStatus @default(ACTIVE)` sur `User`.
-  - [ ] Ajouter un index si utile pour filtrage admin, par exemple `@@index([status, createdAt])` si supporté sans perturber les maps existants.
-  - [ ] Générer une migration Prisma explicite (ex: `add_user_account_status`) avec default `ACTIVE` pour tous les comptes existants.
-  - [ ] Régénérer le client Prisma selon le workflow existant et ne jamais committer `dev.db` ou `*.sqlite3`.
+- [x] **AC3: Ajouter un statut compte utilisateur distinct**
+  - [x] Auditer `prisma/schema.prisma`; confirmer que `User` n'a actuellement que `verificationStatus` et aucun `status` compte.
+  - [x] Ajouter un enum Prisma dédié, par exemple `UserStatus { ACTIVE SUSPENDED }`, et un champ `status UserStatus @default(ACTIVE)` sur `User`.
+  - [x] Ajouter un index si utile pour filtrage admin, par exemple `@@index([status, createdAt])` si supporté sans perturber les maps existants.
+  - [x] Générer une migration Prisma explicite (ex: `add_user_account_status`) avec default `ACTIVE` pour tous les comptes existants.
+  - [x] Régénérer le client Prisma selon le workflow existant et ne jamais committer `dev.db` ou `*.sqlite3`.
 
-- [ ] **AC4/AC5/AC8: Créer la mutation admin suspension/réactivation**
-  - [ ] Ajouter une route dédiée sous `src/app/api/admin/users/[id]/status/route.ts` (recommandé) ou étendre proprement une route existante sans casser `tier`/`verify`.
-  - [ ] Authentifier via `auth()` puis vérifier `role === "ADMIN"` en DB, comme les routes admin existantes.
-  - [ ] Accepter uniquement `action: "suspend" | "reactivate"` via JSON validé; gérer JSON invalide en `400` français.
-  - [ ] Refuser l'auto-suspension de l'admin courant.
-  - [ ] Vérifier l'existence du target user avec `select` minimal (`id`, `status`, `role`, `email`, `name`, `tier`).
-  - [ ] Muter `User.status` en `SUSPENDED` ou `ACTIVE`; préserver `role`, `tier`, `verificationStatus`, abonnements, opportunités et reviews.
-  - [ ] Respecter idempotence : ne pas créer d'audit log si `previousStatus === nextStatus`; retourner `409 INVALID_TRANSITION` ou `{ data: { status, changed: false } }` de façon testée.
-  - [ ] Appeler `safeCreateAuditLog` immédiatement après mutation réussie avec action `USER_SUSPEND` ou `USER_REACTIVATE`.
+- [x] **AC4/AC5/AC8: Créer la mutation admin suspension/réactivation**
+  - [x] Ajouter une route dédiée sous `src/app/api/admin/users/[id]/status/route.ts` (recommandé) ou étendre proprement une route existante sans casser `tier`/`verify`.
+  - [x] Authentifier via `auth()` puis vérifier `role === "ADMIN"` en DB, comme les routes admin existantes.
+  - [x] Accepter uniquement `action: "suspend" | "reactivate"` via JSON validé; gérer JSON invalide en `400` français.
+  - [x] Refuser l'auto-suspension de l'admin courant.
+  - [x] Vérifier l'existence du target user avec `select` minimal (`id`, `status`, `role`, `email`, `name`, `tier`).
+  - [x] Muter `User.status` en `SUSPENDED` ou `ACTIVE`; préserver `role`, `tier`, `verificationStatus`, abonnements, opportunités et reviews.
+  - [x] Respecter idempotence : ne pas créer d'audit log si `previousStatus === nextStatus`; retourner `409 INVALID_TRANSITION` ou `{ data: { status, changed: false } }` de façon testée.
+  - [x] Appeler `safeCreateAuditLog` immédiatement après mutation réussie avec action `USER_SUSPEND` ou `USER_REACTIVATE`.
 
-- [ ] **AC4/AC5: Bloquer login et prochaines requêtes des comptes suspendus**
-  - [ ] Credentials : dans `src/lib/auth.ts`, après chargement user et avant comparaison/return finale, refuser `status === "SUSPENDED"`.
-  - [ ] OAuth : ajouter/adapter un callback NextAuth côté Node config pour refuser la connexion si l'email correspond à un utilisateur `SUSPENDED`; préserver le single-object spread pattern Auth.js v5 (`NextAuth({ ...authConfig, ...overrides })`) et ne pas importer Prisma dans `auth.config.ts`.
-  - [ ] JWT/session : ajouter `status` aux claims si nécessaire pour l'UI, mais ne pas se fier à un vieux JWT pour autoriser un compte suspendu.
-  - [ ] Requêtes protégées existantes : ajouter un helper serveur réutilisable ou une vérification DB minimale dans les layouts/API sensibles pour rediriger/retourner `403 ACCOUNT_SUSPENDED` dès la prochaine requête. Ne pas importer Prisma dans middleware Edge.
-  - [ ] Documenter/implémenter le comportement de « logout » réaliste avec JWT strategy : l'utilisateur est rejeté à la prochaine requête serveur protégée et invité à se reconnecter; ne pas prétendre que supprimer `Session` suffit, car le projet utilise `session: { strategy: "jwt" }`.
+- [x] **AC4/AC5: Bloquer login et prochaines requêtes des comptes suspendus**
+  - [x] Credentials : dans `src/lib/auth.ts`, après chargement user et avant comparaison/return finale, refuser `status === "SUSPENDED"`.
+  - [x] OAuth : ajouter/adapter un callback NextAuth côté Node config pour refuser la connexion si l'email correspond à un utilisateur `SUSPENDED`; préserver le single-object spread pattern Auth.js v5 (`NextAuth({ ...authConfig, ...overrides })`) et ne pas importer Prisma dans `auth.config.ts`.
+  - [x] JWT/session : ajouter `status` aux claims si nécessaire pour l'UI, mais ne pas se fier à un vieux JWT pour autoriser un compte suspendu.
+  - [x] Requêtes protégées existantes : ajouter un helper serveur réutilisable ou une vérification DB minimale dans les layouts/API sensibles pour rediriger/retourner `403 ACCOUNT_SUSPENDED` dès la prochaine requête. Ne pas importer Prisma dans middleware Edge.
+  - [x] Documenter/implémenter le comportement de « logout » réaliste avec JWT strategy : l'utilisateur est rejeté à la prochaine requête serveur protégée et invité à se reconnecter; ne pas prétendre que supprimer `Session` suffit, car le projet utilise `session: { strategy: "jwt" }`.
 
-- [ ] **AC2/AC9: Remplacer/compléter la page `/admin/members` existante**
-  - [ ] Lire complètement `src/app/(admin)/admin/members/page.tsx` avant modification; préserver auth/admin guard et route `/admin/members`.
-  - [ ] Charger les utilisateurs avec `image`, `name`, `email`, `tier`, `status`, `createdAt`, et `subscriptions: { orderBy: { createdAt: "desc" }, take: 1, select: { id, status, tier, providerRef, createdAt } }`.
-  - [ ] Afficher avatar (image si disponible, initiales fallback), nom, email, tier, statut abonnement, statut compte, date d'inscription, actions.
-  - [ ] Ajouter des labels français pour tiers, account status et subscription status.
-  - [ ] Ajouter des actions accessibles : « Suspendre » si actif, « Réactiver » si suspendu, « Envoyer email de confirmation ».
-  - [ ] Pour « Suspendre », utiliser confirmation accessible (`Dialog` shadcn ou formulaire client clair) avant action destructive.
-  - [ ] Ajouter feedback success/error via toast si client component, ou message query param si server forms; garder les boutons `min-h-11`.
-  - [ ] Optionnel mais utile : recherche simple par nom/email et filtre statut compte via query params; ne pas dépasser le scope si temps limité.
+- [x] **AC2/AC9: Remplacer/compléter la page `/admin/members` existante**
+  - [x] Lire complètement `src/app/(admin)/admin/members/page.tsx` avant modification; préserver auth/admin guard et route `/admin/members`.
+  - [x] Charger les utilisateurs avec `image`, `name`, `email`, `tier`, `status`, `createdAt`, et `subscriptions: { orderBy: { createdAt: "desc" }, take: 1, select: { id, status, tier, providerRef, createdAt } }`.
+  - [x] Afficher avatar (image si disponible, initiales fallback), nom, email, tier, statut abonnement, statut compte, date d'inscription, actions.
+  - [x] Ajouter des labels français pour tiers, account status et subscription status.
+  - [x] Ajouter des actions accessibles : « Suspendre » si actif, « Réactiver » si suspendu, « Envoyer email de confirmation ».
+  - [x] Pour « Suspendre », utiliser confirmation accessible (`Dialog` shadcn ou formulaire client clair) avant action destructive.
+  - [x] Ajouter feedback success/error via toast si client component, ou message query param si server forms; garder les boutons `min-h-11`.
+  - [x] Optionnel mais utile : recherche simple par nom/email et filtre statut compte via query params; ne pas dépasser le scope si temps limité.
 
-- [ ] **AC6: Ajouter l'email admin de confirmation**
-  - [ ] Étendre `src/lib/email.ts` avec une fonction dédiée, par exemple `sendAdminSubscriptionConfirmationEmail({ to, name, tier })`.
-  - [ ] Réutiliser `getResendClient()`, `getSender()`, `greeting()`, `tierLabel()` et `dashboardLine()` existants; ne pas créer un second client Resend ailleurs.
-  - [ ] Sujet exact obligatoire : `Votre abonnement IBC est confirmé`.
-  - [ ] Texte recommandé : confirmer que l'abonnement IBC est bien confirmé, rappeler le tier si connu, inviter à consulter `/dashboard` via `APP_URL` si configuré.
-  - [ ] Ajouter route dédiée `POST /api/admin/users/[id]/confirmation-email` ou équivalent, admin-only, qui récupère target user + dernier abonnement pertinent.
-  - [ ] Retourner `EMAIL_FAILED` en cas d'échec Resend sans exposer erreur brute; logger via `sanitizeError` uniquement.
-  - [ ] Créer l'audit log `USER_CONFIRMATION_EMAIL_SEND` après succès Resend avec metadata sanitizée (`subscriptionId`, `subscriptionStatus`, `tier`, `emailSent: true`).
+- [x] **AC6: Ajouter l'email admin de confirmation**
+  - [x] Étendre `src/lib/email.ts` avec une fonction dédiée, par exemple `sendAdminSubscriptionConfirmationEmail({ to, name, tier })`.
+  - [x] Réutiliser `getResendClient()`, `getSender()`, `greeting()`, `tierLabel()` et `dashboardLine()` existants; ne pas créer un second client Resend ailleurs.
+  - [x] Sujet exact obligatoire : `Votre abonnement IBC est confirmé`.
+  - [x] Texte recommandé : confirmer que l'abonnement IBC est bien confirmé, rappeler le tier si connu, inviter à consulter `/dashboard` via `APP_URL` si configuré.
+  - [x] Ajouter route dédiée `POST /api/admin/users/[id]/confirmation-email` ou équivalent, admin-only, qui récupère target user + dernier abonnement pertinent.
+  - [x] Retourner `EMAIL_FAILED` en cas d'échec Resend sans exposer erreur brute; logger via `sanitizeError` uniquement.
+  - [x] Créer l'audit log `USER_CONFIRMATION_EMAIL_SEND` après succès Resend avec metadata sanitizée (`subscriptionId`, `subscriptionStatus`, `tier`, `emailSent: true`).
 
-- [ ] **AC7: Étendre l'audit Story 6.4 sans le réinventer**
-  - [ ] Lire `src/lib/audit-log.ts`; ajouter seulement les nouvelles constantes `USER_SUSPEND`, `USER_REACTIVATE`, `USER_CONFIRMATION_EMAIL_SEND` à `AUDIT_ACTIONS`.
-  - [ ] Utiliser `safeCreateAuditLog` depuis `@/lib/audit-log`. Le brief mentionne `src/lib/audit.ts`, mais le codebase actuel expose le helper dans `src/lib/audit-log.ts`; ne pas créer de helper parallèle.
-  - [ ] Ne jamais stocker email complet, payload Resend, cookies, tokens, secrets, ou erreurs brutes dans metadata.
-  - [ ] Ajouter/mettre à jour tests `src/lib/audit-log.test.ts` ou tests de route pour vérifier action/entity/metadata.
+- [x] **AC7: Étendre l'audit Story 6.4 sans le réinventer**
+  - [x] Lire `src/lib/audit-log.ts`; ajouter seulement les nouvelles constantes `USER_SUSPEND`, `USER_REACTIVATE`, `USER_CONFIRMATION_EMAIL_SEND` à `AUDIT_ACTIONS`.
+  - [x] Utiliser `safeCreateAuditLog` depuis `@/lib/audit-log`. Le brief mentionne `src/lib/audit.ts`, mais le codebase actuel expose le helper dans `src/lib/audit-log.ts`; ne pas créer de helper parallèle.
+  - [x] Ne jamais stocker email complet, payload Resend, cookies, tokens, secrets, ou erreurs brutes dans metadata.
+  - [x] Ajouter/mettre à jour tests `src/lib/audit-log.test.ts` ou tests de route pour vérifier action/entity/metadata.
 
-- [ ] **AC8/AC10: Tests ciblés et validation**
-  - [ ] Ajouter tests API pour `src/app/api/admin/users/[id]/status/route.ts`: 401, 403, invalid JSON/body, user missing, self-suspend, suspend success, reactivate success, idempotence/no duplicate audit.
-  - [ ] Ajouter tests API pour `confirmation-email`: 401, 403, user missing/no email if applicable, Resend success, Resend failure, audit success metadata.
-  - [ ] Mettre à jour tests Auth (`src/lib/auth.test.ts` ou nouveau test) pour credentials `SUSPENDED` refusé et OAuth/signIn callback refusé.
-  - [ ] Ajouter/mettre à jour test page `/admin/members` si le projet a déjà un pattern React Testing Library pour pages admin; sinon tester les composants client extraits.
-  - [ ] Vérifier que les tests n'utilisent pas de secrets Resend réels; mocker `resend` comme dans `src/lib/email.test.ts`.
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`.
-  - [ ] Exécuter tests ciblés des fichiers modifiés.
-  - [ ] Exécuter `npx vitest run`.
-  - [ ] Exécuter `npm run build`.
-  - [ ] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
+- [x] **AC8/AC10: Tests ciblés et validation**
+  - [x] Ajouter tests API pour `src/app/api/admin/users/[id]/status/route.ts`: 401, 403, invalid JSON/body, user missing, self-suspend, suspend success, reactivate success, idempotence/no duplicate audit.
+  - [x] Ajouter tests API pour `confirmation-email`: 401, 403, user missing/no email if applicable, Resend success, Resend failure, audit success metadata.
+  - [x] Mettre à jour tests Auth (`src/lib/auth.test.ts` ou nouveau test) pour credentials `SUSPENDED` refusé et OAuth/signIn callback refusé.
+  - [x] Ajouter/mettre à jour test page `/admin/members` si le projet a déjà un pattern React Testing Library pour pages admin; sinon tester les composants client extraits.
+  - [x] Vérifier que les tests n'utilisent pas de secrets Resend réels; mocker `resend` comme dans `src/lib/email.test.ts`.
+  - [x] Exécuter `./node_modules/.bin/prisma validate`.
+  - [x] Exécuter tests ciblés des fichiers modifiés.
+  - [x] Exécuter `npx vitest run`.
+  - [x] Exécuter `npm run build`.
+  - [x] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
 
 ## Dev Notes
 
@@ -368,14 +368,52 @@ If `npm run lint` is run, document pre-existing unrelated lint warnings separate
 
 ### Agent Model Used
 
-_To be filled by dev-story agent._
+GPT-5.5 Codex (Hermes Agent)
 
 ### Debug Log References
 
+- 2026-05-22: Loaded BMAD dev-story skill, story context, architecture, and sprint status.
+- 2026-05-22: Updated sprint status to in-progress before implementation.
+- 2026-05-22: Ran `./node_modules/.bin/prisma validate` and `./node_modules/.bin/prisma generate`.
+- 2026-05-22: Ran targeted Vitest suite for new/changed auth, email, API, account-status, and admin members page tests: PASS (30).
+- 2026-05-22: Ran local migration deploy against a temporary SQLite database: all migrations applied successfully.
+- 2026-05-22: Ran full `npx vitest run`: PASS (442).
+- 2026-05-22: Ran `npm run build`: PASS.
+- 2026-05-22: Ran `npm run lint`: fails only on pre-existing unrelated lint issues in dashboard/opportunity/signup/profile/document/middleware files; introduced lint issue was fixed.
+
 ### Completion Notes List
 
+- Added dedicated `UserStatus` account status (`ACTIVE`/`SUSPENDED`) with migration and admin-friendly index, keeping `verificationStatus` reserved for KYC/verification.
+- Added admin status mutation API with validated JSON, 401/403/404/400/409 responses, self-suspension guard, idempotence guard, and immediate sanitized audit logs for suspend/reactivate.
+- Blocked suspended accounts for credentials sign-in, Google OAuth sign-in, and next protected dashboard server request via a reusable account-status guard.
+- Reworked `/admin/members` to show avatar/name/email/tier/latest subscription/account status/registration/actions in a responsive French table without premium gating.
+- Added accessible destructive confirmation UI for suspension and admin action feedback/refresh behavior.
+- Added Resend-backed admin confirmation email helper with the exact required subject and an admin-only API route with sanitized error handling and audit metadata.
+- Added/updated tests for admin APIs, auth suspension paths, email helper, protected request guard, and admin members page display/empty/auth cases.
+
 ### File List
+
+- prisma/schema.prisma
+- prisma/migrations/20260522093000_add_user_account_status/migration.sql
+- src/app/(admin)/admin/members/page.tsx
+- src/app/(admin)/admin/members/page.test.tsx
+- src/app/(dashboard)/layout.tsx
+- src/app/api/admin/users/[id]/status/route.ts
+- src/app/api/admin/users/[id]/status/route.test.ts
+- src/app/api/admin/users/[id]/confirmation-email/route.ts
+- src/app/api/admin/users/[id]/confirmation-email/route.test.ts
+- src/components/features/admin/admin-member-actions.tsx
+- src/lib/account-status.ts
+- src/lib/account-status.test.ts
+- src/lib/audit-log.ts
+- src/lib/auth.ts
+- src/lib/auth.test.ts
+- src/lib/email.ts
+- src/lib/email.test.ts
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/6-5-gestion-des-utilisateurs-et-emails-admin.md
 
 ### Change Log
 
 - 2026-05-22: Story context created and marked ready-for-dev.
+- 2026-05-22: Implemented admin member account status management, confirmation email action, suspension blocking, audit logs, tests, validation, and marked story ready for review.

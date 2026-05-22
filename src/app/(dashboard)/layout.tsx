@@ -1,6 +1,5 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import SignOutButton from "@/components/auth/sign-out-button";
+import { requireActiveAuthenticatedUser } from "@/lib/account-status";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
@@ -15,8 +14,7 @@ const NAV_ITEMS = [
 const MOBILE_NAV_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[1], NAV_ITEMS[2], NAV_ITEMS[5]];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/auth/signin");
+  await requireActiveAuthenticatedUser();
 
   return (
     <div className="flex min-h-screen">

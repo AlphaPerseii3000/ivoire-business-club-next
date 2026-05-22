@@ -31,6 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.passwordHash) return null;
+        if (user.status === "SUSPENDED") return null;
 
         const isValid = await bcrypt.compare(
           String(credentials.password),
@@ -44,8 +45,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           tier: user.tier,
           role: user.role,
+          status: user.status,
         };
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: { status: true },
+        });
+        if (existingUser?.status === "SUSPENDED") return false;
+      }
+      return true;
+    },
+    async jwt(args) {
+      const token = (authConfig.callbacks?.jwt ? await authConfig.callbacks.jwt(args) : args.token) ?? args.token;
+      if (args.user) {
+        token.status = (args.user as unknown as Record<string, unknown>).status ?? "ACTIVE";
+      }
+      return token;
+    },
+    async session(args) {
+      const session = (authConfig.callbacks?.session ? await authConfig.callbacks.session(args) : args.session) ?? args.session;
+      if (session.user) {
+        (session.user as unknown as Record<string, unknown>).status = args.token.status ?? "ACTIVE";
+      }
+      return session;
+    },
+  },
 });

@@ -11,6 +11,8 @@ type SubscriptionRejectedEmailInput = SubscriptionEmailBase & {
   reason: string;
 };
 
+type AdminSubscriptionConfirmationEmailInput = SubscriptionEmailBase;
+
 type OpportunityEmailBase = {
   to: string;
   name?: string | null;
@@ -60,6 +62,16 @@ export async function sendSubscriptionActivatedEmail({ to, name, tier }: Subscri
     to,
     subject: "Votre abonnement IBC est activé",
     text: `${greeting(name)}\n\nVotre abonnement IBC ${label} est activé. Bienvenue dans le club !${dashboardLine()}`,
+  });
+}
+
+export async function sendAdminSubscriptionConfirmationEmail({ to, name, tier }: AdminSubscriptionConfirmationEmailInput) {
+  const label = tierLabel(tier);
+  await getResendClient().emails.send({
+    from: getSender(),
+    to,
+    subject: "Votre abonnement IBC est confirmé",
+    text: `${greeting(name)}\n\nVotre abonnement IBC ${label} est bien confirmé. Vous pouvez consulter votre espace membre pour accéder aux avantages de votre plan.${dashboardLine()}`,
   });
 }
 
