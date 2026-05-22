@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 import { deleteR2Object, getMissingR2Env } from "@/lib/r2";
 import { sanitizeError } from "@/lib/sanitize-log";
@@ -144,6 +145,26 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     });
 
     const updated = await loadOpportunityForResponse(id);
+    await safeCreateAuditLog({
+      actorId: authResult.sessionUserId,
+      action: AUDIT_ACTIONS.OPPORTUNITY_UPDATE,
+      entityType: "Opportunity",
+      entityId: id,
+      metadata: {
+        previousStatus: opportunity.verificationStatus,
+        nextStatus: opportunity.verificationStatus,
+        requiresDoubleVerification,
+        approvalCount: opportunity.verificationApprovals.length,
+        changedFields: {
+          title: parsed.data.title !== opportunity.title,
+          category: parsed.data.category !== opportunity.category,
+          amount: parsed.data.amount !== opportunity.amount,
+          requiredTier: parsed.data.requiredTier !== opportunity.requiredTier,
+          requiresDoubleVerification: requiresDoubleVerification !== opportunity.requiresDoubleVerification,
+          description: parsed.data.description !== opportunity.description,
+        },
+      },
+    });
     return NextResponse.json({ data: serializeOpportunity(updated, authResult.sessionUserId) });
   } catch (error) {
     console.error("[admin-opportunity-update]", sanitizeError(error));
@@ -159,7 +180,7 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
     const { id } = await params;
     const opportunity = await prisma.opportunity.findUnique({
       where: { id },
-      include: { documents: { select: { id: true, r2Key: true } } },
+      include: { documents: { select: { id: true, r2Key: true } }, verificationApprovals: { select: { adminId: true } } },
     });
     if (!opportunity) {
       return NextResponse.json({ error: "Opportunité introuvable" }, { status: 404 });
@@ -177,6 +198,19 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
     }
 
     console.info("[admin-opportunity-delete]", { opportunityId: id, adminId: authResult.sessionUserId });
+    await safeCreateAuditLog({
+      actorId: authResult.sessionUserId,
+      action: AUDIT_ACTIONS.OPPORTUNITY_DELETE,
+      entityType: "Opportunity",
+      entityId: id,
+      metadata: {
+        previousStatus: opportunity.verificationStatus,
+        nextStatus: "DELETED",
+        requiresDoubleVerification: opportunity.requiresDoubleVerification,
+        documentCount: opportunity.documents.length,
+        approvalCount: opportunity.verificationApprovals.length,
+      },
+    });
     return NextResponse.json({ data: { ok: true } });
   } catch (error) {
     console.error("[admin-opportunity-delete]", sanitizeError(error));

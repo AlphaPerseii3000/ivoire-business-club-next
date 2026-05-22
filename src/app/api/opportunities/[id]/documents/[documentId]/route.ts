@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { createDownloadSignedUrl, deleteR2Object, getMissingR2Env } from "@/lib/r2";
 import {
   canManageDocuments,
@@ -31,6 +32,16 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
       } catch (error) {
         console.error("Delete R2 object error:", error instanceof Error ? error.message : "unknown");
       }
+    }
+
+    if (session.role === "ADMIN") {
+      await safeCreateAuditLog({
+        actorId: session.userId,
+        action: AUDIT_ACTIONS.DOCUMENT_DELETE,
+        entityType: "Document",
+        entityId: documentId,
+        metadata: { opportunityId: id, uploadedById: document.uploadedById, size: document.size, mimeType: document.mimeType },
+      });
     }
 
     return NextResponse.json({ data: { ok: true } });

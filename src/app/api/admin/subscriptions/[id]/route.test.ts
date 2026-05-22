@@ -11,6 +11,18 @@ const mockSendActivated = vi.hoisted(() => vi.fn());
 const mockSendRejected = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
+vi.mock("@/lib/audit-log", () => ({
+  AUDIT_ACTIONS: {
+    SUBSCRIPTION_VALIDATE: "SUBSCRIPTION_VALIDATE",
+    SUBSCRIPTION_REJECT: "SUBSCRIPTION_REJECT",
+    SUBSCRIPTION_SUSPEND: "SUBSCRIPTION_SUSPEND",
+    OPPORTUNITY_STATUS_CHANGE: "OPPORTUNITY_STATUS_CHANGE",
+    OPPORTUNITY_DOUBLE_VERIFICATION_APPROVE: "OPPORTUNITY_DOUBLE_VERIFICATION_APPROVE",
+    OPPORTUNITY_UPDATE: "OPPORTUNITY_UPDATE",
+    OPPORTUNITY_DELETE: "OPPORTUNITY_DELETE",
+  },
+  safeCreateAuditLog: vi.fn(),
+}));
 vi.mock("@/lib/email", () => ({
   sendSubscriptionActivatedEmail: mockSendActivated,
   sendSubscriptionRejectedEmail: mockSendRejected,

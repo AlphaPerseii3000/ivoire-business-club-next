@@ -2,7 +2,7 @@
 Story: "6.4"
 StoryKey: "6-4-audit-logs-et-conformite"
 Title: "Audit Logs et Conformité"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-22"
 
 # Story 6.4: Audit Logs et Conformité
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: admin route group, admin layout/navigation, subscription/opportunity admin APIs, admin analytics/dashboard, document management, and sanitize-log utility already exist. This story creates the durable immutable audit trail and admin audit viewer; do not rebuild admin auth, kanban, analytics, subscriptions, or document systems. -->
 
@@ -97,55 +97,55 @@ afin de respecter les obligations réglementaires (CENTIF-CI, APDP) et tracer le
 
 ## Tasks / Subtasks
 
-- [ ] **AC2/AC3: Créer le modèle Prisma AuditLog + migration immuable**
-  - [ ] Auditer `prisma/schema.prisma` avant modification; confirmer qu'aucun modèle `AuditLog` n'existe.
-  - [ ] Ajouter `AuditLog` avec relation optionnelle `actor User?` et champ inverse `auditLogs AuditLog[]` sur `User` si nécessaire.
-  - [ ] Utiliser `metadata Json?`; si SQLite/Prisma adapter présente une limitation JSON, conserver le type Prisma supporté par le projet ou documenter clairement le fallback `String` JSON sérialisé uniquement si nécessaire.
-  - [ ] Ajouter `@@index([createdAt])`, `@@index([actorId, createdAt])`, `@@index([entityType, entityId])`, `@@index([action, createdAt])`, `@@map("audit_logs")`.
-  - [ ] Générer une migration Prisma nommée explicitement (ex: `add_audit_logs`) et ajouter dans `migration.sql` les triggers SQLite `BEFORE UPDATE` / `BEFORE DELETE` qui abortent toute mutation d'une ligne audit.
-  - [ ] Ne jamais ajouter `prisma/dev.db` ou autre DB binaire au commit.
+- [x] **AC2/AC3: Créer le modèle Prisma AuditLog + migration immuable**
+  - [x] Auditer `prisma/schema.prisma` avant modification; confirmer qu'aucun modèle `AuditLog` n'existe.
+  - [x] Ajouter `AuditLog` avec relation optionnelle `actor User?` et champ inverse `auditLogs AuditLog[]` sur `User` si nécessaire.
+  - [x] Utiliser `metadata Json?`; si SQLite/Prisma adapter présente une limitation JSON, conserver le type Prisma supporté par le projet ou documenter clairement le fallback `String` JSON sérialisé uniquement si nécessaire.
+  - [x] Ajouter `@@index([createdAt])`, `@@index([actorId, createdAt])`, `@@index([entityType, entityId])`, `@@index([action, createdAt])`, `@@map("audit_logs")`.
+  - [x] Générer une migration Prisma nommée explicitement (ex: `add_audit_logs`) et ajouter dans `migration.sql` les triggers SQLite `BEFORE UPDATE` / `BEFORE DELETE` qui abortent toute mutation d'une ligne audit.
+  - [x] Ne jamais ajouter `prisma/dev.db` ou autre DB binaire au commit.
 
-- [ ] **AC4: Créer le helper d'audit centralisé**
-  - [ ] Étendre `src/lib/sanitize-log.ts` pour couvrir aussi `r2Key`, `signedUrl`, `publicUrl`, `downloadUrl`, `previewUrl`, `email`, `fileName`, `originalName`, `description`, `note`, `adminNote`, `rejectionNote` si ces champs peuvent être sensibles en metadata.
-  - [ ] Créer `src/lib/audit-log.ts` avec une fonction type `createAuditLog({ actorId, action, entityType, entityId, metadata })`.
-  - [ ] Le helper doit appeler uniquement `prisma.auditLog.create`; ne pas exposer update/delete.
-  - [ ] Ajouter des types/constantes d'actions pour éviter les strings divergentes (`SUBSCRIPTION_VALIDATE`, `OPPORTUNITY_STATUS_CHANGE`, etc.).
-  - [ ] Ajouter tests unitaires du helper et de la sanitation.
+- [x] **AC4: Créer le helper d'audit centralisé**
+  - [x] Étendre `src/lib/sanitize-log.ts` pour couvrir aussi `r2Key`, `signedUrl`, `publicUrl`, `downloadUrl`, `previewUrl`, `email`, `fileName`, `originalName`, `description`, `note`, `adminNote`, `rejectionNote` si ces champs peuvent être sensibles en metadata.
+  - [x] Créer `src/lib/audit-log.ts` avec une fonction type `createAuditLog({ actorId, action, entityType, entityId, metadata })`.
+  - [x] Le helper doit appeler uniquement `prisma.auditLog.create`; ne pas exposer update/delete.
+  - [x] Ajouter des types/constantes d'actions pour éviter les strings divergentes (`SUBSCRIPTION_VALIDATE`, `OPPORTUNITY_STATUS_CHANGE`, etc.).
+  - [x] Ajouter tests unitaires du helper et de la sanitation.
 
-- [ ] **AC5: Instrumenter les endpoints admin existants sans changer leur contrat**
-  - [ ] Instrumenter `src/app/api/admin/subscriptions/[id]/route.ts` après mutation réussie pour `validate`, `reject`, `suspend`, avec status/tier/montant/référence virement.
-  - [ ] Instrumenter `src/app/api/admin/opportunities/[id]/verify/route.ts` pour status changes et double-vérification; respecter `currentStatus !== nextStatus` pour éviter notifications/audits en double.
-  - [ ] Instrumenter `src/app/api/admin/opportunities/[id]/route.ts` pour `PATCH` édition et `DELETE` suppression, sans logger description complète, noms/keys documents ou payload complet.
-  - [ ] Instrumenter `src/app/api/admin/users/[id]/tier/route.ts` et `src/app/api/admin/users/[id]/verify/route.ts` si ces routes mutent tier/vérification.
-  - [ ] Si la suppression document admin passe par `src/app/api/opportunities/[id]/documents/[documentId]/route.ts`, ajouter un audit uniquement quand l'acteur est admin et sans exposer `r2Key`/nom de fichier.
-  - [ ] Préserver toutes les réponses JSON existantes (`{ data: ... }`, `{ error: ... }`) pour ne pas casser les tests/UI.
+- [x] **AC5: Instrumenter les endpoints admin existants sans changer leur contrat**
+  - [x] Instrumenter `src/app/api/admin/subscriptions/[id]/route.ts` après mutation réussie pour `validate`, `reject`, `suspend`, avec status/tier/montant/référence virement.
+  - [x] Instrumenter `src/app/api/admin/opportunities/[id]/verify/route.ts` pour status changes et double-vérification; respecter `currentStatus !== nextStatus` pour éviter notifications/audits en double.
+  - [x] Instrumenter `src/app/api/admin/opportunities/[id]/route.ts` pour `PATCH` édition et `DELETE` suppression, sans logger description complète, noms/keys documents ou payload complet.
+  - [x] Instrumenter `src/app/api/admin/users/[id]/tier/route.ts` et `src/app/api/admin/users/[id]/verify/route.ts` si ces routes mutent tier/vérification.
+  - [x] Si la suppression document admin passe par `src/app/api/opportunities/[id]/documents/[documentId]/route.ts`, ajouter un audit uniquement quand l'acteur est admin et sans exposer `r2Key`/nom de fichier.
+  - [x] Préserver toutes les réponses JSON existantes (`{ data: ... }`, `{ error: ... }`) pour ne pas casser les tests/UI.
 
-- [ ] **AC1/AC6/AC7: Créer la page `/admin/audit` et son API de lecture**
-  - [ ] Ajouter `src/app/api/admin/audit/route.ts` avec `GET`, auth via `auth()` + vérification role `ADMIN` par Prisma, validation query params via Zod.
-  - [ ] Ajouter `src/app/(admin)/admin/audit/page.tsx` comme Server Component avec auth/admin guard identique aux pages admin existantes; pas de premium gate membre.
-  - [ ] Lire les query params et récupérer les logs côté serveur via Prisma ou appeler le même helper de query; éviter un client fetch inutile au premier rendu.
-  - [ ] Joindre l'acteur via relation `actor` avec `select: { id, name, email }` seulement.
-  - [ ] Ajouter UI filtres/pagination en français; utiliser composants shadcn existants (`Button`, `Input`, `Select`, `Card`, table HTML accessible) et query params.
-  - [ ] Ajouter lien « Audit » dans `src/app/(admin)/admin/layout.tsx` sans casser les liens existants.
+- [x] **AC1/AC6/AC7: Créer la page `/admin/audit` et son API de lecture**
+  - [x] Ajouter `src/app/api/admin/audit/route.ts` avec `GET`, auth via `auth()` + vérification role `ADMIN` par Prisma, validation query params via Zod.
+  - [x] Ajouter `src/app/(admin)/admin/audit/page.tsx` comme Server Component avec auth/admin guard identique aux pages admin existantes; pas de premium gate membre.
+  - [x] Lire les query params et récupérer les logs côté serveur via Prisma ou appeler le même helper de query; éviter un client fetch inutile au premier rendu.
+  - [x] Joindre l'acteur via relation `actor` avec `select: { id, name, email }` seulement.
+  - [x] Ajouter UI filtres/pagination en français; utiliser composants shadcn existants (`Button`, `Input`, `Select`, `Card`, table HTML accessible) et query params.
+  - [x] Ajouter lien « Audit » dans `src/app/(admin)/admin/layout.tsx` sans casser les liens existants.
 
-- [ ] **AC7: UX/accessibilité admin audit**
-  - [ ] Format timestamp en `fr-FR` avec date + heure; conserver ISO dans attribut `dateTime` si `<time>` est utilisé.
-  - [ ] Afficher les métadonnées comme résumé lisible; masquer/plier le JSON complet si trop long.
-  - [ ] Prévoir état loading si des composants client sont ajoutés, et état erreur français pour filtre invalide.
-  - [ ] Mobile : table dans conteneur `overflow-x-auto`, boutons `min-h-11`, labels visibles, pas de dépendance à la couleur seule.
-  - [ ] Respecter la règle Next.js 16 : pas de `&&` dans JSX; booléens composés pré-calculés.
+- [x] **AC7: UX/accessibilité admin audit**
+  - [x] Format timestamp en `fr-FR` avec date + heure; conserver ISO dans attribut `dateTime` si `<time>` est utilisé.
+  - [x] Afficher les métadonnées comme résumé lisible; masquer/plier le JSON complet si trop long.
+  - [x] Prévoir état loading si des composants client sont ajoutés, et état erreur français pour filtre invalide.
+  - [x] Mobile : table dans conteneur `overflow-x-auto`, boutons `min-h-11`, labels visibles, pas de dépendance à la couleur seule.
+  - [x] Respecter la règle Next.js 16 : pas de `&&` dans JSX; booléens composés pré-calculés.
 
-- [ ] **AC8: Tests et validations**
-  - [ ] Ajouter tests API `src/app/api/admin/audit/route.test.ts` pour 401/403, pagination, filtres, bornes `pageSize`, dates invalides.
-  - [ ] Ajouter tests helper `src/lib/audit-log.test.ts` et/ou `src/lib/sanitize-log.test.ts` pour redaction.
-  - [ ] Ajouter tests d'instrumentation aux tests existants des routes subscriptions/opportunities/users/documents.
-  - [ ] Ajouter test d'immutabilité DB (`update`/`delete` doivent échouer) après migration appliquée.
-  - [ ] Ajouter/mettre à jour test de page admin audit si les patterns existants le permettent.
-  - [ ] Exécuter `./node_modules/.bin/prisma validate`.
-  - [ ] Exécuter les tests ciblés ajoutés/modifiés.
-  - [ ] Exécuter `npx vitest run`.
-  - [ ] Exécuter `npm run build`.
-  - [ ] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
+- [x] **AC8: Tests et validations**
+  - [x] Ajouter tests API `src/app/api/admin/audit/route.test.ts` pour 401/403, pagination, filtres, bornes `pageSize`, dates invalides.
+  - [x] Ajouter tests helper `src/lib/audit-log.test.ts` et/ou `src/lib/sanitize-log.test.ts` pour redaction.
+  - [x] Ajouter tests d'instrumentation aux tests existants des routes subscriptions/opportunities/users/documents.
+  - [x] Ajouter test d'immutabilité DB (`update`/`delete` doivent échouer) après migration appliquée.
+  - [x] Ajouter/mettre à jour test de page admin audit si les patterns existants le permettent.
+  - [x] Exécuter `./node_modules/.bin/prisma validate`.
+  - [x] Exécuter les tests ciblés ajoutés/modifiés.
+  - [x] Exécuter `npx vitest run`.
+  - [x] Exécuter `npm run build`.
+  - [x] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
 
 ## Dev Notes
 
@@ -341,10 +341,53 @@ If `npm run lint` is run, document pre-existing unrelated lint warnings separate
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gpt-5.5 (openai-codex)
 
 ### Debug Log References
 
+- `./node_modules/.bin/prisma validate` — PASS
+- `DATABASE_URL=file:/tmp/ibc-audit-test.db ./node_modules/.bin/prisma migrate deploy` — PASS
+- `npx vitest run src/lib/sanitize-log.test.ts src/lib/audit-log.test.ts src/lib/audit-log-immutability.test.ts src/app/api/admin/audit/route.test.ts src/app/api/admin/subscriptions/[id]/route.test.ts src/app/api/admin/opportunities/[id]/route.test.ts src/app/api/admin/opportunities/[id]/verify/route.test.ts` — PASS (53/53)
+- `npx vitest run` — PASS (414/414)
+- `npm run build` — PASS (middleware deprecation and missing Upstash env warnings only)
+- `npm run lint` — FAIL due to pre-existing issues outside touched files (`src/app/(dashboard)/**`, `src/app/auth/signup/page.tsx`, `src/components/features/**`, `src/middleware.ts`, `src/app/api/user/profile/route.test.ts`); no new lint findings in story files.
+
 ### Completion Notes List
 
+- Added durable `AuditLog` Prisma model mapped to `audit_logs`, with actor relation, consultation indexes, migration, and SQLite immutability triggers for update/delete protection.
+- Added centralized audit helper with stable action constants, sanitized metadata creation only, read query helper, and safe non-blocking audit creation for post-mutation failures.
+- Extended log sanitation to redact audit-sensitive metadata (`r2Key`, signed/public/download/preview URLs, email, filenames, descriptions, notes).
+- Instrumented critical admin mutations for subscriptions, opportunity status/double-verification/update/delete, user tier/verification, and admin document deletion without changing existing response shapes.
+- Added protected `/api/admin/audit` with Zod query validation, filtering, pagination, and French 401/403/400 responses.
+- Added protected `/admin/audit` admin page with French filters, responsive accessible table, metadata details disclosure, empty/error states, and admin navigation link.
+- Added tests for helper creation/sanitation, immutable SQLite triggers, audit API auth/filter/pagination validation, and updated existing route tests to account for audit instrumentation.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/6-4-audit-logs-et-conformite.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `prisma/schema.prisma`
+- `prisma/migrations/20260522100000_add_audit_logs/migration.sql`
+- `src/lib/audit-log.ts`
+- `src/lib/audit-log.test.ts`
+- `src/lib/audit-log-immutability.test.ts`
+- `src/lib/sanitize-log.ts`
+- `src/lib/sanitize-log.test.ts`
+- `src/app/api/admin/audit/route.ts`
+- `src/app/api/admin/audit/route.test.ts`
+- `src/app/(admin)/admin/audit/page.tsx`
+- `src/app/(admin)/admin/audit/page.test.tsx`
+- `src/app/(admin)/admin/layout.tsx`
+- `src/app/api/admin/subscriptions/[id]/route.ts`
+- `src/app/api/admin/subscriptions/[id]/route.test.ts`
+- `src/app/api/admin/opportunities/[id]/route.ts`
+- `src/app/api/admin/opportunities/[id]/route.test.ts`
+- `src/app/api/admin/opportunities/[id]/verify/route.ts`
+- `src/app/api/admin/opportunities/[id]/verify/route.test.ts`
+- `src/app/api/admin/users/[id]/tier/route.ts`
+- `src/app/api/admin/users/[id]/verify/route.ts`
+- `src/app/api/opportunities/[id]/documents/[documentId]/route.ts`
+
+### Change Log
+
+- 2026-05-22: Implemented Story 6.4 audit logs and compliance trail; status moved to review.

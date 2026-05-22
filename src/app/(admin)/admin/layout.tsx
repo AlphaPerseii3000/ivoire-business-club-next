@@ -5,6 +5,7 @@ const adminNav = [
   { href: "/admin/members", label: "Membres" },
   { href: "/admin/subscriptions", label: "Abonnements" },
   { href: "/admin/opportunities", label: "Opportunités" },
+  { href: "/admin/audit", label: "Audit" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

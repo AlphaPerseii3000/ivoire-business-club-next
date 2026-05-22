@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { sendSubscriptionActivatedEmail, sendSubscriptionRejectedEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
@@ -24,7 +25,7 @@ async function requireAdmin() {
     return { error: NextResponse.json({ error: "Interdit" }, { status: 403 }) };
   }
 
-  return { session };
+  return { sessionUserId: session.user.id };
 }
 
 function transitionError(action: string, status: string) {
@@ -139,6 +140,27 @@ export async function PATCH(req: Request, { params }: Params) {
       userId: subscription.userId,
       previousStatus: subscription.status,
       nextStatus: updatedSubscription.status,
+    });
+
+    const auditAction =
+      action === "validate"
+        ? AUDIT_ACTIONS.SUBSCRIPTION_VALIDATE
+        : action === "reject"
+          ? AUDIT_ACTIONS.SUBSCRIPTION_REJECT
+          : AUDIT_ACTIONS.SUBSCRIPTION_SUSPEND;
+    await safeCreateAuditLog({
+      actorId: admin.sessionUserId,
+      action: auditAction,
+      entityType: "Subscription",
+      entityId: id,
+      metadata: {
+        previousStatus: subscription.status,
+        nextStatus: updatedSubscription.status,
+        tier: subscription.tier,
+        amount: undefined,
+        providerRef: subscription.providerRef,
+        paymentStatus: action === "validate" ? "succeeded" : action === "reject" ? "failed" : undefined,
+      },
     });
 
     return NextResponse.json({ data: updatedSubscription });

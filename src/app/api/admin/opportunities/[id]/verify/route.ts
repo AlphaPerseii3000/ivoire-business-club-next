@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { sendOpportunityMatchedEmail, sendOpportunityRejectedEmail, sendOpportunityVerifiedEmail } from "@/lib/email";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import type { SelectedTag } from "@/lib/tags";
@@ -263,6 +264,20 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       from: currentStatus,
       to: effectiveNextStatus,
       pendingSecondVerification,
+    });
+
+    await safeCreateAuditLog({
+      actorId: authResult.sessionUserId,
+      action: pendingSecondVerification ? AUDIT_ACTIONS.OPPORTUNITY_DOUBLE_VERIFICATION_APPROVE : AUDIT_ACTIONS.OPPORTUNITY_STATUS_CHANGE,
+      entityType: "Opportunity",
+      entityId: id,
+      metadata: {
+        previousStatus: currentStatus,
+        nextStatus: effectiveNextStatus,
+        requiresDoubleVerification: opportunity.requiresDoubleVerification,
+        approvalCount: updated.verificationApprovals.length,
+        pendingSecondVerification,
+      },
     });
 
     try {

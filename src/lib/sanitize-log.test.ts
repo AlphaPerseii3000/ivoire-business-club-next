@@ -55,7 +55,7 @@ describe("sanitizeForLog", () => {
     };
     const result = sanitizeForLog(data);
 
-    expect(result.email).toBe("user@example.com");
+    expect(result.email).toBe("[REDACTED]");
     expect(result.password).toBe("[REDACTED]");
     expect(result.passwordHash).toBe("[REDACTED]");
     expect(result.token).toBe("[REDACTED]");
@@ -90,6 +90,29 @@ describe("sanitizeForLog", () => {
     expect(result.PASSWORDHASH).toBe("[REDACTED]");
     expect(result.AccessToken).toBe("[REDACTED]");
     expect(result.SecretKey).toBe("[REDACTED]");
+  });
+
+  it("redacts audit-specific sensitive metadata keys", () => {
+    const result = sanitizeForLog({
+      r2Key: "opportunities/opp/doc.pdf",
+      signedUrl: "https://signed.example.com",
+      publicUrl: "https://public.example.com",
+      fileName: "secret.pdf",
+      originalName: "passport.pdf",
+      description: "sensitive description",
+      adminNote: "private note",
+      nested: { email: "admin@example.com", token: "tok" },
+    });
+
+    expect(result.r2Key).toBe("[REDACTED]");
+    expect(result.signedUrl).toBe("[REDACTED]");
+    expect(result.publicUrl).toBe("[REDACTED]");
+    expect(result.fileName).toBe("[REDACTED]");
+    expect(result.originalName).toBe("[REDACTED]");
+    expect(result.description).toBe("[REDACTED]");
+    expect(result.adminNote).toBe("[REDACTED]");
+    expect((result.nested as Record<string, unknown>).email).toBe("[REDACTED]");
+    expect((result.nested as Record<string, unknown>).token).toBe("[REDACTED]");
   });
 
   it("handles empty objects", () => {

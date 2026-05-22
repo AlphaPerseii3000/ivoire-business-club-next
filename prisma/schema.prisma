@@ -92,6 +92,7 @@ model User {
   opportunityInterests OpportunityInterest[]
   reviewsWritten     Review[] @relation("ReviewsWritten")
   reviewsReceived    Review[] @relation("ReviewsReceived")
+  auditLogs          AuditLog[] @relation("AuditLogActor")
 
   @@map("users")
 }
@@ -321,4 +322,21 @@ model Payment {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payments")
+}
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
 }

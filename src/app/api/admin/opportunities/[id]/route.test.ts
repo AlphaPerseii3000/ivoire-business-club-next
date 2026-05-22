@@ -11,6 +11,18 @@ const mockDeleteR2Object = vi.hoisted(() => vi.fn());
 const mockGetMissingR2Env = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
+vi.mock("@/lib/audit-log", () => ({
+  AUDIT_ACTIONS: {
+    SUBSCRIPTION_VALIDATE: "SUBSCRIPTION_VALIDATE",
+    SUBSCRIPTION_REJECT: "SUBSCRIPTION_REJECT",
+    SUBSCRIPTION_SUSPEND: "SUBSCRIPTION_SUSPEND",
+    OPPORTUNITY_STATUS_CHANGE: "OPPORTUNITY_STATUS_CHANGE",
+    OPPORTUNITY_DOUBLE_VERIFICATION_APPROVE: "OPPORTUNITY_DOUBLE_VERIFICATION_APPROVE",
+    OPPORTUNITY_UPDATE: "OPPORTUNITY_UPDATE",
+    OPPORTUNITY_DELETE: "OPPORTUNITY_DELETE",
+  },
+  safeCreateAuditLog: vi.fn(),
+}));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
@@ -184,7 +196,10 @@ describe("DELETE /api/admin/opportunities/[id]", () => {
     mockUserFindUnique.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockOpportunityFindUnique.mockResolvedValue({
       id: "opp-1",
+      verificationStatus: "PENDING",
+      requiresDoubleVerification: false,
       documents: [{ id: "doc-1", r2Key: "opportunities/opp-1/documents/doc-1.pdf" }],
+      verificationApprovals: [],
     });
     mockOpportunityDelete.mockResolvedValue({ id: "opp-1" });
     mockGetMissingR2Env.mockReturnValue([]);
