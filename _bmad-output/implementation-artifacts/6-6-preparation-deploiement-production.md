@@ -120,6 +120,10 @@ afin de garantir la stabilité et la scalabilité en production.
   - [x] La config Nginx exemple passe une revue syntaxique/documentaire; si test local possible, `nginx -t` avec chemins temporaires.
   - [x] `git status` vérifié: aucun `.env`, `.env.local`, `dev.db`, `*.sqlite`, `*.sqlite3`, `deploy-dist/` ou log runtime ne doit être committé.
 
+### Review Findings
+
+- [ ] [Review][Patch] Production deploy artifact can embed a SQLite-generated Prisma Client — AC6/NFR-SC3 require PostgreSQL runtime, but the documented/package flow runs `npm run build`/`npm run prepare-deploy` without forcing `PRISMA_SCHEMA=prisma/schema.prisma` and a PostgreSQL `DATABASE_URL` before Prisma Client generation. The built `deploy-dist/.next/standalone/.next/server/...` artifact currently contains `activeProvider:"sqlite"` and `provider = "sqlite"`, while `src/lib/prisma.ts` selects `PrismaPg` in production. Fix the build/deploy flow so production packages are generated with the PostgreSQL schema/client, and add an automated assertion that `deploy-dist` does not contain a SQLite active provider. [`prisma.config.ts`, `scripts/prepare-deploy.sh`, `scripts/DEPLOY.md`, `deploy-dist/.next/standalone/.next/server/chunks/_0vjedb9._.js`]
+
 ## Dev Notes
 
 ### Delta scope — état actuel vérifié dans le codebase
