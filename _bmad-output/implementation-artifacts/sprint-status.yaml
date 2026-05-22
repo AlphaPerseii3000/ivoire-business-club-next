@@ -84,7 +84,7 @@ development_status:
   6-1-tableau-de-bord-kanban-des-opportunites: done
   6-2-metriques-cles-et-analytics-admin: done
   6-3-gestion-des-documents-et-edition-des-opportunites: done
-  6-4-audit-logs-et-conformite: review
+  6-4-audit-logs-et-conformite: done
   6-5-gestion-des-utilisateurs-et-emails-admin: done
   6-6-preparation-deploiement-production: backlog
   epic-6-retrospective: optional

@@ -2,7 +2,7 @@
 Story: "6.4"
 StoryKey: "6-4-audit-logs-et-conformite"
 Title: "Audit Logs et Conformité"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-22"
 
 # Story 6.4: Audit Logs et Conformité
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: admin route group, admin layout/navigation, subscription/opportunity admin APIs, admin analytics/dashboard, document management, and sanitize-log utility already exist. This story creates the durable immutable audit trail and admin audit viewer; do not rebuild admin auth, kanban, analytics, subscriptions, or document systems. -->
 
