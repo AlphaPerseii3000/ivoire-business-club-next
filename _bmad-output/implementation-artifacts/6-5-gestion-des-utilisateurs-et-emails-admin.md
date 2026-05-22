@@ -2,7 +2,7 @@
 Story: "6.5"
 StoryKey: "6-5-gestion-des-utilisateurs-et-emails-admin"
 Title: "Gestion des Utilisateurs et Emails Admin"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR7", "FR40", "FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-22"
 
 # Story 6.5: Gestion des Utilisateurs et Emails Admin
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: admin route group, `/admin/members` page, user tier/verification admin routes, Resend utilities, and Story 6.4 audit trail already exist. Extend existing code; do not rebuild admin auth, subscriptions, audit, dashboard, or email infrastructure. -->
 
@@ -167,6 +167,13 @@ afin d'assurer le support et la modération de la communauté.
   - [x] Exécuter `npx vitest run`.
   - [x] Exécuter `npm run build`.
   - [x] Avant commit dev-story, utiliser `git add -A -- . ':!dev.db' ':!*.sqlite3'` ou ajouter explicitement les fichiers, jamais `git add -A` seul.
+
+### Review Findings
+
+- [ ] [Review][Patch] Audit log for confirmation email is created after the fallible email side effect, not before it [`src/app/api/admin/users/[id]/confirmation-email/route.ts:46`]
+  - AC7/architecture require durable audit coverage for admin actions and prior review guardrails require `safeCreateAuditLog()` to precede email side effects. Current flow calls `sendAdminSubscriptionConfirmationEmail()` in the `try` block first, returns `EMAIL_FAILED` without any audit on send failure, and only calls `safeCreateAuditLog()` after the email succeeds (`route.ts:46-75`). If Resend succeeds but the process fails before the audit write, or if email attempts must be compliance-visible, the admin email action is untraceable. Move/split audit so the admin email action is durably logged before the Resend side effect with sanitized metadata.
+- [ ] [Review][Patch] Suspended admins/existing JWTs are still accepted by admin pages and admin APIs [`src/app/(admin)/admin/layout.tsx:11`, `src/app/api/admin/users/[id]/status/route.ts:46`, `src/app/api/admin/users/[id]/confirmation-email/route.ts:13`]
+  - AC4 requires suspended users' existing sessions/protected server requests to be rejected on the next protected request. The new `requireActiveAuthenticatedUser()` guard is only wired into `(dashboard)/layout.tsx`; `(admin)/admin/layout.tsx` has no auth/status guard, and the new admin APIs only select/check `role` for the acting user, not `status`. Because the status API allows one admin to suspend another admin (only self-suspension is blocked), a suspended admin with an existing JWT can continue using admin pages/APIs until re-authentication. Add a DB-backed active-status check to admin layout and admin route authorization paths (or shared admin guard) so `status === "SUSPENDED"` is rejected consistently.
 
 ## Dev Notes
 
