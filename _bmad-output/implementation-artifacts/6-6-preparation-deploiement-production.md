@@ -2,7 +2,7 @@
 Story: "6.6"
 StoryKey: "6-6-preparation-deploiement-production"
 Title: "Préparation Déploiement Production"
-Status: "review"
+Status: "done"
 Priority: "P0"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: []
@@ -12,7 +12,7 @@ Created: "2026-05-22"
 
 # Story 6.6: Préparation Déploiement Production
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Story brownfield/delta: une partie du socle déploiement existe déjà depuis Story 1.7 (`output: "standalone"`, `ecosystem.config.js`, `scripts/prepare-deploy.sh`, `npm run prepare-deploy`). Cette story doit finaliser/adapter pour la production Infomaniak, Nginx/Certbot et PostgreSQL; ne pas réinventer ce qui fonctionne déjà. -->
 
@@ -290,6 +290,24 @@ Validation minimale attendue avant dev-story completion:
 - `ecosystem.config.js`: PM2 actuel à ajuster.
 - `scripts/prepare-deploy.sh`: packaging actuel à préserver/renforcer.
 - `prisma/schema.prisma`, `src/lib/prisma.ts`, `prisma.config.ts`: état SQLite actuel à migrer pour production.
+
+
+#### Resolution — P1: Production deploy artifact embedded SQLite Prisma Client
+
+**Status: FIXED** (commit: fix(deploy): regenerate Prisma Client with PostgreSQL provider)
+
+The CR correctly identified that `deploy-dist` contained `activeProvider:"sqlite"` in the Prisma Client bundled into `.next/standalone`. The root cause was that `npm run build` uses the dev SQLite Prisma Client, and the standalone build copies that SQLite-embedding bundle into the deploy artifact.
+
+**Fix applied:**
+- Rewrote `scripts/prepare-deploy.sh` to rebuild Next.js entirely with the PostgreSQL Prisma Client before assembling `deploy-dist`. The script now:
+  1. Regenerates Prisma Client with `PRISMA_SCHEMA=prisma/schema.prisma` and `DATABASE_URL=postgresql://...`
+  2. Runs `npm run build` with the PG client
+  3. Copies the PG-enabled standalone build into `deploy-dist`
+  4. Asserts NFR-SC3: `grep -rq 'activeProvider:"sqlite"' deploy-dist/` rejects the artifact
+  5. Restores the SQLite Prisma Client for local dev after packaging
+
+- Added a test in `deployment-config.test.ts` verifying the NFR-SC3 assertion logic exists in prepare-deploy.sh
+- All 452 tests pass. Build successful. NFR-SC3 assertion passes.
 
 ## Dev Agent Record
 
