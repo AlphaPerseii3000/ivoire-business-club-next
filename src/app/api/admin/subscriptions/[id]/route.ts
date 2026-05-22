@@ -109,6 +109,29 @@ export async function PATCH(req: Request, { params }: Params) {
       });
     });
 
+    const auditAction =
+      action === "validate"
+        ? AUDIT_ACTIONS.SUBSCRIPTION_VALIDATE
+        : action === "reject"
+          ? AUDIT_ACTIONS.SUBSCRIPTION_REJECT
+          : AUDIT_ACTIONS.SUBSCRIPTION_SUSPEND;
+    // Audit log MUST be created immediately after DB mutation, before email side effects,
+    // so that email failures don't skip compliance logging (AC4/AC5).
+    await safeCreateAuditLog({
+      actorId: admin.sessionUserId,
+      action: auditAction,
+      entityType: "Subscription",
+      entityId: id,
+      metadata: {
+        previousStatus: subscription.status,
+        nextStatus: updatedSubscription.status,
+        tier: subscription.tier,
+        amount: undefined,
+        providerRef: subscription.providerRef,
+        paymentStatus: action === "validate" ? "succeeded" : action === "reject" ? "failed" : undefined,
+      },
+    });
+
     try {
       if (action === "validate") {
         await sendSubscriptionActivatedEmail({
@@ -140,27 +163,6 @@ export async function PATCH(req: Request, { params }: Params) {
       userId: subscription.userId,
       previousStatus: subscription.status,
       nextStatus: updatedSubscription.status,
-    });
-
-    const auditAction =
-      action === "validate"
-        ? AUDIT_ACTIONS.SUBSCRIPTION_VALIDATE
-        : action === "reject"
-          ? AUDIT_ACTIONS.SUBSCRIPTION_REJECT
-          : AUDIT_ACTIONS.SUBSCRIPTION_SUSPEND;
-    await safeCreateAuditLog({
-      actorId: admin.sessionUserId,
-      action: auditAction,
-      entityType: "Subscription",
-      entityId: id,
-      metadata: {
-        previousStatus: subscription.status,
-        nextStatus: updatedSubscription.status,
-        tier: subscription.tier,
-        amount: undefined,
-        providerRef: subscription.providerRef,
-        paymentStatus: action === "validate" ? "succeeded" : action === "reject" ? "failed" : undefined,
-      },
     });
 
     return NextResponse.json({ data: updatedSubscription });

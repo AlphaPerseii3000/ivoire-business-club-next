@@ -12,6 +12,7 @@ const mockNotificationCreateMany = vi.hoisted(() => vi.fn());
 const mockSendVerified = vi.hoisted(() => vi.fn());
 const mockSendRejected = vi.hoisted(() => vi.fn());
 const mockSendMatched = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/audit-log", () => ({
@@ -24,7 +25,7 @@ vi.mock("@/lib/audit-log", () => ({
     OPPORTUNITY_UPDATE: "OPPORTUNITY_UPDATE",
     OPPORTUNITY_DELETE: "OPPORTUNITY_DELETE",
   },
-  safeCreateAuditLog: vi.fn(),
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 vi.mock("@/lib/email", () => ({
   sendOpportunityVerifiedEmail: mockSendVerified,
@@ -116,7 +117,7 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
     }));
   });
 
-  it("verifies an opportunity and sends an email", async () => {
+  it("verifies an opportunity, sends an email, and creates audit log", async () => {
     const res = await PATCH(request({ action: "verify", note: "Dossier complet" }), params);
     const json = await res.json();
 
@@ -131,6 +132,13 @@ describe("PATCH /api/admin/opportunities/[id]/verify", () => {
       opportunityId: "opp-1",
       title: "Terrain à Cocody",
     });
+    // AC8: audit log created for verify action
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+      actorId: "admin-1",
+      action: "OPPORTUNITY_STATUS_CHANGE",
+      entityType: "Opportunity",
+      entityId: "opp-1",
+    }));
   });
 
   it("keeps a double-verification deal EN_COURS after the first admin approval without sending email", async () => {

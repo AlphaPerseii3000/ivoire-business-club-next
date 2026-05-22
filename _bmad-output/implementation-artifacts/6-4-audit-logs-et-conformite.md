@@ -2,7 +2,7 @@
 Story: "6.4"
 StoryKey: "6-4-audit-logs-et-conformite"
 Title: "Audit Logs et Conformité"
-Status: "review"
+Status: "in-progress"
 Priority: "P1"
 Epic: "Epic 6 — Administration et Back-office"
 FRs: ["FR39", "FR44"]
@@ -13,7 +13,7 @@ Created: "2026-05-22"
 
 # Story 6.4: Audit Logs et Conformité
 
-Status: review
+Status: in-progress
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: admin route group, admin layout/navigation, subscription/opportunity admin APIs, admin analytics/dashboard, document management, and sanitize-log utility already exist. This story creates the durable immutable audit trail and admin audit viewer; do not rebuild admin auth, kanban, analytics, subscriptions, or document systems. -->
 
@@ -391,3 +391,10 @@ gpt-5.5 (openai-codex)
 ### Change Log
 
 - 2026-05-22: Implemented Story 6.4 audit logs and compliance trail; status moved to review.
+
+### Review Findings
+
+- [ ] [Review][Patch] Subscription mutations can skip audit logging when post-mutation email sending fails [src/app/api/admin/subscriptions/[id]/route.ts:112] — AC4/AC5 require critical admin subscription actions to create an audit log after the business mutation succeeds and not let later side-effect failures hide the mutation from compliance. Current flow updates the subscription/payment in the transaction, then sends activation/refusal email, and returns `EMAIL_FAILED` from the email catch before reaching `safeCreateAuditLog` at line 151. A successful validate/reject mutation with email failure therefore leaves no durable audit trail. Move/create the audit log immediately after the DB mutation (or in a finally-style path before returning email failure).
+- [ ] [Review][Patch] Audit immutability test does not exercise Prisma update/delete as required [src/lib/audit-log-immutability.test.ts:13] — AC3 explicitly says tests must verify `prisma.auditLog.update` and `prisma.auditLog.delete` fail. The current test executes raw better-sqlite SQL `UPDATE`/`DELETE` against the migration, proving trigger behavior but not the Prisma client path required by the story. Add a Prisma-backed integration test using the migrated SQLite test database.
+- [ ] [Review][Patch] Admin mutation instrumentation tests do not assert audit log creation [src/app/api/admin/subscriptions/[id]/route.test.ts:14] — AC8 requires tests for subscription instrumentation and opportunity update/delete/status instrumentation. The route tests mock `safeCreateAuditLog` but never assert it is called with the expected action/entity/metadata, so regressions that remove or mis-shape audit entries would still pass. Add assertions for validate/reject/suspend, opportunity update/delete/status/double-verification, and document/admin user routes where practical.
+

@@ -9,6 +9,7 @@ const mockPaymentUpdateMany = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn());
 const mockSendActivated = vi.hoisted(() => vi.fn());
 const mockSendRejected = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/audit-log", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/audit-log", () => ({
     OPPORTUNITY_UPDATE: "OPPORTUNITY_UPDATE",
     OPPORTUNITY_DELETE: "OPPORTUNITY_DELETE",
   },
-  safeCreateAuditLog: vi.fn(),
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 vi.mock("@/lib/email", () => ({
   sendSubscriptionActivatedEmail: mockSendActivated,
@@ -100,7 +101,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
     expect(json.error).toBe("Interdit");
   });
 
-  it("validates a pending subscription, marks payment succeeded, and sends activation email", async () => {
+  it("validates a pending subscription, marks payment succeeded, sends activation email, and creates audit log", async () => {
     mockSubscriptionFindUnique.mockResolvedValueOnce(pendingSubscription);
 
     const res = await PATCH(request({ action: "validate" }), params);
@@ -121,6 +122,18 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       to: "jean@example.com",
       name: "Jean Kouassi",
       tier: "GRAND_FRERE",
+    });
+    // AC4/AC8: audit log created with correct action/entity for validate
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+      actorId: "admin-1",
+      action: "SUBSCRIPTION_VALIDATE",
+      entityType: "Subscription",
+      entityId: "sub-1",
+      metadata: expect.objectContaining({
+        previousStatus: "PENDING",
+        nextStatus: "ACTIVE",
+        tier: "GRAND_FRERE",
+      }),
     });
   });
 
@@ -145,7 +158,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
     expect(json.error).toBe("La justification est obligatoire pour refuser un abonnement.");
   });
 
-  it("rejects a pending subscription, marks payment failed, and sends refusal email with the reason", async () => {
+  it("rejects a pending subscription, marks payment failed, sends refusal email, and creates audit log", async () => {
     mockSubscriptionFindUnique.mockResolvedValueOnce(pendingSubscription);
     mockSubscriptionUpdate.mockResolvedValueOnce({ ...pendingSubscription, status: "CANCELLED" });
 
@@ -164,9 +177,22 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       tier: "GRAND_FRERE",
       reason: "Virement non reçu",
     });
+    // AC4/AC8: audit log created with correct action/entity for reject
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+      actorId: "admin-1",
+      action: "SUBSCRIPTION_REJECT",
+      entityType: "Subscription",
+      entityId: "sub-1",
+      metadata: expect.objectContaining({
+        previousStatus: "PENDING",
+        nextStatus: "CANCELLED",
+        tier: "GRAND_FRERE",
+        paymentStatus: "failed",
+      }),
+    });
   });
 
-  it("suspends an ACTIVE subscription and blocks future premium access", async () => {
+  it("suspends an ACTIVE subscription, blocks future premium access, and creates audit log", async () => {
     mockSubscriptionFindUnique.mockResolvedValueOnce(activeSubscription);
     mockSubscriptionUpdate.mockResolvedValueOnce({ ...activeSubscription, status: "CANCELLED" });
 
@@ -181,5 +207,17 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       include: { user: { select: { id: true, name: true, email: true } } },
     });
     expect(mockPaymentUpdateMany).not.toHaveBeenCalled();
+    // AC4/AC8: audit log created with correct action/entity for suspend
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+      actorId: "admin-1",
+      action: "SUBSCRIPTION_SUSPEND",
+      entityType: "Subscription",
+      entityId: "sub-1",
+      metadata: expect.objectContaining({
+        previousStatus: "ACTIVE",
+        nextStatus: "CANCELLED",
+        tier: "GRAND_FRERE",
+      }),
+    });
   });
 });

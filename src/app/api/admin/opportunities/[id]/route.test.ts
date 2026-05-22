@@ -9,6 +9,7 @@ const mockOpportunityUpdate = vi.hoisted(() => vi.fn());
 const mockOpportunityDelete = vi.hoisted(() => vi.fn());
 const mockDeleteR2Object = vi.hoisted(() => vi.fn());
 const mockGetMissingR2Env = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/audit-log", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/audit-log", () => ({
     OPPORTUNITY_UPDATE: "OPPORTUNITY_UPDATE",
     OPPORTUNITY_DELETE: "OPPORTUNITY_DELETE",
   },
-  safeCreateAuditLog: vi.fn(),
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -146,7 +147,7 @@ describe("PATCH /api/admin/opportunities/[id]", () => {
     expect(json.error).toBe("Opportunité introuvable");
   });
 
-  it("updates allowed fields and enables double verification for amount above 50k", async () => {
+  it("updates allowed fields and enables double verification for amount above 50k, and creates audit log", async () => {
     const updatedForResponse = { ...baseOpportunity, ...validUpdate, requiresDoubleVerification: true, updatedAt: new Date("2026-05-03T00:00:00.000Z") };
     mockOpportunityFindUnique.mockReset();
     mockOpportunityFindUnique.mockResolvedValueOnce(baseOpportunity).mockResolvedValueOnce(updatedForResponse);
@@ -168,6 +169,20 @@ describe("PATCH /api/admin/opportunities/[id]", () => {
     });
     expect(json.data.requiresDoubleVerification).toBe(true);
     expect(json.data.documents[0].originalName).toBe("Document.pdf");
+    // AC8: audit log created for opportunity update
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+      actorId: "admin-1",
+      action: "OPPORTUNITY_UPDATE",
+      entityType: "Opportunity",
+      entityId: "opp-1",
+      metadata: expect.objectContaining({
+        changedFields: expect.objectContaining({
+          title: true,
+          category: true,
+          amount: true,
+        }),
+      }),
+    });
   });
 
   it("preserves double verification when a verified deal amount decreases", () => {
@@ -206,7 +221,7 @@ describe("DELETE /api/admin/opportunities/[id]", () => {
     mockDeleteR2Object.mockResolvedValue(undefined);
   });
 
-  it("deletes the opportunity and then its R2 documents", async () => {
+  it("deletes the opportunity and then its R2 documents, and creates audit log", async () => {
     const res = await DELETE(new Request("http://localhost/api/admin/opportunities/opp-1", { method: "DELETE" }), params);
     const json = await res.json();
 
@@ -214,6 +229,14 @@ describe("DELETE /api/admin/opportunities/[id]", () => {
     expect(json.data.ok).toBe(true);
     expect(mockOpportunityDelete).toHaveBeenCalledWith({ where: { id: "opp-1" } });
     expect(mockDeleteR2Object).toHaveBeenCalledWith("opportunities/opp-1/documents/doc-1.pdf");
+    // AC8: audit log created for opportunity delete
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+      actorId: "admin-1",
+      action: "OPPORTUNITY_DELETE",
+      entityType: "Opportunity",
+      entityId: "opp-1",
+      metadata: expect.objectContaining({ previousStatus: "PENDING" }),
+    });
   });
 
   it("does not fail the user response when R2 deletion fails after DB deletion", async () => {
