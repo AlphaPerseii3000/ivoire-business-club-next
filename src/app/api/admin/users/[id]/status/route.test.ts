@@ -45,7 +45,7 @@ describe("PATCH /api/admin/users/[id]/status", () => {
     vi.resetAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "admin-1" } });
     mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN" };
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "ACTIVE" };
       if (where.id === "member-1") return activeUser;
       return null;
     });
@@ -79,7 +79,19 @@ describe("PATCH /api/admin/users/[id]/status", () => {
   });
 
   it("returns 403 for non-admin users", async () => {
-    mockUserFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER" });
+    mockUserFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER", status: "ACTIVE" });
+
+    const res = await PATCH(request({ action: "suspend" }), params);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 403 for suspended admin users", async () => {
+    mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "SUSPENDED" };
+      if (where.id === "member-1") return activeUser;
+      return null;
+    });
 
     const res = await PATCH(request({ action: "suspend" }), params);
 
@@ -88,7 +100,7 @@ describe("PATCH /api/admin/users/[id]/status", () => {
 
   it("returns 404 when target user is missing", async () => {
     mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN" };
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "ACTIVE" };
       return null;
     });
 
@@ -133,7 +145,7 @@ describe("PATCH /api/admin/users/[id]/status", () => {
 
   it("reactivates a suspended user and creates audit metadata", async () => {
     mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN" };
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "ACTIVE" };
       return suspendedUser;
     });
     mockUserUpdate.mockResolvedValueOnce({ id: "member-1", status: "ACTIVE", tier: "GRAND_FRERE" });
@@ -161,7 +173,7 @@ describe("PATCH /api/admin/users/[id]/status", () => {
     mockUserUpdate.mockClear();
     mockSafeCreateAuditLog.mockClear();
     mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN" };
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "ACTIVE" };
       return suspendedUser;
     });
 

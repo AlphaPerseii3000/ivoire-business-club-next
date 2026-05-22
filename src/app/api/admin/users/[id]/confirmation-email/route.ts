@@ -12,9 +12,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const admin = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, role: true },
+    select: { id: true, role: true, status: true },
   });
   if (admin?.role !== "ADMIN") return NextResponse.json({ error: "Interdit" }, { status: 403 });
+  if (admin?.status === "SUSPENDED") return NextResponse.json({ error: "Compte administrateur suspendu." }, { status: 403 });
 
   const { id } = await params;
   const user = await prisma.user.findUnique({
@@ -43,6 +44,21 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const latestSubscription = user.subscriptions[0] ?? null;
   const tier = latestSubscription?.tier ?? user.tier;
 
+  // Audit log BEFORE fallible email side effect (guardrail: audit must exist even if email fails)
+  await safeCreateAuditLog({
+    actorId: session.user.id,
+    action: AUDIT_ACTIONS.USER_CONFIRMATION_EMAIL_SEND,
+    entityType: "User",
+    entityId: id,
+    metadata: {
+      targetUserId: user.id,
+      subscriptionId: latestSubscription?.id,
+      subscriptionStatus: latestSubscription?.status,
+      tier,
+      emailSent: false, // will be true only if send succeeds
+    },
+  });
+
   try {
     await sendAdminSubscriptionConfirmationEmail({
       to: user.email,
@@ -54,25 +70,12 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       targetUserId: user.id,
       error: sanitizeError(error),
     });
+    // Audit log already created — the attempt is durably recorded
     return NextResponse.json(
       { error: "L'email de confirmation n'a pas pu être envoyé.", code: "EMAIL_FAILED" },
       { status: 500 }
     );
   }
-
-  await safeCreateAuditLog({
-    actorId: session.user.id,
-    action: AUDIT_ACTIONS.USER_CONFIRMATION_EMAIL_SEND,
-    entityType: "User",
-    entityId: id,
-    metadata: {
-      targetUserId: user.id,
-      subscriptionId: latestSubscription?.id,
-      subscriptionStatus: latestSubscription?.status,
-      tier,
-      emailSent: true,
-    },
-  });
 
   return NextResponse.json({ data: { ok: true, emailSent: true } });
 }

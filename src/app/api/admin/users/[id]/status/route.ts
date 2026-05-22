@@ -45,9 +45,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const admin = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, role: true },
+    select: { id: true, role: true, status: true },
   });
   if (admin?.role !== "ADMIN") return NextResponse.json({ error: "Interdit" }, { status: 403 });
+  if (admin?.status === "SUSPENDED") return NextResponse.json({ error: "Compte administrateur suspendu." }, { status: 403 });
 
   const { id } = await params;
   if (action === "suspend" && id === session.user.id) {

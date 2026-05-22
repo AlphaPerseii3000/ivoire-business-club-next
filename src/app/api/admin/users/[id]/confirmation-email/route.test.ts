@@ -31,7 +31,7 @@ describe("POST /api/admin/users/[id]/confirmation-email", () => {
     vi.resetAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "admin-1" } });
     mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN" };
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "ACTIVE" };
       if (where.id === "member-1") return user;
       return null;
     });
@@ -47,7 +47,18 @@ describe("POST /api/admin/users/[id]/confirmation-email", () => {
   });
 
   it("returns 403 for non-admin users", async () => {
-    mockUserFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER" });
+    mockUserFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER", status: "ACTIVE" });
+
+    const res = await POST(request, params);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 403 for suspended admin users", async () => {
+    mockUserFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
+      if (where.id === "admin-1") return { id: "admin-1", role: "ADMIN", status: "SUSPENDED" };
+      return user;
+    });
 
     const res = await POST(request, params);
 
@@ -78,13 +89,12 @@ describe("POST /api/admin/users/[id]/confirmation-email", () => {
     expect(json.code).toBe("EMAIL_MISSING");
   });
 
-  it("sends the confirmation email and creates sanitized audit metadata", async () => {
+  it("creates audit log before sending email, then sends the confirmation email", async () => {
     const res = await POST(request, params);
     const json = await res.json();
 
     expect(res.status).toBe(200);
     expect(json.data).toEqual({ ok: true, emailSent: true });
-    expect(mockSendEmail).toHaveBeenCalledWith({ to: "awa@example.com", name: "Awa", tier: "GRAND_FRERE" });
     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
       actorId: "admin-1",
       action: "USER_CONFIRMATION_EMAIL_SEND",
@@ -95,13 +105,18 @@ describe("POST /api/admin/users/[id]/confirmation-email", () => {
         subscriptionId: "sub-1",
         subscriptionStatus: "ACTIVE",
         tier: "GRAND_FRERE",
-        emailSent: true,
+        emailSent: false, // audit created BEFORE email send
       },
     });
+    // Audit log is called BEFORE sendEmail
+    const auditCallIndex = mockSafeCreateAuditLog.mock.invocationCallOrder[0];
+    const sendCallIndex = mockSendEmail.mock.invocationCallOrder[0];
+    expect(auditCallIndex).toBeLessThan(sendCallIndex);
+    expect(mockSendEmail).toHaveBeenCalledWith({ to: "awa@example.com", name: "Awa", tier: "GRAND_FRERE" });
     expect(mockSafeCreateAuditLog.mock.calls[0][0].metadata).not.toHaveProperty("email");
   });
 
-  it("returns EMAIL_FAILED without raw Resend details when sending fails", async () => {
+  it("returns EMAIL_FAILED without raw Resend details when sending fails, but audit log is still created", async () => {
     mockSendEmail.mockRejectedValueOnce(new Error("RESEND_API_KEY secret leaked"));
 
     const res = await POST(request, params);
@@ -110,6 +125,12 @@ describe("POST /api/admin/users/[id]/confirmation-email", () => {
     expect(res.status).toBe(500);
     expect(json).toEqual({ error: "L'email de confirmation n'a pas pu être envoyé.", code: "EMAIL_FAILED" });
     expect(mockSanitizeError).toHaveBeenCalled();
-    expect(mockSafeCreateAuditLog).not.toHaveBeenCalled();
+    // Audit log was STILL created (before the email attempt)
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "USER_CONFIRMATION_EMAIL_SEND",
+        entityId: "member-1",
+      })
+    );
   });
 });
