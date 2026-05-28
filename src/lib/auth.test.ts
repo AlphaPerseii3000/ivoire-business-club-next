@@ -5,11 +5,12 @@ const mockCredentials = vi.hoisted(() => vi.fn((config) => ({ id: "credentials",
 const mockGoogle = vi.hoisted(() => vi.fn((config) => ({ id: "google", ...config })));
 const mockFindUnique = vi.hoisted(() => vi.fn());
 const mockCompare = vi.hoisted(() => vi.fn());
+const mockAdapterCreateUser = vi.hoisted(() => vi.fn(async (user) => user));
 
 vi.mock("next-auth", () => ({ default: mockNextAuth }));
 vi.mock("next-auth/providers/google", () => ({ default: mockGoogle }));
 vi.mock("next-auth/providers/credentials", () => ({ default: mockCredentials }));
-vi.mock("@auth/prisma-adapter", () => ({ PrismaAdapter: vi.fn(() => ({})) }));
+vi.mock("@auth/prisma-adapter", () => ({ PrismaAdapter: vi.fn(() => ({ createUser: mockAdapterCreateUser })) }));
 vi.mock("bcryptjs", () => ({ default: { compare: mockCompare } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: mockFindUnique } } }));
 
@@ -24,6 +25,7 @@ describe("auth.ts exports", () => {
     vi.clearAllMocks();
     mockFindUnique.mockReset();
     mockCompare.mockReset();
+    mockAdapterCreateUser.mockClear();
   });
 
   it("exports handlers, auth, signIn, signOut", async () => {
@@ -99,5 +101,24 @@ describe("auth.ts exports", () => {
     const result = await config.callbacks.signIn({ user: { email: "member@example.com" }, account: { provider: "google" } });
 
     expect(result).toBe(true);
+  });
+
+  it("normalizes null emailVerified before Auth.js creates a Prisma user", async () => {
+    const config = await loadAuthConfig();
+
+    const result = await config.adapter.createUser({
+      email: "member@example.com",
+      emailVerified: null,
+      name: "Awa",
+      image: "https://example.com/avatar.png",
+    });
+
+    expect(mockAdapterCreateUser).toHaveBeenCalledWith({
+      email: "member@example.com",
+      emailVerified: false,
+      name: "Awa",
+      image: "https://example.com/avatar.png",
+    });
+    expect(result).toMatchObject({ emailVerified: false });
   });
 });
