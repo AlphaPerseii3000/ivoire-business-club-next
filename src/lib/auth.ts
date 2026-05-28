@@ -2,16 +2,35 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
+
+// Wrap PrismaAdapter to handle non-null fields that Auth.js may send as null.
+// Google OAuth does not provide emailVerified, so the adapter passes null,
+// but our schema requires emailVerified: Boolean (non-null).
+// The Auth.js User type does not include emailVerified, so we cast through unknown.
+function patchPrismaAdapter(adapter: Adapter): Adapter {
+  const originalCreateUser = adapter.createUser;
+  if (originalCreateUser) {
+    adapter.createUser = async function (user) {
+      const patched = { ...user } as Record<string, unknown>;
+      if (patched["emailVerified"] === null || patched["emailVerified"] === undefined) {
+        patched["emailVerified"] = false;
+      }
+      return originalCreateUser(patched as unknown as Awaited<ReturnType<NonNullable<Adapter["createUser"]>>>);
+    };
+  }
+  return adapter;
+}
 
 // Full auth — Node.js runtime only (uses Prisma + bcrypt)
 // Must use JWT strategy: Credentials provider is incompatible with database sessions
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   session: { strategy: "jwt" },
-  adapter: PrismaAdapter(prisma),
+  adapter: patchPrismaAdapter(PrismaAdapter(prisma)),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",

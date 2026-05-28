@@ -363,3 +363,111 @@ GPT-5.5 Codex (Hermes Agent)
 
 - 2026-05-22 — Implemented story 6.6 production deployment preparation: PM2/package hardening, Nginx/Certbot runbook, PostgreSQL production Prisma path, tests, and validation evidence.
 
+### Deployment Log — 2026-05-25: Production Go-Live
+
+**Server:** Hetzner CX33, Helsinki (hel1), Ubuntu 26.04 LTS
+**IPv4:** 46.62.143.23 | **IPv6:** 2a01:4f9:c011:a547::1
+**Domain:** ivoire-business-club.com (DNS at Infomaniak)
+
+#### Infrastructure Provisioning
+
+| Step | Result |
+|---|---|
+| VPS created (CX33, Helsinki, Ubuntu 26.04) | ✅ |
+| SSH key ed25519 added to Hetzner + server | ✅ |
+| System apt update && full-upgrade | ✅ |
+| User `deploy` created with sudo NOPASSWD | ✅ |
+| SSH hardening (PermitRootLogin no, PasswordAuth no, AllowUsers deploy) | ✅ |
+| UFW (22/tcp, 80/tcp, 443/tcp, ICMP) | ✅ |
+
+#### Software Stack
+
+| Component | Version |
+|---|---|
+| Node.js | 20.20.2 (NodeSource) |
+| PostgreSQL | 18 (Ubuntu 26.04 native, not 16 as runbook stated) |
+| Nginx | 1.28.3 |
+| PM2 | 7.0.1 |
+| Certbot | 4.0.0 |
+
+#### Database
+
+- Database `ibc_prod` created with user `ibc_user`
+- PostgreSQL 18 used (Ubuntu 26.04 ships PG 18, not 16)
+- Migrations applied: `20260522130000_init_postgresql` — 16 tables created
+- Connection verified: `postgresql://ibc_user:***@127.0.0.1:5432/ibc_prod?schema=public`
+
+#### DNS (Infomaniak → Hetzner)
+
+| Record | Type | Value | TTL |
+|---|---|---|---|
+| @ | A | 46.62.143.23 | 300 |
+| @ | AAAA | 2a01:4f9:c011:a547::1 | 300 |
+| www | A | 46.62.143.23 | 300 |
+| www | AAAA | 2a01:4f9:c011:a547::1 | 300 |
+
+- MX, SPF, DKIM, DMARC, autoconfig, autodiscover records preserved
+- DNS propagation: immediate (verified via Cloudflare 1.1.1.1, Google 8.8.8.8, local resolver)
+
+#### HTTPS / Let's Encrypt
+
+- Certificate issued via `certbot --nginx` for `ivoire-business-club.com` + `www.ivoire-business-club.com`
+- Expires: 2026-08-23
+- Auto-renewal timer active (systemd)
+- `www` → non-www redirect active for both HTTP and HTTPS
+
+#### Application Deployment
+
+- Release: `20260525205929`
+- Build: `npm run prepare-deploy` — 76M standalone package
+- Rsync from local `deploy-dist/` to `/var/www/ibc/releases/20260525205929/`
+- Symlink `/var/www/ibc/current` → `/var/www/ibc/releases/20260525205929/`
+- `.env` created at `/var/www/ibc/current/.env` (chmod 600, owner deploy)
+- `.env` symlinked to `/var/www/ibc/current/.next/standalone/.env` (Next.js standalone reads from this path)
+- Prisma migrate deploy: SUCCESS (1 migration applied)
+
+#### PM2 Runtime
+
+- App: `ibc-app`, cluster mode, 4 instances (max on 4 vCPU)
+- Each instance ~128MB RAM at steady state
+- PM2 startup systemd service `pm2-deploy` enabled
+- pm2-save executed, process list persisted
+
+#### Nginx Configuration Issues Resolved
+
+1. **Initial config**: Static assets `/_next/static/` returned 404 because regex location for `.js/.css` files intercepteded requests before the `/_next/static/` alias block.
+2. **Fix**: Changed `location /_next/static/` to `location ^~ /_next/static/` (prefix match with priority over regex). Removed the generic regex asset location. Assets now served correctly with 365-day immutable cache header.
+3. **Certbot**: Modified config to preserve HTTPS redirect blocks. Full config at `/etc/nginx/sites-available/ibc-app` with backup at `/etc/nginx/sites-available/ibc-app.bak.*`.
+
+#### Known Issues / Pending Configuration
+
+| Variable | Status | Priority |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Empty — login pages will fail | P0 |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Empty — rate limiting disabled (logged as error, non-blocking) | P2 |
+| Cloudflare R2 credentials | Empty — file upload features disabled | P1 |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Empty — transactional emails disabled | P1 |
+| Bank transfer details | Empty — virement payment info missing | P1 |
+| `SUPPORT_WHATSAPP_NUMBER` | Empty — WhatsApp support link missing | P2 |
+
+#### Validation Checklist (post-deploy)
+
+- [x] SSH as `deploy` with key auth only — root login disabled
+- [x] `sudo whoami` returns `root`
+- [x] UFW active with port 22/80/443 only
+- [x] PostgreSQL listens on 127.0.0.1:5432 only
+- [x] `https://ivoire-business-club.com/` → HTTP 200
+- [x] `https://www.ivoire-business-club.com/` → 301 redirect to non-www
+- [x] `/_next/static/` assets served with 365-day cache headers (CSS 200, 105KB)
+- [x] PM2 `ibc-app` online × 4, auto-restart enabled
+- [x] `pm2 save` + systemd `pm2-deploy` enabled for boot
+- [x] No `.env`, `.git`, `.sqlite`, `node_modules` exposed via Nginx
+
+#### Runbook Deviations from scripts/DEPLOY.md
+
+1. **Ubuntu 26.04 instead of 24.04** — only CX33 available at Helsinki was Ubuntu 26.04
+2. **PostgreSQL 18 instead of 16** — Ubuntu 26.04 ships PG 18; `apt install postgresql-16` fails
+3. **SSH key**: used existing `~/.ssh/id_ed25519` instead of creating a dedicated `ibc_hetzner_ed25519`
+4. **Helsinki (hel1) instead of Nuremberg (nbg1)** — only location with CX33 available
+5. **ICMP UFW rule**: not added (minor, Hetzner firewall handles it)
+
