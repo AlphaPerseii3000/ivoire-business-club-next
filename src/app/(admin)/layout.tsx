@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { ACCOUNT_SUSPENDED_REDIRECT } from "@/lib/account-status";
-import { prisma } from "@/lib/prisma";
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { redirect } from "next/navigation";
 import SignOutButton from "@/components/auth/sign-out-button";
 
@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, role: true, status: true } });
+  const user = await promoteConfiguredAdminUser(session.user.id);
   if (user?.role !== "ADMIN") redirect("/dashboard");
   if (user?.status === "SUSPENDED") redirect(ACCOUNT_SUSPENDED_REDIRECT);
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AdminOpportunityKanban } from "@/components/features/admin/opportunity-kanban-board";
 import type { AdminOpportunity } from "@/components/features/admin/opportunity-detail-sheet";
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -10,7 +11,7 @@ export default async function AdminOpportunitiesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
+  const user = await promoteConfiguredAdminUser(session.user.id);
   if (user?.role !== "ADMIN") redirect("/dashboard");
   const currentAdminId = session.user.id;
 

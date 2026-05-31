@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { signinSchema } from "@/lib/validations";
 import { signinRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { isConfiguredAdminEmail } from "@/lib/admin-authorization";
 
 export async function POST(req: Request) {
   try {
@@ -44,12 +45,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const role = isConfiguredAdminEmail(user.email) && user.role !== "ADMIN" ? "ADMIN" : user.role;
+    if (role !== user.role) {
+      await prisma.user.update({ where: { id: user.id }, data: { role } });
+    }
+
     return NextResponse.json({
       id: user.id,
       email: user.email,
       name: user.name,
       tier: user.tier,
-      role: user.role,
+      role,
     });
   } catch (error) {
     console.error("Signin error:", sanitizeError(error));

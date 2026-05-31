@@ -6,6 +6,7 @@ import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
+import { isConfiguredAdminEmail, roleForEmail } from "@/lib/admin-authorization";
 
 // Wrap PrismaAdapter to handle non-null fields that Auth.js may send as null.
 // Google OAuth does not provide emailVerified, so the adapter passes null,
@@ -18,6 +19,9 @@ function patchPrismaAdapter(adapter: Adapter): Adapter {
       const patched = { ...user } as Record<string, unknown>;
       if (patched["emailVerified"] === null || patched["emailVerified"] === undefined) {
         patched["emailVerified"] = false;
+      }
+      if (typeof patched["email"] === "string") {
+        patched["role"] = roleForEmail(patched["email"]);
       }
       return originalCreateUser(patched as unknown as Awaited<ReturnType<NonNullable<Adapter["createUser"]>>>);
     };
@@ -58,12 +62,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!isValid) return null;
 
+        const role = isConfiguredAdminEmail(user.email) && user.role !== "ADMIN" ? "ADMIN" : user.role;
+        if (role !== user.role) {
+          await prisma.user.update({ where: { id: user.id }, data: { role } });
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           tier: user.tier,
-          role: user.role,
+          role,
           status: user.status,
         };
       },
@@ -75,9 +84,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "google" && user.email) {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { status: true },
+          select: { id: true, role: true, status: true },
         });
         if (existingUser?.status === "SUSPENDED") return false;
+        if (existingUser && isConfiguredAdminEmail(user.email) && existingUser.role !== "ADMIN") {
+          await prisma.user.update({ where: { id: existingUser.id }, data: { role: "ADMIN" } });
+        }
       }
       return true;
     },

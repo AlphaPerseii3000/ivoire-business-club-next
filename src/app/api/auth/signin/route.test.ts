@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "./route";
 
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserUpdate = vi.hoisted(() => vi.fn());
 const mockRateLimit = vi.hoisted(() => vi.fn(async () => ({ success: true, limit: 10, remaining: 9, reset: 0 })));
 const mockBcryptCompare = vi.hoisted(() => vi.fn());
 
@@ -9,6 +10,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: mockUserFindUnique,
+      update: mockUserUpdate,
     },
   },
 }));
@@ -72,6 +74,31 @@ describe("POST /api/auth/signin", () => {
       name: "Jean Dupont",
       tier: "AFFRANCHI",
       role: "MEMBER",
+    });
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+  });
+
+  it("promotes the configured bootstrap admin after valid credentials", async () => {
+    mockUserFindUnique.mockResolvedValue({
+      id: "admin-123",
+      email: "berseth.j@gmail.com",
+      name: "Jonathan",
+      passwordHash: "hashed",
+      tier: "AFFRANCHI",
+      role: "MEMBER",
+    });
+    mockUserUpdate.mockResolvedValue({ id: "admin-123", role: "ADMIN" });
+    mockBcryptCompare.mockResolvedValue(true);
+
+    const req = makeRequest({ email: "berseth.j@gmail.com", password: "securePass123!" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.role).toBe("ADMIN");
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "admin-123" },
+      data: { role: "ADMIN" },
     });
   });
 

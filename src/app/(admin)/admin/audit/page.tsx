@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { queryAuditLogs } from "@/lib/audit-log";
-import { prisma } from "@/lib/prisma";
 
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZE_MIN = 10;
@@ -59,7 +59,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
+  const user = await promoteConfiguredAdminUser(session.user.id);
   if (user?.role !== "ADMIN") redirect("/dashboard");
 
   const params = await searchParams;

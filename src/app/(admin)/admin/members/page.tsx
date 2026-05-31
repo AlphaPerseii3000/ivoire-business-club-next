@@ -1,4 +1,5 @@
 import { AdminMemberActions } from "@/components/features/admin/admin-member-actions";
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -36,10 +37,7 @@ export default async function AdminMembersPage() {
   if (!session?.user?.id) redirect("/auth/signin");
   const currentAdminId = session.user.id;
 
-  const admin = await prisma.user.findUnique({
-    where: { id: currentAdminId },
-    select: { id: true, role: true },
-  });
+  const admin = await promoteConfiguredAdminUser(currentAdminId);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
 
   const members = await prisma.user.findMany({

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 printf "🚀 IBC — Préparation du déploiement production...\n"
 
@@ -22,7 +22,7 @@ printf "  ✓ Prisma Client régénéré avec provider=postgresql.\n"
 
 # --- Step 2: Build Next.js standalone with PG Prisma Client ---
 printf "🔨 Build Next.js standalone avec Prisma Client PostgreSQL...\n"
-if ! npm run build 2>/dev/null; then
+if ! DATABASE_URL="postgresql://deploy:deploy@localhost:5432/ibc_deploy" npx next build; then
   printf "❌ Erreur : npm run build a échoué. Corrigez les erreurs avant le déploiement.\n" >&2
   exit 1
 fi

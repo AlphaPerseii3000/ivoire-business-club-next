@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { getTierBadgeConfig } from "@/lib/tier-config";
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { AdminSubscriptionActions } from "@/components/admin-subscription-actions";
 import { redirect } from "next/navigation";
 
@@ -94,7 +95,7 @@ export default async function AdminSubscriptionsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const admin = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const admin = await promoteConfiguredAdminUser(session.user.id);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
 
   const [pendingSubscriptions, activeSubscriptions] = await Promise.all([

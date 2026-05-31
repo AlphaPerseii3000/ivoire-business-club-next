@@ -68,7 +68,27 @@ describe("POST /api/auth/signup", () => {
 
     expect(res.status).toBe(201);
     expect(json).toEqual({ id: "user-123", email: "test@example.com", name: "Jean Dupont" });
+    expect(mockUserCreate).toHaveBeenCalledWith({
+      data: { name: "Jean Dupont", email: "test@example.com", passwordHash: "hashed-password", role: "MEMBER" },
+    });
     expect(mockSubscriptionCreate).not.toHaveBeenCalled();
+  });
+
+  it("creates the configured bootstrap admin with ADMIN role", async () => {
+    mockUserFindUnique.mockResolvedValue(null);
+    mockUserCreate.mockResolvedValue({
+      id: "admin-123",
+      email: "berseth.j@gmail.com",
+      name: "Jonathan",
+    });
+
+    const req = makeRequest({ name: "Jonathan", email: "BERSETH.J@gmail.com", password: "securePass123!" });
+    const res = await POST(req);
+
+    expect(res.status).toBe(201);
+    expect(mockUserCreate).toHaveBeenCalledWith({
+      data: { name: "Jonathan", email: "BERSETH.J@gmail.com", passwordHash: "hashed-password", role: "ADMIN" },
+    });
   });
 
   it("returns 409 with exact French message for duplicate email", async () => {

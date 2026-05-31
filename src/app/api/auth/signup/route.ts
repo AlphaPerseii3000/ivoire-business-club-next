@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validations";
 import { signupRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { roleForEmail } from "@/lib/admin-authorization";
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email, passwordHash },
+      data: { name, email, passwordHash, role: roleForEmail(email) },
     });
 
     return NextResponse.json(

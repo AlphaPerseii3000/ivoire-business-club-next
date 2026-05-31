@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as path from "node:path";
 import { getDatabaseProvider, resolveSqliteDatabasePath } from "./prisma-runtime";
 
 describe("prisma runtime provider selection", () => {
@@ -16,7 +17,7 @@ describe("prisma runtime provider selection", () => {
   });
 
   it("resolves SQLite file URLs to absolute filesystem paths for better-sqlite3", () => {
-    expect(resolveSqliteDatabasePath("file:./prisma/dev.db")).toBe(`${process.cwd()}/prisma/dev.db`);
+    expect(resolveSqliteDatabasePath("file:./prisma/dev.db")).toBe(path.resolve(process.cwd(), "prisma/dev.db"));
     expect(resolveSqliteDatabasePath("file:/tmp/ibc-dev.db")).toBe("/tmp/ibc-dev.db");
   });
 });

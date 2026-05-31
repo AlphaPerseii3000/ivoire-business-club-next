@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { isConfiguredAdminEmail, roleForEmail } from "@/lib/admin-authorization";
 
 // Edge-compatible auth config — NO Prisma, NO bcrypt, NO Node.js modules
 // Used only in middleware (Edge Runtime)
@@ -14,7 +15,9 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id;
         token.tier = (user as unknown as Record<string, unknown>).tier ?? "AFFRANCHI";
-        token.role = (user as unknown as Record<string, unknown>).role ?? "MEMBER";
+        token.role = roleForEmail(user.email) === "ADMIN" ? "ADMIN" : (user as unknown as Record<string, unknown>).role ?? "MEMBER";
+      } else if (isConfiguredAdminEmail(token.email)) {
+        token.role = "ADMIN";
       }
       return token;
     },
@@ -22,7 +25,7 @@ export const authConfig: NextAuthConfig = {
       if (token.id && session.user) {
         session.user.id = token.id as string;
         (session.user as unknown as Record<string, unknown>).tier = token.tier;
-        (session.user as unknown as Record<string, unknown>).role = token.role;
+        (session.user as unknown as Record<string, unknown>).role = isConfiguredAdminEmail(session.user.email) ? "ADMIN" : token.role;
       }
       return session;
     },
@@ -34,7 +37,8 @@ export const authConfig: NextAuthConfig = {
 
       if (pathname.startsWith("/admin")) {
         if (!isLoggedIn) return false;
-        if ((auth?.user as unknown as Record<string, unknown>)?.role !== "ADMIN") {
+        const user = auth?.user as { email?: string | null; role?: string } | undefined;
+        if (user?.role !== "ADMIN" && !isConfiguredAdminEmail(user?.email)) {
           return Response.redirect(new URL("/", nextUrl));
         }
       }

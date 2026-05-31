@@ -53,6 +53,37 @@ describe("authConfig authorized callback", () => {
     expect(authorized(makeRequest("/admin/members", admin))).toBe(true);
   });
 
+  it("allows the configured bootstrap admin email even while the token role is still MEMBER", () => {
+    const bootstrapAdmin = { id: "u-1", email: "berseth.j@gmail.com", role: "MEMBER" };
+
+    expect(authorized(makeRequest("/admin", bootstrapAdmin))).toBe(true);
+    expect(authorized(makeRequest("/admin/members", bootstrapAdmin))).toBe(true);
+  });
+
+  it("upgrades the bootstrap admin role in jwt and session callbacks", async () => {
+    const jwt = authConfig.callbacks!.jwt! as unknown as (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    const session = authConfig.callbacks!.session! as unknown as (args: Record<string, unknown>) => Promise<{ user?: Record<string, unknown> }>;
+
+    const token = await jwt({
+      token: { email: "berseth.j@gmail.com", role: "MEMBER" },
+      user: undefined,
+      account: null,
+      profile: undefined,
+      trigger: undefined,
+      isNewUser: false,
+    });
+    const hydratedSession = await session({
+      session: { user: { id: "u-1", email: "berseth.j@gmail.com", name: "Jonathan" }, expires: "" },
+      token: { id: "u-1", email: "berseth.j@gmail.com", role: "MEMBER", tier: "AFFRANCHI" },
+      user: undefined,
+      newSession: undefined,
+      trigger: undefined,
+    });
+
+    expect(token.role).toBe("ADMIN");
+    expect(hydratedSession.user?.role).toBe("ADMIN");
+  });
+
   it("allows authenticated MEMBER requests to tier-gated dashboard routes", () => {
     const member = { id: "u-1", email: "m@example.com", role: "MEMBER" };
     expect(authorized(makeRequest("/dashboard/deals", member))).toBe(true);

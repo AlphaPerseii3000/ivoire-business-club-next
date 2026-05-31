@@ -11,7 +11,7 @@
 # ─────────────────────────────────────────────────────────────────
 
 [core]
-project_name = "ivoire-business-club-new"
+project_name = "ibc"
 document_output_language = "French"
 output_folder = "_bmad-output"
 
