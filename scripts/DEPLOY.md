@@ -630,7 +630,18 @@ La commande doit afficher `true`.
 
 ## 7. Configurer PM2
 
-Le fichier `/var/www/ibc/current/ecosystem.config.js` fourni par le paquet de déploiement définit:
+> [!IMPORTANT]
+> **Notes de résolution critiques pour le déploiement (Next.js standalone & PM2) :**
+> 
+> 1. **Injecter dynamiquement les variables d'environnement (`.env`) :**
+>    Le serveur de production Next.js standalone (`server.js`) ne charge *pas* automatiquement le fichier `.env` à l'exécution en production. Si PM2 est redémarré de zéro (`pm2 delete`), l'application échouera avec une exception `DATABASE_URL is not configured`.
+>    *Solution en place :* Le fichier `ecosystem.config.js` est configuré pour lire et parser dynamiquement le fichier `.env` de la release active à chaque démarrage ou rechargement, injectant toutes les configurations secrètes et la connexion PostgreSQL de manière transparente dans le cluster PM2.
+> 
+> 2. **Résolution des jonctions node_modules absolues de Turbopack :**
+>    Le compilateur Next.js génère des *jonctions de répertoires* (liens symboliques absolus de développement) dans `.next/standalone/.next/node_modules/` pointant vers l'ordinateur du développeur. Compresser directement le dossier entraîne des liens brisés ou des fichiers de 0 octet sur le serveur Linux (`Cannot find module '@prisma/client-xxxx'`).
+>    *Procédure de build :* Le script de préparation remplace ces jonctions par des répertoires physiques réels en y recopiant le contenu correspondant depuis `deploy-dist/.next/standalone/node_modules/` (notamment pour `@prisma/client-...`, `pg-...`, `better-sqlite3-...`, et `@aws-sdk/client-s3-...`) avant d'empaqueter le tarball.
+> 
+> Le fichier `/var/www/ibc/current/ecosystem.config.js` fourni par le paquet de déploiement définit:
 
 - `name=ibc-app`
 - `script=./.next/standalone/server.js`
