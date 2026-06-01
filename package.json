@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare-deploy": "npm run build && bash scripts/prepare-deploy.sh"
+    "prepare-deploy": "powershell -ExecutionPolicy Bypass -File scripts/prepare-deploy.ps1",
+    "deploy:prod": "powershell -ExecutionPolicy Bypass -File scripts/deploy-production.ps1"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

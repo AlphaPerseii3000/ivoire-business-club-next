@@ -3,6 +3,12 @@ set -eu
 
 printf "🚀 IBC — Préparation du déploiement production...\n"
 
+NEXT_CLI="node_modules/next/dist/bin/next"
+if [ ! -f "$NEXT_CLI" ]; then
+  printf "❌ Erreur : Next.js CLI introuvable. Exécutez d'abord npm ci.\n" >&2
+  exit 1
+fi
+
 # --- Step 1: Regenerate Prisma Client with PostgreSQL provider (NFR-SC3) ---
 # The dev build uses SQLite (schema.dev.prisma). For production deploy,
 # we MUST use PostgreSQL exclusively. We regenerate Prisma Client with
@@ -22,7 +28,7 @@ printf "  ✓ Prisma Client régénéré avec provider=postgresql.\n"
 
 # --- Step 2: Build Next.js standalone with PG Prisma Client ---
 printf "🔨 Build Next.js standalone avec Prisma Client PostgreSQL...\n"
-if ! DATABASE_URL="postgresql://deploy:deploy@localhost:5432/ibc_deploy" npx next build; then
+if ! node "$NEXT_CLI" build; then
   printf "❌ Erreur : npm run build a échoué. Corrigez les erreurs avant le déploiement.\n" >&2
   exit 1
 fi

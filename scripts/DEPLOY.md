@@ -4,7 +4,36 @@ Cible: Hetzner CX33 (4 vCPU, 8 GB RAM, 80 GB NVMe), Ubuntu 26.04 LTS, Helsinki F
 
 > **Note (2026-05-25):** Déploiement effectif sur Helsinki (hel1) avec Ubuntu 26.04 et PostgreSQL 18. Les instructions ci-dessous référencent Ubuntu 24.04 et PostgreSQL 16 par défaut; adapter les numéros de version si le VPS utilise une version plus récente. Voir les déviations en fin de document.
 
-Ce runbook décrit le déploiement complet de l'application IBC (`ivoire-business-club.com`) sur un VPS Hetzner Cloud CX33. Il part du principe que le build de production est préparé localement via `npm run prepare-deploy`, puis transféré vers le serveur dans un système de releases atomiques sous `/var/www/ibc`.
+Ce runbook décrit le déploiement complet de l'application IBC (`ivoire-business-club.com`) sur un VPS Hetzner Cloud CX33. Le chemin recommandé est le script automatisé `npm run deploy:prod`, qui prépare le build PostgreSQL, transfère une release atomique vers `/var/www/ibc/releases/`, active `/var/www/ibc/current`, lance les migrations Prisma, recharge PM2/Nginx et vérifie HTTPS.
+
+## Déploiement rapide
+
+Depuis le dépôt local:
+
+```powershell
+npm ci
+npm run deploy:prod
+```
+
+Par défaut, le script déploie vers `deploy@ivoire-business-club.com` et crée une release UTC du type `YYYYMMDDHHMMSS`.
+
+Options utiles:
+
+```powershell
+# Reprendre un deploy-dist déjà préparé, sans rebuild local
+npm run deploy:prod -- -SkipPrepare
+
+# Cibler explicitement un autre hôte ou utilisateur SSH
+npm run deploy:prod -- -HostName ivoire-business-club.com -User deploy
+```
+
+Préconditions:
+
+- La clé SSH locale doit permettre `ssh deploy@ivoire-business-club.com`.
+- La release active précédente doit contenir `/var/www/ibc/current/.env`; le script le recopie dans la nouvelle release.
+- Si aucun `.env` de production n'existe encore, le créer manuellement sur le serveur avant `npx prisma migrate deploy` et le reload PM2.
+
+Le script échoue volontairement si `deploy-dist/` contient un `.env`, une base SQLite locale ou un Prisma Client généré avec `activeProvider:"sqlite"`.
 
 Architecture cible:
 
@@ -394,7 +423,7 @@ npm ci
 npm run prepare-deploy
 ```
 
-Le script `npm run prepare-deploy` existe déjà dans le projet. Il prépare un paquet de déploiement autonome dans:
+Le script `npm run prepare-deploy` prépare uniquement le paquet local via `scripts/prepare-deploy.ps1` sur Windows. Le script Bash `scripts/prepare-deploy.sh` reste disponible comme fallback Unix. Pour un déploiement complet, préférer `npm run deploy:prod`. Il prépare un paquet de déploiement autonome dans:
 
 ```bash
 /home/alphaperseii/projects/ibc/deploy-dist/
@@ -448,7 +477,9 @@ find deploy-dist \( -name '.env' -o -name '.env.local' -o -name '*.db' -o -name 
 
 Cette dernière commande ne doit rien afficher.
 
-## 4. Transférer vers le VPS
+## 4. Transférer vers le VPS (manuel/fallback)
+
+> Le transfert manuel est conservé comme fallback opérationnel. En usage courant, utiliser plutôt `npm run deploy:prod`.
 
 Le déploiement utilise des releases atomiques:
 
@@ -1179,31 +1210,12 @@ Sur un CX33 avec 8 GB RAM, surveiller particulièrement:
 
 Pour chaque nouvelle version:
 
-```bash
-# Local
-cd /home/alphaperseii/projects/ibc
+```powershell
 npm ci
-npm run prepare-deploy
-export IBC_IPV4="ADRESSE_IPV4_HETZNER"
-export RELEASE="$(date -u +%Y%m%d%H%M%S)"
-ssh -i ~/.ssh/ibc_hetzner_ed25519 deploy@$IBC_IPV4 "mkdir -p /var/www/ibc/releases/$RELEASE"
-rsync -az --delete -e "ssh -i ~/.ssh/ibc_hetzner_ed25519" deploy-dist/ deploy@$IBC_IPV4:/var/www/ibc/releases/$RELEASE/
-
-# Serveur
-ssh -i ~/.ssh/ibc_hetzner_ed25519 deploy@$IBC_IPV4
-ln -sfn /var/www/ibc/releases/$RELEASE /var/www/ibc/current
-cd /var/www/ibc/current
-cp /var/www/ibc/releases/$(ls -1 /var/www/ibc/releases | sort | tail -n 2 | head -n 1)/.env .env 2>/dev/null || true
-chmod 600 .env
-npm ci --omit=dev
-npx prisma validate
-npx prisma migrate deploy
-pm2 reload ibc-app --update-env
-sudo nginx -t && sudo systemctl reload nginx
-curl -I https://ivoire-business-club.com/
+npm run deploy:prod
 ```
 
-Si `.env` n'est pas copié automatiquement depuis la release précédente, recréer `/var/www/ibc/current/.env` depuis `.env.example` et les secrets de production avant de lancer Prisma ou PM2.
+Si `.env` n'est pas copié automatiquement depuis la release précédente, recréer `/var/www/ibc/current/.env` depuis `.env.example` et les secrets de production avant de relancer le script ou de lancer Prisma/PM2 manuellement.
 
 ---
 
@@ -1241,8 +1253,8 @@ Ce qui reste à configurer ou corriger après le premier déploiement (2026-05-2
 - [ ] Configurer les backups PostgreSQL (pg_dump cron ou Hetzner snapshot)
 - [ ] Ajouter un monitoring minimum (uptime check, alerte si PM2 crash loop)
 
-### Corrections runbook vs réalité terrain
+### Notes runbook vs réalité terrain
 
-- `cp -a` échoue silencieusement si le chemin cible contient `/dev/null` — utiliser un `cp` simple suivi de `chmod` à la place pour copier le `.env` entre releases
-- `prisma migrate deploy` échoue si `prisma.config.ts` référence `schema.dev.prisma` absent du paquet standalone — ignorer ou corriger le config pour pointer vers `schema.prisma` uniquement en production
-- Le symlink `.next/standalone/.env → ../.env` est nécessaire car Next.js standalone lit le `.env` depuis le répertoire du server.js, pas depuis la racine du projet
+- Le déploiement automatisé copie le `.env` depuis la release précédente avec `cp`, puis applique `chmod 600`.
+- Le paquet de production embarque `prisma/schema.prisma` et `prisma/migrations-postgresql`; `prisma.config.ts` sélectionne donc PostgreSQL quand `DATABASE_URL` est celui de production.
+- Si PM2 est supprimé puis recréé au lieu d'être rechargé, vérifier que le runtime standalone lit bien les variables de production attendues.
