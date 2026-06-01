@@ -90,10 +90,11 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
   const filterErrorText = invalidDateFilter ? "Une date de filtre est invalide." : invalidRange ? "La date de début doit précéder la date de fin." : "";
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Journal d&apos;audit</h2>
-        <p className="text-sm text-muted-foreground">Historique immuable des actions critiques de conformité.</p>
+        <p className="text-sm font-medium text-primary">Administration</p>
+        <h1 className="text-2xl font-bold tracking-tight">Journal d&apos;audit</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Historique immuable des actions critiques de conformité.</p>
       </div>
 
       <Card>
