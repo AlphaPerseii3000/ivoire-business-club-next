@@ -192,12 +192,12 @@ export function BankTransferInstructions({
         </CardHeader>
         <CardContent className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted rounded-xl">
-              <TabsTrigger value="eur" className="py-2.5 flex items-center justify-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted rounded-xl h-12">
+              <TabsTrigger value="eur" className="flex items-center justify-center gap-2">
                 <Globe className="size-4" />
                 Virement en EUR (SEPA / International)
               </TabsTrigger>
-              <TabsTrigger value="xof" className="py-2.5 flex items-center justify-center gap-2">
+              <TabsTrigger value="xof" className="flex items-center justify-center gap-2">
                 <Landmark className="size-4" />
                 Virement en XOF (UEMOA / Local CI)
               </TabsTrigger>

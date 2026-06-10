@@ -42,11 +42,13 @@ chmod 600 .env
 npm ci --omit=dev
 npx prisma validate
 npx prisma migrate deploy
-pm2 reload ibc-app --update-env
+pm2 delete ibc-app || true
+pm2 start ecosystem.config.js
+pm2 save
 sudo nginx -t
 sudo systemctl reload nginx
 readlink -f "`$REMOTE_ROOT/current"
-pm2 status ibc-app --no-color
+pm2 status ibc-app
 "@
 
 Invoke-Step "Verification des outils" {
