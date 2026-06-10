@@ -1,25 +1,26 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 
 interface HeroVideoPlayerProps {
   videoUrl?: string;
   fallbackImageUrl?: string;
   className?: string;
-  /** External scroll progress 0–1, drives video scrubbing */
-  scrollProgress?: number;
 }
 
+/**
+ * Scroll-driven hero video player.
+ * Uses a wrapperRef callback so the parent can provide the scroll container
+ * without prop-driven re-renders. All video scrubbing is imperative via refs.
+ */
 export function HeroVideoPlayer({
   videoUrl = '/animated-hero-section.mp4',
   fallbackImageUrl = '/hero-background-ibc-next-with-blue-vignette.webp',
   className = '',
-  scrollProgress,
 }: HeroVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [useFallback, setUseFallback] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
+  const [useFallback, setUseFallback] = React.useState(true);
 
   useEffect(() => {
     const checkPerformance = () => {
@@ -39,64 +40,27 @@ export function HeroVideoPlayer({
     setUseFallback(checkPerformance());
   }, []);
 
-  // IntersectionObserver to pause rAF when off-screen
+  // Expose imperative scrub method via ref
+  const scrub = useCallback((progress: number) => {
+    const video = videoRef.current;
+    if (!video || !video.duration || video.readyState < 2) return;
+    const targetTime = progress * video.duration;
+    // Direct seek — no rAF loop, no interpolation, just snap to frame
+    if (Math.abs(video.currentTime - targetTime) > 0.03) {
+      video.currentTime = targetTime;
+    }
+  }, []);
+
+  // Register this player with the parent via DOM dataset
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0 }
-    );
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  // Scroll-driven video scrubbing — driven by external scrollProgress prop
-  useEffect(() => {
-    if (useFallback) return;
-    if (!isVisible) return;
-    if (scrollProgress === undefined) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    let animationFrameId: number | null = null;
-    let isLooping = false;
-    let currentTime = 0;
-
-    const updateVideoFrame = () => {
-      if (video.readyState >= 2 && video.duration) {
-        const targetTime = scrollProgress * video.duration;
-        currentTime += (targetTime - currentTime) * 0.15;
-
-        if (Math.abs(currentTime - video.currentTime) > 0.01) {
-          video.currentTime = currentTime;
-        }
-
-        // Keep looping until close enough
-        if (Math.abs(currentTime - targetTime) > 0.001) {
-          animationFrameId = requestAnimationFrame(updateVideoFrame);
-        } else {
-          isLooping = false;
-        }
-      }
-    };
-
-    if (!isLooping) {
-      isLooping = true;
-      animationFrameId = requestAnimationFrame(updateVideoFrame);
-    }
-
+    // Store scrub function on the DOM element for the parent to call imperatively
+    (container as any).__heroVideoScrub = scrub;
     return () => {
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-      }
+      delete (container as any).__heroVideoScrub;
     };
-  }, [useFallback, isVisible, scrollProgress]);
+  }, [scrub]);
 
   return (
     <div ref={containerRef} className={`relative w-full h-full overflow-hidden bg-black ${className}`}>
@@ -112,7 +76,7 @@ export function HeroVideoPlayer({
         }`}
       />
 
-      {/* Scroll-driven video — seeks based on scrollProgress prop */}
+      {/* Scroll-driven video — seeks based on scroll position */}
       <video
         ref={videoRef}
         src={videoUrl}

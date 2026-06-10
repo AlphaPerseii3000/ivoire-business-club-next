@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { HeroVideoPlayer } from '@/components/ui/hero-video-player';
 import { SplitText } from '@/components/ui/split-text';
 import { BlurText } from '@/components/ui/blur-text';
@@ -8,8 +8,9 @@ import { ShinyText } from '@/components/ui/shiny-text';
 
 export function Hero() {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const gradientRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const prefersReducedMotion =
@@ -18,35 +19,60 @@ export function Hero() {
 
     if (prefersReducedMotion) return;
 
+    let ticking = false;
+
     const handleScroll = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) return;
+      if (ticking) return;
+      ticking = true;
 
-      const rect = wrapper.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      // Total scrollable distance inside the wrapper
-      const scrollableDistance = wrapper.offsetHeight - viewportHeight;
+      requestAnimationFrame(() => {
+        const wrapper = wrapperRef.current;
+        const content = contentRef.current;
+        const gradient = gradientRef.current;
+        const videoContainer = videoContainerRef.current;
+        if (!wrapper || !content) {
+          ticking = false;
+          return;
+        }
 
-      if (scrollableDistance <= 0) {
-        setScrollProgress(0);
-        return;
-      }
+        const rect = wrapper.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const scrollableDistance = wrapper.offsetHeight - viewportHeight;
 
-      // Progress: 0 when wrapper top is at viewport top, 1 when wrapper bottom reaches viewport bottom
-      const progress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
-      setScrollProgress(progress);
+        if (scrollableDistance <= 0) {
+          ticking = false;
+          return;
+        }
+
+        // Progress: 0 when wrapper top at viewport top, 1 when wrapper bottom at viewport bottom
+        const progress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+
+        // Content: fade out in first 40% of scroll
+        const contentOpacity = Math.max(0, 1 - progress * 2.5);
+        const contentScale = 1 - Math.min(0.08, progress * 0.15);
+        const parallaxY = progress * -60;
+
+        content.style.transform = `translateY(${parallaxY}px) scale(${contentScale})`;
+        content.style.opacity = String(contentOpacity);
+
+        // Bottom gradient intensifies as we scroll deeper
+        if (gradient) {
+          gradient.style.opacity = String(Math.min(1, progress * 2));
+        }
+
+        // Video scrub — call imperative method on video container
+        if (videoContainer && (videoContainer as any).__heroVideoScrub) {
+          (videoContainer as any).__heroVideoScrub(progress);
+        }
+
+        ticking = false;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Parallax: content fades out in the first 50% of scroll, then stays invisible
-  const contentOpacity = Math.max(0, 1 - scrollProgress * 2.5);
-  const contentScale = 1 - Math.min(0.08, scrollProgress * 0.15);
-  // Slight upward drift on parallax
-  const parallaxY = scrollProgress * -60;
 
   return (
     <div
@@ -55,29 +81,22 @@ export function Hero() {
       style={{ height: '300vh' }}
     >
       {/* Sticky container — stays pinned while the tall wrapper scrolls */}
-      <div
-        ref={stickyRef}
-        className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center"
-      >
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         {/* Background Video Loops */}
-        <div className="absolute inset-0 z-0">
+        <div ref={videoContainerRef} className="absolute inset-0 z-0">
           <HeroVideoPlayer
             videoUrl="/animated-hero-section.mp4"
             fallbackImageUrl="/hero-background-ibc-next-with-blue-vignette.webp"
-            scrollProgress={scrollProgress}
           />
         </div>
 
         {/* Grid Overlay to add depth */}
         <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02),transparent_60%)]" />
 
-        {/* Content wrapper with parallax + fade-out */}
+        {/* Content wrapper — styled via imperative DOM in scroll handler */}
         <div
+          ref={contentRef}
           className="relative z-10 mx-auto max-w-7xl px-4 text-center will-change-transform"
-          style={{
-            transform: `translateY(${parallaxY}px) scale(${contentScale})`,
-            opacity: contentOpacity,
-          }}
         >
           {/* Animated Headline */}
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
@@ -139,11 +158,9 @@ export function Hero() {
 
         {/* Bottom gradient that intensifies as video finishes to blend into next section */}
         <div
-          className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none bg-gradient-to-t from-[#090D16] via-[#090D16]/80 to-transparent transition-opacity duration-500"
-          style={{
-            height: '40vh',
-            opacity: Math.min(1, scrollProgress * 2),
-          }}
+          ref={gradientRef}
+          className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none bg-gradient-to-t from-[#090D16] via-[#090D16]/80 to-transparent"
+          style={{ height: '40vh', opacity: 0 }}
         />
       </div>
     </div>
