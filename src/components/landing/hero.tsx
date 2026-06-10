@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { HeroVideoPlayer } from '@/components/ui/hero-video-player';
+import { HeroVideoPlayer, HeroVideoPlayerHandle } from '@/components/ui/hero-video-player';
 import { SplitText } from '@/components/ui/split-text';
 import { BlurText } from '@/components/ui/blur-text';
 import { ShinyText } from '@/components/ui/shiny-text';
@@ -10,7 +10,7 @@ export function Hero() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const gradientRef = useRef<HTMLDivElement>(null);
-  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const videoPlayerRef = useRef<HeroVideoPlayerHandle>(null);
 
   useEffect(() => {
     const prefersReducedMotion =
@@ -29,7 +29,6 @@ export function Hero() {
         const wrapper = wrapperRef.current;
         const content = contentRef.current;
         const gradient = gradientRef.current;
-        const videoContainer = videoContainerRef.current;
         if (!wrapper || !content) {
           ticking = false;
           return;
@@ -60,10 +59,8 @@ export function Hero() {
           gradient.style.opacity = String(Math.min(1, progress * 2));
         }
 
-        // Video scrub — call imperative method on video container
-        if (videoContainer && (videoContainer as any).__heroVideoScrub) {
-          (videoContainer as any).__heroVideoScrub(progress);
-        }
+        // Video scrub — call imperative method
+        videoPlayerRef.current?.scrub(progress);
 
         ticking = false;
       });
@@ -83,8 +80,9 @@ export function Hero() {
       {/* Sticky container — stays pinned while the tall wrapper scrolls */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         {/* Background Video Loops */}
-        <div ref={videoContainerRef} className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0">
           <HeroVideoPlayer
+            ref={videoPlayerRef}
             videoUrl="/animated-hero-section.mp4"
             fallbackImageUrl="/hero-background-ibc-next-with-blue-vignette.webp"
           />
