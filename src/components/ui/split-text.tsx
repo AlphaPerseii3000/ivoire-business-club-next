@@ -37,6 +37,7 @@ export function SplitText({
 }: SplitTextProps) {
   const containerRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -65,18 +66,22 @@ export function SplitText({
     const elements = containerRef.current.querySelectorAll('.split-item');
     if (!elements.length) return;
 
+    setIsInitialized(true);
+
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion) {
       gsap.set(elements, to);
+      gsap.set(containerRef.current, { opacity: 1 });
       if (onLetterAnimationComplete) {
         onLetterAnimationComplete();
       }
       return;
     }
 
+    gsap.set(containerRef.current, { opacity: 1 });
     gsap.fromTo(
       elements,
       from,
@@ -99,7 +104,7 @@ export function SplitText({
   return (
     <Tag
       ref={containerRef as any}
-      className={`split-text-container ${className}`}
+      className={`split-text-container ${isInitialized ? '' : 'split-text-preinit'} ${className}`}
       style={{ textAlign, display: 'inline-block' }}
     >
       {items.map((item, idx) => {

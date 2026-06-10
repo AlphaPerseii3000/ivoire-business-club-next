@@ -14,8 +14,8 @@ import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
 
-// Incremental Static Regeneration (ISR) - revalidate every 3600 seconds (1 hour)
-export const revalidate = 3600;
+// Dynamic rendering avoids requiring database access during build.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Ivoire Business Club — Bâtir son futur en Afrique',
@@ -126,7 +126,7 @@ export default async function HomePage() {
       <Footer />
 
       {/* Sticky Bottom CTA for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#090D16]/95 p-4 backdrop-blur md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
         <Link
           href="/auth/signup"
           className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#D4A847] text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"

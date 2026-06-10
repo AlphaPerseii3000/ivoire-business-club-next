@@ -202,3 +202,22 @@
 .animate-fade-in {
   animation: fade-in 1s ease-out forwards;
 }
+
+.split-text-preinit {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text,
+  .animate-fade-in,
+  .split-text-container,
+  .split-item,
+  .glass-panel,
+  .glass-panel-light,
+  .mesh-gradient-bg {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -14,6 +14,7 @@ export function HeroVideoPlayer({
   className = '',
 }: HeroVideoPlayerProps) {
   const [useFallback, setUseFallback] = useState(true);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -41,26 +42,30 @@ export function HeroVideoPlayer({
       {/* Top Black-to-transparent Overlay */}
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#090D16] to-transparent z-10 pointer-events-none" />
 
-      {/* Fallback Image is always mounted to avoid visual flickers during video load or error */}
+      {/* Fallback image and video stay mounted to avoid visual flickers during video load or error. */}
       <img
         src={fallbackImageUrl}
         alt="IBC Hero Background"
-        className="absolute inset-0 w-full h-full object-cover opacity-75 animate-fade-in"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+          useFallback || !videoReady ? 'opacity-75' : 'opacity-0'
+        }`}
       />
 
-      {!useFallback && (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onError={() => setUseFallback(true)}
-          className="absolute inset-0 w-full h-full object-cover opacity-70 transition-opacity duration-1000"
-          aria-label="IBC Hero video loops"
-        />
-      )}
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        autoPlay={!useFallback}
+        loop
+        muted
+        playsInline
+        preload={useFallback ? 'none' : 'metadata'}
+        onCanPlay={() => setVideoReady(true)}
+        onError={() => setUseFallback(true)}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+          useFallback || !videoReady ? 'opacity-0' : 'opacity-70'
+        }`}
+        aria-label="IBC Hero video loops"
+      />
 
       {/* Bottom Black-to-transparent Overlay */}
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#090D16] to-transparent z-10 pointer-events-none" />

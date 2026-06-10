@@ -30,8 +30,6 @@ export function ShinyText({
   direction = 'left',
 }: ShinyTextProps) {
   const styles: React.CSSProperties = {
-    color: disabled ? color : 'transparent',
-    WebkitTextFillColor: disabled ? 'initial' : 'transparent',
     backgroundImage: `linear-gradient(${
       direction === 'left' ? '120deg' : '240deg'
     }, ${color} 40%, ${shineColor} 50%, ${color} 60%)`,
@@ -43,6 +41,7 @@ export function ShinyText({
     animationDelay: `${delay}s`,
     animationIterationCount: 'infinite',
     animationTimingFunction: 'linear',
+    ...(disabled ? { color, WebkitTextFillColor: 'initial' } : {}),
   };
 
   return (

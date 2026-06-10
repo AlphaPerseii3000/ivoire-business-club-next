@@ -56,7 +56,9 @@ describe('Video Players Fallbacks', () => {
 
     const img = screen.getByAltText('IBC Hero Background');
     expect(img).toBeInTheDocument();
-    expect(screen.queryByLabelText('IBC Hero video loops')).not.toBeInTheDocument();
+    const video = screen.getByLabelText('IBC Hero video loops');
+    expect(video).toBeInTheDocument();
+    expect(video).toHaveClass('opacity-0');
   });
 
   it('HeroVideoPlayer falls back to static image when width is small (mobile)', () => {

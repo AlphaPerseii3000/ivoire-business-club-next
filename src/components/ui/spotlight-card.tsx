@@ -25,6 +25,12 @@ export function SpotlightCard({
       setPrefersReducedMotion(
         window.matchMedia('(prefers-reduced-motion: reduce)').matches
       );
+
+      const invalidateRect = () => {
+        rectRef.current = null;
+      };
+      window.addEventListener('resize', invalidateRect);
+      return () => window.removeEventListener('resize', invalidateRect);
     }
   }, []);
 
@@ -64,14 +70,14 @@ export function SpotlightCard({
       className={`relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md ${className}`}
       {...props}
     >
-      {isFocused && !prefersReducedMotion && (
+      {isFocused && !prefersReducedMotion ? (
         <div
           className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
           style={{
             background: `radial-gradient(600px circle at ${coords.x}px ${coords.y}px, ${spotlightColor}, transparent 40%)`,
           }}
         />
-      )}
+      ) : null}
       <div className="relative z-10 w-full h-full flex flex-col flex-1">{children}</div>
     </div>
   );

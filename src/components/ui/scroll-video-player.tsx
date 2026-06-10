@@ -16,6 +16,7 @@ export function ScrollVideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [useFallback, setUseFallback] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const checkPerformance = () => {
@@ -36,7 +37,24 @@ export function ScrollVideoPlayer({
   }, []);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     if (useFallback) return;
+    if (!isVisible) return;
 
     const video = videoRef.current;
     const container = containerRef.current;
@@ -44,7 +62,7 @@ export function ScrollVideoPlayer({
 
     let targetTime = 0;
     let currentTime = 0;
-    let animationFrameId: number;
+    let animationFrameId: number | null = null;
     let isLooping = false;
 
     const updateVideoFrame = () => {
@@ -68,7 +86,10 @@ export function ScrollVideoPlayer({
       const viewportHeight = window.innerHeight;
 
       if (rect.top < viewportHeight && rect.bottom > 0) {
-        const progress = Math.max(0, Math.min(1, (viewportHeight - rect.top) / (rect.height + viewportHeight)));
+        const progress = Math.max(
+          0,
+          Math.min(1, (viewportHeight - rect.top) / (rect.height + viewportHeight))
+        );
         if (video.duration) {
           targetTime = progress * video.duration;
           if (!isLooping) {
@@ -85,30 +106,29 @@ export function ScrollVideoPlayer({
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     video.addEventListener('loadedmetadata', init);
-
-    if (video.readyState >= 1) {
-      init();
-    }
+    init();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       video.removeEventListener('loadedmetadata', init);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, [useFallback]);
+  }, [useFallback, isVisible]);
 
   return (
     <div
       ref={containerRef}
-      className={`relative w-full bg-[#090D16] ${useFallback ? 'h-[50vh]' : 'h-[150vh]'} ${className}`}
+      className={`relative w-full bg-[#090D16] ${useFallback ? 'h-auto min-h-[50vh]' : 'h-[150vh]'} ${className}`}
     >
       {useFallback ? (
-        <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+        <div className="relative w-full min-h-[50vh] overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-[#090D16] via-transparent to-[#090D16]" />
           <img
             src={fallbackImageUrl}
             alt="Fallback static scene"
-            className="w-full h-full object-cover opacity-75 animate-fade-in"
+            className="w-full h-full min-h-[50vh] object-cover opacity-75 animate-fade-in"
           />
         </div>
       ) : (

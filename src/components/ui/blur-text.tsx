@@ -34,7 +34,11 @@ export function BlurText({
   });
 
   const elements = animateBy === 'words' ? text.split(' ') : text.split('');
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [prefersReducedMotion] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false
+  );
   const [isMounted, setIsMounted] = useState(false);
 
   const savedCb = useRef(onAnimationComplete);
@@ -44,11 +48,6 @@ export function BlurText({
 
   useEffect(() => {
     setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      setPrefersReducedMotion(
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      );
-    }
   }, []);
 
   const containerVariants = {

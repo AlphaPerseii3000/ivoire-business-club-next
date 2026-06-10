@@ -149,7 +149,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
       ) : null}
       <div className="px-4 pb-4">
         <WhatsAppCTA
-          phoneNumber={deal.author.phone}
+          phoneNumber={deal.author?.phone}
           prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${deal.title} sur IBC.`}
         />
       </div>
