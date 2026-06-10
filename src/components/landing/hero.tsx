@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from 'react';
 import { HeroVideoPlayer, HeroVideoPlayerHandle } from '@/components/ui/hero-video-player';
 import { SplitText } from '@/components/ui/split-text';
-import { BlurText } from '@/components/ui/blur-text';
 import { ShinyText } from '@/components/ui/shiny-text';
 
 export function Hero() {
@@ -45,41 +44,26 @@ export function Hero() {
           return;
         }
 
-        // Progress: 0 at top, 1 when wrapper bottom reaches viewport bottom
         const progress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
 
-        // --- Text content: stays fully visible until 55%, then fades out ---
-        // 0→0.55: opacity=1, 0.55→0.85: fade to 0, 0.85→1: invisible
-        const textFadeStart = 0.55;
-        const textFadeEnd = 0.85;
-        const contentOpacity = progress < textFadeStart
-          ? 1
-          : progress > textFadeEnd
-            ? 0
-            : 1 - (progress - textFadeStart) / (textFadeEnd - textFadeStart);
-
-        // Subtle parallax: content drifts up slightly as it fades
-        const parallaxY = progress > textFadeStart ? (progress - textFadeStart) * -80 : 0;
-        const contentScale = 1 - Math.max(0, (progress - textFadeStart) * 0.08);
-
+        // --- Text content: parallax drift only, no opacity override ---
+        const parallaxY = progress > 0.4 ? (progress - 0.4) * -50 : 0;
+        const contentScale = 1 - Math.max(0, (progress - 0.4) * 0.05);
         content.style.transform = `translateY(${parallaxY}px) scale(${contentScale})`;
-        content.style.opacity = String(contentOpacity);
 
-        // --- Sticky container: fades out in the last 30% to blend into next section ---
-        // This prevents the "frozen last frame" jank — the whole hero dissolves away
+        // --- Sticky container: fades out in the last 30% ---
         const stickyFadeStart = 0.7;
         const stickyOpacity = progress > stickyFadeStart
           ? 1 - (progress - stickyFadeStart) / (1 - stickyFadeStart)
           : 1;
-
         sticky.style.opacity = String(stickyOpacity);
 
-        // --- Bottom gradient: intensifies from 40% onwards ---
+        // --- Bottom gradient ---
         if (gradient) {
           gradient.style.opacity = String(Math.max(0, Math.min(1, (progress - 0.3) / 0.5)));
         }
 
-        // --- Video scrub: maps to full video duration ---
+        // --- Video scrub ---
         videoPlayerRef.current?.scrub(progress);
 
         ticking = false;
@@ -97,12 +81,12 @@ export function Hero() {
       className="relative bg-[#090D16] mesh-gradient-bg"
       style={{ height: '160vh' }}
     >
-      {/* Sticky container — stays pinned while the tall wrapper scrolls */}
+      {/* Sticky container */}
       <div
         ref={stickyRef}
         className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center will-change-transform"
       >
-        {/* Background Video Loops */}
+        {/* Background Video */}
         <div className="absolute inset-0 z-0">
           <HeroVideoPlayer
             ref={videoPlayerRef}
@@ -111,10 +95,10 @@ export function Hero() {
           />
         </div>
 
-        {/* Grid Overlay to add depth */}
+        {/* Grid Overlay */}
         <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02),transparent_60%)]" />
 
-        {/* Content wrapper — styled via imperative DOM in scroll handler */}
+        {/* Content wrapper */}
         <div
           ref={contentRef}
           className="relative z-10 mx-auto max-w-7xl px-4 text-center will-change-transform"
@@ -122,7 +106,7 @@ export function Hero() {
           {/* Animated Headline */}
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
             <SplitText
-              text="Bâtir son futur en Afrique"
+              text="Bâtir son futur"
               className="inline-block"
               delay={50}
               duration={1.25}
@@ -130,32 +114,29 @@ export function Hero() {
               splitType="chars"
               tag="span"
             />
+            <br className="sm:hidden" />
+            <SplitText
+              text="en Afrique"
+              className="inline-block"
+              delay={250}
+              duration={1.25}
+              ease="power3.out"
+              splitType="chars"
+              tag="span"
+            />
           </h1>
 
-          {/* Animated Subheadline */}
-          <div className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-            <BlurText
-              text="Avec l'Ivoire Business Club, accède aux meilleures opportunités business en Côte d'Ivoire. Le réseau de référence pour investir, entreprendre ou développer ton activité."
-              animateBy="words"
-              direction="top"
-              delay={200}
-              stepDuration={0.05}
-            />
-          </div>
+          {/* Subheadline — CSS animation, no framer-motion useInView dependency */}
+          <p className="hero-fade-in mx-auto mt-6 max-w-2xl text-lg text-slate-300" style={{ animationDelay: '0.6s' }}>
+            Avec l&apos;Ivoire Business Club, accède aux meilleures opportunités business en Côte d&apos;Ivoire. Le réseau de référence pour investir, entreprendre ou développer ton activité.
+          </p>
 
-          <div className="mt-4">
-            <BlurText
-              text={"«\u00a0Investir ou entreprendre ne s'improvise pas\u00a0»"}
-              className="text-xl font-semibold text-[#D4A847]"
-              animateBy="words"
-              direction="bottom"
-              delay={400}
-              stepDuration={0.08}
-            />
-          </div>
+          <p className="hero-fade-in mt-4 text-xl font-semibold text-[#D4A847]" style={{ animationDelay: '0.9s' }}>
+            «&nbsp;Investir ou entreprendre ne s&apos;improvise pas&nbsp;»
+          </p>
 
           {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
+          <div className="hero-fade-in mt-10 flex flex-col sm:flex-row justify-center items-center gap-4" style={{ animationDelay: '1.2s' }}>
             <a
               href="/auth/signup"
               className="glass-panel group relative rounded-lg px-8 py-3 text-lg font-semibold shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] border border-[#D4A847]/30 hover:border-[#D4A847]/60"
@@ -177,7 +158,7 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Bottom gradient that intensifies as video finishes to blend into next section */}
+        {/* Bottom gradient */}
         <div
           ref={gradientRef}
           className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none bg-gradient-to-t from-[#090D16] via-[#090D16]/80 to-transparent"
