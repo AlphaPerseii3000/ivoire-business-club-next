@@ -14,3 +14,8 @@
 
 - Project-wide pre-existing JSX `&&` patterns remain outside the Story 4.2 diff. Clean in a separate hardening pass if the Next.js 16 guardrail is enforced globally.
 - `POST /api/user/profile` deletes and recreates tags even when the optional `tags` field is omitted. Current UI sends tags, but future/non-UI clients may unintentionally clear tags; consider preserving tags when `tags` is absent.
+
+## Deferred from: code review of spec-coordonnees-bancaires-reelles.md (2026-06-10)
+
+- Tests unitaires dégradés et assertions fragiles : Le remplacement de `userEvent` par `fireEvent` dans [bank-transfer-instructions.test.tsx](file:///d:/Fichiers%20Code/ivoire-business-club-next/src/components/bank-transfer-instructions.test.tsx) diminue le réalisme des tests et l'accessibilité globale. L'utilisation de regex complexes pour matcher des espaces insécables rend de plus les assertions de tests instables selon l'OS.
+

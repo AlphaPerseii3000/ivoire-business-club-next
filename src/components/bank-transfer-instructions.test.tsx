@@ -51,12 +51,20 @@ describe("BankTransferInstructions", () => {
     expect(screen.getByText("1 avenue de la Banque, Abidjan")).toBeInTheDocument();
     expect(screen.getByText("IBC-user-123-GRAND_FRERE")).toBeInTheDocument();
 
-    // Verify copy button for final IBAN in EUR tab
-    const copyIbanBtn = screen.getByRole("button", { name: "Copier IBAN" });
-    expect(copyIbanBtn).toBeInTheDocument();
-    fireEvent.click(copyIbanBtn);
+    // Verify copy button for transit IBAN in EUR tab
+    const copyTransitIbanBtn = screen.getByRole("button", { name: "Copier IBAN Transit" });
+    expect(copyTransitIbanBtn).toBeInTheDocument();
+    fireEvent.click(copyTransitIbanBtn);
     await waitFor(() => {
       expect(mockClipboardWriteText).toHaveBeenCalledWith(defaultProps.iban);
+    });
+
+    // Verify copy button for final IBAN in EUR tab
+    const copyFinalIbanBtn = screen.getByRole("button", { name: "Copier IBAN Final" });
+    expect(copyFinalIbanBtn).toBeInTheDocument();
+    fireEvent.click(copyFinalIbanBtn);
+    await waitFor(() => {
+      expect(mockClipboardWriteText).toHaveBeenCalledWith("CI93 CI11 2010 0501 8780 4900 0125");
     });
 
     // Verify copy all button in EUR tab

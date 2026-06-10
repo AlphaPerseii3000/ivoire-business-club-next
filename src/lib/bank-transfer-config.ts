@@ -8,6 +8,16 @@ export const BANK_TRANSFER_CONFIG = {
   } as Record<string, number>,
 } as const;
 
+export const XOF_ROUNDED_AMOUNTS: Record<number, number> = {
+  29: 19000,
+  49: 32000,
+  99: 65000,
+};
+
+export function formatNumber(num: number): string {
+  return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
 export interface BankAccountXOF {
   bankName: string;
   domiciliation: string;
@@ -28,6 +38,7 @@ export interface BankAccountEUR {
   bankName: string;
   bankAddress: string;
   bic: string;
+  iban: string;
   faveur: string;
   bankCode: string;
   branchCode: string;
@@ -64,18 +75,19 @@ export function getBankTransferDetails() {
       bankName: "SOCIETE GENERALE - PARIS",
       bankAddress: "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France",
       bic: process.env.BANK_TRANSFER_EUR_BIC || "SOGEFRPPXXX",
+      iban: process.env.BANK_TRANSFER_EUR_IBAN || "FR76 3000 3069 9000 1016 1063 363",
       faveur: "VERSUS BANK",
       bankCode: "30003",
       branchCode: "06990",
       accountNumber: "00101610633",
       ribKey: "63",
-      swift: process.env.BANK_TRANSFER_BIC || "VSBKCIABXXX",
+      swift: process.env.BANK_TRANSFER_XOF_BIC || process.env.BANK_TRANSFER_BIC || "VSBKCIABXXX",
       finalBeneficiary: "KS Investment",
       finalBankCode: "CI112",
       finalBranchCode: "01005",
       finalAccountNumber: "018780490001",
       finalRibKey: "25",
-      finalIban: process.env.BANK_TRANSFER_EUR_IBAN || process.env.BANK_TRANSFER_IBAN || "CI93 CI11 2010 0501 8780 4900 0125",
+      finalIban: process.env.BANK_TRANSFER_XOF_IBAN || process.env.BANK_TRANSFER_IBAN || "CI93 CI11 2010 0501 8780 4900 0125",
       currency: "EUR",
     } as BankAccountEUR,
     // Keep legacy fields for backward compatibility/types
@@ -90,4 +102,5 @@ export function getBankTransferDetails() {
 export function getAmountForTier(tier: string): number {
   return BANK_TRANSFER_CONFIG.amounts[tier] ?? 0;
 }
+
 

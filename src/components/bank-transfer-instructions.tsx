@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getTierConfig, type MembershipTier } from "@/lib/tier-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type BankAccountXOF, type BankAccountEUR } from "@/lib/bank-transfer-config";
+import { type BankAccountXOF, type BankAccountEUR, XOF_ROUNDED_AMOUNTS, formatNumber } from "@/lib/bank-transfer-config";
 
 interface BankTransferInstructionsProps {
   tier: MembershipTier;
@@ -44,17 +44,13 @@ export function BankTransferInstructions({
   eurDetails,
 }: BankTransferInstructionsProps) {
   const [confirmation, setConfirmation] = useState<ConfirmationState>({ status: "idle" });
-  const [activeTab, setActiveTab] = useState<string>("eur");
+  const [activeTab, setActiveTab] = useState<string>(currency.toLowerCase() === "xof" ? "xof" : "eur");
   const config = getTierConfig(tier);
 
   const xofAmounts = useMemo(() => {
     // Parité fixe officielle : 1 EUR = 655.957 XOF
     const exact = Math.round(amount * 655.957);
-    // Arrondis usuels simples à transférer pour les membres (29 -> 19000, 49 -> 32000, 99 -> 65000)
-    let rounded = exact;
-    if (amount === 29) rounded = 19000;
-    else if (amount === 49) rounded = 32000;
-    else if (amount === 99) rounded = 65000;
+    const rounded = XOF_ROUNDED_AMOUNTS[amount] || exact;
 
     return { exact, rounded };
   }, [amount]);
@@ -71,15 +67,16 @@ export function BankTransferInstructions({
       branchCode: "01005",
       accountNumber: "018780490001",
       ribKey: "25",
-      bankAddress: currency === "XOF" ? bankAddress : "01 BP 1874 ABIDJAN 01, COTE D'IVOIRE",
+      bankAddress: "01 BP 1874 ABIDJAN 01, COTE D'IVOIRE",
     };
-  }, [xofDetails, currency, iban, beneficiary, bic, bankAddress]);
+  }, [xofDetails, currency, iban, beneficiary, bic]);
 
   const resolvedEur = useMemo<BankAccountEUR>(() => {
     return eurDetails || {
       bankName: "SOCIETE GENERALE - PARIS",
       bankAddress: currency === "EUR" ? bankAddress : "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France",
       bic: currency === "EUR" ? bic : "SOGEFRPPXXX",
+      iban: currency === "EUR" ? iban : "FR76 3000 3069 9000 1016 1063 363",
       faveur: "VERSUS BANK",
       bankCode: "30003",
       branchCode: "06990",
@@ -91,7 +88,7 @@ export function BankTransferInstructions({
       finalBranchCode: "01005",
       finalAccountNumber: "018780490001",
       finalRibKey: "25",
-      finalIban: currency === "EUR" ? iban : "CI93 CI11 2010 0501 8780 4900 0125",
+      finalIban: currency === "XOF" ? iban : "CI93 CI11 2010 0501 8780 4900 0125",
       currency: "EUR",
     };
   }, [eurDetails, currency, bankAddress, bic, beneficiary, iban]);
@@ -103,6 +100,7 @@ export function BankTransferInstructions({
       `BIC / SWIFT : ${resolvedEur.bic}`,
       `Faveur : ${resolvedEur.faveur} (SWIFT: ${resolvedEur.swift})`,
       `Coordonnées Compte Transit (SocGen) :`,
+      `- IBAN de transit : ${resolvedEur.iban}`,
       `- Code Banque : ${resolvedEur.bankCode}`,
       `- Code Guichet : ${resolvedEur.branchCode}`,
       `- N° Compte : ${resolvedEur.accountNumber}`,
@@ -131,8 +129,8 @@ export function BankTransferInstructions({
       `- N° Compte : ${resolvedXof.accountNumber}`,
       `- Clé RIB : ${resolvedXof.ribKey}`,
       `- IBAN / RIB : ${resolvedXof.iban}`,
-      `Montant Exact : ${xofAmounts.exact.toLocaleString("fr-FR")} XOF`,
-      `Montant Suggéré : ${xofAmounts.rounded.toLocaleString("fr-FR")} XOF`,
+      `Montant Exact : ${formatNumber(xofAmounts.exact)} XOF`,
+      `Montant Suggéré : ${formatNumber(xofAmounts.rounded)} XOF`,
       `Référence : ${reference}`,
     ].join("\n");
   }, [resolvedXof, xofAmounts, reference]);
@@ -140,6 +138,10 @@ export function BankTransferInstructions({
   const activeCopyBlock = activeTab === "eur" ? copyBlockEur : copyBlockXof;
 
   async function copyText(text: string) {
+    if (typeof window === "undefined" || !navigator?.clipboard) {
+      toast.error("Le presse-papiers n'est pas disponible sur ce navigateur.");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
       toast.success("Copié");
@@ -250,6 +252,15 @@ export function BankTransferInstructions({
                         <Copy className="size-3.5 mr-1" /> Copier
                       </Button>
                     </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-muted/50 p-2.5 rounded-lg gap-2 mt-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-muted-foreground text-xs">IBAN de transit (RIB)</p>
+                        <p className="font-mono text-sm font-semibold break-all">{resolvedEur.iban}</p>
+                      </div>
+                      <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => copyText(resolvedEur.iban)}>
+                        <Copy className="size-3.5 mr-1" /> Copier IBAN Transit
+                      </Button>
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
                       <div className="bg-muted/30 p-2 rounded">
                         <p className="text-muted-foreground">Code Banque</p>
@@ -281,7 +292,7 @@ export function BankTransferInstructions({
                         <p className="font-mono text-sm font-semibold break-all">{resolvedEur.finalIban}</p>
                       </div>
                       <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => copyText(resolvedEur.finalIban)}>
-                        <Copy className="size-3.5 mr-1" /> Copier IBAN
+                        <Copy className="size-3.5 mr-1" /> Copier IBAN Final
                       </Button>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
@@ -335,9 +346,9 @@ export function BankTransferInstructions({
                 <div className="rounded-xl border bg-muted/30 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Montant à transférer</p>
                   <p className="mt-1 text-lg font-semibold text-primary">
-                    {xofAmounts.rounded.toLocaleString("fr-FR")} XOF <span className="text-xs font-normal text-muted-foreground">(suggéré)</span>
+                    {formatNumber(xofAmounts.rounded)} XOF <span className="text-xs font-normal text-muted-foreground">(suggéré)</span>
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Montant exact converti (1€ = 655,957 XOF) : {xofAmounts.exact.toLocaleString("fr-FR")} XOF</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Montant exact converti (1€ = 655,957 XOF) : {formatNumber(xofAmounts.exact)} XOF</p>
                 </div>
               </div>
 
