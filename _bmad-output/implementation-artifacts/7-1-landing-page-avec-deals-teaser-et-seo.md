@@ -2,7 +2,7 @@
 Story: "7.1"
 StoryKey: "7-1-landing-page-avec-deals-teaser-et-seo"
 Title: "Landing Page avec Deals Teaser et SEO"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 7 — Landing Page et Découverte Publique"
 FRs: ["FR41", "FR43", "FR44", "FR45"]
@@ -12,7 +12,7 @@ Created: "2026-06-10"
 
 # Story 7.1: Landing Page avec Deals Teaser et SEO
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
