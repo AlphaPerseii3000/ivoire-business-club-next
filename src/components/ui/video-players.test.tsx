@@ -39,8 +39,9 @@ describe('Video Players Fallbacks', () => {
 
     render(<HeroVideoPlayer />);
 
-    const video = screen.getByLabelText('IBC Hero video loops');
+    const video = screen.getByLabelText('Scroll-driven hero video');
     expect(video).toBeInTheDocument();
+    expect(video).not.toHaveAttribute('autoPlay');
     expect(screen.getByAltText('IBC Hero Background')).toBeInTheDocument();
   });
 
@@ -56,7 +57,7 @@ describe('Video Players Fallbacks', () => {
 
     const img = screen.getByAltText('IBC Hero Background');
     expect(img).toBeInTheDocument();
-    const video = screen.getByLabelText('IBC Hero video loops');
+    const video = screen.getByLabelText('Scroll-driven hero video');
     expect(video).toBeInTheDocument();
     expect(video).toHaveClass('opacity-0');
   });
