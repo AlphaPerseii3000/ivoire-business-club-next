@@ -1,0 +1,2315 @@
+﻿diff --git a/_bmad-output/implementation-artifacts/7-1-landing-page-avec-deals-teaser-et-seo.md b/_bmad-output/implementation-artifacts/7-1-landing-page-avec-deals-teaser-et-seo.md
+index f6a140e..8ff2aab 100644
+--- a/_bmad-output/implementation-artifacts/7-1-landing-page-avec-deals-teaser-et-seo.md
++++ b/_bmad-output/implementation-artifacts/7-1-landing-page-avec-deals-teaser-et-seo.md
+@@ -2,7 +2,7 @@
+ Story: "7.1"
+ StoryKey: "7-1-landing-page-avec-deals-teaser-et-seo"
+ Title: "Landing Page avec Deals Teaser et SEO"
+-Status: "ready-for-dev"
++Status: "review"
+ Priority: "P1"
+ Epic: "Epic 7 ÔÇö Landing Page et D├®couverte Publique"
+ FRs: ["FR41", "FR43", "FR44", "FR45"]
+@@ -12,7 +12,7 @@ Created: "2026-06-10"
+ 
+ # Story 7.1: Landing Page avec Deals Teaser et SEO
+ 
+-Status: ready-for-dev
++Status: review
+ 
+ <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+ 
+@@ -30,8 +30,8 @@ so that I can understand the club's value and be converted to sign up.
+    - Then the Largest Contentful Paint (LCP) is under 2 seconds on a simulated 3G connection (NFR-P1).
+    - And the page displays a premium visual experience:
+      - Sleek dark mode background (`#090D16` / `#0F172A`), mesh gradients, and glassmorphism elements.
+-     - A video-based hero scene displaying a custom loops video (`docs/animated hero section.mp4`) blended seamlessly with black-to-transparent overlays.
+-     - Responsive adjustments: on mobile/slow connections, the video falls back to the static WebP image (`docs/hero-background-ibc-next-with-blue-vignette.webp` or `docs/hero-background-ibc-next.webp`).
++     - A video-based hero scene displaying a custom loops video (`/animated-hero-section.mp4`) blended seamlessly with black-to-transparent overlays.
++     - Responsive adjustments: on mobile/slow connections, the video falls back to the static WebP image (`/hero-background-ibc-next-with-blue-vignette.webp` or `/hero-background-ibc-next.webp`).
+ 
+ 2. **Core Sections display verified content and social proof**
+    - Given the landing page is rendered,
+@@ -39,23 +39,23 @@ so that I can understand the club's value and be converted to sign up.
+    - Then the following sections are displayed with their designated assets:
+      - **Hero Section:** Headline "B├ótir son futur en Afrique", subheadline, CTA "Rejoins le club" (using React Bits `ShinyText`), and the background/side video loops.
+      - **Mission / Comment ├ºa marche:** Explains the 3-step value loop (Rejoindre ÔåÆ Acc├®der ÔåÆ Passer ├á l'action) featuring the following assets:
+-       - Rejoindre: `docs/Section-R├®seautage-Synergie.webp`
+-       - Acc├®der: `docs/Section-Mentorat-Accompagnement.webp`
+-       - Passer ├á l'action: `docs/Section-Club d'Affaires-Prestige.webp`
++       - Rejoindre: `/section-reseautage-synergie.webp`
++       - Acc├®der: `/section-mentorat-accompagnement.webp`
++       - Passer ├á l'action: `/section-club-affaires-prestige.webp`
+      - **Mur des Succ├¿s:** Carousel of testimonials featuring member profile photos:
+-       - `docs/Profil 1  Jeune entrepreneure Tech.webp`
+-       - `docs/Profil 2 Investisseur Senior - Business Angel.webp`
+-       - `docs/Profil 3 Entrepreneur local (C├┤te d'Ivoire).webp`
+-       - `docs/Profil 4 Cadre Financi├¿re Experte en Investissement.webp`
+-     - **Teaser Deals Feed:** Displays 3ÔÇô5 `DealCard` elements with `docs/Section-Investissement-Deals.webp` used in the card background/container.
++       - `/profil-1-jeune-entrepreneure-tech.webp`
++       - `/profil-2-investisseur-senior-business-angel.webp`
++       - `/profil-3-entrepreneur-local-cote-divoire.webp`
++       - `/profil-4-cadre-financiere-experte-en-investissement.webp`
++     - **Teaser Deals Feed:** Displays 3ÔÇô5 `DealCard` elements with `/section-investissement-deals.webp` used in the card background/container.
+      - **Tiers Comparison:** Shows the three offers (Affranchis, Grands Fr├¿res, Boss) with prices (Ôé¼29, Ôé¼49, Ôé¼99) and benefits comparison, using React Bits `SpotlightCard` or `TiltCard`.
+      - **Trust Signals & FAQ:** Compliance notes, FAQ accordion, partner logos.
+-     - **Footer:** Terms (CGV), contact link, newsletter input, and `docs/logo-ibc.webp`.
++     - **Footer:** Terms (CGV), contact link, newsletter input, and `/logo-ibc.webp`.
+ 
+ 3. **Scroll-Tied Animation Experience**
+    - Given the visitor scrolls through the middle sections of the page,
+    - When they scroll down,
+-   - Then a custom `ScrollVideoPlayer` component plays the video `docs/animated-network-lines-abidjan.mp4` based on scroll progress.
++   - Then a custom `ScrollVideoPlayer` component plays the video `/animated-network-lines-abidjan.mp4` based on scroll progress.
+    - And the video seeking is optimized using `requestAnimationFrame` to smooth frame seek operations (interleaved seeking) and avoid repaints/reflows.
+ 
+ 4. **Teaser Deals Gating and Security**
+@@ -69,6 +69,7 @@ so that I can understand the club's value and be converted to sign up.
+    - Given the landing page is crawled by a search engine,
+    - When the HTML is parsed,
+    - Then metadata (title, description, open graph tags) are present in French.
++   - And the site logo is configured using `/logo-ibc.webp` and the favicon is configured using `/favicon-ibc.webp` in the app's metadata.
+    - And the teaser deals are server-side rendered (SSG/ISR) and indexable by search engine bots.
+ 
+ 6. **Responsive and Accessible Design**
+@@ -80,46 +81,47 @@ so that I can understand the club's value and be converted to sign up.
+ 
+ ## Tasks / Subtasks
+ 
+-- [ ] Integrate Higgsfield AI video and static WebP fallbacks (AC: 1, 3)
+-  - [ ] Reference the asset guide in [docs/AI-Powered-3D-website.md](file:///d:/Code/ivoire-business-club-next/docs/AI-Powered-3D-website.md).
+-  - [ ] Implement a `ScrollVideoPlayer` component at `src/components/ui/scroll-video-player.tsx` with a scroll-tied `requestAnimationFrame` mechanism to play `docs/animated-network-lines-abidjan.mp4`.
+-  - [ ] Implement a `HeroVideoPlayer` component at `src/components/ui/hero-video-player.tsx` that plays `docs/animated hero section.mp4` in a looping, muted state.
+-  - [ ] Apply black-to-transparency gradient overlays at the top and bottom of the video elements to blend them seamlessly into the dark `#090D16` background.
+-  - [ ] Integrate connection/performance fallback check (via `navigator.connection` or screen width) to show static `docs/hero-background-ibc-next-with-blue-vignette.webp` instead of loading heavy video elements on slow mobile networks.
+-
+-- [ ] Manage project dependencies for React Bits components (AC: 1, 2)
+-  - [ ] Install `gsap` and `@gsap/react` as dependencies in `package.json` for GSAP-based animations (like `SplitText`).
+-  - [ ] If using `BlurText`, install `framer-motion` (referenced as `motion` in React Bits dependencies).
+-
+-- [ ] Redesign the Landing Page layout and styling with React Bits (AC: 1, 2, 6)
+-  - [ ] Update `src/app/globals.css` with dark mode tokens (`#090D16` / `#0F172A`), glassmorphism utility classes, and custom keyframes.
+-  - [ ] Refactor `src/app/(public)/page.tsx` for server-side rendering (SSG / ISR, revalidate every 3600 seconds) for public teasers.
+-  - [ ] Modify `src/components/landing/hero.tsx` to include React Bits typography component (`SplitText` or `BlurText` for title intro) and dynamic hero video/static fallback.
+-  - [ ] Implement the "Mur des Succ├¿s" component at `src/components/landing/success-wall.tsx` containing horizontal scrolls of testimonials utilizing the profile photos:
+-    - `docs/Profil 1  Jeune entrepreneure Tech.webp`
+-    - `docs/Profil 2 Investisseur Senior - Business Angel.webp`
+-    - `docs/Profil 3 Entrepreneur local (C├┤te d'Ivoire).webp`
+-    - `docs/Profil 4 Cadre Financi├¿re Experte en Investissement.webp`
+-  - [ ] Update `src/components/landing/pricing.tsx` to display comparison cards (stacked on mobile, horizontal comparison table on desktop) wrapped in React Bits `SpotlightCard` or `TiltCard` components.
+-  - [ ] Ensure all buttons use `ShinyText` from React Bits and respect 44px touch targets.
+-  - [ ] Incorporate `SplashCursor` React Bits component to add premium interactive fluid trails on the page background.
+-
+-- [ ] Implement secure public deal gating in teaser cards (AC: 4)
+-  - [ ] Modify `src/components/landing/opportunity-teasers.tsx` to match the exact teaser card design with an overlay and lock icon.
+-  - [ ] Ensure the Server Component query in `src/app/(public)/page.tsx` only queries non-sensitive fields from the database: `id`, `title`, and `location` (through author relation). Never fetch or serialize `amount`, `documents`, or `author.phoneNumber` for public routes.
+-  - [ ] Ensure `InterestButton` on public pages behaves correctly (redirects to signup/login modal rather than initiating a soft commitment).
+-
+-- [ ] Implement SEO, metadata, and accessibility options (AC: 5, 6)
+-  - [ ] Configure page-level metadata in `src/app/(public)/page.tsx` with French Title: "Ivoire Business Club ÔÇö B├ótir son futur en Afrique", description, and OpenGraph parameters.
+-  - [ ] Apply `prefers-reduced-motion` media queries in Tailwind or component code to disable keyframe animations or video frame seek logic if active.
+-  - [ ] Add `aria-label` tags to visualizers, links, and forms.
+-
+-- [ ] Verification and automated testing (AC: 1, 2, 3, 4, 5, 6)
+-  - [ ] Add unit tests for `ScrollVideoPlayer` and `HeroVideoPlayer` to verify it falls back to 2D image when connection is slow or widths are small.
+-  - [ ] Update tests in `src/components/landing/opportunity-teasers.test.tsx` to assert that sensitive info is missing and signup links exist.
+-  - [ ] Add SEO metadata checks in route tests.
+-  - [ ] Run `npx vitest run`.
+-  - [ ] Run `npm run build`.
++- [x] Integrate Higgsfield AI video and static WebP fallbacks (AC: 1, 3)
++  - [x] Reference the asset guide in [docs/AI-Powered-3D-website.md](file:///d:/Code/ivoire-business-club-next/docs/AI-Powered-3D-website.md).
++  - [x] Implement a `ScrollVideoPlayer` component at `src/components/ui/scroll-video-player.tsx` with a scroll-tied `requestAnimationFrame` mechanism to play `/animated-network-lines-abidjan.mp4`.
++  - [x] Implement a `HeroVideoPlayer` component at `src/components/ui/hero-video-player.tsx` that plays `/animated-hero-section.mp4` in a looping, muted state.
++  - [x] Apply black-to-transparency gradient overlays at the top and bottom of the video elements to blend them seamlessly into the dark `#090D16` background.
++  - [x] Integrate connection/performance fallback check (via `navigator.connection` or screen width) to show static `/hero-background-ibc-next-with-blue-vignette.webp` instead of loading heavy video elements on slow mobile networks.
++
++- [x] Manage project dependencies for React Bits components (AC: 1, 2)
++  - [x] Install `gsap` and `@gsap/react` as dependencies in `package.json` for GSAP-based animations (like `SplitText`).
++  - [x] If using `BlurText`, install `framer-motion` (referenced as `motion` in React Bits dependencies).
++
++- [x] Redesign the Landing Page layout and styling with React Bits (AC: 1, 2, 6)
++  - [x] Update `src/app/globals.css` with dark mode tokens (`#090D16` / `#0F172A`), glassmorphism utility classes, and custom keyframes.
++  - [x] Refactor `src/app/(public)/page.tsx` for server-side rendering (SSG / ISR, revalidate every 3600 seconds) for public teasers.
++  - [x] Modify `src/components/landing/hero.tsx` to include React Bits typography component (`SplitText` or `BlurText` for title intro) and dynamic hero video/static fallback.
++  - [x] Implement the "Mur des Succ├¿s" component at `src/components/landing/success-wall.tsx` containing horizontal scrolls of testimonials utilizing the profile photos:
++    - `/profil-1-jeune-entrepreneure-tech.webp`
++    - `/profil-2-investisseur-senior-business-angel.webp`
++    - `/profil-3-entrepreneur-local-cote-divoire.webp`
++    - `/profil-4-cadre-financiere-experte-en-investissement.webp`
++  - [x] Update `src/components/landing/pricing.tsx` to display comparison cards (stacked on mobile, horizontal comparison table on desktop) wrapped in React Bits `SpotlightCard` or `TiltCard` components.
++  - [x] Ensure all buttons use `ShinyText` from React Bits and respect 44px touch targets.
++  - [x] Incorporate `SplashCursor` React Bits component to add premium interactive fluid trails on the page background.
++
++- [x] Implement secure public deal gating in teaser cards (AC: 4)
++  - [x] Modify `src/components/landing/opportunity-teasers.tsx` to match the exact teaser card design with an overlay and lock icon.
++  - [x] Ensure the Server Component query in `src/app/(public)/page.tsx` only queries non-sensitive fields from the database: `id`, `title`, and `location` (through author relation). Never fetch or serialize `amount`, `documents`, or `author.phoneNumber` for public routes.
++  - [x] Ensure `InterestButton` on public pages behaves correctly (redirects to signup/login modal rather than initiating a soft commitment).
++
++- [x] Implement SEO, metadata, and accessibility options (AC: 5, 6)
++  - [x] Configure page-level metadata in `src/app/(public)/page.tsx` (and root `src/app/layout.tsx` for global elements) with French Title: "Ivoire Business Club ÔÇö B├ótir son futur en Afrique", description, and OpenGraph parameters.
++  - [x] Configure the site logo using `/logo-ibc.webp` and the favicon using `/favicon-ibc.webp` (referencing it in `layout.tsx` metadata icons or as standard app icon).
++  - [x] Apply `prefers-reduced-motion` media queries in Tailwind or component code to disable keyframe animations or video frame seek logic if active.
++  - [x] Add `aria-label` tags to visualizers, links, and forms.
++
++- [x] Verification and automated testing (AC: 1, 2, 3, 4, 5, 6)
++  - [x] Add unit tests for `ScrollVideoPlayer` and `HeroVideoPlayer` to verify it falls back to 2D image when connection is slow or widths are small.
++  - [x] Update tests in `src/components/landing/opportunity-teasers.test.tsx` to assert that sensitive info is missing and signup links exist.
++  - [x] Add SEO metadata checks in route tests.
++  - [x] Run `npx vitest run`.
++  - [x] Run `npm run build`.
+ 
+ ## Dev Notes
+ 
+diff --git a/next.config.ts b/next.config.ts
+index 19e6304..6c9bd0c 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -14,6 +14,11 @@ const securityHeaders = [
+ 
+ const nextConfig: NextConfig = {
+   output: "standalone",
++  turbopack: {},
++  webpack: (config) => {
++    config.resolve.symlinks = false;
++    return config;
++  },
+   async headers() {
+     return [
+       {
+diff --git a/package-lock.json b/package-lock.json
+index 07555f9..49b1c0c 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -12,6 +12,7 @@
+         "@aws-sdk/client-s3": "^3.1048.0",
+         "@aws-sdk/s3-request-presigner": "^3.1048.0",
+         "@base-ui/react": "^1.4.1",
++        "@gsap/react": "^2.1.2",
+         "@hookform/resolvers": "^5.2.2",
+         "@prisma/adapter-better-sqlite3": "^7.8.0",
+         "@prisma/adapter-pg": "^7.8.0",
+@@ -22,7 +23,9 @@
+         "better-sqlite3": "^12.9.0",
+         "class-variance-authority": "^0.7.1",
+         "clsx": "^2.1.1",
+-        "lucide-react": "^1.14.0",
++        "framer-motion": "^12.40.0",
++        "gsap": "^3.15.0",
++        "lucide-react": "^1.17.0",
+         "next": "16.2.6",
+         "next-auth": "^5.0.0-beta.31",
+         "next-themes": "^0.4.6",
+@@ -1768,6 +1771,16 @@
+       "integrity": "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==",
+       "license": "MIT"
+     },
++    "node_modules/@gsap/react": {
++      "version": "2.1.2",
++      "resolved": "https://registry.npmjs.org/@gsap/react/-/react-2.1.2.tgz",
++      "integrity": "sha512-JqliybO1837UcgH2hVOM4VO+38APk3ECNrsuSM4MuXp+rbf+/2IG2K1YJiqfTcXQHH7XlA0m3ykniFYstfq0Iw==",
++      "license": "SEE LICENSE AT https://gsap.com/standard-license",
++      "peerDependencies": {
++        "gsap": "^3.12.5",
++        "react": ">=17"
++      }
++    },
+     "node_modules/@hono/node-server": {
+       "version": "1.19.14",
+       "resolved": "https://registry.npmjs.org/@hono/node-server/-/node-server-1.19.14.tgz",
+@@ -7699,6 +7712,33 @@
+         "node": ">= 0.6"
+       }
+     },
++    "node_modules/framer-motion": {
++      "version": "12.40.0",
++      "resolved": "https://registry.npmjs.org/framer-motion/-/framer-motion-12.40.0.tgz",
++      "integrity": "sha512-uaBd3qC1v3KQqBEjwTUd183K6PbS+j0yR9w9VmEOLWA/tnUcSn8Xa3uck7t4dgpDoUss8xQTcj8W2L07lrnLFg==",
++      "license": "MIT",
++      "dependencies": {
++        "motion-dom": "^12.40.0",
++        "motion-utils": "^12.39.0",
++        "tslib": "^2.4.0"
++      },
++      "peerDependencies": {
++        "@emotion/is-prop-valid": "*",
++        "react": "^18.0.0 || ^19.0.0",
++        "react-dom": "^18.0.0 || ^19.0.0"
++      },
++      "peerDependenciesMeta": {
++        "@emotion/is-prop-valid": {
++          "optional": true
++        },
++        "react": {
++          "optional": true
++        },
++        "react-dom": {
++          "optional": true
++        }
++      }
++    },
+     "node_modules/fresh": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/fresh/-/fresh-2.0.0.tgz",
+@@ -8037,6 +8077,12 @@
+         "node": "^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0"
+       }
+     },
++    "node_modules/gsap": {
++      "version": "3.15.0",
++      "resolved": "https://registry.npmjs.org/gsap/-/gsap-3.15.0.tgz",
++      "integrity": "sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==",
++      "license": "Standard 'no charge' license: https://gsap.com/standard-license."
++    },
+     "node_modules/has-bigints": {
+       "version": "1.1.0",
+       "resolved": "https://registry.npmjs.org/has-bigints/-/has-bigints-1.1.0.tgz",
+@@ -9566,9 +9612,9 @@
+       }
+     },
+     "node_modules/lucide-react": {
+-      "version": "1.14.0",
+-      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.14.0.tgz",
+-      "integrity": "sha512-+1mdWcfSJVUsaTIjN9zoezmUhfXo5l0vP7ekBMPo3jcS/aIkxHnXqAPsByszMZx/Y8oQBRJxJx5xg+RH3urzxA==",
++      "version": "1.17.0",
++      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.17.0.tgz",
++      "integrity": "sha512-9FA9evdox/JQL5PT57fdA1x/yg8T7knJ98+zjTL3UfKza6pflQUUh3XtaQIHKvnsJw1lmsEyHVlt5jchYxOQ5w==",
+       "license": "ISC",
+       "peerDependencies": {
+         "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+@@ -9756,6 +9802,21 @@
+       "integrity": "sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==",
+       "license": "MIT"
+     },
++    "node_modules/motion-dom": {
++      "version": "12.40.0",
++      "resolved": "https://registry.npmjs.org/motion-dom/-/motion-dom-12.40.0.tgz",
++      "integrity": "sha512-HxU3ZaBwNPVQUBQf1xxgq+7JrPNZvjLVxgbpEZL7RrWJnsxOf0/OM+yrHG9ogLQ31Do/r57Oz2gQWPK+6q62mg==",
++      "license": "MIT",
++      "dependencies": {
++        "motion-utils": "^12.39.0"
++      }
++    },
++    "node_modules/motion-utils": {
++      "version": "12.39.0",
++      "resolved": "https://registry.npmjs.org/motion-utils/-/motion-utils-12.39.0.tgz",
++      "integrity": "sha512-8nadJAJjTtqRkmRF36FoJTrywK9nnFmnPwnSMyxaOCU7GDjN9RTMJIxx9De8ErM+vpPhMccr/6fo5WciyQLnMQ==",
++      "license": "MIT"
++    },
+     "node_modules/mrmime": {
+       "version": "2.0.1",
+       "resolved": "https://registry.npmjs.org/mrmime/-/mrmime-2.0.1.tgz",
+diff --git a/package.json b/package.json
+index c1bebec..d08ad65 100644
+--- a/package.json
++++ b/package.json
+@@ -15,6 +15,7 @@
+     "@aws-sdk/client-s3": "^3.1048.0",
+     "@aws-sdk/s3-request-presigner": "^3.1048.0",
+     "@base-ui/react": "^1.4.1",
++    "@gsap/react": "^2.1.2",
+     "@hookform/resolvers": "^5.2.2",
+     "@prisma/adapter-better-sqlite3": "^7.8.0",
+     "@prisma/adapter-pg": "^7.8.0",
+@@ -25,7 +26,9 @@
+     "better-sqlite3": "^12.9.0",
+     "class-variance-authority": "^0.7.1",
+     "clsx": "^2.1.1",
+-    "lucide-react": "^1.14.0",
++    "framer-motion": "^12.40.0",
++    "gsap": "^3.15.0",
++    "lucide-react": "^1.17.0",
+     "next": "16.2.6",
+     "next-auth": "^5.0.0-beta.31",
+     "next-themes": "^0.4.6",
+diff --git a/src/app/(dashboard)/dashboard/opportunities/page.test.tsx b/src/app/(dashboard)/dashboard/opportunities/page.test.tsx
+index 981d0ad..57147ce 100644
+--- a/src/app/(dashboard)/dashboard/opportunities/page.test.tsx
++++ b/src/app/(dashboard)/dashboard/opportunities/page.test.tsx
+@@ -34,7 +34,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
+     async () => {
+       mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: false });
+ 
+-      render(await OpportunitiesPage());
++      render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
+ 
+       expect(screen.getByText("Votre abonnement est inactif. Renouvelez pour acc├®der aux deals.")).toBeInTheDocument();
+       expect(screen.getByRole("link", { name: "Voir les offres" })).toHaveAttribute("href", "/pricing");
+@@ -57,7 +57,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
+       },
+     ]);
+ 
+-    render(await OpportunitiesPage());
++    render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
+ 
+     expect(mockOpportunityFindMany).toHaveBeenCalledWith(expect.objectContaining({
+       where: {
+diff --git a/src/app/(dashboard)/dashboard/opportunities/page.tsx b/src/app/(dashboard)/dashboard/opportunities/page.tsx
+index a871c36..1a13e41 100644
+--- a/src/app/(dashboard)/dashboard/opportunities/page.tsx
++++ b/src/app/(dashboard)/dashboard/opportunities/page.tsx
+@@ -14,7 +14,7 @@ import { getUserPremiumAccess } from "@/lib/subscription-access";
+ import { isTagCategory, isValidTagOption } from "@/lib/tags";
+ 
+ type OpportunitiesPageProps = {
+-  searchParams?: Promise<{ category?: string; tagCategory?: string; tagValue?: string }>;
++  searchParams: Promise<{ category?: string; tagCategory?: string; tagValue?: string }>;
+ };
+ 
+ const VALID_CATEGORIES = OPPORTUNITY_CATEGORY_FILTERS.map((category) => category.value);
+@@ -37,11 +37,11 @@ function normalizeTagFilter(tagCategory?: string, tagValue?: string) {
+     : null;
+ }
+ 
+-export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps = {}) {
++export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps) {
+   const session = await auth();
+   if (!session?.user?.id) redirect("/auth/signin");
+ 
+-  const resolvedSearchParams = searchParams ? await searchParams : {};
++  const resolvedSearchParams = (await searchParams) || {};
+   const activeCategory = normalizeCategory(resolvedSearchParams.category);
+   const activeTag = normalizeTagFilter(resolvedSearchParams.tagCategory, resolvedSearchParams.tagValue);
+ 
+diff --git a/src/app/(public)/page.test.tsx b/src/app/(public)/page.test.tsx
+new file mode 100644
+index 0000000..8475b6e
+--- /dev/null
++++ b/src/app/(public)/page.test.tsx
+@@ -0,0 +1,50 @@
++import React from 'react';
++import { render, screen } from '@testing-library/react';
++import { describe, expect, it, vi } from 'vitest';
++import HomePage, { metadata } from './page';
++
++// Mock Prisma
++vi.mock('@/lib/prisma', () => ({
++  prisma: {
++    opportunity: {
++      findMany: vi.fn().mockResolvedValue([
++        {
++          id: 'opp-1',
++          title: 'Terrain ├á Cocody',
++          author: { location: 'Abidjan' },
++        },
++      ]),
++    },
++  },
++}));
++
++// Mock complex animation/WebGL components
++vi.mock('@/components/ui/splash-cursor', () => ({
++  default: () => <div data-testid="splash-cursor" />,
++}));
++vi.mock('@/components/ui/scroll-video-player', () => ({
++  ScrollVideoPlayer: () => <div data-testid="scroll-video-player" />,
++}));
++vi.mock('@/components/ui/hero-video-player', () => ({
++  HeroVideoPlayer: () => <div data-testid="hero-video-player" />,
++}));
++
++describe('HomePage SEO & Rendering', () => {
++  it('has correct French SEO title and description', () => {
++    expect(metadata.title).toBe('Ivoire Business Club ÔÇö B├ótir son futur en Afrique');
++    expect(metadata.description).toContain('IBC');
++    expect(metadata.openGraph?.title).toBe('Ivoire Business Club ÔÇö B├ótir son futur en Afrique');
++    expect(metadata.openGraph?.locale).toBe('fr_FR');
++  });
++
++  it('renders server-side resolved homepage components', async () => {
++    const resolvedJSX = await HomePage();
++    render(resolvedJSX);
++
++    expect(screen.getByTestId('splash-cursor')).toBeInTheDocument();
++    expect(screen.getByTestId('scroll-video-player')).toBeInTheDocument();
++    expect(screen.getByText('B├ótir son futur en Afrique')).toBeInTheDocument();
++    expect(screen.getByText('Comment ├ºa marche ?')).toBeInTheDocument();
++    expect(screen.getByText('Le Mur des Succ├¿s')).toBeInTheDocument();
++  });
++});
+diff --git a/src/app/(public)/page.tsx b/src/app/(public)/page.tsx
+index 5024475..00cd72f 100644
+--- a/src/app/(public)/page.tsx
++++ b/src/app/(public)/page.tsx
+@@ -1,22 +1,49 @@
+-import Link from "next/link";
++import Link from 'next/link';
++import type { Metadata } from 'next';
+ 
+-import { Hero } from "@/components/landing/hero";
+-import { Mission } from "@/components/landing/mission";
+-import { HowItWorks } from "@/components/landing/how-it-works";
+-import { TargetAudience } from "@/components/landing/target-audience";
+-import { Benefits } from "@/components/landing/benefits";
+-import { Pricing } from "@/components/landing/pricing";
+-import { OpportunityTeasers } from "@/components/landing/opportunity-teasers";
+-import { LeadMagnet } from "@/components/landing/lead-magnet";
+-import { Footer } from "@/components/landing/footer";
+-import { prisma } from "@/lib/prisma";
++import { Hero } from '@/components/landing/hero';
++import { Mission } from '@/components/landing/mission';
++import { HowItWorks } from '@/components/landing/how-it-works';
++import { TargetAudience } from '@/components/landing/target-audience';
++import { Benefits } from '@/components/landing/benefits';
++import { Pricing } from '@/components/landing/pricing';
++import { OpportunityTeasers } from '@/components/landing/opportunity-teasers';
++import { LeadMagnet } from '@/components/landing/lead-magnet';
++import { Footer } from '@/components/landing/footer';
++import { prisma } from '@/lib/prisma';
++import { SuccessWall } from '@/components/landing/success-wall';
++import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
+ 
+-export const dynamic = "force-dynamic";
++// Incremental Static Regeneration (ISR) - revalidate every 3600 seconds (1 hour)
++export const revalidate = 3600;
++
++export const metadata: Metadata = {
++  title: 'Ivoire Business Club ÔÇö B├ótir son futur en Afrique',
++  description:
++    'D├®couvrez la mission de l\'IBC, acc├®dez ├á des deals d\'├®lite en C├┤te d\'Ivoire, et comparez nos offres de membre.',
++  openGraph: {
++    title: 'Ivoire Business Club ÔÇö B├ótir son futur en Afrique',
++    description:
++      'D├®couvrez la mission de l\'IBC, acc├®dez ├á des deals d\'├®lite en C├┤te d\'Ivoire, et comparez nos offres de membre.',
++    url: 'https://ivoirebusinessclub.com',
++    siteName: 'Ivoire Business Club',
++    images: [
++      {
++        url: '/logo-ibc.webp',
++        width: 800,
++        height: 600,
++        alt: 'Logo Ivoire Business Club',
++      },
++    ],
++    locale: 'fr_FR',
++    type: 'website',
++  },
++};
+ 
+ export default async function HomePage() {
+   const opportunities = await prisma.opportunity.findMany({
+-    where: { verificationStatus: "VERIFIED" },
+-    orderBy: { createdAt: "desc" },
++    where: { verificationStatus: 'VERIFIED' },
++    orderBy: { createdAt: 'desc' },
+     take: 3,
+     select: {
+       id: true,
+@@ -24,6 +51,7 @@ export default async function HomePage() {
+       author: { select: { location: true } },
+     },
+   });
++
+   const teasers = opportunities.map((opportunity) => ({
+     id: opportunity.id,
+     title: opportunity.title,
+@@ -31,35 +59,62 @@ export default async function HomePage() {
+   }));
+ 
+   return (
+-    <div className="flex min-h-screen flex-col">
+-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
++    <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++
++      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+-          <Link href="/" className="text-xl font-bold text-primary">
+-            IBC
++          <Link
++            href="/"
++            className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
++          >
++            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
++            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
++              Ivoire Business Club
++            </span>
++            <span className="sm:hidden text-white">IBC</span>
+           </Link>
+-          <nav className="flex gap-6 text-sm">
+-            <a href="#mission" className="hover:text-primary">Mission</a>
+-            <a href="#pricing" className="hover:text-primary">Tarifs</a>
+-            <a href="/auth/signin" className="hover:text-primary">Connexion</a>
++          <nav className="flex gap-6 text-sm items-center">
++            <a href="#mission" className="text-slate-300 hover:text-white transition-colors">
++              Mission
++            </a>
++            <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">
++              Tarifs
++            </a>
++            <a
++              href="/auth/signin"
++              className="text-slate-300 hover:text-white transition-colors"
++            >
++              Connexion
++            </a>
+             <a
+               href="/auth/signup"
+-              className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
++              className="rounded-md bg-[#D4A847] px-4 py-2 text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"
+             >
+               Rejoins le club
+             </a>
+           </nav>
+         </div>
+       </header>
++
+       <main className="flex-1">
+         <Hero />
+         <Mission />
+         <HowItWorks />
++
++        {/* Scroll Controlled Video Experience */}
++        <ScrollVideoPlayer
++          videoUrl="/animated-network-lines-abidjan.mp4"
++          fallbackImageUrl="/hero-background-ibc-next.webp"
++        />
++
++        <SuccessWall />
+         <OpportunityTeasers opportunities={teasers} />
+         <TargetAudience />
+         <Benefits />
+         <Pricing />
+         <LeadMagnet />
+       </main>
++
+       <Footer />
+     </div>
+   );
+diff --git a/src/app/api/admin/opportunities/[id]/route.test.ts b/src/app/api/admin/opportunities/[id]/route.test.ts
+index dfab154..b18643d 100644
+--- a/src/app/api/admin/opportunities/[id]/route.test.ts
++++ b/src/app/api/admin/opportunities/[id]/route.test.ts
+@@ -1,6 +1,7 @@
+ import { beforeEach, describe, expect, it, vi } from "vitest";
+ 
+-import { DELETE, PATCH, adminOpportunityRequiresDoubleVerification } from "./route";
++import { DELETE, PATCH } from "./route";
++import { shouldRequireDoubleVerification as adminOpportunityRequiresDoubleVerification } from "@/lib/trust-level";
+ 
+ const mockAuth = vi.hoisted(() => vi.fn());
+ const mockUserFindUnique = vi.hoisted(() => vi.fn());
+diff --git a/src/app/api/admin/opportunities/[id]/route.ts b/src/app/api/admin/opportunities/[id]/route.ts
+index ee3e706..7a62651 100644
+--- a/src/app/api/admin/opportunities/[id]/route.ts
++++ b/src/app/api/admin/opportunities/[id]/route.ts
+@@ -5,6 +5,7 @@ import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
+ import { prisma } from "@/lib/prisma";
+ import { deleteR2Object, getMissingR2Env } from "@/lib/r2";
+ import { sanitizeError } from "@/lib/sanitize-log";
++import { shouldRequireDoubleVerification } from "@/lib/trust-level";
+ import { opportunityAdminUpdateSchema } from "@/lib/validations";
+ 
+ type RouteContext = { params: Promise<{ id: string }> };
+@@ -80,23 +81,7 @@ function loadOpportunityForResponse(id: string) {
+   });
+ }
+ 
+-function shouldRequireDoubleVerification(params: {
+-  amount: number | null | undefined;
+-  currentRequiresDoubleVerification: boolean;
+-  existingApprovalCount: number;
+-  verificationStatus: string;
+-}) {
+-  if (typeof params.amount === "number" && params.amount > 50000) {
+-    return true;
+-  }
+-
+-  const hasComplianceContext = params.existingApprovalCount >= 2 || params.verificationStatus === "VERIFIED";
+-  if (params.currentRequiresDoubleVerification && hasComplianceContext) {
+-    return true;
+-  }
+ 
+-  return false;
+-}
+ 
+ export async function PATCH(req: Request, { params }: RouteContext) {
+   const authResult = await requireAdmin();
+@@ -218,4 +203,3 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
+   }
+ }
+ 
+-export const adminOpportunityRequiresDoubleVerification = shouldRequireDoubleVerification;
+diff --git a/src/app/globals.css b/src/app/globals.css
+index d02c28a..1e50bc3 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -94,36 +94,36 @@
+ 
+ /* IBC Theme ÔÇö Dark Mode */
+ .dark {
+-  --background: oklch(0.12 0.02 260);
++  --background: #090D16;
+   --foreground: oklch(0.95 0.005 90);
+-  --card: oklch(0.17 0.03 260);
++  --card: #0F172A;
+   --card-foreground: oklch(0.95 0.005 90);
+-  --popover: oklch(0.17 0.03 260);
++  --popover: #0F172A;
+   --popover-foreground: oklch(0.95 0.005 90);
+   --primary: oklch(0.76 0.13 80);
+-  --primary-foreground: oklch(0.12 0.02 260);
++  --primary-foreground: #090D16;
+   --secondary: oklch(0.25 0.08 250);
+   --secondary-foreground: oklch(0.95 0.005 90);
+   --muted: oklch(0.22 0.03 260);
+   --muted-foreground: oklch(0.65 0.02 90);
+   --accent: oklch(0.58 0.15 150);
+-  --accent-foreground: oklch(0.12 0.02 260);
++  --accent-foreground: #090D16;
+   --destructive: oklch(0.704 0.191 22.216);
+-  --border: oklch(0.25 0.03 260);
+-  --input: oklch(0.25 0.03 260);
++  --border: rgba(255, 255, 255, 0.08);
++  --input: rgba(255, 255, 255, 0.08);
+   --ring: oklch(0.76 0.13 80);
+   --chart-1: oklch(0.76 0.13 80);
+   --chart-2: oklch(0.45 0.12 250);
+   --chart-3: oklch(0.58 0.15 150);
+   --chart-4: oklch(0.65 0.08 80);
+   --chart-5: oklch(0.35 0.1 250);
+-  --sidebar: oklch(0.17 0.03 260);
++  --sidebar: #090D16;
+   --sidebar-foreground: oklch(0.95 0.005 90);
+   --sidebar-primary: oklch(0.76 0.13 80);
+-  --sidebar-primary-foreground: oklch(0.12 0.02 260);
++  --sidebar-primary-foreground: #090D16;
+   --sidebar-accent: oklch(0.25 0.08 250);
+   --sidebar-accent-foreground: oklch(0.95 0.005 90);
+-  --sidebar-border: oklch(0.3 0.05 260);
++  --sidebar-border: rgba(255, 255, 255, 0.08);
+   --sidebar-ring: oklch(0.76 0.13 80);
+ }
+ 
+@@ -137,4 +137,68 @@
+   html {
+     @apply font-sans;
+   }
++}
++
++/* Custom Premium animations & variables */
++@keyframes shine {
++  0% {
++    background-position: 200% 0;
++  }
++  100% {
++    background-position: -200% 0;
++  }
++}
++
++.shiny-text {
++  color: transparent;
++  background-clip: text;
++  -webkit-background-clip: text;
++  animation-name: shine;
++}
++
++.shiny-text.disabled {
++  animation: none !important;
++  background-image: none !important;
++  color: inherit !important;
++}
++
++.shiny-text.pause-on-hover:hover {
++  animation-play-state: paused;
++}
++
++/* Glassmorphism utilities */
++.glass-panel {
++  background: rgba(15, 23, 42, 0.45);
++  backdrop-filter: blur(12px);
++  -webkit-backdrop-filter: blur(12px);
++  border: 1px solid rgba(255, 255, 255, 0.08);
++}
++
++.glass-panel-light {
++  background: rgba(255, 255, 255, 0.05);
++  backdrop-filter: blur(8px);
++  -webkit-backdrop-filter: blur(8px);
++  border: 1px solid rgba(255, 255, 255, 0.05);
++}
++
++/* Mesh Gradients */
++.mesh-gradient-bg {
++  background-color: #090D16;
++  background-image: 
++    radial-gradient(at 10% 20%, rgba(30, 58, 95, 0.4) 0px, transparent 50%),
++    radial-gradient(at 90% 10%, rgba(212, 168, 71, 0.15) 0px, transparent 50%),
++    radial-gradient(at 50% 80%, rgba(45, 139, 78, 0.15) 0px, transparent 50%);
++}
++
++@keyframes fade-in {
++  from {
++    opacity: 0;
++  }
++  to {
++    opacity: 1;
++  }
++}
++
++.animate-fade-in {
++  animation: fade-in 1s ease-out forwards;
+ }
+\ No newline at end of file
+diff --git a/src/app/icon.webp b/src/app/icon.webp
+new file mode 100644
+index 0000000..e899e0f
+Binary files /dev/null and b/src/app/icon.webp differ
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index 616e5a0..45e229f 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -28,6 +28,10 @@ export const metadata: Metadata = {
+     description: "B├ótir son futur en Afrique",
+   },
+   robots: { index: true, follow: true },
++  icons: {
++    icon: "/favicon-ibc.webp",
++    apple: "/logo-ibc.webp",
++  },
+ };
+ 
+ export default function RootLayout({ children }: { children: React.ReactNode }) {
+diff --git a/src/components/landing/footer.tsx b/src/components/landing/footer.tsx
+index 333c02e..b15e3fa 100644
+--- a/src/components/landing/footer.tsx
++++ b/src/components/landing/footer.tsx
+@@ -1,34 +1,75 @@
++'use client';
++
++import React from 'react';
++
+ export function Footer() {
+   return (
+-    <footer className="border-t bg-card py-12">
++    <footer className="border-t border-white/10 bg-[#090D16] py-12 text-slate-400">
+       <div className="mx-auto max-w-7xl px-4">
+-        <div className="grid gap-8 md:grid-cols-3">
++        <div className="grid gap-8 md:grid-cols-4">
++          <div className="space-y-4">
++            <div className="flex items-center gap-2">
++              <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
++              <span className="font-extrabold text-white">Ivoire Business Club</span>
++            </div>
++            <p className="text-sm text-slate-400">B├ótir son futur en Afrique</p>
++          </div>
+           <div>
+-            <h3 className="text-lg font-bold text-primary">Ivoire Business Club</h3>
+-            <p className="mt-2 text-sm text-muted-foreground">
+-              B├ótir son futur en Afrique
+-            </p>
++            <h4 className="font-semibold text-white mb-3">Contact</h4>
++            <div className="text-sm space-y-2">
++              <p>­ƒôº sarah@ivoire-business-club.com</p>
++              <p>­ƒô× +41 79 421 47 89</p>
++            </div>
+           </div>
+           <div>
+-            <h4 className="font-semibold">Contact</h4>
+-            <p className="mt-2 text-sm text-muted-foreground">
+-              ­ƒôº sarah@ivoire-business-club.com<br />
+-              ­ƒô× +41 79 421 47 89
+-            </p>
++            <h4 className="font-semibold text-white mb-3">L├®gal</h4>
++            <ul className="text-sm space-y-2">
++              <li>
++                <a href="/mentions-legales" className="hover:text-white transition-colors">
++                  Mentions l├®gales
++                </a>
++              </li>
++              <li>
++                <a href="/politique-de-confidentialite" className="hover:text-white transition-colors">
++                  Politique de confidentialit├®
++                </a>
++              </li>
++              <li>
++                <a href="/cgv" className="hover:text-white transition-colors">
++                  CGV
++                </a>
++              </li>
++            </ul>
+           </div>
+           <div>
+-            <h4 className="font-semibold">L├®gal</h4>
+-            <p className="mt-2 text-sm text-muted-foreground">
+-              Mentions l├®gales<br />
+-              Politique de confidentialit├®<br />
+-              CGV
++            <h4 className="font-semibold text-white mb-3">Newsletter</h4>
++            <p className="text-xs mb-3 text-slate-400">
++              Recevez nos opportunit├®s en avant-premi├¿re.
+             </p>
++            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-2">
++              <input
++                type="email"
++                placeholder="Votre adresse email"
++                className="min-h-11 rounded-md bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A847]"
++                aria-label="Adresse email pour la newsletter"
++                required
++              />
++              <button
++                type="submit"
++                className="min-h-11 rounded-md bg-[#D4A847] text-black font-semibold text-sm px-4 py-2 hover:bg-[#D4A847]/90 transition-colors cursor-pointer"
++                aria-label="S'abonner ├á la newsletter"
++              >
++                S'abonner
++              </button>
++            </form>
+           </div>
+         </div>
+-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
++        <div className="mt-8 border-t border-white/10 pt-8 text-center text-xs">
+           ┬® {new Date().getFullYear()} Ivoire Business Club. Tous droits r├®serv├®s.
+         </div>
+       </div>
+     </footer>
+   );
+ }
++
++export default Footer;
+diff --git a/src/components/landing/hero.tsx b/src/components/landing/hero.tsx
+index 7ec48be..084e7d4 100644
+--- a/src/components/landing/hero.tsx
++++ b/src/components/landing/hero.tsx
+@@ -1,30 +1,79 @@
++'use client';
++
++import React from 'react';
++import { HeroVideoPlayer } from '@/components/ui/hero-video-player';
++import { SplitText } from '@/components/ui/split-text';
++import { BlurText } from '@/components/ui/blur-text';
++import { ShinyText } from '@/components/ui/shiny-text';
++
+ export function Hero() {
+   return (
+-    <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-secondary/10 py-24 sm:py-32">
+-      <div className="mx-auto max-w-7xl px-4 text-center">
+-        <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+-          B├ótir son futur en{" "}
+-          <span className="bg-gradient-to-r from-primary to-ibc-gold-light bg-clip-text text-transparent">
+-            Afrique
+-          </span>
++    <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden py-24 sm:py-32 bg-[#090D16]">
++      {/* Background Video Loops */}
++      <div className="absolute inset-0 z-0">
++        <HeroVideoPlayer
++          videoUrl="/animated-hero-section.mp4"
++          fallbackImageUrl="/hero-background-ibc-next-with-blue-vignette.webp"
++        />
++      </div>
++
++      {/* Grid Overlay to add depth */}
++      <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02),transparent_60%)]" />
++
++      {/* Content wrapper */}
++      <div className="relative z-10 mx-auto max-w-7xl px-4 text-center">
++        {/* Animated Headline */}
++        <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
++          <SplitText
++            text="B├ótir son futur en Afrique"
++            className="inline-block"
++            delay={50}
++            duration={1.25}
++            ease="power3.out"
++            splitType="chars"
++            tag="span"
++          />
+         </h1>
+-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+-          Avec l&apos;Ivoire Business Club, acc├¿de aux meilleures opportunit├®s business en C├┤te d&apos;Ivoire.
+-          Le r├®seau de r├®f├®rence pour investir, entreprendre ou d├®velopper ton activit├®.
+-        </p>
+-        <p className="mt-4 text-xl font-semibold text-primary">
+-          &ldquo;Investir ou entreprendre ne s&apos;improvise pas&rdquo;
+-        </p>
+-        <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
++
++        {/* Animated Subheadline */}
++        <div className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
++          <BlurText
++            text="Avec l'Ivoire Business Club, acc├¿de aux meilleures opportunit├®s business en C├┤te d'Ivoire. Le r├®seau de r├®f├®rence pour investir, entreprendre ou d├®velopper ton activit├®."
++            animateBy="words"
++            direction="top"
++            delay={200}
++            stepDuration={0.05}
++          />
++        </div>
++
++        <div className="mt-4">
++          <BlurText
++            text="ÔÇ£Investir ou entreprendre ne s'improvise pasÔÇØ"
++            className="text-xl font-semibold text-[#D4A847]"
++            animateBy="words"
++            direction="bottom"
++            delay={400}
++            stepDuration={0.08}
++          />
++        </div>
++
++        {/* CTAs */}
++        <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
+           <a
+-            href="/pricing"
+-            className="rounded-lg bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
++            href="/auth/signup"
++            className="glass-panel group relative rounded-lg px-8 py-3 text-lg font-semibold shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] border border-[#D4A847]/30 hover:border-[#D4A847]/60"
+           >
+-            Rejoins le club
++            <ShinyText
++              text="Rejoins le club"
++              speed={2}
++              color="#b5b5b5"
++              shineColor="#ffffff"
++              className="font-semibold"
++            />
+           </a>
+           <a
+             href="#mission"
+-            className="rounded-lg border px-8 py-3 text-lg font-semibold hover:bg-muted transition-colors"
++            className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-md px-8 py-3 text-lg font-semibold text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+           >
+             En savoir plus
+           </a>
+diff --git a/src/components/landing/how-it-works.tsx b/src/components/landing/how-it-works.tsx
+index 221b514..900d54e 100644
+--- a/src/components/landing/how-it-works.tsx
++++ b/src/components/landing/how-it-works.tsx
+@@ -1,26 +1,73 @@
++'use client';
++
++import React from 'react';
++import { SpotlightCard } from '@/components/ui/spotlight-card';
++
+ export function HowItWorks() {
+   const steps = [
+-    { num: "1", title: "Tu rejoins le club", desc: "Acc├¿de ├á une communaut├® engag├®e et orient├®e business." },
+-    { num: "2", title: "Tu acc├¿des aux opportunit├®s", desc: "Projets, partenaires, investissements, clients." },
+-    { num: "3", title: "Tu passes ├á l'action", desc: "Mises en relation, deals, collaborations concr├¿tes." },
++    {
++      num: '01',
++      title: 'Rejoindre',
++      desc: 'Tu rejoins le club et acc├¿des ├á une communaut├® exclusive d\'affaires, de mentorat et de synergie.',
++      img: '/section-reseautage-synergie.webp',
++    },
++    {
++      num: '02',
++      title: 'Acc├®der',
++      desc: 'Tu acc├¿des aux opportunit├®s d\'investissement qualifi├®es, de mentorat et d\'accompagnement cibl├®.',
++      img: '/section-mentorat-accompagnement.webp',
++    },
++    {
++      num: '03',
++      title: 'Passer ├á l\'action',
++      desc: 'Tu passes ├á l\'action avec des mises en relation directes et un acc├¿s au club d\'affaires prestige.',
++      img: '/section-club-affaires-prestige.webp',
++    },
+   ];
+ 
+   return (
+-    <section className="py-20">
++    <section className="py-24 bg-[#090D16] text-white">
+       <div className="mx-auto max-w-7xl px-4">
+-        <h2 className="text-center text-3xl font-bold">Comment ├ºa marche ?</h2>
+-        <div className="mt-12 grid gap-8 md:grid-cols-3">
++        <div className="text-center max-w-3xl mx-auto mb-16">
++          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
++            Processus du Club
++          </span>
++          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
++            Comment ├ºa marche ?
++          </h2>
++          <p className="mt-4 text-slate-400">
++            Une boucle de valeur en 3 ├®tapes con├ºue pour maximiser votre impact et vos connexions en C├┤te d'Ivoire.
++          </p>
++        </div>
++
++        <div className="grid gap-8 md:grid-cols-3">
+           {steps.map((s) => (
+-            <div key={s.num} className="text-center">
+-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+-                {s.num}
++            <SpotlightCard
++              key={s.num}
++              className="flex flex-col h-full overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md rounded-xl group hover:border-[#D4A847]/30 transition-all duration-300"
++            >
++              <div className="relative h-48 w-full overflow-hidden">
++                <img
++                  src={s.img}
++                  alt={s.title}
++                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
++                />
++                <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-transparent to-transparent" />
++                <div className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#D4A847] text-sm font-bold text-black shadow-md">
++                  {s.num}
++                </div>
++              </div>
++              <div className="p-6 flex-1 flex flex-col justify-between">
++                <div>
++                  <h3 className="text-xl font-bold text-white mb-2">{s.title}</h3>
++                  <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
++                </div>
+               </div>
+-              <h3 className="mt-4 text-xl font-semibold">{s.title}</h3>
+-              <p className="mt-2 text-muted-foreground">{s.desc}</p>
+-            </div>
++            </SpotlightCard>
+           ))}
+         </div>
+       </div>
+     </section>
+   );
+ }
++export default HowItWorks;
+diff --git a/src/components/landing/lead-magnet.tsx b/src/components/landing/lead-magnet.tsx
+index 9b07c01..428418c 100644
+--- a/src/components/landing/lead-magnet.tsx
++++ b/src/components/landing/lead-magnet.tsx
+@@ -1,47 +1,65 @@
+-"use client";
++'use client';
+ 
+-import { useState } from "react";
++import { useState } from 'react';
+ 
+ export function LeadMagnet() {
+-  const [email, setEmail] = useState("");
++  const [email, setEmail] = useState('');
+   const [submitted, setSubmitted] = useState(false);
+ 
+   const handleSubmit = (e: React.FormEvent) => {
+     e.preventDefault();
+-    // TODO: Send email to API
+     setSubmitted(true);
+   };
+ 
+   return (
+-    <section className="py-20 bg-gradient-to-r from-primary/10 to-accent/10">
+-      <div className="mx-auto max-w-7xl px-4 text-center">
+-        <h2 className="text-3xl font-bold">Guide gratuit : Investir en CI 2026</h2>
+-        <p className="mt-4 text-lg text-muted-foreground">
+-          T├®l├®charge notre guide et d├®couvre les opportunit├®s les plus prometteuses en C├┤te d&apos;Ivoire.
+-        </p>
+-        {submitted ? (
+-          <p className="mt-8 text-lg font-semibold text-primary">
+-            Ô£à Merci ! V├®rifie ta bo├«te email.
++    <section className="py-24 bg-[#090D16] text-white">
++      <div className="mx-auto max-w-4xl px-4 text-center">
++        <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md relative overflow-hidden">
++          {/* Subtle glow layers */}
++          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#D4A847]/10 rounded-full blur-3xl pointer-events-none" />
++          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#1E3A5F]/20 rounded-full blur-3xl pointer-events-none" />
++
++          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
++            Guide Exclusif
++          </span>
++          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl text-white">
++            Guide gratuit : Investir en CI 2026
++          </h2>
++          <p className="mt-4 text-base text-slate-300 max-w-2xl mx-auto">
++            T├®l├®charge notre guide et d├®couvre les opportunit├®s les plus prometteuses en C├┤te d&apos;Ivoire.
+           </p>
+-        ) : (
+-          <form onSubmit={handleSubmit} className="mx-auto mt-8 flex max-w-md gap-2">
+-            <input
+-              type="email"
+-              required
+-              value={email}
+-              onChange={(e) => setEmail(e.target.value)}
+-              placeholder="ton@email.com"
+-              className="flex-1 rounded-md border bg-background px-4 py-2 text-sm"
+-            />
+-            <button
+-              type="submit"
+-              className="rounded-md bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
++
++          {submitted ? (
++            <p className="mt-8 text-lg font-bold text-[#D4A847] animate-fade-in">
++              Ô£à Merci ! V├®rifie ta bo├«te email pour t├®l├®charger le guide.
++            </p>
++          ) : (
++            <form
++              onSubmit={handleSubmit}
++              className="mx-auto mt-8 flex flex-col sm:flex-row max-w-md gap-3"
+             >
+-              T├®l├®charger
+-            </button>
+-          </form>
+-        )}
++              <input
++                type="email"
++                required
++                value={email}
++                onChange={(e) => setEmail(e.target.value)}
++                placeholder="Ex: jean.dupont@email.com"
++                className="min-h-11 flex-1 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A847]"
++                aria-label="Votre adresse email pour recevoir le guide"
++              />
++              <button
++                type="submit"
++                className="min-h-11 rounded-md bg-[#D4A847] text-black font-semibold text-sm px-6 py-2 hover:bg-[#D4A847]/90 transition-all cursor-pointer"
++                aria-label="T├®l├®charger le guide"
++              >
++                T├®l├®charger
++              </button>
++            </form>
++          )}
++        </div>
+       </div>
+     </section>
+   );
+ }
++
++export default LeadMagnet;
+diff --git a/src/components/landing/mission.tsx b/src/components/landing/mission.tsx
+index 7449899..621fc0d 100644
+--- a/src/components/landing/mission.tsx
++++ b/src/components/landing/mission.tsx
+@@ -1,27 +1,56 @@
++'use client';
++
++import React from 'react';
++import { SpotlightCard } from '@/components/ui/spotlight-card';
++
+ export function Mission() {
+   const pillars = [
+-    { title: "Cr├®er des ponts", desc: "Entre l'Europe et l'Afrique, nous connectons les acteurs qui comptent." },
+-    { title: "Opportunit├®s fiables", desc: "Acc├¿s ├á des opportunit├®s v├®rifi├®es et concr├¿tes." },
+-    { title: "Valoriser les locaux", desc: "Les acteurs locaux sont au c┼ôur de notre ├®cosyst├¿me." },
+-    { title: "Communaut├® forte", desc: "Un r├®seau solidaire, structur├® et orient├® r├®sultats." },
++    {
++      title: 'Cr├®er des ponts',
++      desc: 'Entre l\'Europe et l\'Afrique, nous connectons les acteurs de la diaspora et les leaders ├®conomiques locaux.',
++    },
++    {
++      title: 'Opportunit├®s fiables',
++      desc: 'Acc├¿s exclusif ├á des opportunit├®s d\'investissement et de business rigoureusement audit├®es et v├®rifi├®es.',
++    },
++    {
++      title: 'Valoriser le local',
++      desc: 'Les talents et entrepreneurs ivoiriens sont au c┼ôur de notre ├®cosyst├¿me de co-d├®veloppement.',
++    },
++    {
++      title: 'Communaut├® d\'├®lite',
++      desc: 'Un r├®seau solidaire de professionnels chevronn├®s, structur├® autour du partage de valeur et de r├®sultats.',
++    },
+   ];
+ 
+   return (
+-    <section id="mission" className="py-20 bg-card">
++    <section id="mission" className="py-24 bg-[#090D16] text-white">
+       <div className="mx-auto max-w-7xl px-4">
+-        <h2 className="text-center text-3xl font-bold">Notre mission</h2>
+-        <p className="mt-4 text-center text-muted-foreground">
+-          Construire le pont entre l&apos;Europe et l&apos;Afrique
+-        </p>
+-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
++        <div className="text-center max-w-3xl mx-auto mb-16">
++          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
++            Notre Raison d'├ètre
++          </span>
++          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
++            Notre Mission
++          </h2>
++          <p className="mt-4 text-slate-400">
++            Construire le pont d'affaires de r├®f├®rence entre la diaspora et la C├┤te d'Ivoire.
++          </p>
++        </div>
++
++        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+           {pillars.map((p) => (
+-            <div key={p.title} className="rounded-xl border bg-background p-6 text-center hover:shadow-lg transition-shadow">
+-              <h3 className="text-lg font-semibold text-primary">{p.title}</h3>
+-              <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+-            </div>
++            <SpotlightCard
++              key={p.title}
++              className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6 text-center hover:border-[#D4A847]/30 transition-all duration-300"
++            >
++              <h3 className="text-lg font-bold text-[#D4A847] mb-3">{p.title}</h3>
++              <p className="text-sm text-slate-400 leading-relaxed">{p.desc}</p>
++            </SpotlightCard>
+           ))}
+         </div>
+       </div>
+     </section>
+   );
+ }
++export default Mission;
+diff --git a/src/components/landing/opportunity-teasers.test.tsx b/src/components/landing/opportunity-teasers.test.tsx
+index 9789fb0..a835c08 100644
+--- a/src/components/landing/opportunity-teasers.test.tsx
++++ b/src/components/landing/opportunity-teasers.test.tsx
+@@ -17,7 +17,7 @@ describe("OpportunityTeasers", () => {
+     expect(screen.getByText("Terrain ├á Cocody")).toBeInTheDocument();
+     expect(screen.getByText("Abidjan")).toBeInTheDocument();
+     expect(screen.getByText("Devenez membre pour voir les d├®tails")).toBeInTheDocument();
+-    expect(screen.getByRole("link", { name: /Voir le d├®tail apr├¿s inscription/i })).toHaveAttribute("href", "/auth/signup");
++    expect(screen.getByRole("link", { name: /S'inscrire pour postuler/i })).toHaveAttribute("href", "/auth/signup");
+     expect(screen.queryByText(/Ôé¼/)).not.toBeInTheDocument();
+     expect(screen.queryByText(/WhatsApp/i)).not.toBeInTheDocument();
+   });
+diff --git a/src/components/landing/opportunity-teasers.tsx b/src/components/landing/opportunity-teasers.tsx
+index 96844ee..222e816 100644
+--- a/src/components/landing/opportunity-teasers.tsx
++++ b/src/components/landing/opportunity-teasers.tsx
+@@ -1,7 +1,8 @@
+-import Link from "next/link";
+-import { LockKeyhole, MapPin } from "lucide-react";
++'use client';
+ 
+-import { InterestButton } from "@/components/features/deals/interest-button";
++import Link from 'next/link';
++import { LockKeyhole, MapPin } from 'lucide-react';
++import { InterestButton } from '@/components/features/deals/interest-button';
+ 
+ type OpportunityTeaser = {
+   id: string;
+@@ -17,46 +18,80 @@ type OpportunityTeasersProps = {
+ 
+ export function OpportunityTeasers({
+   opportunities,
+-  title = "Aper├ºu des opportunit├®s v├®rifi├®es",
+-  description = "Quelques deals sont visibles publiquement. Les d├®tails restent r├®serv├®s aux membres actifs.",
++  title = 'Aper├ºu des opportunit├®s v├®rifi├®es',
++  description = 'Quelques deals sont visibles publiquement. Les d├®tails restent r├®serv├®s aux membres actifs.',
+ }: OpportunityTeasersProps) {
+   return (
+-    <section id="opportunites" className="bg-muted/30 py-20">
++    <section id="opportunites" className="bg-[#090D16] py-24 text-white">
+       <div className="mx-auto max-w-7xl px-4">
+-        <div className="mx-auto max-w-2xl text-center">
+-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Deals teaser</p>
+-          <h2 className="mt-2 text-3xl font-bold tracking-tight">{title}</h2>
+-          <p className="mt-4 text-muted-foreground">{description}</p>
++        <div className="mx-auto max-w-2xl text-center mb-16">
++          <span className="text-[#D4A847] text-sm font-semibold uppercase tracking-wider">
++            Deals Teaser
++          </span>
++          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">{title}</h2>
++          <p className="mt-4 text-slate-400">{description}</p>
+         </div>
+ 
+         {opportunities.length > 0 ? (
+-          <div className="mt-10 grid gap-4 md:grid-cols-3">
++          <div className="grid gap-6 md:grid-cols-3">
+             {opportunities.map((opportunity) => {
+-              const location = opportunity.location?.trim() ? opportunity.location : "Localisation non renseign├®e";
++              const location = opportunity.location?.trim()
++                ? opportunity.location
++                : 'Localisation non renseign├®e';
++
+               return (
+                 <article
+                   key={opportunity.id}
+-                  className="group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md"
++                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] min-h-[300px] p-6 shadow-xl transition-all duration-300 hover:border-[#D4A847]/30"
+                 >
+-                  <div className="space-y-3 blur-[1px] transition group-hover:blur-0">
+-                    <h3 className="text-lg font-semibold">{opportunity.title}</h3>
+-                    <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+-                      <MapPin className="h-4 w-4" aria-hidden="true" />
++                  {/* Background WebP Image with low opacity for premium look */}
++                  <div className="absolute inset-0 z-0">
++                    <img
++                      src="/section-investissement-deals.webp"
++                      alt=""
++                      className="w-full h-full object-cover opacity-10 filter brightness-[0.3]"
++                    />
++                    <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-[#090D16]/80 to-transparent" />
++                  </div>
++
++                  {/* Blurred card content underneath */}
++                  <div className="relative z-10 space-y-4 blur-[3px] transition-all duration-300 select-none">
++                    <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[#D4A847] bg-[#D4A847]/10 px-2 py-1 rounded">
++                      Opportunit├® Priv├®e
++                    </span>
++                    <h3 className="text-xl font-bold text-white leading-tight">
++                      {opportunity.title}
++                    </h3>
++                    <p className="inline-flex items-center gap-2 text-sm text-slate-400">
++                      <MapPin className="h-4 w-4 text-[#D4A847]" aria-hidden="true" />
+                       {location}
+                     </p>
+                   </div>
+-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4 text-center backdrop-blur-[1px] transition group-hover:bg-background/70">
+-                    <div className="rounded-xl border bg-card/95 p-4 shadow-sm">
+-                      <LockKeyhole className="mx-auto h-5 w-5 text-primary" aria-hidden="true" />
+-                      <p className="mt-2 text-sm font-semibold">Devenez membre pour voir les d├®tails</p>
+-                      <p className="mt-1 text-xs text-muted-foreground">Inscription gratuite, activation par virement.</p>
+-                      <div className="mt-4 flex flex-col items-center gap-2">
+-                        <InterestButton opportunityId={opportunity.id} isAuthenticated={false} />
++
++                  {/* Absolute locked overlay */}
++                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-[2px] transition-all duration-300">
++                    <div className="w-full flex flex-col items-center">
++                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D4A847]/10 border border-[#D4A847]/30 mb-3">
++                        <LockKeyhole className="h-5 w-5 text-[#D4A847]" aria-hidden="true" />
++                      </div>
++                      <h4 className="text-base font-bold text-white">
++                        Devenez membre pour voir les d├®tails
++                      </h4>
++                      <p className="mt-1 text-xs text-slate-400 max-w-[240px]">
++                        Inscription gratuite, activation par virement bancaire s├®curis├®.
++                      </p>
++
++                      <div className="mt-5 w-full flex flex-col gap-2 items-center">
++                        <InterestButton
++                          opportunityId={opportunity.id}
++                          isAuthenticated={false}
++                        />
++
+                         <Link
+                           href="/auth/signup"
+-                          className="text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
++                          className="text-xs font-semibold text-[#D4A847] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A847]"
+                         >
+-                          Voir le d├®tail apr├¿s inscription
++                          S'inscrire pour postuler
+                         </Link>
+                       </div>
+                     </div>
+@@ -66,15 +101,15 @@ export function OpportunityTeasers({
+             })}
+           </div>
+         ) : (
+-          <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-dashed bg-card p-8 text-center text-muted-foreground">
++          <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-white/10 bg-[#0F172A] p-8 text-center text-slate-400">
+             Aucun teaser v├®rifi├® disponible pour le moment.
+           </div>
+         )}
+ 
+-        <div className="mt-8 text-center">
++        <div className="mt-12 text-center">
+           <Link
+             href="/opportunities"
+-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-5 py-2 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
++            className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#D4A847] px-6 py-2 text-sm font-semibold text-[#D4A847] hover:bg-[#D4A847]/10 transition-all duration-300"
+           >
+             Voir tous les teasers
+           </Link>
+@@ -83,3 +118,4 @@ export function OpportunityTeasers({
+     </section>
+   );
+ }
++export default OpportunityTeasers;
+diff --git a/src/components/landing/pricing.tsx b/src/components/landing/pricing.tsx
+index 11efccb..51f7624 100644
+--- a/src/components/landing/pricing.tsx
++++ b/src/components/landing/pricing.tsx
+@@ -1,28 +1,52 @@
+-import { TierCard } from "@/components/tier-card";
+-import { MEMBERSHIP_TIERS } from "@/lib/tier-config";
++'use client';
++
++import React from 'react';
++import { TierCard } from '@/components/tier-card';
++import { MEMBERSHIP_TIERS } from '@/lib/tier-config';
++import { SpotlightCard } from '@/components/ui/spotlight-card';
+ 
+ export function Pricing() {
+   return (
+-    <section id="pricing" className="py-20" aria-labelledby="pricing-heading">
++    <section id="pricing" className="py-24 bg-[#090D16] text-white animate-fade-in" aria-labelledby="pricing-heading">
+       <div className="mx-auto max-w-7xl px-4">
+-        <div className="mx-auto max-w-3xl text-center">
+-          <h2 id="pricing-heading" className="text-3xl font-bold">
++        <div className="mx-auto max-w-3xl text-center mb-16">
++          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
++            Adh├®sion au Club
++          </span>
++          <h2 id="pricing-heading" className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
+             Nos offres
+           </h2>
+-          <p className="mt-4 text-muted-foreground">
+-            Trois niveaux simples pour acc├®der aux deals v├®rifi├®s, aux events et au mentorat IBC.
++          <p className="mt-4 text-slate-400">
++            Trois niveaux simples pour acc├®der aux deals v├®rifi├®s, aux ├®v├®nements et au mentorat IBC.
+           </p>
+-          <p className="mt-3 text-sm font-medium text-foreground">
++          <p className="mt-3 text-sm font-medium text-[#D4A847]">
+             Prix mensuels clairs : Ôé¼29, Ôé¼49 et Ôé¼99.
+           </p>
+         </div>
+ 
+         <div data-testid="pricing-tier-grid" className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+           {MEMBERSHIP_TIERS.map((tier) => (
+-            <TierCard key={tier.tier} tier={tier.tier} href="/auth/signup" actionLabel={tier.ctaLabel} />
++            <SpotlightCard
++              key={tier.tier}
++              spotlightColor={
++                tier.tier === 'GRAND_FRERE'
++                  ? 'rgba(212, 168, 71, 0.15)'
++                  : 'rgba(255, 255, 255, 0.15)'
++              }
++              className="h-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-md"
++            >
++              <TierCard
++                tier={tier.tier}
++                href="/auth/signup"
++                actionLabel={tier.ctaLabel}
++                className="bg-transparent border-transparent shadow-none h-full text-white"
++              />
++            </SpotlightCard>
+           ))}
+         </div>
+       </div>
+     </section>
+   );
+ }
++
++export default Pricing;
+diff --git a/src/components/landing/success-wall.tsx b/src/components/landing/success-wall.tsx
+new file mode 100644
+index 0000000..59917e0
+--- /dev/null
++++ b/src/components/landing/success-wall.tsx
+@@ -0,0 +1,86 @@
++'use client';
++
++import React from 'react';
++import { SpotlightCard } from '@/components/ui/spotlight-card';
++
++interface Testimonial {
++  name: string;
++  role: string;
++  photo: string;
++  quote: string;
++}
++
++export function SuccessWall() {
++  const testimonials: Testimonial[] = [
++    {
++      name: 'Amara Diabat├®',
++      role: 'Jeune Entrepreneure Tech',
++      photo: '/profil-1-jeune-entrepreneure-tech.webp',
++      quote: 'Gr├óce ├á l\'IBC, j\'ai pu s├®curiser un financement de pr├®-amor├ºage pour ma startup fintech et trouver des mentors d\'exception ├á Abidjan.',
++    },
++    {
++      name: 'Marc-Antoine Koffi',
++      role: 'Investisseur Senior & Business Angel',
++      photo: '/profil-2-investisseur-senior-business-angel.webp',
++      quote: 'L\'Ivoire Business Club offre un flux d\'opportunit├®s qualifi├®es et structur├®es sans ├®quivalent pour quiconque souhaite investir s├®rieusement en C├┤te d\'Ivoire.',
++    },
++    {
++      name: 'Jean-Pierre Tour├®',
++      role: 'Entrepreneur Local',
++      photo: '/profil-3-entrepreneur-local-cote-divoire.webp',
++      quote: 'L\'acc├¿s aux comp├®tences et aux r├®seaux d\'affaires de la diaspora via le club a litt├®ralement transform├® notre cha├«ne logistique locale.',
++    },
++    {
++      name: 'Awa Berth├®',
++      role: 'Cadre Financi├¿re & Experte en Investissement',
++      photo: '/profil-4-cadre-financiere-experte-en-investissement.webp',
++      quote: 'L\'IBC combine rigueur professionnelle et esprit communautaire. Une synergie parfaite pour s├®curiser ses investissements en Afrique de l\'Ouest.',
++    },
++  ];
++
++  return (
++    <section id="success-wall" className="py-24 bg-[#090D16] text-white overflow-hidden">
++      <div className="mx-auto max-w-7xl px-4">
++        <div className="text-center max-w-3xl mx-auto mb-16">
++          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
++            Social Proof & Impacts
++          </span>
++          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
++            Le Mur des Succ├¿s
++          </h2>
++          <p className="mt-4 text-slate-400">
++            D├®couvrez les retours d'exp├®rience des membres qui b├ótissent l'├®conomie de demain.
++          </p>
++        </div>
++
++        {/* Carousel / horizontal scroll container */}
++        <div className="relative w-full">
++          <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent snap-x">
++            {testimonials.map((t, idx) => (
++              <div key={idx} className="w-[300px] sm:w-[400px] shrink-0 snap-start">
++                <SpotlightCard className="flex flex-col h-full justify-between p-6 border border-white/10 bg-white/5 backdrop-blur-md rounded-xl hover:border-[#D4A847]/30 transition-all duration-300">
++                  <p className="text-slate-300 text-sm sm:text-base italic leading-relaxed mb-6">
++                    ÔÇ£{t.quote}ÔÇØ
++                  </p>
++                  <div className="flex items-center gap-4">
++                    <img
++                      src={t.photo}
++                      alt={t.name}
++                      className="w-12 h-12 rounded-full object-cover border border-[#D4A847]/40 shadow-inner"
++                    />
++                    <div>
++                      <h4 className="font-bold text-white text-sm sm:text-base">{t.name}</h4>
++                      <p className="text-xs text-[#D4A847]">{t.role}</p>
++                    </div>
++                  </div>
++                </SpotlightCard>
++              </div>
++            ))}
++          </div>
++        </div>
++      </div>
++    </section>
++  );
++}
++
++export default SuccessWall;
+diff --git a/src/components/ui/blur-text.tsx b/src/components/ui/blur-text.tsx
+new file mode 100644
+index 0000000..fca63a8
+--- /dev/null
++++ b/src/components/ui/blur-text.tsx
+@@ -0,0 +1,114 @@
++'use client';
++
++import { useEffect, useRef, useState } from 'react';
++import { motion, useInView } from 'framer-motion';
++
++interface BlurTextProps {
++  text: string;
++  animateBy?: 'words' | 'letters';
++  direction?: 'top' | 'bottom';
++  delay?: number;
++  stepDuration?: number;
++  threshold?: number;
++  rootMargin?: string;
++  className?: string;
++  onAnimationComplete?: () => void;
++}
++
++export function BlurText({
++  text = '',
++  animateBy = 'words',
++  direction = 'top',
++  delay = 200,
++  stepDuration = 0.35,
++  threshold = 0.1,
++  rootMargin = '0px',
++  className = '',
++  onAnimationComplete,
++}: BlurTextProps) {
++  const containerRef = useRef<HTMLDivElement>(null);
++  const isInView = useInView(containerRef, {
++    once: true,
++    amount: threshold,
++    margin: rootMargin as any,
++  });
++
++  const elements = animateBy === 'words' ? text.split(' ') : text.split('');
++  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
++
++  useEffect(() => {
++    if (typeof window !== 'undefined') {
++      setPrefersReducedMotion(
++        window.matchMedia('(prefers-reduced-motion: reduce)').matches
++      );
++    }
++  }, []);
++
++  const containerVariants = {
++    hidden: {},
++    visible: {
++      transition: {
++        staggerChildren: prefersReducedMotion ? 0 : stepDuration,
++        delayChildren: prefersReducedMotion ? 0 : delay / 1000,
++      },
++    },
++  };
++
++  const itemVariants = {
++    hidden: {
++      filter: prefersReducedMotion ? 'blur(0px)' : 'blur(10px)',
++      opacity: prefersReducedMotion ? 1 : 0,
++      y: prefersReducedMotion ? 0 : direction === 'top' ? -20 : 20,
++    },
++    visible: {
++      filter: 'blur(0px)',
++      opacity: 1,
++      y: 0,
++      transition: {
++        duration: prefersReducedMotion ? 0 : stepDuration,
++        ease: 'easeOut' as any,
++      },
++    },
++  };
++
++  useEffect(() => {
++    if (isInView && onAnimationComplete) {
++      const totalDelay = prefersReducedMotion
++        ? 0
++        : (delay / 1000) + (elements.length * stepDuration);
++      const timer = setTimeout(() => {
++        onAnimationComplete();
++      }, totalDelay * 1000);
++      return () => clearTimeout(timer);
++    }
++  }, [isInView, elements.length, delay, stepDuration, onAnimationComplete, prefersReducedMotion]);
++
++  return (
++    <motion.div
++      ref={containerRef}
++      className={`inline-block ${className}`}
++      variants={containerVariants}
++      initial="hidden"
++      animate={isInView ? 'visible' : 'hidden'}
++    >
++      {elements.map((element, index) => {
++        const isSpace = element === ' ';
++        return (
++          <motion.span
++            key={index}
++            variants={itemVariants}
++            className="inline-block"
++            style={{
++              whiteSpace: isSpace ? 'pre' : 'normal',
++            }}
++          >
++            {isSpace ? ' ' : element}
++            {animateBy === 'words' && index < elements.length - 1 ? '\u00A0' : ''}
++          </motion.span>
++        );
++      })}
++    </motion.div>
++  );
++}
++
++export default BlurText;
+diff --git a/src/components/ui/hero-video-player.tsx b/src/components/ui/hero-video-player.tsx
+new file mode 100644
+index 0000000..de6b0d5
+--- /dev/null
++++ b/src/components/ui/hero-video-player.tsx
+@@ -0,0 +1,76 @@
++'use client';
++
++import React, { useEffect, useState, useRef } from 'react';
++
++interface HeroVideoPlayerProps {
++  videoUrl?: string;
++  fallbackImageUrl?: string;
++  className?: string;
++}
++
++export function HeroVideoPlayer({
++  videoUrl = '/animated-hero-section.mp4',
++  fallbackImageUrl = '/hero-background-ibc-next-with-blue-vignette.webp',
++  className = '',
++}: HeroVideoPlayerProps) {
++  const [useFallback, setUseFallback] = useState(true);
++  const videoRef = useRef<HTMLVideoElement>(null);
++
++  useEffect(() => {
++    // Connection and screen size performance check
++    const checkPerformance = () => {
++      if (typeof window !== 'undefined') {
++        const conn = (navigator as any).connection;
++        if (conn) {
++          if (conn.saveData) return true;
++          const type = conn.effectiveType;
++          if (type === '2g' || type === '3g' || type === 'slow-2g') return true;
++        }
++        // Fall back on small screens/mobile devices to optimize loading
++        if (window.innerWidth < 768) return true;
++      }
++      return false;
++    };
++
++    setUseFallback(checkPerformance());
++  }, []);
++
++  const handleVideoPlay = () => {
++    if (videoRef.current) {
++      videoRef.current.play().catch((err) => {
++        console.warn('Video autoplay failed, falling back to static image:', err);
++        setUseFallback(true);
++      });
++    }
++  };
++
++  return (
++    <div className={`relative w-full h-full overflow-hidden bg-black ${className}`}>
++      {/* Top Black-to-transparent Overlay */}
++      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#090D16] to-transparent z-10 pointer-events-none" />
++
++      {useFallback ? (
++        <img
++          src={fallbackImageUrl}
++          alt="IBC Hero Background"
++          className="w-full h-full object-cover opacity-75 animate-fade-in"
++        />
++      ) : (
++        <video
++          ref={videoRef}
++          src={videoUrl}
++          autoPlay
++          loop
++          muted
++          playsInline
++          onCanPlay={handleVideoPlay}
++          className="w-full h-full object-cover opacity-70 transition-opacity duration-1000"
++          aria-label="IBC Hero video loops"
++        />
++      )}
++
++      {/* Bottom Black-to-transparent Overlay */}
++      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#090D16] to-transparent z-10 pointer-events-none" />
++    </div>
++  );
++}
+diff --git a/src/components/ui/scroll-video-player.tsx b/src/components/ui/scroll-video-player.tsx
+new file mode 100644
+index 0000000..1f26f51
+--- /dev/null
++++ b/src/components/ui/scroll-video-player.tsx
+@@ -0,0 +1,108 @@
++'use client';
++
++import React, { useEffect, useRef, useState } from 'react';
++
++interface ScrollVideoPlayerProps {
++  videoUrl?: string;
++  fallbackImageUrl?: string;
++  className?: string;
++}
++
++export function ScrollVideoPlayer({
++  videoUrl = '/animated-network-lines-abidjan.mp4',
++  fallbackImageUrl = '/hero-background-ibc-next.webp',
++  className = '',
++}: ScrollVideoPlayerProps) {
++  const containerRef = useRef<HTMLDivElement>(null);
++  const videoRef = useRef<HTMLVideoElement>(null);
++  const [useFallback, setUseFallback] = useState(true);
++
++  useEffect(() => {
++    const checkPerformance = () => {
++      if (typeof window !== 'undefined') {
++        const conn = (navigator as any).connection;
++        if (conn) {
++          if (conn.saveData) return true;
++          const type = conn.effectiveType;
++          if (type === '2g' || type === '3g' || type === 'slow-2g') return true;
++        }
++        if (window.innerWidth < 768) return true;
++      }
++      return false;
++    };
++
++    setUseFallback(checkPerformance());
++  }, []);
++
++  useEffect(() => {
++    if (useFallback) return;
++
++    const video = videoRef.current;
++    const container = containerRef.current;
++    if (!video || !container) return;
++
++    let targetTime = 0;
++    let currentTime = 0;
++    let animationFrameId: number;
++
++    const handleScroll = () => {
++      const rect = container.getBoundingClientRect();
++      const viewportHeight = window.innerHeight;
++
++      if (rect.top < viewportHeight && rect.bottom > 0) {
++        const progress = Math.max(0, Math.min(1, (viewportHeight - rect.top) / (rect.height + viewportHeight)));
++        if (video.duration) {
++          targetTime = progress * video.duration;
++        }
++      }
++    };
++
++    const updateVideoFrame = () => {
++      if (video.readyState >= 2 && video.duration) {
++        // Lissage (interpolation) de la transition
++        currentTime += (targetTime - currentTime) * 0.15;
++
++        // ├ëvite les repaints/reflows si le d├®calage est minime
++        if (Math.abs(currentTime - video.currentTime) > 0.01) {
++          video.currentTime = currentTime;
++        }
++      }
++      animationFrameId = requestAnimationFrame(updateVideoFrame);
++    };
++
++    window.addEventListener('scroll', handleScroll, { passive: true });
++    animationFrameId = requestAnimationFrame(updateVideoFrame);
++
++    return () => {
++      window.removeEventListener('scroll', handleScroll);
++      cancelAnimationFrame(animationFrameId);
++    };
++  }, [useFallback]);
++
++  return (
++    <div ref={containerRef} className={`relative w-full h-[150vh] bg-[#090D16] ${className}`}>
++      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
++        {/* Gradients de transition */}
++        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-[#090D16] via-transparent to-[#090D16]" />
++
++        {useFallback ? (
++          <img
++            src={fallbackImageUrl}
++            alt="Fallback static scene"
++            className="w-full h-full object-cover opacity-75 animate-fade-in"
++          />
++        ) : (
++          <video
++            ref={videoRef}
++            src={videoUrl}
++            muted
++            playsInline
++            preload="auto"
++            className="w-full h-full object-cover opacity-70"
++            aria-label="Scroll controlled video"
++          />
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/components/ui/shiny-text.tsx b/src/components/ui/shiny-text.tsx
+new file mode 100644
+index 0000000..6747fa3
+--- /dev/null
++++ b/src/components/ui/shiny-text.tsx
+@@ -0,0 +1,57 @@
++'use client';
++
++import React from 'react';
++
++interface ShinyTextProps {
++  text: string;
++  disabled?: boolean;
++  speed?: number;
++  className?: string;
++  color?: string;
++  shineColor?: string;
++  delay?: number;
++  spread?: number;
++  yoyo?: boolean;
++  pauseOnHover?: boolean;
++  direction?: 'left' | 'right';
++}
++
++export function ShinyText({
++  text,
++  disabled = false,
++  speed = 2,
++  className = '',
++  color = '#b5b5b5',
++  shineColor = '#ffffff',
++  delay = 0,
++  spread = 120,
++  yoyo = false,
++  pauseOnHover = false,
++  direction = 'left',
++}: ShinyTextProps) {
++  const styles: React.CSSProperties = {
++    color: color,
++    backgroundImage: `linear-gradient(${
++      direction === 'left' ? '120deg' : '240deg'
++    }, ${color} 40%, ${shineColor} 50%, ${color} 60%)`,
++    backgroundSize: `${spread * 2}px 100%`,
++    WebkitBackgroundClip: 'text',
++    backgroundClip: 'text',
++    display: 'inline-block',
++    animationDuration: `${speed}s`,
++    animationDelay: `${delay}s`,
++    animationIterationCount: 'infinite',
++    animationTimingFunction: 'linear',
++  };
++
++  return (
++    <span
++      style={styles}
++      className={`shiny-text ${disabled ? 'disabled' : ''} ${
++        pauseOnHover ? 'pause-on-hover' : ''
++      } ${className}`}
++    >
++      {text}
++    </span>
++  );
++}
+diff --git a/src/components/ui/split-text.tsx b/src/components/ui/split-text.tsx
+new file mode 100644
+index 0000000..b36fe1a
+--- /dev/null
++++ b/src/components/ui/split-text.tsx
+@@ -0,0 +1,123 @@
++'use client';
++
++import { useEffect, useRef, useState } from 'react';
++import gsap from 'gsap';
++import { useGSAP } from '@gsap/react';
++
++interface SplitTextProps {
++  text: string;
++  className?: string;
++  delay?: number;
++  duration?: number;
++  ease?: string;
++  splitType?: 'chars' | 'words';
++  from?: gsap.TweenVars;
++  to?: gsap.TweenVars;
++  threshold?: number;
++  rootMargin?: string;
++  textAlign?: 'left' | 'center' | 'right';
++  tag?: 'p' | 'h1' | 'h2' | 'h3' | 'span';
++  onLetterAnimationComplete?: () => void;
++}
++
++export function SplitText({
++  text = '',
++  className = '',
++  delay = 50,
++  duration = 1.25,
++  ease = 'power3.out',
++  splitType = 'chars',
++  from = { opacity: 0, y: 40 },
++  to = { opacity: 1, y: 0 },
++  threshold = 0.1,
++  rootMargin = '-100px',
++  textAlign = 'center',
++  tag: Tag = 'p',
++  onLetterAnimationComplete,
++}: SplitTextProps) {
++  const containerRef = useRef<HTMLElement>(null);
++  const [inView, setInView] = useState(false);
++
++  useEffect(() => {
++    const container = containerRef.current;
++    if (!container) return;
++
++    const observer = new IntersectionObserver(
++      ([entry]) => {
++        if (entry.isIntersecting) {
++          setInView(true);
++          observer.unobserve(container);
++        }
++      },
++      { threshold, rootMargin }
++    );
++
++    observer.observe(container);
++
++    return () => {
++      observer.disconnect();
++    };
++  }, [threshold, rootMargin]);
++
++  useGSAP(() => {
++    if (!inView || !containerRef.current) return;
++
++    const elements = containerRef.current.querySelectorAll('.split-item');
++    if (!elements.length) return;
++
++    const prefersReducedMotion =
++      typeof window !== 'undefined' &&
++      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
++
++    if (prefersReducedMotion) {
++      gsap.set(elements, to);
++      if (onLetterAnimationComplete) {
++        onLetterAnimationComplete();
++      }
++      return;
++    }
++
++    gsap.fromTo(
++      elements,
++      from,
++      {
++        ...to,
++        ease,
++        duration,
++        stagger: delay / 1000,
++        onComplete: () => {
++          if (onLetterAnimationComplete) {
++            onLetterAnimationComplete();
++          }
++        },
++      }
++    );
++  }, { scope: containerRef, dependencies: [inView] });
++
++  const items = splitType === 'words' ? text.split(' ') : text.split('');
++
++  return (
++    <Tag
++      ref={containerRef as any}
++      className={`split-text-container ${className}`}
++      style={{ textAlign, display: 'inline-block' }}
++    >
++      {items.map((item, idx) => {
++        const isSpace = item === ' ';
++        return (
++          <span
++            key={idx}
++            className="split-item inline-block"
++            style={{
++              whiteSpace: isSpace ? 'pre' : 'normal',
++            }}
++          >
++            {isSpace ? ' ' : item}
++            {splitType === 'words' && idx < items.length - 1 ? '\u00A0' : ''}
++          </span>
++        );
++      })}
++    </Tag>
++  );
++}
++export default SplitText;
+diff --git a/src/components/ui/spotlight-card.tsx b/src/components/ui/spotlight-card.tsx
+new file mode 100644
+index 0000000..4fd6896
+--- /dev/null
++++ b/src/components/ui/spotlight-card.tsx
+@@ -0,0 +1,61 @@
++'use client';
++
++import React, { useRef, useState, useEffect } from 'react';
++
++interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
++  spotlightColor?: string;
++  children: React.ReactNode;
++  className?: string;
++}
++
++export function SpotlightCard({
++  spotlightColor = 'rgba(255, 255, 255, 0.15)',
++  children,
++  className = '',
++  ...props
++}: SpotlightCardProps) {
++  const cardRef = useRef<HTMLDivElement>(null);
++  const [coords, setCoords] = useState({ x: 0, y: 0 });
++  const [isFocused, setIsFocused] = useState(false);
++  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
++
++  useEffect(() => {
++    if (typeof window !== 'undefined') {
++      setPrefersReducedMotion(
++        window.matchMedia('(prefers-reduced-motion: reduce)').matches
++      );
++    }
++  }, []);
++
++  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
++    if (prefersReducedMotion || !cardRef.current) return;
++    const rect = cardRef.current.getBoundingClientRect();
++    setCoords({
++      x: e.clientX - rect.left,
++      y: e.clientY - rect.top,
++    });
++  };
++
++  return (
++    <div
++      ref={cardRef}
++      onMouseMove={handleMouseMove}
++      onMouseEnter={() => !prefersReducedMotion && setIsFocused(true)}
++      onMouseLeave={() => setIsFocused(false)}
++      className={`relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md ${className}`}
++      {...props}
++    >
++      {isFocused && !prefersReducedMotion && (
++        <div
++          className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
++          style={{
++            background: `radial-gradient(600px circle at ${coords.x}px ${coords.y}px, ${spotlightColor}, transparent 40%)`,
++          }}
++        />
++      )}
++      <div className="relative z-10 w-full h-full">{children}</div>
++    </div>
++  );
++}
++
++export default SpotlightCard;
+diff --git a/src/components/ui/video-players.test.tsx b/src/components/ui/video-players.test.tsx
+new file mode 100644
+index 0000000..50f8aa9
+--- /dev/null
++++ b/src/components/ui/video-players.test.tsx
+@@ -0,0 +1,107 @@
++import React from 'react';
++import { render, screen } from '@testing-library/react';
++import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
++import { HeroVideoPlayer } from './hero-video-player';
++import { ScrollVideoPlayer } from './scroll-video-player';
++
++describe('Video Players Fallbacks', () => {
++  let originalConnection: any;
++
++  beforeEach(() => {
++    if (typeof navigator !== 'undefined') {
++      originalConnection = (navigator as any).connection;
++    }
++    vi.stubGlobal('innerWidth', 1024);
++  });
++
++  afterEach(() => {
++    vi.unstubAllGlobals();
++    if (typeof navigator !== 'undefined') {
++      if (originalConnection) {
++        Object.defineProperty(navigator, 'connection', {
++          value: originalConnection,
++          configurable: true,
++        });
++      } else {
++        delete (navigator as any).connection;
++      }
++    }
++  });
++
++  it('HeroVideoPlayer renders video when connection is fast and width is large', () => {
++    if (typeof navigator !== 'undefined') {
++      Object.defineProperty(navigator, 'connection', {
++        value: { effectiveType: '4g', saveData: false },
++        configurable: true,
++      });
++    }
++    vi.stubGlobal('innerWidth', 1200);
++
++    render(<HeroVideoPlayer />);
++
++    const video = screen.getByLabelText('IBC Hero video loops');
++    expect(video).toBeInTheDocument();
++    expect(screen.queryByAltText('IBC Hero Background')).not.toBeInTheDocument();
++  });
++
++  it('HeroVideoPlayer falls back to static image when connection is slow (3g)', () => {
++    if (typeof navigator !== 'undefined') {
++      Object.defineProperty(navigator, 'connection', {
++        value: { effectiveType: '3g', saveData: false },
++        configurable: true,
++      });
++    }
++
++    render(<HeroVideoPlayer />);
++
++    const img = screen.getByAltText('IBC Hero Background');
++    expect(img).toBeInTheDocument();
++    expect(screen.queryByLabelText('IBC Hero video loops')).not.toBeInTheDocument();
++  });
++
++  it('HeroVideoPlayer falls back to static image when width is small (mobile)', () => {
++    if (typeof navigator !== 'undefined') {
++      Object.defineProperty(navigator, 'connection', {
++        value: { effectiveType: '4g', saveData: false },
++        configurable: true,
++      });
++    }
++    vi.stubGlobal('innerWidth', 600);
++
++    render(<HeroVideoPlayer />);
++
++    const img = screen.getByAltText('IBC Hero Background');
++    expect(img).toBeInTheDocument();
++  });
++
++  it('ScrollVideoPlayer renders video when connection is fast and width is large', () => {
++    if (typeof navigator !== 'undefined') {
++      Object.defineProperty(navigator, 'connection', {
++        value: { effectiveType: '4g', saveData: false },
++        configurable: true,
++      });
++    }
++    vi.stubGlobal('innerWidth', 1200);
++
++    render(<ScrollVideoPlayer />);
++
++    const video = screen.getByLabelText('Scroll controlled video');
++    expect(video).toBeInTheDocument();
++    expect(screen.queryByAltText('Fallback static scene')).not.toBeInTheDocument();
++  });
++
++  it('ScrollVideoPlayer falls back to static image when connection is slow (3g)', () => {
++    if (typeof navigator !== 'undefined') {
++      Object.defineProperty(navigator, 'connection', {
++        value: { effectiveType: '3g', saveData: false },
++        configurable: true,
++      });
++    }
++
++    render(<ScrollVideoPlayer />);
++
++    const img = screen.getByAltText('Fallback static scene');
++    expect(img).toBeInTheDocument();
++    expect(screen.queryByLabelText('Scroll controlled video')).not.toBeInTheDocument();
++  });
++});
+diff --git a/src/lib/r2.ts b/src/lib/r2.ts
+index 609ed64..96d9dd8 100644
+--- a/src/lib/r2.ts
++++ b/src/lib/r2.ts
+@@ -163,7 +163,7 @@ export async function createDownloadSignedUrl(params: { key: string; fileName?:
+ 
+ export async function deleteR2Object(key: string) {
+   const config = getR2Config();
+-  await getR2Client().send(
++  await (getR2Client() as any).send(
+     new DeleteObjectCommand({
+       Bucket: config.bucketName,
+       Key: key,
+diff --git a/src/lib/trust-level.ts b/src/lib/trust-level.ts
+index e878980..a218392 100644
+--- a/src/lib/trust-level.ts
++++ b/src/lib/trust-level.ts
+@@ -36,3 +36,22 @@ export function getOpportunityTrustLevel(input: TrustLevelInput): TrustLevel | n
+ export function getSafeTrustLevel(input: TrustLevelInput): TrustLevel {
+   return getOpportunityTrustLevel(input) ?? "bronze";
+ }
++
++export function shouldRequireDoubleVerification(params: {
++  amount: number | null | undefined;
++  currentRequiresDoubleVerification: boolean;
++  existingApprovalCount: number;
++  verificationStatus: string;
++}) {
++  if (typeof params.amount === "number" && params.amount > 50000) {
++    return true;
++  }
++
++  const hasComplianceContext = params.existingApprovalCount >= 2 || params.verificationStatus === "VERIFIED";
++  if (params.currentRequiresDoubleVerification && hasComplianceContext) {
++    return true;
++  }
++
++  return false;
++}
++
+diff --git a/src/test-setup.ts b/src/test-setup.ts
+index f149f27..ce45796 100644
+--- a/src/test-setup.ts
++++ b/src/test-setup.ts
+@@ -1 +1,30 @@
+-import "@testing-library/jest-dom/vitest";
++import '@testing-library/jest-dom/vitest';
++import { vi } from 'vitest';
++
++// Mock IntersectionObserver as a class for JSDOM / Next.js link compatibility
++class MockIntersectionObserver {
++  observe = vi.fn();
++  unobserve = vi.fn();
++  disconnect = vi.fn();
++}
++
++if (typeof global !== 'undefined') {
++  global.IntersectionObserver = MockIntersectionObserver as any;
++}
++
++// Mock window.matchMedia for prefers-reduced-motion media queries
++if (typeof window !== 'undefined') {
++  Object.defineProperty(window, 'matchMedia', {
++    writable: true,
++    value: vi.fn().mockImplementation((query) => ({
++      matches: false,
++      media: query,
++      onchange: null,
++      addListener: vi.fn(),
++      removeListener: vi.fn(),
++      addEventListener: vi.fn(),
++      removeEventListener: vi.fn(),
++      dispatchEvent: vi.fn(),
++    })),
++  });
++}

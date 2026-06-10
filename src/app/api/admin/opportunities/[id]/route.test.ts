@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DELETE, PATCH, adminOpportunityRequiresDoubleVerification } from "./route";
+import { DELETE, PATCH } from "./route";
+import { shouldRequireDoubleVerification as adminOpportunityRequiresDoubleVerification } from "@/lib/trust-level";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());

@@ -36,3 +36,22 @@ export function getOpportunityTrustLevel(input: TrustLevelInput): TrustLevel | n
 export function getSafeTrustLevel(input: TrustLevelInput): TrustLevel {
   return getOpportunityTrustLevel(input) ?? "bronze";
 }
+
+export function shouldRequireDoubleVerification(params: {
+  amount: number | null | undefined;
+  currentRequiresDoubleVerification: boolean;
+  existingApprovalCount: number;
+  verificationStatus: string;
+}) {
+  if (typeof params.amount === "number" && params.amount > 50000) {
+    return true;
+  }
+
+  const hasComplianceContext = params.existingApprovalCount >= 2 || params.verificationStatus === "VERIFIED";
+  if (params.currentRequiresDoubleVerification && hasComplianceContext) {
+    return true;
+  }
+
+  return false;
+}
+

@@ -9,7 +9,7 @@ describe("OpportunityTeasers", () => {
     render(
       <OpportunityTeasers
         opportunities={[
-          { id: "opp-1", title: "Terrain à Cocody", location: "Abidjan" },
+          { id: "opp-1", title: "Terrain à Cocody", location: "Abidjan", category: "IMMOBILIER" },
         ]}
       />,
     );
@@ -17,7 +17,7 @@ describe("OpportunityTeasers", () => {
     expect(screen.getByText("Terrain à Cocody")).toBeInTheDocument();
     expect(screen.getByText("Abidjan")).toBeInTheDocument();
     expect(screen.getByText("Devenez membre pour voir les détails")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Voir le détail après inscription/i })).toHaveAttribute("href", "/auth/signup");
+    expect(screen.getByRole("link", { name: /S'inscrire pour postuler/i })).toHaveAttribute("href", "/auth/signup");
     expect(screen.queryByText(/€/)).not.toBeInTheDocument();
     expect(screen.queryByText(/WhatsApp/i)).not.toBeInTheDocument();
   });
@@ -29,7 +29,7 @@ describe("OpportunityTeasers", () => {
     render(
       <OpportunityTeasers
         opportunities={[
-          { id: "opp-1", title: "Terrain à Cocody", location: "Abidjan" },
+          { id: "opp-1", title: "Terrain à Cocody", location: "Abidjan", category: "IMMOBILIER" },
         ]}
       />,
     );

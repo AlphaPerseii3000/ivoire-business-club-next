@@ -28,6 +28,10 @@ export const metadata: Metadata = {
     description: "Bâtir son futur en Afrique",
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: "/favicon-ibc.webp",
+    apple: "/logo-ibc.webp",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

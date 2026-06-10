@@ -34,7 +34,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
     async () => {
       mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: false });
 
-      render(await OpportunitiesPage());
+      render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
 
       expect(screen.getByText("Votre abonnement est inactif. Renouvelez pour accéder aux deals.")).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Voir les offres" })).toHaveAttribute("href", "/pricing");
@@ -57,7 +57,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
       },
     ]);
 
-    render(await OpportunitiesPage());
+    render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
 
     expect(mockOpportunityFindMany).toHaveBeenCalledWith(expect.objectContaining({
       where: {

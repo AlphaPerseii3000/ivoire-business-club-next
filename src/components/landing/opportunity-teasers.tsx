@@ -1,11 +1,12 @@
-import Link from "next/link";
-import { LockKeyhole, MapPin } from "lucide-react";
+'use client';
 
-import { InterestButton } from "@/components/features/deals/interest-button";
+import Link from 'next/link';
+import { DealCard } from '@/components/features/deals/deal-card';
 
 type OpportunityTeaser = {
   id: string;
   title: string;
+  category?: string | null;
   location?: string | null;
 };
 
@@ -17,64 +18,40 @@ type OpportunityTeasersProps = {
 
 export function OpportunityTeasers({
   opportunities,
-  title = "Aperçu des opportunités vérifiées",
-  description = "Quelques deals sont visibles publiquement. Les détails restent réservés aux membres actifs.",
+  title = 'Aperçu des opportunités vérifiées',
+  description = 'Quelques deals sont visibles publiquement. Les détails restent réservés aux membres actifs.',
 }: OpportunityTeasersProps) {
   return (
-    <section id="opportunites" className="bg-muted/30 py-20">
+    <section id="opportunites" className="bg-[#090D16] py-24 text-white">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Deals teaser</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight">{title}</h2>
-          <p className="mt-4 text-muted-foreground">{description}</p>
+        <div className="mx-auto max-w-2xl text-center mb-16">
+          <span className="text-[#D4A847] text-sm font-semibold uppercase tracking-wider">
+            Deals Teaser
+          </span>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">{title}</h2>
+          <p className="mt-4 text-slate-400">{description}</p>
         </div>
 
         {opportunities.length > 0 ? (
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {opportunities.map((opportunity) => {
-              const location = opportunity.location?.trim() ? opportunity.location : "Localisation non renseignée";
-              return (
-                <article
-                  key={opportunity.id}
-                  className="group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md"
-                >
-                  <div className="space-y-3 blur-[1px] transition group-hover:blur-0">
-                    <h3 className="text-lg font-semibold">{opportunity.title}</h3>
-                    <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" aria-hidden="true" />
-                      {location}
-                    </p>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4 text-center backdrop-blur-[1px] transition group-hover:bg-background/70">
-                    <div className="rounded-xl border bg-card/95 p-4 shadow-sm">
-                      <LockKeyhole className="mx-auto h-5 w-5 text-primary" aria-hidden="true" />
-                      <p className="mt-2 text-sm font-semibold">Devenez membre pour voir les détails</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Inscription gratuite, activation par virement.</p>
-                      <div className="mt-4 flex flex-col items-center gap-2">
-                        <InterestButton opportunityId={opportunity.id} isAuthenticated={false} />
-                        <Link
-                          href="/auth/signup"
-                          className="text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                        >
-                          Voir le détail après inscription
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="grid gap-6 md:grid-cols-3">
+            {opportunities.map((opportunity) => (
+              <DealCard
+                key={opportunity.id}
+                deal={opportunity}
+                isTeaser={true}
+              />
+            ))}
           </div>
         ) : (
-          <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-dashed bg-card p-8 text-center text-muted-foreground">
+          <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-white/10 bg-[#0F172A] p-8 text-center text-slate-400">
             Aucun teaser vérifié disponible pour le moment.
           </div>
         )}
 
-        <div className="mt-8 text-center">
+        <div className="mt-12 text-center">
           <Link
             href="/opportunities"
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-5 py-2 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#D4A847] px-6 py-2 text-sm font-semibold text-[#D4A847] hover:bg-[#D4A847]/10 transition-all duration-300"
           >
             Voir tous les teasers
           </Link>
@@ -83,3 +60,4 @@ export function OpportunityTeasers({
     </section>
   );
 }
+export default OpportunityTeasers;

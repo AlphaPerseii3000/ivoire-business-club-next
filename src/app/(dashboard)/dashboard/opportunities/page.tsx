@@ -14,7 +14,7 @@ import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { isTagCategory, isValidTagOption } from "@/lib/tags";
 
 type OpportunitiesPageProps = {
-  searchParams?: Promise<{ category?: string; tagCategory?: string; tagValue?: string }>;
+  searchParams: Promise<{ category?: string; tagCategory?: string; tagValue?: string }>;
 };
 
 const VALID_CATEGORIES = OPPORTUNITY_CATEGORY_FILTERS.map((category) => category.value);
@@ -37,11 +37,11 @@ function normalizeTagFilter(tagCategory?: string, tagValue?: string) {
     : null;
 }
 
-export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps = {}) {
+export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const resolvedSearchParams = (await searchParams) || {};
   const activeCategory = normalizeCategory(resolvedSearchParams.category);
   const activeTag = normalizeTagFilter(resolvedSearchParams.tagCategory, resolvedSearchParams.tagValue);
 

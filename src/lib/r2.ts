@@ -163,7 +163,7 @@ export async function createDownloadSignedUrl(params: { key: string; fileName?: 
 
 export async function deleteR2Object(key: string) {
   const config = getR2Config();
-  await getR2Client().send(
+  await (getR2Client() as any).send(
     new DeleteObjectCommand({
       Bucket: config.bucketName,
       Key: key,

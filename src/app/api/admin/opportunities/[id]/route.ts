@@ -5,6 +5,7 @@ import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 import { deleteR2Object, getMissingR2Env } from "@/lib/r2";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { shouldRequireDoubleVerification } from "@/lib/trust-level";
 import { opportunityAdminUpdateSchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -80,23 +81,7 @@ function loadOpportunityForResponse(id: string) {
   });
 }
 
-function shouldRequireDoubleVerification(params: {
-  amount: number | null | undefined;
-  currentRequiresDoubleVerification: boolean;
-  existingApprovalCount: number;
-  verificationStatus: string;
-}) {
-  if (typeof params.amount === "number" && params.amount > 50000) {
-    return true;
-  }
 
-  const hasComplianceContext = params.existingApprovalCount >= 2 || params.verificationStatus === "VERIFIED";
-  if (params.currentRequiresDoubleVerification && hasComplianceContext) {
-    return true;
-  }
-
-  return false;
-}
 
 export async function PATCH(req: Request, { params }: RouteContext) {
   const authResult = await requireAdmin();
@@ -218,4 +203,3 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
   }
 }
 
-export const adminOpportunityRequiresDoubleVerification = shouldRequireDoubleVerification;
