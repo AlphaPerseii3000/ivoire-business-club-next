@@ -75,7 +75,7 @@ export function Hero() {
     <div
       ref={wrapperRef}
       className="relative bg-[#090D16] mesh-gradient-bg"
-      style={{ height: '300vh' }}
+      style={{ height: '200vh' }}
     >
       {/* Sticky container — stays pinned while the tall wrapper scrolls */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
