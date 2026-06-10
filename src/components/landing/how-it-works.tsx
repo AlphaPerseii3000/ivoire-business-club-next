@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { SpotlightCard } from '@/components/ui/spotlight-card';
+import { BlurReveal } from '@/components/ui/blur-reveal';
 
 export function HowItWorks() {
   const steps = [
@@ -28,42 +29,45 @@ export function HowItWorks() {
   return (
     <section className="py-24 bg-[#090D16] text-white">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
-            Processus du Club
-          </span>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
-            Comment ça marche ?
-          </h2>
-          <p className="mt-4 text-slate-400">
-            Une boucle de valeur en 3 étapes conçue pour maximiser votre impact et vos connexions en Côte d'Ivoire.
-          </p>
-        </div>
+        <BlurReveal>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
+              Processus du Club
+            </span>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
+              Comment ça marche ?
+            </h2>
+            <p className="mt-4 text-slate-400">
+              Une boucle de valeur en 3 étapes conçue pour maximiser votre impact et vos connexions en Côte d'Ivoire.
+            </p>
+          </div>
+        </BlurReveal>
 
         <div className="grid gap-8 md:grid-cols-3">
-          {steps.map((s) => (
-            <SpotlightCard
-              key={s.num}
-              className="flex flex-col h-full overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md rounded-xl group hover:border-[#D4A847]/30 transition-all duration-300"
-            >
-              <div className="relative h-48 w-full overflow-hidden">
-                <img
-                  src={s.img}
-                  alt={s.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-transparent to-transparent" />
-                <div className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#D4A847] text-sm font-bold text-black shadow-md">
-                  {s.num}
+          {steps.map((s, i) => (
+            <BlurReveal key={s.num} delay={i * 150}>
+              <SpotlightCard
+                className="flex flex-col h-full overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md rounded-xl group hover:border-[#D4A847]/30 transition-all duration-300"
+              >
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src={s.img}
+                    alt={s.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-transparent to-transparent" />
+                  <div className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#D4A847] text-sm font-bold text-black shadow-md">
+                    {s.num}
+                  </div>
                 </div>
-              </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">{s.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{s.title}</h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
+                  </div>
                 </div>
-              </div>
-            </SpotlightCard>
+              </SpotlightCard>
+            </BlurReveal>
           ))}
         </div>
       </div>

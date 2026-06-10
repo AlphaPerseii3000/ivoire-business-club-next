@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SpotlightCard } from '@/components/ui/spotlight-card';
+import { BlurReveal } from '@/components/ui/blur-reveal';
 
 interface Testimonial {
   name: string;
@@ -52,61 +53,65 @@ export function SuccessWall() {
   return (
     <section id="success-wall" className="py-24 bg-[#090D16] text-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
-          <div className="max-w-2xl">
-            <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
-              Social Proof & Impacts
-            </span>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
-              Le Mur des Succès
-            </h2>
-            <p className="mt-4 text-slate-400">
-              Découvrez les retours d'expérience des membres qui bâtissent l'économie de demain.
-            </p>
+        <BlurReveal>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
+            <div className="max-w-2xl">
+              <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
+                Social Proof & Impacts
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
+                Le Mur des Succès
+              </h2>
+              <p className="mt-4 text-slate-400">
+                Découvrez les retours d'expérience des membres qui bâtissent l'économie de demain.
+              </p>
+            </div>
+            <div className="flex gap-3 mt-6 md:mt-0">
+              <button
+                onClick={() => scroll('left')}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white hover:bg-[#D4A847] hover:text-black hover:border-[#D4A847] transition-all cursor-pointer"
+                aria-label="Témoignage précédent"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white hover:bg-[#D4A847] hover:text-black hover:border-[#D4A847] transition-all cursor-pointer"
+                aria-label="Témoignage suivant"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3 mt-6 md:mt-0">
-            <button
-              onClick={() => scroll('left')}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white hover:bg-[#D4A847] hover:text-black hover:border-[#D4A847] transition-all cursor-pointer"
-              aria-label="Témoignage précédent"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white hover:bg-[#D4A847] hover:text-black hover:border-[#D4A847] transition-all cursor-pointer"
-              aria-label="Témoignage suivant"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+        </BlurReveal>
 
         {/* Carousel / horizontal scroll container */}
-        <div className="relative w-full">
-          <div ref={scrollRef} className="flex gap-6 overflow-x-auto pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent snap-x scroll-smooth">
-            {testimonials.map((t, idx) => (
-              <div key={idx} className="w-[300px] sm:w-[400px] shrink-0 snap-start">
-                <SpotlightCard className="flex flex-col h-full justify-between p-6 border border-white/10 bg-white/5 backdrop-blur-md rounded-xl hover:border-[#D4A847]/30 transition-all duration-300">
-                  <p className="text-slate-300 text-sm sm:text-base italic leading-relaxed mb-6">
-                    “{t.quote}”
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={t.photo}
-                      alt={t.name}
-                      className="w-12 h-12 rounded-full object-cover border border-[#D4A847]/40 shadow-inner"
-                    />
-                    <div>
-                      <h4 className="font-bold text-white text-sm sm:text-base">{t.name}</h4>
-                      <p className="text-xs text-[#D4A847]">{t.role}</p>
+        <BlurReveal delay={200}>
+          <div className="relative w-full">
+            <div ref={scrollRef} className="flex gap-6 overflow-x-auto pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent snap-x scroll-smooth">
+              {testimonials.map((t, idx) => (
+                <div key={idx} className="w-[300px] sm:w-[400px] shrink-0 snap-start">
+                  <SpotlightCard className="flex flex-col h-full justify-between p-6 border border-white/10 bg-white/5 backdrop-blur-md rounded-xl hover:border-[#D4A847]/30 transition-all duration-300">
+                    <p className="text-slate-300 text-sm sm:text-base italic leading-relaxed mb-6">
+                      "{t.quote}"
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={t.photo}
+                        alt={t.name}
+                        className="w-12 h-12 rounded-full object-cover border border-[#D4A847]/40 shadow-inner"
+                      />
+                      <div>
+                        <h4 className="font-bold text-white text-sm sm:text-base">{t.name}</h4>
+                        <p className="text-xs text-[#D4A847]">{t.role}</p>
+                      </div>
                     </div>
-                  </div>
-                </SpotlightCard>
-              </div>
-            ))}
+                  </SpotlightCard>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </BlurReveal>
       </div>
     </section>
   );

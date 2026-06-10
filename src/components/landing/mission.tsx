@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { SpotlightCard } from '@/components/ui/spotlight-card';
+import { BlurReveal } from '@/components/ui/blur-reveal';
 
 export function Mission() {
   const pillars = [
@@ -26,27 +27,30 @@ export function Mission() {
   return (
     <section id="mission" className="py-24 bg-[#090D16] text-white">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
-            Notre Raison d'Être
-          </span>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
-            Notre Mission
-          </h2>
-          <p className="mt-4 text-slate-400">
-            Construire le pont d'affaires de référence entre la diaspora et la Côte d'Ivoire.
-          </p>
-        </div>
+        <BlurReveal>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-[#D4A847] text-sm font-semibold tracking-wider uppercase">
+              Notre Raison d'Être
+            </span>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
+              Notre Mission
+            </h2>
+            <p className="mt-4 text-slate-400">
+              Construire le pont d'affaires de référence entre la diaspora et la Côte d'Ivoire.
+            </p>
+          </div>
+        </BlurReveal>
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {pillars.map((p) => (
-            <SpotlightCard
-              key={p.title}
-              className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6 text-center hover:border-[#D4A847]/30 transition-all duration-300"
-            >
-              <h3 className="text-lg font-bold text-[#D4A847] mb-3">{p.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{p.desc}</p>
-            </SpotlightCard>
+          {pillars.map((p, i) => (
+            <BlurReveal key={p.title} delay={i * 120}>
+              <SpotlightCard
+                className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6 text-center hover:border-[#D4A847]/30 transition-all duration-300"
+              >
+                <h3 className="text-lg font-bold text-[#D4A847] mb-3">{p.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{p.desc}</p>
+              </SpotlightCard>
+            </BlurReveal>
           ))}
         </div>
       </div>

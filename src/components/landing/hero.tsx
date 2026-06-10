@@ -1,14 +1,50 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { HeroVideoPlayer } from '@/components/ui/hero-video-player';
 import { SplitText } from '@/components/ui/split-text';
 import { BlurText } from '@/components/ui/blur-text';
 import { ShinyText } from '@/components/ui/shiny-text';
 
 export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setIsVisible(true);
+      return;
+    }
+
+    setIsVisible(true);
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Parallax offset: content moves at 40% of scroll speed
+  const parallaxOffset = scrollY * 0.4;
+  // Fade out content as user scrolls past hero
+  const heroHeight = sectionRef.current?.offsetHeight ?? 800;
+  const fadeProgress = Math.min(1, scrollY / (heroHeight * 0.6));
+  const contentOpacity = 1 - fadeProgress;
+  const contentScale = 1 - fadeProgress * 0.05;
+
   return (
-    <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden py-24 sm:py-32 bg-[#090D16] mesh-gradient-bg">
+    <section
+      ref={sectionRef}
+      className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden py-24 sm:py-32 bg-[#090D16] mesh-gradient-bg"
+    >
       {/* Background Video Loops */}
       <div className="absolute inset-0 z-0">
         <HeroVideoPlayer
@@ -20,8 +56,15 @@ export function Hero() {
       {/* Grid Overlay to add depth */}
       <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02),transparent_60%)]" />
 
-      {/* Content wrapper */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 text-center">
+      {/* Content wrapper with parallax */}
+      <div
+        ref={contentRef}
+        className="relative z-10 mx-auto max-w-7xl px-4 text-center will-change-transform"
+        style={{
+          transform: `translateY(${parallaxOffset}px) scale(${contentScale})`,
+          opacity: contentOpacity,
+        }}
+      >
         {/* Animated Headline */}
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
           <SplitText
@@ -48,7 +91,7 @@ export function Hero() {
 
         <div className="mt-4">
           <BlurText
-            text="“Investir ou entreprendre ne s'improvise pas”"
+            text={"«\u00a0Investir ou entreprendre ne s'improvise pas\u00a0»"}
             className="text-xl font-semibold text-[#D4A847]"
             animateBy="words"
             direction="bottom"
