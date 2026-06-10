@@ -1,121 +1,207 @@
-# IBC — Recommandations pour une Landing Page 3D & IA d'Exception
+# IBC — Guide de Conception Web 3D & Animations d'Exception (Higgsfield & React Bits)
 
-Ce document sert de guide et de spécification technique pour concevoir une landing page immersive, moderne et interactive ("qui claque") pour l'**Ivoire Business Club (IBC)**. Il s'appuie sur des technologies 3D (comme Spline ou React Three Fiber) et sur la génération d'assets optimisés par Intelligence Artificielle (Midjourney, Spline AI, Luma AI, etc.).
-
----
-
-## 1. Direction Artistique & Expérience Visuelle
-
-Pour créer un effet "Wow" immédiat tout en respectant l'identité d'IBC, la landing page doit adopter les principes suivants :
-
-*   **Palette de Couleurs Premium :** 
-    *   Fond sombre profond (Sleek Dark Mode : `#090D16` à `#0F172A`) pour faire ressortir les éléments lumineux.
-    *   Accent Principal : Teal d'IBC (`#0F766E`) avec des variantes vibrantes (`#14B8A6`).
-    *   Accent Secondaire : Amber chaleureux (`#F59E0B` / `#D97706`) symbolisant la croissance et la richesse de l'Afrique.
-    *   Accents Verts WhatsApp (`#25D366`) pour les actions de contact.
-*   **Aesthétique Glassmorphism & Mesh Gradients :** 
-    *   Fonds de cartes semi-transparents avec flou d'arrière-plan (`backdrop-blur-md bg-white/5 border border-white/10`).
-    *   Gradients de fond fluides et animés en arrière-plan (glows colorés en teal et amber).
-*   **3D Interactive (Spline) :** 
-    *   Un modèle 3D principal interactif dans la section Hero (ex: Globe terrestre stylisé mettant en valeur l'axe Europe-Afrique, ou une carte 3D interactive de la Côte d'Ivoire).
-    *   Animations au défilement (Scroll-driven animations) pour faire pivoter ou déplacer les objets 3D à mesure que l'utilisateur descend.
-*   **Micro-interactions & Typographie Moderne :**
-    *   Police d'en-tête géométrique et premium (ex: *Outfit* ou *Clash Display*) et police de corps ultra-lisible (*Inter*).
-    *   Transitions fluides sur les boutons (hover scale, lueur glow).
+Ce document sert de spécification technique et de guide de production pour concevoir des sites web immersifs et interactifs haut de gamme. La philosophie centrale est la vitesse d'exécution, l'exploitation de structures existantes et l'utilisation de vidéos 3D ultra-réalistes générées par IA combinées avec des animations d'interface avancées (React Bits), éliminant ainsi le besoin d'intégrer des moteurs 3D lourds ou complexes comme Spline ou Three.js.
 
 ---
 
-## 2. Guide de Création des Assets avec l'IA
+## La Stack Technique & Les Outils de Design
 
-Pour alimenter cette landing page avec des visuels de haute qualité sans coûts de studio, nous utiliserons des outils génératifs d'IA. Voici le guide étape par étape pour chaque type d'asset.
-
-### A. Le Fond de Page et les Textures (Midjourney / DALL-E 3)
-Nous voulons un fond de page avec un aspect technologique et professionnel, mais ancré en Afrique.
-
-*   **Prompt Midjourney recommandé (Hero Background) :**
-    > `/imagine prompt: A futuristic cybernetic city skyline of Abidjan, Ivory Coast, glowing teal and amber lights, digital network nodes connecting buildings, holographic business maps, dark night mode, cinematic lighting, 8k, photorealistic, ultra-detailed, web header background --ar 16:9 --style raw`
-
-*   **Prompts Midjourney pour les illustrations de sections :**
-    *   **Section "Réseautage & Synergie" (Networking intercontinental) :**
-        > `/imagine prompt: A professional African businessman and a European woman investor shaking hands in a high-tech modern office overlooking Abidjan, double exposure with abstract digital network lines, teal and gold color palette, corporate premium design, 3d render style, clean studio light --ar 4:3`
-    *   **Section "Investissement & Deals" (Opportunités de croissance) :**
-        > `/imagine prompt: A clean 3D render of a futuristic holographic map of West Africa, showing glowing connections, rising golden 3D charts, glowing teal nodes, premium glassmorphism base, dark UI design style, cinematic studio lighting, high-tech finance concept --ar 4:3 --v 6.0`
-    *   **Section "Mentorat & Accompagnement" (Partage d'expérience) :**
-        > `/imagine prompt: A business mentor guiding a young entrepreneur in a sleek co-working space in Abidjan, looking at a transparent digital screen showing growth analytics, warm amber and cool teal ambient lighting, professional, realistic, cinematic corporate photography --ar 4:3`
-    *   **Section "Club d'Affaires & Prestige" (Exclusivité) :**
-        > `/imagine prompt: A luxury modern business lounge with elegant glass furniture, premium dark navy walls, subtle gold accents, large window overlooking the glowing skyline of Cocody Abidjan at night, sophisticated atmosphere, minimal architectural render style --ar 4:3`
-
-### B. Les Avatars de Témoignages et Portraits Professionnels (Mur des Succès)
-Pour le mur des succès et les profils de membres, il nous faut des portraits professionnels réalistes, diversifiés et engageants de membres de la diaspora et d'entrepreneurs locaux.
-
-*   **Prompt Midjourney de base (Standard) :**
-    > `/imagine prompt: Corporate headshot of an African entrepreneur in their 30s, smiling, confident, blurred modern office background, soft professional lighting, highly detailed skin texture, captured on 85mm lens, corporate directory style --ar 1:1`
-
-*   **Prompts Midjourney pour des profils spécifiques :**
-    *   **Profil 1 : Jeune entrepreneure Tech (Diaspora Europe) :**
-        > `/imagine prompt: Close up corporate portrait of a confident West African woman in her late 20s, wearing modern business casual attire, natural hair, warm smile, blurred chic Parisian office background with soft daylight, professional photography, high-end commercial aesthetic, 85mm lens --ar 1:1 --style raw`
-    *   **Profil 2 : Investisseur Senior / Business Angel :**
-        > `/imagine prompt: Professional headshot of an elegant African businessman in his 50s, wearing a tailored navy suit with a subtle gold lapel pin, confident and experienced expression, modern glass boardroom background with soft teal reflection, corporate portrait photography, Hasselblad --ar 1:1`
-    *   **Profil 3 : Entrepreneur local (Côte d'Ivoire) :**
-        > `/imagine prompt: Headshot of an energetic African male entrepreneur in his mid 30s, smiling warmly, wearing a smart casual blazer, modern sunny Abidjan office balcony background, natural bright golden hour lighting, photorealistic, depth of field --ar 1:1`
-    *   **Profil 4 : Cadre Financière / Experte en Investissement :**
-        > `/imagine prompt: Studio portrait of a professional African-European woman in her 40s, smart glasses, confident smile, clean corporate dark background with subtle amber glow, high-end business directory style, soft studio lighting, sharp focus --ar 1:1`
+*   **Inspiration & Direction :** Pinterest (références de style 3D/Avatars), [Land-book](https://land-book.com) (architecture de mise en page et structures épurées), [Motionsites.ai](https://motionsites.ai) (prompts de base).
+*   **Génération & Animation d'Actifs :** Higgsfield AI (modèle *Nano Banana 2* pour les images fixes 4K, *Seedance 2.0* pour les animations vidéo en boucle fluide).
+*   **Animations d'Interface & Typographie :** [React Bits](https://reactbits.dev) (intégration de micro-interactions interactives, texte dynamique et effets de survol).
+*   **Développement :** React, Tailwind CSS, Vite / Next.js.
 
 ---
 
-## 3. Guide de Création et d'Intégration de la 3D (Spline)
+## Phase 1 : Génération des Actifs 3D Personnalisés (Higgsfield AI)
 
-Pour la 3D, nous recommandons **Spline** car il permet de concevoir des scènes 3D interactives légères, gérant le responsive et les événements de souris sans coder en Three.js.
+Les clients premium attendent des visuels sur mesure. L'utilisation d'illustrations génériques libres de droits est à proscrire au profit d'actifs 3D abstraits et de personnages uniques.
 
-### Concept 3D proposé : "L'Axe Europe-Afrique Connecté"
-Une scène 3D contenant un globe terrestre stylisé en verre foncé avec des lignes lumineuses (teal/amber) reliant Paris/Bruxelles à Abidjan. Au passage de la souris, le globe tourne légèrement. Sur mobile, il se recentre et se réduit automatiquement.
+1.  **Trouver la Référence Visuelle :** Recherchez sur Pinterest des rendus 3D (ex: formes géométriques brillantes, avatars stylisés pour la FinTech ou le SaaS) et effectuez une capture d'écran pour servir d'image de référence (Image-to-Image).
+2.  **Générer l'Arrière-Plan Abstrait (Nano Banana 2 - Qualité 4K) :**
+    *   Téléversez l'image de référence sur Higgsfield AI.
+    *   *Prompt :* `"Create a background just like this it should have abstract since this is a background for my desktop wallpaper."` (Crée un arrière-plan exactement comme celui-ci, il doit être abstrait car c'est un arrière-plan pour mon fond d'écran de bureau).
+3.  **Générer le Personnage Principal :**
+    *   Utilisez la même référence visuelle pour conserver la cohérence chromatique et matérielle.
+    *   *Prompt :* `"Create me a character like this, expand so their full height is visible."` (Crée-moi un personnage comme celui-ci, élargis pour que toute sa hauteur soit visible).
+4.  **Combiner les Éléments (Higgsfield Image Combiner - Ratio 16:9) :**
+    *   Sélectionnez l'arrière-plan abstrait et le personnage générés précédemment.
+    *   *Prompt :* `"Combine these two images into one image and the character should be in the middle some smaller size."` (Combine ces deux images en une seule et le personnage doit être au milieu avec une taille légèrement réduite).
 
-### Étape 1 : Création dans Spline
-1.  Créez un compte gratuit sur [Spline.design](https://spline.design/).
-2.  Dans la bibliothèque de Spline, recherchez un modèle de **Globe** ou importez une carte 3D de la Côte d'Ivoire au format `.gltf` / `.obj`.
-3.  Appliquez des matériaux "Glassmorphism" :
-    *   Matériau de base : Couleur sombre, transmission élevée (transparence), rugosité faible.
-    *   Lumières : Ajoutez une lumière directionnelle teal d'un côté et une lumière ponctuelle amber de l'autre pour créer le reflet premium.
-4.  Configurez les interactions :
-    *   **State / Hover :** Rotation lente au survol de la souris.
-    *   **Scroll Animate :** Associez la rotation sur l'axe Y au défilement de la page Web.
+---
 
-### Étape 2 : Exportation & Intégration Next.js
-Une fois la scène prête dans Spline, cliquez sur **Export** > **Viewer** et copiez l'URL publique de la scène (ex: `https://prod.spline.design/.../scene.splinecode`).
+## Phase 2 : Animation Temporelle & Boucles 3D (Seedance 2.0)
 
-Pour l'intégrer proprement dans Next.js sans bloquer le chargement initial (LCP < 2s) :
-1.  Utilisez le chargement différé (Dynamic Imports) pour ne charger le composant 3D qu'après le premier rendu de la page.
-2.  Affichez un **Skeleton Loader** (image 2D optimisée de la scène 3D) en attendant que la scène soit chargée.
+Les animations fluides et infinies justifient le positionnement haut de gamme du produit. Nous utilisons le modèle *Seedance 2.0* pour sa capacité à générer des boucles parfaites sans saccades.
 
-```tsx
-// Exemple de composant Next.js 16 (React Server Component safe)
-import dynamic from 'next/dynamic';
+1.  **Créer la Boucle d'Arrière-Plan (Hero Loop) :**
+    *   Téléversez l'image combinée ou le fond d'écran abstrait dans l'onglet Vidéo.
+    *   Réglez la durée sur **8 secondes** et activez l'option **Looping**.
+    *   *Prompt :* `"Animate this, no camera movement, no extra elements to be added, no zoom in and no zoom out, looping animation."` (Anime ceci, aucun mouvement de caméra, aucun élément supplémentaire à ajouter, pas de zoom avant ni de zoom arrière, animation en boucle).
+2.  **Créer des Vidéos Déclenchées par Défilement (Scroll) :**
+    *   Téléversez les images de personnages isolés.
+    *   *Prompt :* `"Animate this as well."` (Anime ceci également). Seedance 2.0 ajoutera de subtils mouvements de respiration ou de flottement physique parfaits pour l'interaction.
+3.  **Extraction des URL Directes :**
+    *   Ouvrez la vidéo générée dans un nouvel onglet et copiez le lien brut (ex: lien Cloudfront). Stockez ces URL pour les injecter directement dans le code.
 
-const SplineViewer = dynamic(() => import('@/components/ui/SplineScene'), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-slate-900 rounded-lg w-full h-[500px]" />
-});
+---
+
+## Phase 3 : Structure de l'Architecture Web
+
+Ne réinventez pas la roue. Inspirez-vous des meilleures compositions et utilisez l'IA pour générer le code structurel de base.
+
+1.  **Générer la Section Hero :**
+    *   Copiez un prompt de structure de section Hero depuis Motionsites.ai incluant le support du Dark Mode, de React et de Tailwind CSS, puis soumettez-le à votre assistant de code IA (ex: Google AI Studio).
+2.  **Construire le Reste de la Page (Land-book Inspiration) :**
+    *   Prenez une capture d'écran d'une mise en page épurée (4 à 5 sections) sur Land-book.com.
+    *   Téléversez-la dans votre assistant de code.
+    *   *Prompt :* `"Build the rest of the website around 4 to 5 sections. They should have a layout similar to this screenshot. Do not copy the exact layout, just use it as an inspiration of how you can position elements on the page. Keep the same dark mode styles established in the hero section."` (Construis le reste du site web autour de 4 à 5 sections. Elles doivent avoir une mise en page similaire à cette capture d'écran. Ne copie pas la mise en page exacte, utilise-la juste comme inspiration pour positionner les éléments. Garde les mêmes styles de mode sombre établis dans la section hero).
+
+---
+
+## Phase 4 : L'Intégration & "La Touche à 10 000 €"
+
+Cette étape mélange l'intégration vidéo avancée et les bibliothèques d'animations créatives pour obtenir un rendu ultra-premium.
+
+### 1. Fusion Parfaite des Vidéos (Gradients de Transparence)
+Pour éviter l'effet "bloc vidéo rectangulaire", appliquez des calques de transition noirs vers transparents en haut et en bas de la vidéo pour la fondre parfaitement dans le fond sombre du site.
+
+*   *Prompt IA :* `"Add a black to transparency overlay from the top of the video... Also add that same transparency effect from the bottom of the video so it goes from black to fully transparent."`
+
+```html
+<!-- Exemple de structure de fusion vidéo avec Tailwind CSS -->
+<div className="relative overflow-hidden w-full h-[600px] bg-black">
+  <!-- Gradient du haut -->
+  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none" />
+  
+  <video src="URL_CLOUDFRONT_DIRECT" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80" />
+  
+  <!-- Gradient du bas -->
+  <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none" />
+</div>
 ```
 
+### 2. Animation Liée au Défilement (Scroll-Tied & Performance)
+Au lieu de lire la vidéo normalement, synchronisez son avancement avec le scroll de la souris. Utilisez `requestAnimationFrame` pour optimiser le rendu et éviter les saccades ou les rafraîchissements excessifs (repaints/reflows).
+
+*   *Prompt IA :* `"Instead of playing this video in the fourth section, let's have it tied to scroll so it only plays when someone scrolls the page. If the video is seeking, tell the browser: 'Update the video frame ONLY when you have completely finished drawing the previous one' using requestAnimationFrame."`
+
+```tsx
+// Composant React de contrôle vidéo lié au défilement
+import { useEffect, useRef } from 'react';
+
+export function ScrollVideoPlayer({ videoUrl }: { videoUrl: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const container = containerRef.current;
+    if (!video || !container) return;
+
+    let targetTime = 0;
+    let currentTime = 0;
+    let animationFrameId: number;
+
+    const handleScroll = () => {
+      const rect = container.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      // Calcule le progrès du scroll dans la zone du conteneur
+      if (rect.top < viewportHeight && rect.bottom > 0) {
+        const progress = Math.max(0, Math.min(1, (viewportHeight - rect.top) / (rect.height + viewportHeight)));
+        if (video.duration) {
+          targetTime = progress * video.duration;
+        }
+      }
+    };
+
+    const updateVideoFrame = () => {
+      if (video.readyState >= 2 && video.duration) {
+        // Interpolation pour lisser la transition entre les frames
+        currentTime += (targetTime - currentTime) * 0.15;
+        
+        // Empêche la mise à jour si la différence est imperceptible (optimisation des repaints)
+        if (Math.abs(currentTime - video.currentTime) > 0.01) {
+          video.currentTime = currentTime;
+        }
+      }
+      animationFrameId = requestAnimationFrame(updateVideoFrame);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    animationFrameId = requestAnimationFrame(updateVideoFrame);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full h-[180vh] bg-black">
+      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-black via-transparent to-black" />
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover opacity-75"
+        />
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. Cartes de Fonctionnalités en Parallaxe Vidéo (Multi-Card Offset)
+Pour dynamiser une grille de fonctionnalités sans alourdir la page, étirez une seule vidéo verticale abstraite en arrière-plan de plusieurs cartes, en appliquant un alignement décalé pour chaque carte.
+
+*   *Prompt IA :* `"For this section, let's have this video as a background of each card. The first card should have the video aligned to the top, the second card aligned to the center, and the third card aligned to the bottom."`
+
+```html
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+  <!-- Carte 1 : Alignement en haut (object-top) -->
+  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md h-96">
+    <video src="URL_VIDEO_ABSTRAITE_VERTICALE" muted loop autoPlay className="absolute inset-0 w-full h-full object-cover object-top opacity-20 pointer-events-none" />
+    <div className="relative z-10 p-6">...Contenu...</div>
+  </div>
+
+  <!-- Carte 2 : Alignement au centre (object-center) -->
+  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md h-96">
+    <video src="URL_VIDEO_ABSTRAITE_VERTICALE" muted loop autoPlay className="absolute inset-0 w-full h-full object-cover object-center opacity-20 pointer-events-none" />
+    <div className="relative z-10 p-6">...Contenu...</div>
+  </div>
+
+  <!-- Carte 3 : Alignement en bas (object-bottom) -->
+  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md h-96">
+    <video src="URL_VIDEO_ABSTRAITE_VERTICALE" muted loop autoPlay className="absolute inset-0 w-full h-full object-cover object-bottom opacity-20 pointer-events-none" />
+    <div className="relative z-10 p-6">...Contenu...</div>
+  </div>
+</div>
+```
+
+### 4. Animations Typographiques & UI Ultra Stylisées (React Bits)
+Intégrez les composants de **React Bits** pour ajouter des effets cinétiques saisissants sans polluer le bundle avec du code custom complexe.
+
+*   **Entrées de Titres Hero (`SplitText` ou `BlurText`) :** Animez l'apparition des lettres ou des mots avec un flou progressif ou une trajectoire physique au chargement de la page.
+*   **Boutons Interactifs & CTAs (`ShinyText`) :** Utilisez des effets de reflets métalliques animés lors du passage de la souris pour souligner les actions importantes.
+*   **Conteneurs & Bento Grids (`SpotlightCard` ou `TiltCard`) :** Ajoutez un faisceau lumineux qui suit le curseur de l'utilisateur ou une inclinaison 3D subtile sur les cartes de tarification ou de fonctionnalités.
+*   **Effet de Curseur Interactif (`SplashCursor`) :** Un tracé de fluide réactif aux mouvements de la souris pour habiller l'arrière-plan du site entier.
+
+### 5. Nettoyage Final de l'Interface Utilisateur
+*   **Supprimer les bordures brutes :** Remplacez les bordures pleines par des séparateurs subtils en gradients transparents ou des ombres portées douces (`box-shadow`).
+*   **Superpositions et Offsets :** Utilisez des marges négatives (ex: `mt-[-200px]`) sur les sections de texte pour chevaucher légèrement les arrière-plans vidéo et créer de la profondeur visuelle.
+*   **Iconographie Premium :** Intégrez des icônes vectorielles animées ou des librairies modernes comme Google Material Icons ou Lucide React pour remplacer le texte brut par des visuels clairs.
+
 ---
 
-## 4. Plan d'Action pas-à-pas pour la Fourniture des Assets
+## Phase 5 : Enregistrement de Démo & Vente du Site
 
-Pour réussir le déploiement de la landing page, voici comment nous allons procéder pour collecter et optimiser les assets :
+Une fois le site assemblé et optimisé, l'étape commerciale garantit la visibilité de l'œuvre auprès des décideurs.
 
-| Étape | Asset | Action Utilisateur (Jonathan) / Agent | Format Attendu |
-| :--- | :--- | :--- | :--- |
-| **Step 1** | **Images de fond & Avatars** | 1. Générer sur Midjourney/DALL-E.<br>2. Compresser via Tinypng/WebP.<br>3. Placer dans `public/assets/images/`. | `.webp` (max 150kb pour le hero, 20kb pour les avatars) |
-| **Step 2** | **Scène 3D Spline** | 1. Créer la scène sur Spline.<br>2. Exporter et fournir le lien `.splinecode`.<br>3. Configurer l'intégration dynamique dans le code. | URL `spline.design` |
-| **Step 3** | **Textes & Copie** | Adapter le contenu textuel fourni dans `NEW landing page.md`. | Markdown |
-| **Step 4** | **SEO & Metadatas** | Définir les meta tags (title, description) et open graph dans Next.js `layout.tsx` ou `page.tsx`. | JSON/Typescript |
-
----
-
-## 5. Performance (NFR-P1) & Accessibilité (NFR-A1)
-
-Pour que le site "claque" aussi en termes de performances (LCP < 2s sur 3G) :
-1.  **Format WebP/AVIF obligatoire** pour toutes les images.
-2.  **Lazy loading** activé sur les images situées sous la ligne de flottaison.
-3.  **3D désactivée sur les connexions lentes** ou remplacée par une image statique sur mobile si les performances chutent.
-4.  **Aria-labels** sur le visualiseur 3D pour que les lecteurs d'écran comprennent l'intention de la page sans bloquer dessus.
+1.  **Enregistrement Haute Résolution :** Réalisez un enregistrement d'écran fluide (60 FPS) mettant en scène le scroll interactif (Scrolltelling), les effets de parallaxe vidéo et les cartes interactives React Bits.
+2.  **Marketing Social Stratégique :** Publiez la vidéo de démonstration sur **X (Twitter)** et **LinkedIn** en la présentant comme une expérience de "Web design ultra-immersif basé sur le scroll-telling".
+3.  **Bénéficier de la Visibilité des Outils :** Taguez **Higgsfield AI** et **React Bits** dans vos publications. Ces plateformes repartagent activement les projets innovants qui utilisent leurs technologies, exposant votre travail à des fondateurs de startups et directeurs artistiques disposant de budgets élevés.
