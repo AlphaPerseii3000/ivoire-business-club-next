@@ -55,7 +55,8 @@ src/generated/
 .idea/
 
 # BMAD output (optional — uncomment if you don't want to track)
-_bmad-output/
+_bmad
+# _bmad-output/
 /src/generated/prisma
 public/avatars/
 .agent
