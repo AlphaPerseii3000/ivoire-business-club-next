@@ -46,7 +46,6 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
             const type = conn.effectiveType;
             if (type === '2g' || type === '3g' || type === 'slow-2g') return true;
           }
-          if (window.innerWidth < 768) return true;
         }
         return false;
       };
