@@ -47,7 +47,7 @@ so that I can understand the club's value and be converted to sign up.
        - `/profil-2-investisseur-senior-business-angel.webp`
        - `/profil-3-entrepreneur-local-cote-divoire.webp`
        - `/profil-4-cadre-financiere-experte-en-investissement.webp`
-     - **Teaser Deals Feed:** Displays 3–5 `DealCard` elements with `/section-investissement-deals.webp` used in the card background/container.
+     - **Teaser Deals Feed:** Displays 3–5 teaser deal cards with `/section-investissement-deals.webp` used in the card background/container.
      - **Tiers Comparison:** Shows the three offers (Affranchis, Grands Frères, Boss) with prices (€29, €49, €99) and benefits comparison, using React Bits `SpotlightCard` or `TiltCard`.
      - **Trust Signals & FAQ:** Compliance notes, FAQ accordion, partner logos.
      - **Footer:** Terms (CGV), contact link, newsletter input, and `/logo-ibc.webp`.
