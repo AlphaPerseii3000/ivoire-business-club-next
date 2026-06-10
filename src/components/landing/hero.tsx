@@ -9,6 +9,7 @@ import { ShinyText } from '@/components/ui/shiny-text';
 export function Hero() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const gradientRef = useRef<HTMLDivElement>(null);
   const videoPlayerRef = useRef<HeroVideoPlayerHandle>(null);
 
@@ -28,8 +29,9 @@ export function Hero() {
       requestAnimationFrame(() => {
         const wrapper = wrapperRef.current;
         const content = contentRef.current;
+        const sticky = stickyRef.current;
         const gradient = gradientRef.current;
-        if (!wrapper || !content) {
+        if (!wrapper || !content || !sticky) {
           ticking = false;
           return;
         }
@@ -43,23 +45,41 @@ export function Hero() {
           return;
         }
 
-        // Progress: 0 when wrapper top at viewport top, 1 when wrapper bottom at viewport bottom
+        // Progress: 0 at top, 1 when wrapper bottom reaches viewport bottom
         const progress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
 
-        // Content: fade out in first 40% of scroll
-        const contentOpacity = Math.max(0, 1 - progress * 2.5);
-        const contentScale = 1 - Math.min(0.08, progress * 0.15);
-        const parallaxY = progress * -60;
+        // --- Text content: stays fully visible until 55%, then fades out ---
+        // 0→0.55: opacity=1, 0.55→0.85: fade to 0, 0.85→1: invisible
+        const textFadeStart = 0.55;
+        const textFadeEnd = 0.85;
+        const contentOpacity = progress < textFadeStart
+          ? 1
+          : progress > textFadeEnd
+            ? 0
+            : 1 - (progress - textFadeStart) / (textFadeEnd - textFadeStart);
+
+        // Subtle parallax: content drifts up slightly as it fades
+        const parallaxY = progress > textFadeStart ? (progress - textFadeStart) * -80 : 0;
+        const contentScale = 1 - Math.max(0, (progress - textFadeStart) * 0.08);
 
         content.style.transform = `translateY(${parallaxY}px) scale(${contentScale})`;
         content.style.opacity = String(contentOpacity);
 
-        // Bottom gradient intensifies as we scroll deeper
+        // --- Sticky container: fades out in the last 30% to blend into next section ---
+        // This prevents the "frozen last frame" jank — the whole hero dissolves away
+        const stickyFadeStart = 0.7;
+        const stickyOpacity = progress > stickyFadeStart
+          ? 1 - (progress - stickyFadeStart) / (1 - stickyFadeStart)
+          : 1;
+
+        sticky.style.opacity = String(stickyOpacity);
+
+        // --- Bottom gradient: intensifies from 40% onwards ---
         if (gradient) {
-          gradient.style.opacity = String(Math.min(1, progress * 2));
+          gradient.style.opacity = String(Math.max(0, Math.min(1, (progress - 0.3) / 0.5)));
         }
 
-        // Video scrub — call imperative method
+        // --- Video scrub: maps to full video duration ---
         videoPlayerRef.current?.scrub(progress);
 
         ticking = false;
@@ -78,7 +98,10 @@ export function Hero() {
       style={{ height: '160vh' }}
     >
       {/* Sticky container — stays pinned while the tall wrapper scrolls */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+      <div
+        ref={stickyRef}
+        className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center will-change-transform"
+      >
         {/* Background Video Loops */}
         <div className="absolute inset-0 z-0">
           <HeroVideoPlayer
