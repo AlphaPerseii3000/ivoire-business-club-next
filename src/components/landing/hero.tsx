@@ -95,8 +95,8 @@ export function Hero() {
           />
         </div>
 
-        {/* Grid Overlay */}
-        <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02),transparent_60%)]" />
+        {/* Dark overlay for text contrast */}
+        <div className="absolute inset-0 z-1 pointer-events-none bg-black/50" />
 
         {/* Content wrapper */}
         <div
