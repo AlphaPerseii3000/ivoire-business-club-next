@@ -6,12 +6,15 @@ interface HeroVideoPlayerProps {
   videoUrl?: string;
   fallbackImageUrl?: string;
   className?: string;
+  /** External scroll progress 0–1, drives video scrubbing */
+  scrollProgress?: number;
 }
 
 export function HeroVideoPlayer({
   videoUrl = '/animated-hero-section.mp4',
   fallbackImageUrl = '/hero-background-ibc-next-with-blue-vignette.webp',
   className = '',
+  scrollProgress,
 }: HeroVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -52,75 +55,48 @@ export function HeroVideoPlayer({
     return () => observer.disconnect();
   }, []);
 
-  // Scroll-driven video scrubbing
+  // Scroll-driven video scrubbing — driven by external scrollProgress prop
   useEffect(() => {
     if (useFallback) return;
     if (!isVisible) return;
+    if (scrollProgress === undefined) return;
 
     const video = videoRef.current;
-    const container = containerRef.current;
-    if (!video || !container) return;
+    if (!video) return;
 
-    let targetTime = 0;
-    let currentTime = 0;
     let animationFrameId: number | null = null;
     let isLooping = false;
+    let currentTime = 0;
 
     const updateVideoFrame = () => {
       if (video.readyState >= 2 && video.duration) {
-        // Smooth interpolation toward target
+        const targetTime = scrollProgress * video.duration;
         currentTime += (targetTime - currentTime) * 0.15;
 
         if (Math.abs(currentTime - video.currentTime) > 0.01) {
           video.currentTime = currentTime;
         }
-      }
 
-      if (Math.abs(currentTime - targetTime) > 0.001) {
-        animationFrameId = requestAnimationFrame(updateVideoFrame);
-      } else {
-        isLooping = false;
-      }
-    };
-
-    const handleScroll = () => {
-      const rect = container.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      // Hero is at the top — progress maps from 0 (hero fully visible) to 1 (hero scrolled out)
-      // When hero top is at viewport top → progress = 0
-      // When hero bottom reaches viewport top → progress = 1
-      if (rect.bottom > 0) {
-        const progress = Math.max(
-          0,
-          Math.min(1, -rect.top / (rect.height - viewportHeight * 0.5))
-        );
-        if (video.duration) {
-          targetTime = progress * video.duration;
-          if (!isLooping) {
-            isLooping = true;
-            animationFrameId = requestAnimationFrame(updateVideoFrame);
-          }
+        // Keep looping until close enough
+        if (Math.abs(currentTime - targetTime) > 0.001) {
+          animationFrameId = requestAnimationFrame(updateVideoFrame);
+        } else {
+          isLooping = false;
         }
       }
     };
 
-    const init = () => {
-      handleScroll();
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    video.addEventListener('loadedmetadata', init);
-    init();
+    if (!isLooping) {
+      isLooping = true;
+      animationFrameId = requestAnimationFrame(updateVideoFrame);
+    }
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      video.removeEventListener('loadedmetadata', init);
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [useFallback, isVisible]);
+  }, [useFallback, isVisible, scrollProgress]);
 
   return (
     <div ref={containerRef} className={`relative w-full h-full overflow-hidden bg-black ${className}`}>
@@ -136,7 +112,7 @@ export function HeroVideoPlayer({
         }`}
       />
 
-      {/* Scroll-driven video — no autoplay, seeks based on scroll position */}
+      {/* Scroll-driven video — seeks based on scrollProgress prop */}
       <video
         ref={videoRef}
         src={videoUrl}
