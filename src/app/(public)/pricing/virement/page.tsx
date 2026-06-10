@@ -62,6 +62,8 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
         currency={details.currency}
         amount={amount}
         reference={reference}
+        xofDetails={details.xof}
+        eurDetails={details.eur}
       />
     </main>
   );
