@@ -14,7 +14,7 @@ try {
         const key = parts[0].trim();
         const value = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
         if (key) {
-          envConfig[key] = value;
+          envConfig[key] = key === 'PORT' ? parseInt(value, 10) : value;
         }
       }
     });
