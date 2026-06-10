@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 
 interface HeroVideoPlayerProps {
   videoUrl?: string;
@@ -23,10 +23,13 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
   ) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [useFallback, setUseFallback] = useState(true);
+    const isMobileRef = useRef(false);
 
-    // Expose imperative scrub method to parent
+    // Expose imperative scrub method — only used on desktop
     useImperativeHandle(ref, () => ({
       scrub(progress: number) {
+        // On mobile, video autoplays — ignore scrub
+        if (isMobileRef.current) return;
         const video = videoRef.current;
         if (!video || !video.duration || video.readyState < 2) return;
         const targetTime = progress * video.duration;
@@ -50,7 +53,18 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
         return false;
       };
 
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      isMobileRef.current = isMobile;
       setUseFallback(checkPerformance());
+    }, []);
+
+    const handleVideoReady = useCallback(() => {
+      const video = videoRef.current;
+      if (!video) return;
+      // On mobile, autoplay the video smoothly — no scroll-driven seeking
+      if (isMobileRef.current && video.readyState >= 3) {
+        video.play().catch(() => setUseFallback(true));
+      }
     }, []);
 
     return (
@@ -67,14 +81,16 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
           }`}
         />
 
-        {/* Scroll-driven video — seeks based on scroll position */}
+        {/* Video: scroll-driven on desktop, autoplay on mobile */}
         <video
           ref={videoRef}
           src={videoUrl}
           muted
           playsInline
           preload="auto"
+          loop={isMobileRef.current}
           onError={() => setUseFallback(true)}
+          onCanPlay={handleVideoReady}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
             useFallback ? 'opacity-0' : 'opacity-70'
           }`}
