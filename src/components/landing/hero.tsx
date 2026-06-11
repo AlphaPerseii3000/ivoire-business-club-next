@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from 'react';
 import { HeroVideoPlayer, HeroVideoPlayerHandle } from '@/components/ui/hero-video-player';
 import { SplitText } from '@/components/ui/split-text';
-import { ShinyText } from '@/components/ui/shiny-text';
 
 export function Hero() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -131,31 +130,31 @@ export function Hero() {
             Avec l&apos;Ivoire Business Club, accède aux meilleures opportunités business en Côte d&apos;Ivoire. Le réseau de référence pour investir, entreprendre ou développer ton activité.
           </p>
 
-          <p className="hero-fade-in mt-4 text-xl font-semibold text-[#D4A847]" style={{ animationDelay: '0.9s' }}>
-            «&nbsp;Investir ou entreprendre ne s&apos;improvise pas&nbsp;»
-          </p>
-
           {/* CTAs */}
           <div className="hero-fade-in mt-10 flex flex-col sm:flex-row justify-center items-center gap-4" style={{ animationDelay: '1.2s' }}>
             <a
               href="/auth/signup"
-              className="glass-panel group relative rounded-lg px-8 py-3 text-lg font-semibold shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] border border-[#D4A847]/30 hover:border-[#D4A847]/60"
+              className="group relative rounded-lg px-8 py-3 text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-[1.02] bg-[#D4A847] text-black hover:bg-[#D4A847]/90"
             >
-              <ShinyText
-                text="Rejoins le club"
-                speed={2}
-                color="#b5b5b5"
-                shineColor="#ffffff"
-                className="font-semibold"
-              />
+              Rejoins le club
             </a>
             <a
               href="#mission"
-              className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-md px-8 py-3 text-lg font-semibold text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+              className="rounded-lg border border-white/20 bg-transparent px-8 py-3 text-lg font-semibold text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
             >
               En savoir plus
             </a>
           </div>
+
+          {/* Social proof */}
+          <p className="hero-fade-in mt-4 text-sm text-slate-400" style={{ animationDelay: '1.4s' }}>
+            Rejoins +500 entrepreneurs et investisseurs en Côte d&apos;Ivoire
+          </p>
+
+          {/* Citation — déplacée après les CTA, discret */}
+          <p className="hero-fade-in mt-6 text-sm italic text-[#D4A847]/60" style={{ animationDelay: '1.6s' }}>
+            «&nbsp;Investir ou entreprendre ne s&apos;improvise pas&nbsp;»
+          </p>
         </div>
 
         {/* Bottom gradient */}

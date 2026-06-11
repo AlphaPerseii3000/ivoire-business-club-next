@@ -94,12 +94,6 @@ export default async function HomePage() {
             >
               Connexion
             </a>
-            <a
-              href="/auth/signup"
-              className="rounded-md bg-[#D4A847] px-4 py-2 text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"
-            >
-              Rejoins le club
-            </a>
           </nav>
         </div>
       </header>

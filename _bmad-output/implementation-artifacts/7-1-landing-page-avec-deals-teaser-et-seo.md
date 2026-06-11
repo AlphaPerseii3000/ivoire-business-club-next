@@ -228,3 +228,72 @@ N/A
 ### Completion Notes List
 
 N/A
+
+---
+
+## Changelog
+
+### 2026-06-11 — Hero Section UX/UI Audit Corrections
+
+Source: Audit complet de la Hero section (UX + UI), 3 corrections critiques appliquées.
+
+#### Correction 1 — Hiérarchie des boutons CTA 🔴 Critique
+
+**Problème :** Les deux boutons CTA ("Rejoins le club" et "En savoir plus") avaient des styles quasi identiques (ghost/transparent), créant une ambiguïté sur l'action prioritaire.
+
+**Fichier :** `src/components/landing/hero.tsx`
+
+**Avant :**
+- CTA principal : `glass-panel` + `ShinyText` (fond semi-transparent, texte gris animé)
+- CTA secondaire : `border-white/10 bg-white/5 backdrop-blur-md` (quasi identique visuellement)
+
+**Après :**
+- CTA principal : `bg-[#D4A847] text-black hover:bg-[#D4A847]/90` (fond plein doré, texte noir — même style que la sticky bar mobile)
+- CTA secondaire : `border-white/20 bg-transparent hover:bg-white/10` (vrai ghost button, fond transparent)
+- Import `ShinyText` retiré (plus utilisé dans le Hero)
+- Texte du CTA principal passé de `<ShinyText>` à texte brut
+
+#### Correction 2 — Ajout de social proof 🟠 Important
+
+**Problème :** Aucun élément de confiance (nombre de membres, témoignages, partenaires) dans le Hero, critique pour un club payant.
+
+**Fichier :** `src/components/landing/hero.tsx`
+
+**Ajout :** Ligne de social proof sous les CTA :
+```html
+<p class="hero-fade-in mt-4 text-sm text-slate-400" style="animationDelay: '1.4s'">
+  Rejoins +500 entrepreneurs et investisseurs en Côte d'Ivoire
+</p>
+```
+- Style discret (`text-sm text-slate-400`) pour ne pas concurrencer les CTA
+- Animation `hero-fade-in` avec delay 1.4s (séquence logique après les boutons)
+
+#### Correction 3 — Citation décorative déplacée et atténuée 🟠 Important
+
+**Problème :** La citation « Investir ou entreprendre ne s'improvise pas » en `text-xl font-semibold text-[#D4A847]` était placée entre le sous-titre et les CTA, cassant le flux de lecture vers l'action.
+
+**Fichier :** `src/components/landing/hero.tsx`
+
+**Avant :** Entre le paragraphe de description et les CTA, style `text-xl font-semibold text-[#D4A847]`
+
+**Après :** Déplacée après les CTA et le social proof, style `text-sm italic text-[#D4A847]/60`
+- Position : après les boutons d'action → ne retarde plus la conversion
+- Style réduit : `text-sm` (au lieu de `text-xl`), `italic`, opacité 60% → discret, ornemental
+- Animation delay : 1.6s (dernier élément visible)
+
+#### Correction bonus — CTA doublon retiré de la navbar 🔴 Critique
+
+**Problème :** "Rejoins le club" apparaissait 3 fois (navbar, Hero, sticky bar mobile), saturant l'utilisateur sans hiérarchie claire.
+
+**Fichier :** `src/app/(public)/page.tsx`
+
+**Avant :** Navbar contenait "Connexion" + "Rejoins le club" (bouton doré plein)
+
+**Après :** Navbar ne contient plus que "Mission", "Tarifs", "Connexion" — le CTA principal reste uniquement dans le Hero + sticky bar mobile
+
+#### Résumé des fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `src/components/landing/hero.tsx` | CTA principal → fond doré plein, CTA secondaire → ghost, ShinyText retiré, citation déplacée + atténuée, social proof ajouté |
+| `src/app/(public)/page.tsx` | Bouton "Rejoins le club" retiré de la navbar desktop |
