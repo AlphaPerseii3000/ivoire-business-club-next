@@ -19,6 +19,7 @@ vi.mock("@/components/features/auth/profile-edit-form", () => ({ default: () => 
 vi.mock("@/components/subscription-activation-notice", () => ({
   SubscriptionActivationNotice: ({ tier }: { tier: string }) => <div>Activation {tier}</div>,
 }));
+vi.mock("@/components/auth/sign-out-button", () => ({ default: () => <button>Déconnexion</button> }));
 
 const baseUser = {
   id: "user-1",
@@ -98,5 +99,13 @@ describe("ProfilePage subscription status", () => {
 
     expect(screen.getByText("Aucun abonnement pour le moment")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Voir les offres" })).toHaveAttribute("href", "/pricing");
+  });
+
+  it("renders a sign-out button", async () => {
+    mockUserFindUnique.mockResolvedValue({ ...baseUser, subscriptions: [] });
+
+    render(await ProfilePage());
+
+    expect(screen.getByRole("button", { name: /déconnexion/i })).toBeInTheDocument();
   });
 });

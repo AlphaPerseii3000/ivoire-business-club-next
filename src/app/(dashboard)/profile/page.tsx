@@ -11,6 +11,7 @@ import SubscriptionStatusTracker from "@/components/subscription-status-tracker"
 import { SubscriptionActivationNotice } from "@/components/subscription-activation-notice";
 import { buildWhatsAppSupportLink } from "@/lib/whatsapp";
 import { getTierBadgeConfig } from "@/lib/tier-config";
+import SignOutButton from "@/components/auth/sign-out-button";
 
 const SUPPORT_EMAIL = "support@ivoirebusinessclub.com";
 const SUPPORT_THRESHOLD_HOURS = 24;
@@ -223,6 +224,12 @@ export default async function ProfilePage() {
       <Card>
         <CardContent className="pt-6">
           <ProfileEditForm user={user} />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardContent className="pt-6">
+          <SignOutButton />
         </CardContent>
       </Card>
     </div>
