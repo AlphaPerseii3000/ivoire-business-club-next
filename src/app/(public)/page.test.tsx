@@ -41,6 +41,9 @@ describe('HomePage SEO & Rendering', () => {
     expect(screen.getByTestId('scroll-video-player')).toBeInTheDocument();
     expect(screen.getByText('Bâtir son futur en Afrique')).toBeInTheDocument();
     expect(screen.getByText('Comment ça marche ?')).toBeInTheDocument();
-    expect(screen.getByText('Le Mur des Succès')).toBeInTheDocument();
+    
+    const headings = screen.getAllByRole('heading', { level: 2 });
+    const successWallHeading = headings.find(h => h.textContent === 'Le Mur des Succès');
+    expect(successWallHeading).toBeDefined();
   });
 });

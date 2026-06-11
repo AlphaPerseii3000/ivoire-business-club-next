@@ -2,17 +2,18 @@
 Story: "7.2"
 StoryKey: "7-2-mur-des-succes-et-presentation-des-tiers"
 Title: "Mur des Succès et Présentation des Tiers"
-Status: "ready-for-dev"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 7 — Landing Page et Découverte Publique"
 FRs: ["FR42", "FR43", "FR44", "FR45"]
 UX_DRs: ["UX-DR6", "UX-DR29", "UX-DR24", "UX-DR25", "UX-DR26", "UX-DR27"]
 Created: "2026-06-11"
+baseline_commit: "34e9c4acf9682b36236e55d03bd79eb773e8adbf"
 ---
 
 # Story 7.2: Mur des Succès et Présentation des Tiers
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is complete. Story updated with premium ReactBits guidelines. -->
 
@@ -75,31 +76,31 @@ Afin de juger de la crédibilité du club et de choisir le tier adapté à mon p
 
 ## Tasks / Subtasks
 
-- [ ] **Rénovation et enrichissement du Mur des Succès (AC: 1, 4)**
-  - [ ] Extraire les données de témoignage dans une structure constante ou un fichier de configuration dédié `src/lib/testimonials-config.ts` pour faciliter la future intégration CMS.
-  - [ ] Modifier [success-wall.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/success-wall.tsx) pour intégrer la localisation et les informations de deals closés (ex. "Deal closés: €25k", "3+ deals closés").
-  - [ ] Remplacer l'animation du titre par le composant `SplitText` (`src/components/ui/split-text.tsx`).
-  - [ ] Utiliser `ShinyText` (`src/components/ui/shiny-text.tsx`) sur le sous-titre de section et les indicateurs de statistiques globales du club (ex. "15+ deals vérifiés", "500+ membres actifs").
-  - [ ] Appliquer le design premium `SpotlightCard` sur les cartes de témoignage avec survol interactif.
-  - [ ] Garantir le défilement fluide au clic (via scrollRef et scrollLeft offset) et le support du drag-scroll sur terminaux mobiles.
+- [x] **Rénovation et enrichissement du Mur des Succès (AC: 1, 4)**
+  - [x] Extraire les données de témoignage dans une structure constante ou un fichier de configuration dédié `src/lib/testimonials-config.ts` pour faciliter la future intégration CMS.
+  - [x] Modifier [success-wall.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/success-wall.tsx) pour intégrer la localisation et les informations de deals closés (ex. "Deal closés: €25k", "3+ deals closés").
+  - [x] Remplacer l'animation du titre par le composant `SplitText` (`src/components/ui/split-text.tsx`).
+  - [x] Utiliser `ShinyText` (`src/components/ui/shiny-text.tsx`) sur le sous-titre de section et les indicateurs de statistiques globales du club (ex. "15+ deals vérifiés", "500+ membres actifs").
+  - [x] Appliquer le design premium `SpotlightCard` sur les cartes de témoignage avec survol interactif.
+  - [x] Garantir le défilement fluide au clic (via scrollRef et scrollLeft offset) et le support du drag-scroll sur terminaux mobiles.
   
-- [ ] **Intégration du Comparateur et des Tiers de tarification (AC: 2, 3)**
-  - [ ] Adapter [pricing.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.tsx) pour utiliser `SplitText` pour le titre "Nos offres".
-  - [ ] Assurer la liaison entre `pricing.tsx` et `TierCard` en lui passant les configurations dynamiques issues de [tier-config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/tier-config.ts).
-  - [ ] Modifier [tier-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/tier-card.tsx) pour utiliser le composant `ShinyText` sur le badge "Recommandé" du tier Grands Frères.
-  - [ ] Modifier l'URL de redirection du CTA de chaque offre pour inclure précisément la clé de tier en majuscule : `/auth/signup?tier=AFFRANCHI`, `/auth/signup?tier=GRAND_FRERE` ou `/auth/signup?tier=BOSS`.
-  - [ ] Mettre en place le tableau comparatif horizontal pour desktop (≥ 1024px) avec un en-tête figé (sticky header) comparant précisément les fonctionnalités : Accès WhatsApp, Visibilité opportunités, Événements, Conseil & Mentorat, Tarif.
+- [x] **Intégration du Comparateur et des Tiers de tarification (AC: 2, 3)**
+  - [x] Adapter [pricing.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.tsx) pour utiliser `SplitText` pour le titre "Nos offres".
+  - [x] Assurer la liaison entre `pricing.tsx` et `TierCard` en lui passant les configurations dynamiques issues de [tier-config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/tier-config.ts).
+  - [x] Modifier [tier-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/tier-card.tsx) pour utiliser le composant `ShinyText` sur le badge "Recommandé" du tier Grands Frères.
+  - [x] Modifier l'URL de redirection du CTA de chaque offre pour inclure précisément la clé de tier en majuscule : `/auth/signup?tier=AFFRANCHI`, `/auth/signup?tier=GRAND_FRERE` ou `/auth/signup?tier=BOSS`.
+  - [x] Mettre en place le tableau comparatif horizontal pour desktop (≥ 1024px) avec un en-tête figé (sticky header) comparant précisément les fonctionnalités : Accès WhatsApp, Visibilité opportunités, Événements, Conseil & Mentorat, Tarif.
   
-- [ ] **Respect des normes d'accessibilité et de performance (AC: 4)**
-  - [ ] Ajouter les tags `aria-label` et `aria-hidden` manquants sur les icônes de contrôle du carrousel.
-  - [ ] Coordonner la détection globale de `prefers-reduced-motion` pour débrayer les animations dans `SplitText`, `BlurText` et les reflets interactifs de `SpotlightCard`.
-  - [ ] Valider le contraste des couleurs pour les textes descriptifs en gris (ex: slate-400) et or (ex: `#D4A847`).
+- [x] **Respect des normes d'accessibilité et de performance (AC: 4)**
+  - [x] Ajouter les tags `aria-label` et `aria-hidden` manquants sur les icônes de contrôle du carrousel.
+  - [x] Coordonner la détection globale de `prefers-reduced-motion` pour débrayer les animations dans `SplitText`, `BlurText` et les reflets interactifs de `SpotlightCard`.
+  - [x] Valider le contraste des couleurs pour les textes descriptifs en gris (ex: slate-400) et or (ex: `#D4A847`).
 
-- [ ] **Tests unitaires et validation (AC: 1, 2, 3, 4)**
-  - [ ] Mettre à jour [pricing.test.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.test.tsx) pour couvrir l'affichage des trois offres avec leurs liens CTA correspondants (en majuscules) et l'existence du tableau comparatif sur grand écran.
-  - [ ] Créer un fichier de test `src/components/landing/success-wall.test.tsx` pour valider le chargement des témoignages, les images associées, les boutons de navigation et les statistiques globales du club.
-  - [ ] Lancer les tests unitaires via `npx vitest run`.
-  - [ ] Lancer un build complet de production via `npm run build` pour s'assurer de l'absence d'erreurs de compilation ou de régression sur le bundle standalone.
+- [x] **Tests unitaires et validation (AC: 1, 2, 3, 4)**
+  - [x] Mettre à jour [pricing.test.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.test.tsx) pour couvrir l'affichage des trois offres avec leurs liens CTA correspondants (en majuscules) et l'existence du tableau comparatif sur grand écran.
+  - [x] Créer un fichier de test `src/components/landing/success-wall.test.tsx` pour valider le chargement des témoignages, les images associées, les boutons de navigation et les statistiques globales du club.
+  - [x] Lancer les tests unitaires via `npx vitest run`.
+  - [x] Lancer un build complet de production via `npm run build` pour s'assurer de l'absence d'erreurs de compilation ou de régression sur le bundle standalone.
 
 ## Dev Notes
 
@@ -108,9 +109,9 @@ La landing page est la vitrine de confiance de l'Ivoire Business Club. Cette sto
 
 ### Composants et configurations existants à réutiliser
 - **Config Tiers** : Utiliser [tier-config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/tier-config.ts) et [bank-transfer-config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/bank-transfer-config.ts) pour récupérer les tarifs et les caractéristiques de chaque tier.
-- **TierCard** : Le composant [tier-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/tier-card.tsx) est déjà prêt et stylé. Ne pas le réimplémenter, mais l'intégrer au sein de la section Pricing.
-- **SpotlightCard** : Utiliser [spotlight-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/ui/spotlight-card.tsx) pour les effets de déplacement lumineux.
-- **SplitText & ShinyText** : Réutiliser les composants existants situés respectivement dans `src/components/ui/split-text.tsx` et `src/components/ui/shiny-text.tsx`.
+- **TierCard** : Le composant [tier-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/tier-card.tsx) is already ready and styled. Do not re-implement, but integrate in the Pricing section.
+- **SpotlightCard** : Use [spotlight-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/ui/spotlight-card.tsx) for light motion effects.
+- **SplitText & ShinyText** : Reuse the existing components located respectively in `src/components/ui/split-text.tsx` and `src/components/ui/shiny-text.tsx`.
 
 ### Garde-fous d'implémentation (Guardrails)
 - **JSX Boolean Guardrail (Next.js 16)** : Ne jamais utiliser d'expressions conditionnelles complexes avec `&&` directement dans le JSX de retour. Toujours pré-calculer les conditions booléennes complexes dans des constantes avant le bloc `return`.
@@ -125,13 +126,32 @@ La landing page est la vitrine de confiance de l'Ivoire Business Club. Cette sto
 ## Dev Agent Record
 
 ### Agent Model Used
-Gemini 3.5 Flash (Medium)
+Gemini 3.5 Flash (High)
 
 ### Debug Log References
 N/A
 
 ### Completion Notes List
-N/A
+- Extraits de témoignages dans `src/lib/testimonials-config.ts` pour une meilleure maintenabilité.
+- Intégration de `SplitText` et `ShinyText` (reflet or `#D4A847`) sur les titres, sous-titres, badges et statistiques clés de la landing page.
+- Ajout d'une option d'interaction par drag-to-scroll sur la section Mur des Succès.
+- Modernisation des fiches de témoignages avec `SpotlightCard` incorporant la localisation et les deals clos.
+- Intégration des CTAs avec paramètres de tier en majuscules (`/auth/signup?tier=AFFRANCHI|GRAND_FRERE|BOSS`).
+- Conception d'un tableau comparatif horizontal desktop pour une meilleure lisibilité.
+- Fixation des targets tactiles à un minimum de 44x44px.
+- Couverture de tests unitaires via `pricing.test.tsx` et `success-wall.test.tsx`.
+- Validation de la conformité du build de production Next.js.
 
 ### File List
-N/A
+- [testimonials-config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/testimonials-config.ts)
+- [success-wall.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/success-wall.tsx)
+- [pricing.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.tsx)
+- [tier-card.tsx](file:///d:/Code/ivoire-business-club-next/src/components/tier-card.tsx)
+- [success-wall.test.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/success-wall.test.tsx)
+- [pricing.test.tsx](file:///d:/Code/ivoire-business-club-next/src/components/landing/pricing.test.tsx)
+- [page.test.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(public)/page.test.tsx)
+
+### Review Findings
+
+- [x] [Review][Patch] Unresolved ARIA Reference in Success Wall [src/components/landing/success-wall.tsx:51]
+- [x] [Review][Patch] Low Contrast Gold on Light Amber Badge in Light Theme [src/components/tier-card.tsx:73]

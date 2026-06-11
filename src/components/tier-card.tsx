@@ -5,6 +5,7 @@ import { buttonVariants, Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getTierConfig, type MembershipTier } from "@/lib/tier-config";
+import { ShinyText } from "@/components/ui/shiny-text";
 
 type TierCardProps = {
   tier: MembershipTier;
@@ -68,8 +69,8 @@ export function TierCard({
             <p className="mt-2 text-sm text-muted-foreground">{config.shortDescription}</p>
           </div>
           {tier === "GRAND_FRERE" ? (
-            <Badge className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
-              Recommandé
+            <Badge className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100 overflow-hidden whitespace-nowrap">
+              <ShinyText text="Recommandé" color="currentColor" shineColor="#FFFFFF" speed={2.5} className="font-semibold" />
             </Badge>
           ) : null}
         </div>
