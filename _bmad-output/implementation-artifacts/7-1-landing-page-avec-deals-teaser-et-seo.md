@@ -297,3 +297,33 @@ Source: Audit complet de la Hero section (UX + UI), 3 corrections critiques appl
 |---|---|
 | `src/components/landing/hero.tsx` | CTA principal → fond doré plein, CTA secondaire → ghost, ShinyText retiré, citation déplacée + atténuée, social proof ajouté |
 | `src/app/(public)/page.tsx` | Bouton "Rejoins le club" retiré de la navbar desktop |
+
+### 2026-06-11 — Hero Video : scroll-driven playback avec rewind (vitesse 1x)
+
+Source: Optimisation de l'expérience vidéo dans la hero section pour un rendu cinématique fluide.
+
+#### Problème initial
+
+La vidéo hero (`animated-hero-section.mp4`) utilisait un scrub par `video.currentTime = progress * duration` (seek direct). Le mouvement était saccadé et trop rapide au scroll, rendant l'expérience peu cinématique.
+
+#### Évolution des approches
+
+1. **Lerp seek (0.08)** — Remplacement du seek direct par un lerp (`currentTime += (target - currentTime) * 0.08`). Plus fluide, mais encore saccadé lors de scrolls rapides car chaque seek force un repaint complet de la frame vidéo.
+2. **PlaybackRate natif (0.5x→0.85x)** — Changement de paradigme : la vidéo joue à vitesse réduite au lieu d'être seekée. Plus fluide, mais `playbackRate` négatif (`-0.75`) lance une `NotSupportedError` dans Chrome/Firefox — seul Safari l'accepte partiellement.
+3. **Hybride forward natif + rewind par rAF** — Approche finale retenue :
+   - **Scroll down** → `playbackRate = 1` + `video.play()` (lecture native fluide)
+   - **Scroll up** → `video.pause()` + boucle `requestAnimationFrame` qui décrémente `currentTime` de `1/60` secondes par frame (≈0.0167s/frame à 60fps), simulant un reverse à 1x
+   - **Arrêt du scroll** → `video.pause()` après 150ms d'inactivité (timeout)
+
+#### Fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `src/components/ui/hero-video-player.tsx` | API impérative changée de `scrub(progress)` à `playForward()` / `playBackward()` / `pause()`. Suppression du lerp seek. Ajout du rewind par rAF (`rewindTick`). Nettoyage du RAF au démontage. |
+| `src/components/landing/hero.tsx` | Hauteur du wrapper : `160vh` → `400vh` pour un défilement vidéo plus lent et confortable. Scroll handler : remplacement de `scrub(progress)` par détection de direction (`isScrollingDown`) + appels `playForward()` / `playBackward()` / `pause()`. Timer de pause automatique 150ms après arrêt du scroll. |
+
+#### Note technique
+
+- `playbackRate` négatif n'est pas supporté dans Chrome/Firefox → le rewind utilise un `requestAnimationFrame` loop qui décrémente `currentTime` manuellement
+- Le wrapper à `400vh` signifie que le scroll parcourt ~300vh (400vh - 100vh viewport) pour couvrir 100% de la vidéo, soit un ratio confortable pour un rendu cinématique
+- La pause automatique après 150ms d'inactivité empêche la vidéo de continuer à jouer quand l'utilisateur arrête de scroller

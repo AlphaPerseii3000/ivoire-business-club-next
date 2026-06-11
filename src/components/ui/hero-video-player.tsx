@@ -9,7 +9,9 @@ interface HeroVideoPlayerProps {
 }
 
 export interface HeroVideoPlayerHandle {
-  scrub: (progress: number) => void;
+  playForward: () => void;
+  playBackward: () => void;
+  pause: () => void;
 }
 
 export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayerProps>(
@@ -25,19 +27,84 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
     const [useFallback, setUseFallback] = useState(true);
     const isMobileRef = useRef(false);
 
-    // Expose imperative scrub method — only used on desktop
+    // Reverse playback state
+    const rewindRafRef = useRef<number | null>(null);
+    const isRewindingRef = useRef(false);
+
+    const stopRewind = useCallback(() => {
+      if (rewindRafRef.current !== null) {
+        cancelAnimationFrame(rewindRafRef.current);
+        rewindRafRef.current = null;
+      }
+      isRewindingRef.current = false;
+    }, []);
+
+    // Reverse playback: manually seek backwards frame-by-frame at ~0.75x speed
+    const rewindTick = useCallback(() => {
+      const video = videoRef.current;
+      if (!video || !isRewindingRef.current) return;
+
+      // 1x speed = 1 second of video per second of real time
+      // At 60fps that's ~0.0167s per frame
+      const decrement = 1 / 60;
+      const newTime = Math.max(0, video.currentTime - decrement);
+
+      if (newTime <= 0) {
+        video.currentTime = 0;
+        stopRewind();
+        return;
+      }
+
+      video.currentTime = newTime;
+      rewindRafRef.current = requestAnimationFrame(rewindTick);
+    }, [stopRewind]);
+
     useImperativeHandle(ref, () => ({
-      scrub(progress: number) {
-        // On mobile, video autoplays — ignore scrub
-        if (isMobileRef.current) return;
+      playForward() {
         const video = videoRef.current;
-        if (!video || !video.duration || video.readyState < 2) return;
-        const targetTime = progress * video.duration;
-        if (Math.abs(video.currentTime - targetTime) > 0.03) {
-          video.currentTime = targetTime;
+        if (!video || video.readyState < 2 || isMobileRef.current) return;
+
+        // Stop any active rewind
+        stopRewind();
+
+        video.playbackRate = 1;
+        if (video.paused) {
+          video.play().catch(() => setUseFallback(true));
+        }
+      },
+      playBackward() {
+        const video = videoRef.current;
+        if (!video || video.readyState < 2 || isMobileRef.current) return;
+
+        // Pause native playback first
+        if (!video.paused) {
+          video.pause();
+        }
+
+        // Stop any previous rewind loop
+        stopRewind();
+
+        isRewindingRef.current = true;
+        rewindRafRef.current = requestAnimationFrame(rewindTick);
+      },
+      pause() {
+        const video = videoRef.current;
+        if (!video || isMobileRef.current) return;
+
+        stopRewind();
+
+        if (!video.paused) {
+          video.pause();
         }
       },
     }));
+
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => {
+        stopRewind();
+      };
+    }, [stopRewind]);
 
     useEffect(() => {
       const checkPerformance = () => {
@@ -61,8 +128,8 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
     const handleVideoReady = useCallback(() => {
       const video = videoRef.current;
       if (!video) return;
-      // On mobile, autoplay the video smoothly — no scroll-driven seeking
       if (isMobileRef.current && video.readyState >= 3) {
+        video.playbackRate = 1;
         video.play().catch(() => setUseFallback(true));
       }
     }, []);
@@ -81,7 +148,7 @@ export const HeroVideoPlayer = forwardRef<HeroVideoPlayerHandle, HeroVideoPlayer
           }`}
         />
 
-        {/* Video: scroll-driven on desktop, autoplay on mobile */}
+        {/* Video: forward native at 0.75x, rewind via rAF frame-by-frame */}
         <video
           ref={videoRef}
           src={videoUrl}
