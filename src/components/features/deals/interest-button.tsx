@@ -88,7 +88,7 @@ export function InterestButton({
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
 
       <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
-        <DialogContent>
+        <DialogContent className="fixed bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0 max-w-full rounded-t-2xl rounded-b-none border-t bg-popover p-6 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:max-w-sm sm:rounded-xl sm:border">
           <DialogHeader>
             <DialogTitle>Connectez-vous pour marquer votre intérêt</DialogTitle>
             <DialogDescription>

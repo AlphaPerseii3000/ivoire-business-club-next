@@ -86,7 +86,7 @@ export default function AvatarUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Changer l'avatar"
+        aria-label={isUploading ? "Envoi de l'avatar en cours" : "Changer l'avatar"}
       >
         <Avatar
           size="lg"

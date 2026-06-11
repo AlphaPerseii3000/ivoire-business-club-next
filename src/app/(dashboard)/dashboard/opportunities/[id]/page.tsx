@@ -166,111 +166,117 @@ export default async function OpportunityDetailPage({
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
 
-      <div className="mt-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 space-y-2">
-            <h1 className="text-2xl font-bold">{opportunity.title}</h1>
-            <p className={interestIndicatorClassName} aria-live="polite" aria-current={shouldHighlightInterests ? "true" : undefined}>
-              {interestCountLabel}
-            </p>
-            {trustLevel ? <TrustBadge level={trustLevel} size="md" animated={trustLevel === "or"} /> : null}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 items-start">
+        {/* Left Column: 60% */}
+        <div className="space-y-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 space-y-2">
+              <h1 className="text-2xl font-bold">{opportunity.title}</h1>
+              <p className={interestIndicatorClassName} aria-live="polite" aria-current={shouldHighlightInterests ? "true" : undefined}>
+                {interestCountLabel}
+              </p>
+              {trustLevel ? <TrustBadge level={trustLevel} size="md" animated={trustLevel === "or"} /> : null}
+            </div>
+            <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
           </div>
-          <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
-        </div>
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
-          {opportunity.amount ? (
-            <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-              {opportunity.amount.toLocaleString("fr-FR")} €
-            </span>
+          <div className="flex flex-wrap gap-3">
+            <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
+            {opportunity.amount ? (
+              <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                {opportunity.amount.toLocaleString("fr-FR")} €
+              </span>
+            ) : null}
+          </div>
+
+          {hasTags ? (
+            <div>
+              <TagChips tags={opportunityTags} />
+            </div>
           ) : null}
-        </div>
 
-        {hasTags ? (
-          <div className="mt-4">
-            <TagChips tags={opportunityTags} />
-          </div>
-        ) : null}
-
-        {canSeeRejectionNote ? (
-          <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            <h2 className="font-semibold">Note privée de refus</h2>
-            <p className="mt-2 whitespace-pre-wrap">{opportunity.rejectionNote}</p>
-          </div>
-        ) : null}
-
-        <div className="mt-6 rounded-xl border bg-card p-6">
-          <p className="whitespace-pre-wrap">{opportunity.description}</p>
-        </div>
-
-        <div className="mt-6 rounded-xl border bg-card p-6">
-          <h2 className="font-semibold">Auteur</h2>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <p className="text-sm">{opportunity.author.name}{opportunity.author.location ? ` — ${opportunity.author.location}` : ""}</p>
-            {shouldShowAuthorPlatinumBadge ? <PlatinumBadge state={authorPlatinumAward.displayState} /> : null}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">Publié le {new Date(opportunity.createdAt).toLocaleDateString("fr-FR")}</p>
-          <ReliabilityScore
-            averageRating={authorReliabilityScore.averageRating}
-            reviewCount={authorReliabilityScore.reviewCount}
-            className="mt-4"
-          />
-          {opportunity.verifiedBy ? (
-            <p className="mt-2 text-xs text-accent">Vérifié par {opportunity.verifiedBy.name}</p>
+          {canSeeRejectionNote ? (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              <h2 className="font-semibold">Note privée de refus</h2>
+              <p className="mt-2 whitespace-pre-wrap">{opportunity.rejectionNote}</p>
+            </div>
           ) : null}
-          {shouldShowWhatsApp ? (
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <WhatsAppCTA
-                phoneNumber={opportunity.author.phone}
-                prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
-                label="Contacter le porteur sur WhatsApp"
-              />
-              <InterestButton
-                opportunityId={opportunity.id}
-                isAuthenticated={true}
-                initialInterested={hasCurrentUserInterest}
-              />
+
+          <div className="rounded-xl border bg-card p-6">
+            <p className="whitespace-pre-wrap">{opportunity.description}</p>
+          </div>
+
+          <div>
+            <VerificationTimeline
+              documentCount={documentCount}
+              verificationStatus={opportunity.verificationStatus}
+              trustLevel={trustLevel}
+              requiresDoubleVerification={opportunity.requiresDoubleVerification}
+              approvalCount={approvalCount}
+              averageRating={averageRating}
+              validatedDealsCount={validatedDealsCount}
+            />
+          </div>
+
+          <div>
+            <DocumentUploadSection
+              opportunityId={opportunity.id}
+              initialDocuments={initialDocuments}
+              documentCount={documentCount}
+              canUpload={canManageDocuments}
+              canPreview={canViewDocuments}
+            />
+          </div>
+
+          {canShowReviewForm ? <ReviewForm opportunityId={opportunity.id} /> : null}
+
+          {isAuthor ? (
+            <div>
+              <form action={`/api/opportunities/${opportunity.id}/delete`} method="POST">
+                <button type="submit" className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                  Supprimer cette opportunité
+                </button>
+              </form>
             </div>
           ) : null}
         </div>
 
-        <div className="mt-6">
-          <VerificationTimeline
-            documentCount={documentCount}
-            verificationStatus={opportunity.verificationStatus}
-            trustLevel={trustLevel}
-            requiresDoubleVerification={opportunity.requiresDoubleVerification}
-            approvalCount={approvalCount}
-            averageRating={averageRating}
-            validatedDealsCount={validatedDealsCount}
-          />
-        </div>
-
-        <div className="mt-6">
-          <DocumentUploadSection
-            opportunityId={opportunity.id}
-            initialDocuments={initialDocuments}
-            documentCount={documentCount}
-            canUpload={canManageDocuments}
-            canPreview={canViewDocuments}
-          />
-        </div>
-
-        {canShowReviewForm ? <ReviewForm opportunityId={opportunity.id} /> : null}
-
-        {isAuthor ? (
-          <div className="mt-6">
-            <form action={`/api/opportunities/${opportunity.id}/delete`} method="POST">
-              <button type="submit" className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                Supprimer cette opportunité
-              </button>
-            </form>
+        {/* Right Column: 40% (Sticky Sidebar) */}
+        <div className="lg:sticky lg:top-6 space-y-6">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="font-semibold text-lg">Auteur (Promoteur)</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium">{opportunity.author.name}{opportunity.author.location ? ` — ${opportunity.author.location}` : ""}</p>
+              {shouldShowAuthorPlatinumBadge ? <PlatinumBadge state={authorPlatinumAward.displayState} /> : null}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Publié le {new Date(opportunity.createdAt).toLocaleDateString("fr-FR")}</p>
+            <ReliabilityScore
+              averageRating={authorReliabilityScore.averageRating}
+              reviewCount={authorReliabilityScore.reviewCount}
+              className="mt-4"
+            />
+            {opportunity.verifiedBy ? (
+              <p className="mt-2 text-xs text-accent font-medium">Vérifié par {opportunity.verifiedBy.name}</p>
+            ) : null}
+            {shouldShowWhatsApp ? (
+              <div className="mt-6 flex flex-col gap-3">
+                <WhatsAppCTA
+                  phoneNumber={opportunity.author.phone}
+                  prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
+                  label="Contacter le porteur sur WhatsApp"
+                />
+                <InterestButton
+                  opportunityId={opportunity.id}
+                  isAuthenticated={true}
+                  initialInterested={hasCurrentUserInterest}
+                />
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import "./patch-readlink.js";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -14,7 +15,6 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  turbopack: {},
   webpack: (config) => {
     config.resolve.symlinks = false;
     return config;

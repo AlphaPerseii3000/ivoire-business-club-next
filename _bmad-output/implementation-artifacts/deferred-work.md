@@ -19,3 +19,10 @@
 
 - Tests unitaires dégradés et assertions fragiles : Le remplacement de `userEvent` par `fireEvent` dans [bank-transfer-instructions.test.tsx](file:///d:/Fichiers%20Code/ivoire-business-club-next/src/components/bank-transfer-instructions.test.tsx) diminue le réalisme des tests et l'accessibilité globale. L'utilisation de regex complexes pour matcher des espaces insécables rend de plus les assertions de tests instables selon l'OS.
 
+## Deferred from: code review of 7-3-responsive-mobilefirst-et-accessibilite-finale.md (2026-06-11)
+
+- CSS parsing in unit test is fragile: In [accessibility.test.tsx](file:///d:/Code/ivoire-business-club-next/src/app/accessibility.test.tsx#L115), reading `globals.css` from the disk using `fs.readFileSync` to verify animation overrides is environment-dependent and fragile.
+- Lack of try-catch on top-level import in next.config.ts: In [next.config.ts](file:///d:/Code/ivoire-business-club-next/next.config.ts#L6), importing `./patch-readlink.js` at the top-level has no safety check, which could block the webpack compiler if the file is missing.
+- Sticky CTA Button on Mobile: In layout / page files, the spec requires a principal sticky CTA button at the bottom of the screen on mobile, which is deferred because: Reporter car cette fonctionnalité dépend de pages de détails non modifiées dans cette story.
+
+

@@ -105,7 +105,7 @@ export default async function MatchingPage() {
       </div>
 
       {hasMatches ? (
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           {matchedOpportunities.map((opportunity) => (
             <DealCard
               key={opportunity.id}

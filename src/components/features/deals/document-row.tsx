@@ -50,6 +50,10 @@ export function DocumentRow({
   const icon = isImage ? <ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" /> : <FileText className="h-5 w-5 text-amber-600" aria-hidden="true" />;
   const progressValue = typeof progress === "number" ? Math.max(0, Math.min(100, progress)) : 0;
 
+  const showPreviewButton = !isUploading && canPreview && !!onPreview;
+  const showDownloadButton = !isUploading && !!onDownload;
+  const showDeleteButton = !isUploading && !!onDelete;
+
   return (
     <div className={cn("rounded-xl border bg-card p-4", className)}>
       <div className="flex items-start gap-3">
@@ -62,7 +66,7 @@ export function DocumentRow({
             {document.mimeType === "application/pdf" ? "PDF" : "Image"} · {formatDocumentSize(document.size)}
           </p>
           {isUploading ? (
-            <div className="mt-3" aria-label={`Upload en cours ${Math.round(progressValue)}%`}>
+            <div className="mt-3" role="status" aria-live="polite" aria-label={`Upload en cours ${Math.round(progressValue)}%`}>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressValue}%` }} />
               </div>
@@ -72,28 +76,22 @@ export function DocumentRow({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {isUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" /> : null}
-          {!isUploading ? (
-            canPreview ? (
-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onPreview?.(document)} aria-label={`Aperçu de ${document.originalName}`}>
-                <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
-                Aperçu
-              </Button>
-            ) : null
+          {showPreviewButton ? (
+            <Button type="button" variant="outline" size="sm" className="min-h-11 px-3 sm:px-4" onClick={() => onPreview?.(document)} aria-label={`Aperçu de ${document.originalName}`}>
+              <Eye className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Aperçu</span>
+            </Button>
           ) : null}
-          {!isUploading ? (
-            canPreview ? (
-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onDownload?.(document)} aria-label={`Télécharger ${document.originalName}`}>
-                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                Télécharger
-              </Button>
-            ) : null
+          {showDownloadButton ? (
+            <Button type="button" variant="outline" size="sm" className="min-h-11 px-3 sm:px-4" onClick={() => onDownload?.(document)} aria-label={`Télécharger ${document.originalName}`}>
+              <Download className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Télécharger</span>
+            </Button>
           ) : null}
-          {!isUploading ? (
-            onDelete ? (
-              <Button type="button" variant="destructive" size="sm" className="min-h-11" onClick={() => onDelete(document)} aria-label={`Supprimer ${document.originalName}`}>
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            ) : null
+          {showDeleteButton ? (
+            <Button type="button" variant="destructive" size="sm" className="min-h-11 w-11 flex items-center justify-center p-0" onClick={() => onDelete?.(document)} aria-label={`Supprimer ${document.originalName}`}>
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </Button>
           ) : null}
         </div>
       </div>

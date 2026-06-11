@@ -99,7 +99,7 @@ export default function SignUpPage() {
               id="name"
               type="text"
               {...register("name")}
-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
               placeholder="Jean Dupont"
             />
             {errors.name ? (
@@ -112,7 +112,7 @@ export default function SignUpPage() {
               id="email"
               type="email"
               {...register("email")}
-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
               placeholder="ton@email.com"
             />
             {errors.email ? (
@@ -125,7 +125,7 @@ export default function SignUpPage() {
               id="password"
               type="password"
               {...register("password")}
-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
               placeholder="••••••••"
             />
             {strength.label ? (
@@ -140,7 +140,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-11"
           >
             {isSubmitting ? "Création..." : "Créer mon compte"}
           </button>
@@ -154,7 +154,7 @@ export default function SignUpPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
         >
           {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
         </button>

@@ -1,5 +1,6 @@
 import SignOutButton from "@/components/auth/sign-out-button";
 import { requireActiveAuthenticatedUser } from "@/lib/account-status";
+import Link from "next/link";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
@@ -21,18 +22,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r bg-card">
         <div className="flex h-16 items-center px-4 border-b">
-          <a href="/dashboard" className="text-xl font-bold text-primary">IBC</a>
+          <Link href="/dashboard" className="text-xl font-bold text-primary">IBC</Link>
         </div>
         <nav className="flex-1 space-y-1 p-4">
           {NAV_ITEMS.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
             >
               <span>{item.icon}</span>
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="border-t p-4">
@@ -41,14 +42,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       {/* Mobile top nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card flex justify-around py-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card/90 backdrop-blur-md flex justify-around h-16 items-center" aria-label="Navigation mobile">
         {MOBILE_NAV_ITEMS.map((item) => (
-          <a key={item.href} href={item.href} className="flex flex-col items-center text-xs">
-            <span className="text-lg">{item.icon}</span>
-            {item.label.split(" ")[0]}
-          </a>
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex flex-1 flex-col items-center justify-center h-full text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
+          >
+            <span className="text-xl mb-1" aria-hidden="true">{item.icon}</span>
+            <span className="text-[10px] font-medium leading-none">{item.label}</span>
+          </Link>
         ))}
-      </div>
+      </nav>
 
       {/* Main content */}
       <main className="flex-1 overflow-auto pb-16 md:pb-0">

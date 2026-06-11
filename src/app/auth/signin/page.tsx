@@ -79,7 +79,7 @@ export default function SignInPage() {
               id="email"
               type="email"
               {...register("email")}
-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
               placeholder="ton@email.com"
             />
             {errors.email ? (
@@ -92,7 +92,7 @@ export default function SignInPage() {
               id="password"
               type="password"
               {...register("password")}
-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
               placeholder="••••••••"
             />
             {errors.password ? (
@@ -102,7 +102,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-11"
           >
             {isSubmitting ? "Connexion..." : "Se connecter"}
           </button>
@@ -114,7 +114,7 @@ export default function SignInPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={googleLoading || isSubmitting}
-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
         >
           {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
         </button>

@@ -95,11 +95,11 @@
 /* IBC Theme — Dark Mode */
 .dark {
   --background: #090D16;
-  --foreground: oklch(0.95 0.005 90);
-  --card: #0F172A;
-  --card-foreground: oklch(0.95 0.005 90);
-  --popover: #0F172A;
-  --popover-foreground: oklch(0.95 0.005 90);
+  --foreground: #F8FAFC;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
   --primary: oklch(0.76 0.13 80);
   --primary-foreground: #090D16;
   --secondary: oklch(0.25 0.08 250);
@@ -226,6 +226,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
   .shiny-text,
   .animate-fade-in,
   .hero-fade-in,

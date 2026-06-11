@@ -1,0 +1,410 @@
+﻿diff --git a/next.config.ts b/next.config.ts
+index 6c9bd0c..9ec2322 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -1,3 +1,4 @@
++import "./patch-readlink.js";
+ import type { NextConfig } from "next";
+ 
+ const securityHeaders = [
+diff --git a/src/app/(admin)/layout.tsx b/src/app/(admin)/layout.tsx
+index 1c7c01f..8f72212 100644
+--- a/src/app/(admin)/layout.tsx
++++ b/src/app/(admin)/layout.tsx
+@@ -3,6 +3,7 @@ import { ACCOUNT_SUSPENDED_REDIRECT } from "@/lib/account-status";
+ import { promoteConfiguredAdminUser } from "@/lib/admin-access";
+ import { redirect } from "next/navigation";
+ import SignOutButton from "@/components/auth/sign-out-button";
++import AdminMobileNav from "@/components/features/admin/admin-mobile-nav";
+ 
+ const ADMIN_NAV = [
+   { href: "/admin/dashboard", label: "Tableau de bord", icon: "­ƒôè" },
+@@ -21,7 +22,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
+   if (user?.status === "SUSPENDED") redirect(ACCOUNT_SUSPENDED_REDIRECT);
+ 
+   return (
+-    <div className="flex min-h-screen">
++    <div className="flex flex-col md:flex-row min-h-screen">
++      {/* Sidebar Desktop */}
+       <aside className="hidden md:flex w-60 flex-col border-r bg-card">
+         <div className="flex h-16 items-center px-4 border-b">
+           <a href="/admin/dashboard" className="text-lg font-bold text-primary">IBC Admin</a>
+@@ -41,6 +43,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
+           <SignOutButton />
+         </div>
+       </aside>
++
++      {/* Header Mobile Navigation */}
++      <AdminMobileNav navItems={ADMIN_NAV} />
++
++      {/* Main Content */}
+       <main className="flex-1 overflow-auto">{children}</main>
+     </div>
+   );
+diff --git a/src/app/(dashboard)/layout.tsx b/src/app/(dashboard)/layout.tsx
+index 233bd23..06826a0 100644
+--- a/src/app/(dashboard)/layout.tsx
++++ b/src/app/(dashboard)/layout.tsx
+@@ -41,14 +41,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
+       </aside>
+ 
+       {/* Mobile top nav */}
+-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card flex justify-around py-2">
++      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card/90 backdrop-blur-md flex justify-around h-16 items-center" aria-label="Navigation mobile">
+         {MOBILE_NAV_ITEMS.map((item) => (
+-          <a key={item.href} href={item.href} className="flex flex-col items-center text-xs">
+-            <span className="text-lg">{item.icon}</span>
+-            {item.label.split(" ")[0]}
++          <a
++            key={item.href}
++            href={item.href}
++            className="flex flex-1 flex-col items-center justify-center h-full text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
++            aria-label={item.label}
++          >
++            <span className="text-xl mb-1" aria-hidden="true">{item.icon}</span>
++            <span className="text-[10px] font-medium leading-none">{item.label}</span>
+           </a>
+         ))}
+-      </div>
++      </nav>
+ 
+       {/* Main content */}
+       <main className="flex-1 overflow-auto pb-16 md:pb-0">
+diff --git a/src/app/accessibility.test.tsx b/src/app/accessibility.test.tsx
+new file mode 100644
+index 0000000..0701a3c
+--- /dev/null
++++ b/src/app/accessibility.test.tsx
+@@ -0,0 +1,46 @@
++import { describe, it, expect, vi } from "vitest";
++import React from "react";
++import { render } from "@testing-library/react";
++import fs from "fs";
++import path from "path";
++import RootLayout from "./layout";
++
++// Mock next/font/google
++vi.mock("next/font/google", () => ({
++  Inter: () => ({ className: "mocked-inter-class" }),
++}));
++
++// Mock theme-provider and auth-provider components to avoid full context complexity
++vi.mock("@/components/theme-provider", () => ({
++  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
++}));
++
++vi.mock("@/components/auth-provider", () => ({
++  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
++}));
++
++vi.mock("@/components/ui/sonner", () => ({
++  Toaster: () => <div data-testid="sonner-toaster" />,
++}));
++
++vi.mock("@/components/ui/tooltip", () => ({
++  TooltipProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="tooltip-provider">{children}</div>,
++}));
++
++describe("Accessibility and Core Layout Tests", () => {
++  it("verifies that the root layout defines the language as French ('fr')", () => {
++    const result = RootLayout({ children: "Test Content" });
++    expect(result.type).toBe("html");
++    expect(result.props.lang).toBe("fr");
++  });
++
++  it("verifies that globals.css contains the prefers-reduced-motion media query with duration overrides", () => {
++    const cssPath = path.resolve(__dirname, "./globals.css");
++    const cssContent = fs.readFileSync(cssPath, "utf-8");
++    
++    expect(cssContent).toContain("@media (prefers-reduced-motion: reduce)");
++    expect(cssContent).toContain("animation-duration: 0.01ms !important");
++    expect(cssContent).toContain("transition-duration: 0.01ms !important");
++    expect(cssContent).toContain("scroll-behavior: auto !important");
++  });
++});
+diff --git a/src/app/auth/signin/page.tsx b/src/app/auth/signin/page.tsx
+index cbe24e0..3f86140 100644
+--- a/src/app/auth/signin/page.tsx
++++ b/src/app/auth/signin/page.tsx
+@@ -79,7 +79,7 @@ export default function SignInPage() {
+               id="email"
+               type="email"
+               {...register("email")}
+-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
++              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
+               placeholder="ton@email.com"
+             />
+             {errors.email ? (
+@@ -92,7 +92,7 @@ export default function SignInPage() {
+               id="password"
+               type="password"
+               {...register("password")}
+-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
++              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
+               placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó"
+             />
+             {errors.password ? (
+@@ -102,7 +102,7 @@ export default function SignInPage() {
+           <button
+             type="submit"
+             disabled={isSubmitting}
+-            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
++            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-11"
+           >
+             {isSubmitting ? "Connexion..." : "Se connecter"}
+           </button>
+@@ -114,7 +114,7 @@ export default function SignInPage() {
+         <button
+           onClick={handleGoogleSignIn}
+           disabled={googleLoading || isSubmitting}
+-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
++          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
+         >
+           {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
+         </button>
+diff --git a/src/app/auth/signup/page.tsx b/src/app/auth/signup/page.tsx
+index a2245fe..8a7b587 100644
+--- a/src/app/auth/signup/page.tsx
++++ b/src/app/auth/signup/page.tsx
+@@ -99,7 +99,7 @@ export default function SignUpPage() {
+               id="name"
+               type="text"
+               {...register("name")}
+-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
++              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
+               placeholder="Jean Dupont"
+             />
+             {errors.name ? (
+@@ -112,7 +112,7 @@ export default function SignUpPage() {
+               id="email"
+               type="email"
+               {...register("email")}
+-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
++              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
+               placeholder="ton@email.com"
+             />
+             {errors.email ? (
+@@ -125,7 +125,7 @@ export default function SignUpPage() {
+               id="password"
+               type="password"
+               {...register("password")}
+-              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
++              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm min-h-11"
+               placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó"
+             />
+             {strength.label ? (
+@@ -140,7 +140,7 @@ export default function SignUpPage() {
+           <button
+             type="submit"
+             disabled={isSubmitting}
+-            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
++            className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-11"
+           >
+             {isSubmitting ? "Cr├®ation..." : "Cr├®er mon compte"}
+           </button>
+@@ -154,7 +154,7 @@ export default function SignUpPage() {
+         <button
+           onClick={handleGoogleSignIn}
+           disabled={googleLoading}
+-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
++          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
+         >
+           {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
+         </button>
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 764bd26..42b4335 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -226,6 +226,18 @@
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {
++  *,
++  ::before,
++  ::after {
++    animation-delay: -1ms !important;
++    animation-duration: 1ms !important;
++    animation-iteration-count: 1 !important;
++    background-attachment: initial !important;
++    scroll-behavior: auto !important;
++    transition-duration: 0.01ms !important;
++    transition-delay: 0s !important;
++  }
++
+   .shiny-text,
+   .animate-fade-in,
+   .hero-fade-in,
+diff --git a/src/components/features/admin/admin-mobile-nav.tsx b/src/components/features/admin/admin-mobile-nav.tsx
+new file mode 100644
+index 0000000..998d32b
+--- /dev/null
++++ b/src/components/features/admin/admin-mobile-nav.tsx
+@@ -0,0 +1,71 @@
++"use client";
++
++import React from "react";
++import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
++import { Button } from "@/components/ui/button";
++import { Menu } from "lucide-react";
++import SignOutButton from "@/components/auth/sign-out-button";
++
++interface NavItem {
++  href: string;
++  label: string;
++  icon: string;
++}
++
++interface AdminMobileNavProps {
++  navItems: NavItem[];
++}
++
++export default function AdminMobileNav({ navItems }: AdminMobileNavProps) {
++  const [open, setOpen] = React.useState(false);
++
++  return (
++    <header className="md:hidden flex h-16 items-center justify-between border-b bg-card px-4 sticky top-0 z-40">
++      <a href="/admin/dashboard" className="text-lg font-bold text-primary">
++        IBC Admin
++      </a>
++      
++      <Sheet open={open} onOpenChange={setOpen}>
++        <SheetTrigger render={
++          <Button
++            variant="ghost"
++            className="h-11 w-11 flex items-center justify-center p-0"
++            aria-label="Ouvrir le menu de navigation"
++          />
++        }>
++          <Menu className="h-6 w-6" />
++        </SheetTrigger>
++        <SheetContent side="left" className="w-[280px] p-0 flex flex-col h-full bg-card">
++          <SheetHeader className="p-4 border-b">
++            <SheetTitle className="text-left">Navigation Admin</SheetTitle>
++          </SheetHeader>
++          <nav className="flex-1 space-y-1 p-4" aria-label="Menu principal">
++            {navItems.map((item) => (
++              <a
++                key={item.href}
++                href={item.href}
++                onClick={() => setOpen(false)}
++                className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted font-medium transition-colors"
++              >
++                <span aria-hidden="true">{item.icon}</span>
++                <span>{item.label}</span>
++              </a>
++            ))}
++            <hr className="my-3 border-border" />
++            <a
++              href="/dashboard"
++              onClick={() => setOpen(false)}
++              className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted font-medium transition-colors"
++            >
++              <span aria-hidden="true">­ƒöÖ</span>
++              <span>Retour au site</span>
++            </a>
++          </nav>
++          <div className="border-t p-4">
++            <SignOutButton />
++          </div>
++        </SheetContent>
++      </Sheet>
++    </header>
++  );
++}
+diff --git a/src/components/features/auth/avatar-upload.tsx b/src/components/features/auth/avatar-upload.tsx
+index 1f6290d..9c78c99 100644
+--- a/src/components/features/auth/avatar-upload.tsx
++++ b/src/components/features/auth/avatar-upload.tsx
+@@ -86,7 +86,7 @@ export default function AvatarUpload({
+         type="button"
+         onClick={() => inputRef.current?.click()}
+         className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+-        aria-label="Changer l'avatar"
++        aria-label={isUploading ? "Envoi de l'avatar en cours" : "Changer l'avatar"}
+       >
+         <Avatar
+           size="lg"
+diff --git a/src/components/features/deals/document-row.tsx b/src/components/features/deals/document-row.tsx
+index 5d957a2..22f2cba 100644
+--- a/src/components/features/deals/document-row.tsx
++++ b/src/components/features/deals/document-row.tsx
+@@ -50,6 +50,10 @@ export function DocumentRow({
+   const icon = isImage ? <ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" /> : <FileText className="h-5 w-5 text-amber-600" aria-hidden="true" />;
+   const progressValue = typeof progress === "number" ? Math.max(0, Math.min(100, progress)) : 0;
+ 
++  const showPreviewButton = !isUploading && canPreview;
++  const showDownloadButton = !isUploading && canPreview;
++  const showDeleteButton = !isUploading && !!onDelete;
++
+   return (
+     <div className={cn("rounded-xl border bg-card p-4", className)}>
+       <div className="flex items-start gap-3">
+@@ -62,7 +66,7 @@ export function DocumentRow({
+             {document.mimeType === "application/pdf" ? "PDF" : "Image"} ┬À {formatDocumentSize(document.size)}
+           </p>
+           {isUploading ? (
+-            <div className="mt-3" aria-label={`Upload en cours ${Math.round(progressValue)}%`}>
++            <div className="mt-3" role="status" aria-live="polite" aria-label={`Upload en cours ${Math.round(progressValue)}%`}>
+               <div className="h-2 overflow-hidden rounded-full bg-muted">
+                 <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressValue}%` }} />
+               </div>
+@@ -72,28 +76,22 @@ export function DocumentRow({
+         </div>
+         <div className="flex shrink-0 items-center gap-2">
+           {isUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" /> : null}
+-          {!isUploading ? (
+-            canPreview ? (
+-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onPreview?.(document)} aria-label={`Aper├ºu de ${document.originalName}`}>
+-                <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+-                Aper├ºu
+-              </Button>
+-            ) : null
++          {showPreviewButton ? (
++            <Button type="button" variant="outline" size="sm" className="min-h-11 px-3 sm:px-4" onClick={() => onPreview?.(document)} aria-label={`Aper├ºu de ${document.originalName}`}>
++              <Eye className="h-4 w-4 sm:mr-2" aria-hidden="true" />
++              <span className="hidden sm:inline">Aper├ºu</span>
++            </Button>
+           ) : null}
+-          {!isUploading ? (
+-            canPreview ? (
+-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onDownload?.(document)} aria-label={`T├®l├®charger ${document.originalName}`}>
+-                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+-                T├®l├®charger
+-              </Button>
+-            ) : null
++          {showDownloadButton ? (
++            <Button type="button" variant="outline" size="sm" className="min-h-11 px-3 sm:px-4" onClick={() => onDownload?.(document)} aria-label={`T├®l├®charger ${document.originalName}`}>
++              <Download className="h-4 w-4 sm:mr-2" aria-hidden="true" />
++              <span className="hidden sm:inline">T├®l├®charger</span>
++            </Button>
+           ) : null}
+-          {!isUploading ? (
+-            onDelete ? (
+-              <Button type="button" variant="destructive" size="sm" className="min-h-11" onClick={() => onDelete(document)} aria-label={`Supprimer ${document.originalName}`}>
+-                <Trash2 className="h-4 w-4" aria-hidden="true" />
+-              </Button>
+-            ) : null
++          {showDeleteButton ? (
++            <Button type="button" variant="destructive" size="sm" className="min-h-11 w-11 flex items-center justify-center p-0" onClick={() => onDelete?.(document)} aria-label={`Supprimer ${document.originalName}`}>
++              <Trash2 className="h-4 w-4" aria-hidden="true" />
++            </Button>
+           ) : null}
+         </div>
+       </div>
+diff --git a/src/components/features/deals/interest-button.tsx b/src/components/features/deals/interest-button.tsx
+index 050e713..6c45769 100644
+--- a/src/components/features/deals/interest-button.tsx
++++ b/src/components/features/deals/interest-button.tsx
+@@ -96,10 +96,10 @@ export function InterestButton({
+             </DialogDescription>
+           </DialogHeader>
+           <DialogFooter>
+-            <Button variant="outline" render={<Link href="/auth/signin" />}>
++            <Button variant="outline" render={<Link href="/auth/signin" />} nativeButton={false} role="link">
+               Se connecter
+             </Button>
+-            <Button render={<Link href="/auth/signup" />}>
++            <Button render={<Link href="/auth/signup" />} nativeButton={false} role="link">
+               S&apos;inscrire
+             </Button>
+           </DialogFooter>
