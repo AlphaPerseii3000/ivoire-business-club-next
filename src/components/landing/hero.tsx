@@ -19,10 +19,15 @@ export function Hero() {
     if (prefersReducedMotion) return;
 
     let ticking = false;
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    let scrollStopTimer: ReturnType<typeof setTimeout> | null = null;
 
     const handleScroll = () => {
       if (ticking) return;
       ticking = true;
+
+      // Reset pause timer on every scroll event
+      if (scrollStopTimer) clearTimeout(scrollStopTimer);
 
       requestAnimationFrame(() => {
         const wrapper = wrapperRef.current;
@@ -62,8 +67,24 @@ export function Hero() {
           gradient.style.opacity = String(Math.max(0, Math.min(1, (progress - 0.3) / 0.5)));
         }
 
-        // --- Video scrub ---
-        videoPlayerRef.current?.scrub(progress);
+        // --- Video: forward on scroll down, rewind on scroll up, pause on idle ---
+        const isScrollingDown = window.scrollY > lastScrollY;
+        lastScrollY = window.scrollY;
+
+        if (progress > 0.02 && progress < 0.98) {
+          if (isScrollingDown) {
+            videoPlayerRef.current?.playForward();
+          } else {
+            videoPlayerRef.current?.playBackward();
+          }
+        } else {
+          videoPlayerRef.current?.pause();
+        }
+
+        // Pause video after 150ms without scroll movement
+        scrollStopTimer = setTimeout(() => {
+          videoPlayerRef.current?.pause();
+        }, 150);
 
         ticking = false;
       });
@@ -78,7 +99,7 @@ export function Hero() {
     <div
       ref={wrapperRef}
       className="relative bg-[#090D16] mesh-gradient-bg"
-      style={{ height: '160vh' }}
+      style={{ height: '400vh' }}
     >
       {/* Sticky container */}
       <div
