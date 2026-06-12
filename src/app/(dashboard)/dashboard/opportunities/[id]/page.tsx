@@ -82,7 +82,7 @@ export default async function OpportunityDetailPage({
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
-        <div className="mt-8 rounded-2xl border bg-card p-8 text-center shadow-sm">
+        <div data-testid="opportunity-tier-gate" className="mt-8 rounded-2xl border bg-card p-8 text-center shadow-sm">
           <LockKeyhole className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
           <h1 className="mt-4 text-xl font-semibold">Cette opportunité nécessite un tier supérieur</h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -90,6 +90,7 @@ export default async function OpportunityDetailPage({
           </p>
           <Link
             href="/pricing"
+            data-testid="upgrade-cta"
             className="mt-6 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Voir les offres
@@ -180,7 +181,7 @@ export default async function OpportunityDetailPage({
               </p>
               {trustLevel ? <TrustBadge level={trustLevel} size="md" animated={trustLevel === "or"} /> : null}
             </div>
-            <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
+            <span data-testid="opportunity-status" className={`text-sm font-medium ${status.color}`}>{status.text}</span>
           </div>
 
           <div className="flex flex-wrap gap-3">

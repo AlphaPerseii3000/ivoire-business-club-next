@@ -178,7 +178,7 @@ export function BankTransferInstructions({
   }
 
   return (
-    <div className="space-y-6">
+    <div data-testid="bank-transfer-instructions" className="space-y-6">
       <Card className="border-primary/20 shadow-sm">
         <CardHeader className="gap-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -208,11 +208,11 @@ export function BankTransferInstructions({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-xl border bg-muted/30 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bénéficiaire Final</p>
-                  <p className="mt-1 text-lg font-semibold">{resolvedEur.finalBeneficiary}</p>
+                  <p data-testid="transfer-beneficiary" className="mt-1 text-lg font-semibold">{resolvedEur.finalBeneficiary}</p>
                 </div>
                 <div className="rounded-xl border bg-muted/30 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Montant à transférer</p>
-                  <p className="mt-1 text-lg font-semibold text-primary">{amount} EUR</p>
+                  <p data-testid="transfer-amount" className="mt-1 text-lg font-semibold text-primary">{amount} EUR</p>
                 </div>
               </div>
 
@@ -321,7 +321,7 @@ export function BankTransferInstructions({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">Référence à indiquer obligatoirement</p>
-                    <p className="mt-1 break-all font-mono text-base font-bold text-amber-900 dark:text-amber-100">{reference}</p>
+                    <p data-testid="transfer-reference" className="mt-1 break-all font-mono text-base font-bold text-amber-900 dark:text-amber-100">{reference}</p>
                   </div>
                   <Button type="button" variant="outline" className="min-h-11 border-amber-300 hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/30" onClick={() => copyText(reference)}>
                     <Copy className="mr-2 size-4" />
@@ -396,7 +396,7 @@ export function BankTransferInstructions({
                       </div>
                     </div>
 
-                    {resolvedXof.bic && (
+                    {resolvedXof.bic ? (
                       <div className="flex items-center justify-between bg-muted/40 p-2 rounded-lg">
                         <div>
                           <p className="font-semibold text-muted-foreground text-xs">Code BIC / SWIFT</p>
@@ -406,7 +406,7 @@ export function BankTransferInstructions({
                           <Copy className="size-3.5 mr-1" /> Copier
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -415,7 +415,7 @@ export function BankTransferInstructions({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">Référence à indiquer obligatoirement</p>
-                    <p className="mt-1 break-all font-mono text-base font-bold text-amber-900 dark:text-amber-100">{reference}</p>
+                    <p data-testid="transfer-reference" className="mt-1 break-all font-mono text-base font-bold text-amber-900 dark:text-amber-100">{reference}</p>
                   </div>
                   <Button type="button" variant="outline" className="min-h-11 border-amber-300 hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/30" onClick={() => copyText(reference)}>
                     <Copy className="mr-2 size-4" />
@@ -467,6 +467,7 @@ export function BankTransferInstructions({
               ) : null}
               <Button
                 type="button"
+                data-testid="transfer-confirm-button"
                 className="min-h-11 w-full"
                 disabled={confirmation.status === "submitting"}
                 onClick={confirmTransfer}

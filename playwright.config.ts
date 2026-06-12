@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const productionBaseURL = 'https://ivoire-business-club.com';
+const baseURL = process.env.BASE_URL ?? productionBaseURL;
 
 export default defineConfig({
   testDir: './e2e',
@@ -10,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [['html'], ['github']] : [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: productionBaseURL,
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

@@ -1,28 +1,39 @@
-import { expect, test } from '@playwright/test';
+import { test, expect, hasCredentials, seededIds } from './fixtures/auth';
+import { selectors } from './helpers/selectors';
 
 test.describe('Premium access gates', () => {
-  test.fixme('blocks an AFFRANCHI member from accessing BOSS-only deals', async ({ page }) => {
-    // TODO: Log in with a seeded AFFRANCHI (€29) test account.
-    // TODO: Navigate to a known BOSS-only deal/opportunity URL.
-    // TODO: Assert access is denied and an upgrade CTA is displayed.
-    // TODO: Verify no sensitive BOSS deal details are rendered in the DOM.
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+  test('blocks an AFFRANCHI member from accessing BOSS-only deals', async ({ affranchiPage }) => {
+    test.skip(!seededIds.bossOpportunityId, 'Requires E2E_BOSS_OPPORTUNITY_ID.');
+    await affranchiPage.goto(`/dashboard/opportunities/${seededIds.bossOpportunityId}`);
+    await expect(affranchiPage.locator(selectors.opportunities.tierGate)).toBeVisible();
+    await expect(affranchiPage.locator(selectors.premium.upgradeCta)).toHaveAttribute('href', /\/pricing/);
+    await expect(affranchiPage.locator('body')).not.toContainText(process.env.E2E_BOSS_SENSITIVE_TEXT ?? 'E2E_BOSS_SENSITIVE_TEXT_NOT_SET');
   });
 
-  test.fixme('allows a BOSS member to access BOSS-only deals', async ({ page }) => {
-    // TODO: Log in with a seeded BOSS (€99) test account.
-    // TODO: Navigate to the same BOSS-only deal/opportunity URL.
-    // TODO: Assert full deal details and expected actions are visible.
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+  test('allows a BOSS member to access BOSS-only deals', async ({ bossPage }) => {
+    test.skip(!seededIds.bossOpportunityId, 'Requires E2E_BOSS_OPPORTUNITY_ID.');
+    await bossPage.goto(`/dashboard/opportunities/${seededIds.bossOpportunityId}`);
+    await expect(bossPage.locator(selectors.opportunities.tierGate)).toHaveCount(0);
+    await expect(bossPage.locator(selectors.opportunities.title).or(bossPage.getByRole('heading').first())).toBeVisible();
+    await expect(bossPage.getByText(/documents juridiques|contacter|intérêt/i).first()).toBeVisible();
   });
 
-  test.fixme('shows upgrade path from AFFRANCHI to higher tiers', async ({ page }) => {
-    // TODO: Log in as AFFRANCHI and trigger a premium gate.
-    // TODO: Verify upgrade messaging references GRAND_FRERE (€49) and/or BOSS (€99).
-    // TODO: Assert upgrade CTA routes to /pricing or the correct checkout/virement flow.
-    await page.goto('/pricing');
-    await expect(page).toHaveURL(/\/pricing/);
+  test('shows upgrade path from AFFRANCHI to higher tiers', async ({ affranchiPage }) => {
+    test.skip(!seededIds.bossOpportunityId, 'Requires E2E_BOSS_OPPORTUNITY_ID.');
+    await affranchiPage.goto(`/dashboard/opportunities/${seededIds.bossOpportunityId}`);
+    await affranchiPage.locator(selectors.premium.upgradeCta).click();
+    await affranchiPage.waitForURL(/\/pricing/);
+    await expect(affranchiPage.locator(selectors.pricing.grandFrereCard)).toContainText(/49/);
+    await expect(affranchiPage.locator(selectors.pricing.bossCard)).toContainText(/99/);
+  });
+
+  test('blocks dashboard premium areas for inactive subscriptions', async ({ page }) => {
+    test.skip(!hasCredentials('CANCELLED'), 'Requires E2E_CANCELLED_EMAIL/PASSWORD for inactive subscription coverage.');
+    const { loginAs, getAccount } = await import('./fixtures/auth');
+    await loginAs(page, getAccount('CANCELLED'));
+    await page.goto('/dashboard/opportunities');
+    await expect(page.locator(selectors.premium.blockedPanel)).toBeVisible();
+    await page.goto('/dashboard/matching');
+    await expect(page.locator(selectors.premium.blockedPanel)).toBeVisible();
   });
 });

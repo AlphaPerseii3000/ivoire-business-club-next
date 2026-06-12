@@ -102,11 +102,12 @@ export default function NewOpportunityPage() {
         Partage une opportunité business avec la communauté
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} className="mt-8 space-y-6">
+      <form data-testid="opportunity-form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} className="mt-8 space-y-6">
         <div className="space-y-2">
           <Label htmlFor="title">Titre</Label>
           <Input
             id="title"
+            data-testid="opportunity-title-input"
             placeholder="Ex: Restaurant franchise à Abidjan"
             {...register("title")}
           />
@@ -145,6 +146,7 @@ export default function NewOpportunityPage() {
           <Label htmlFor="amount">Montant (€, optionnel)</Label>
           <Input
             id="amount"
+            data-testid="opportunity-amount-input"
             type="number"
             step="0.01"
             placeholder="50000"
@@ -159,6 +161,7 @@ export default function NewOpportunityPage() {
           <Label htmlFor="description">Description</Label>
           <Textarea
             id="description"
+            data-testid="opportunity-description-input"
             rows={6}
             placeholder="Décris l'opportunité en détail..."
             {...register("description")}
@@ -176,7 +179,7 @@ export default function NewOpportunityPage() {
           description="Taguez le deal pour aider les membres à le retrouver par secteur, montant et localisation."
         />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+        <Button type="submit" data-testid="opportunity-submit-button" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? "Publication..." : "Publier l'opportunité"}
         </Button>
       </form>

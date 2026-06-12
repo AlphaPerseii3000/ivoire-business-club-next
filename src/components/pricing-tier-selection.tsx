@@ -38,6 +38,7 @@ export function PricingTierSelection({ isAuthenticated }: PricingTierSelectionPr
           </p>
           <Link
             href={selectedTierHref}
+            data-testid="pricing-continue-button"
             className={buttonVariants({
               className: "min-h-11 px-6 focus-visible:ring-3 focus-visible:ring-ring/50",
             })}

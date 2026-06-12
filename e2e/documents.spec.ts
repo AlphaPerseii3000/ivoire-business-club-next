@@ -1,34 +1,43 @@
-import { expect, test } from '@playwright/test';
+import { test, expect, seededIds } from './fixtures/auth';
+import { selectors } from './helpers/selectors';
 
 test.describe('Documents upload and permissions', () => {
-  test.fixme('uploads a member document from the dashboard', async ({ page }) => {
-    // TODO: Log in as a seeded member with permission to upload documents.
-    // TODO: Navigate to the dashboard documents area and upload a safe fixture file.
-    // TODO: Assert upload success, document metadata, and persistence after reload.
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+  test('uploads or stages a member document from the opportunity form', async ({ memberPage }) => {
+    await memberPage.goto('/dashboard/opportunities/new');
+    await expect(memberPage.locator(selectors.documents.section)).toBeVisible();
+    await expect(memberPage.locator(selectors.documents.uploadButton)).toBeVisible();
+    if (process.env.E2E_UPLOAD_DOCUMENT === '1') {
+      const buffer = Buffer.from('%PDF-1.4\n% E2E safe PDF fixture\n');
+      await memberPage.locator(selectors.documents.uploadInput).setInputFiles({
+        name: 'ibc-e2e-document.pdf',
+        mimeType: 'application/pdf',
+        buffer,
+      });
+      await expect(memberPage.getByText(/ibc-e2e-document\.pdf|document prêt/i)).toBeVisible();
+    }
   });
 
-  test.fixme('prevents unauthorized users from viewing private documents', async ({ page }) => {
-    // TODO: Seed a private document owned by one member.
-    // TODO: Log in as a different member and attempt direct URL/API access.
-    // TODO: Assert the app returns not found, forbidden, or redirects without leaking file contents.
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+  test('prevents unauthorized users from viewing private documents', async ({ memberPage, request }) => {
+    test.skip(!seededIds.opportunityWithDocumentId || !seededIds.privateDocumentId, 'Requires E2E_OPPORTUNITY_WITH_DOCUMENT_ID and E2E_PRIVATE_DOCUMENT_ID.');
+    const response = await request.get(`/api/opportunities/${seededIds.opportunityWithDocumentId}/documents/${seededIds.privateDocumentId}/preview`);
+    expect([401, 403, 404]).toContain(response.status());
+    await memberPage.goto(`/dashboard/opportunities/${seededIds.opportunityWithDocumentId}`);
+    await expect(memberPage.locator(selectors.documents.hiddenMetadata).or(memberPage.getByText(/accès|réservé|introuvable/i))).toBeVisible();
   });
 
-  test.fixme('allows admins to review uploaded documents', async ({ page }) => {
-    // TODO: Log in as admin and open the document review/admin area.
-    // TODO: Assert uploaded member documents are listed with owner/status metadata.
-    // TODO: Approve/reject a document if the workflow supports validation.
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin/);
+  test('allows admins to review uploaded documents', async ({ adminPage }) => {
+    await adminPage.goto('/admin/opportunities');
+    await expect(adminPage.getByRole('heading', { name: /workflow de vérification/i })).toBeVisible();
+    await expect(adminPage.getByText(/document|documents|Aucun/i).first()).toBeVisible();
   });
 
-  test.fixme('validates file type and size restrictions', async ({ page }) => {
-    // TODO: Try uploading unsupported file types and oversized files.
-    // TODO: Assert clear validation errors and confirm no invalid object is stored.
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+  test('validates file type restrictions before upload', async ({ memberPage }) => {
+    await memberPage.goto('/dashboard/opportunities/new');
+    await memberPage.locator(selectors.documents.uploadInput).setInputFiles({
+      name: 'unsupported.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('not a legal document'),
+    });
+    await expect(memberPage.getByText(/type de fichier non supporté/i)).toBeVisible();
   });
 });

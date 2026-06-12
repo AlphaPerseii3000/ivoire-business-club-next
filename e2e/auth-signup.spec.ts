@@ -1,35 +1,66 @@
-import { expect, test } from '@playwright/test';
+import { test, expect, getAccount, hasCredentials } from './fixtures/auth';
+import { selectors } from './helpers/selectors';
+import { uniqueE2ELabel } from './fixtures/seed';
 
-const tiers = [
-  { name: 'AFFRANCHI', price: '€29' },
-  { name: 'GRAND_FRERE', price: '€49' },
-  { name: 'BOSS', price: '€99' },
-] as const;
-
-test.describe('Auth signup flows', () => {
-  test.beforeEach(async ({ page }) => {
+test.describe('Auth signup and signin flows', () => {
+  test('validates required signup fields', async ({ page }) => {
     await page.goto('/auth/signup');
+    await page.locator(selectors.auth.signupButton).click();
+    await expect(page.getByText(/email invalide/i)).toBeVisible();
+    await expect(page.getByText(/mot de passe.*8 caractères/i)).toBeVisible();
+    await expect(page.getByText(/nom.*2 caractères/i)).toBeVisible();
   });
 
-  for (const tier of tiers) {
-    test.fixme(`signs up a new ${tier.name} member`, async ({ page }) => {
-      // TODO: Create or provision a unique test user for the production VPS database.
-      // TODO: Select the ${tier.name} tier (${tier.price}) during signup.
-      // TODO: Complete credentials signup and verify the expected redirect/payment step.
-      // TODO: Assert the member lands on /dashboard with the correct tier displayed.
-      await expect(page).toHaveURL(/\/auth\/signup/);
-    });
-  }
-
-  test.fixme('supports Google OAuth signup entry point', async ({ page }) => {
-    // TODO: Verify Google OAuth button is visible and initiates Auth.js v5 OAuth flow.
-    // TODO: Use a dedicated test OAuth account or mocked/staged OAuth flow if available.
-    await expect(page.getByRole('button', { name: /google/i })).toBeVisible();
+  test('signs up a new AFFRANCHI member with unique credentials', async ({ page }, testInfo) => {
+    test.skip(!process.env.E2E_ENABLE_SIGNUP_CREATE, 'Set E2E_ENABLE_SIGNUP_CREATE=1 only on environments where creating a unique user is allowed.');
+    const email = `e2e-${Date.now()}-${testInfo.workerIndex}@example.com`;
+    await page.goto('/auth/signup');
+    await page.locator(selectors.auth.nameInput).fill(uniqueE2ELabel('E2E AFFRANCHI'));
+    await page.locator(selectors.auth.emailInput).fill(email);
+    await page.locator(selectors.auth.passwordInput).fill(process.env.E2E_NEW_USER_PASSWORD ?? 'E2E-Password-123!');
+    await page.locator(selectors.auth.signupButton).click();
+    await page.waitForURL(/\/dashboard(?:\?.*)?$/, { timeout: 20_000 });
+    await expect(page.locator(selectors.dashboard.tier)).toContainText(/Affranchi|AFFRANCHI/i);
   });
 
-  test.fixme('validates required signup fields and duplicate credentials', async ({ page }) => {
-    // TODO: Submit an empty signup form and assert validation messages.
-    // TODO: Attempt signup with an existing email and assert duplicate-account feedback.
-    await expect(page).toHaveURL(/\/auth\/signup/);
+  test('shows duplicate-account feedback for an existing email', async ({ page }) => {
+    test.skip(!hasCredentials('AFFRANCHI'), 'Requires E2E_AFFRANCHI_EMAIL/PASSWORD.');
+    await page.goto('/auth/signup');
+    await page.locator(selectors.auth.nameInput).fill('Duplicate E2E');
+    await page.locator(selectors.auth.emailInput).fill(getAccount('AFFRANCHI').email);
+    await page.locator(selectors.auth.passwordInput).fill('E2E-Password-123!');
+    await page.locator(selectors.auth.signupButton).click();
+    await expect(page.locator(selectors.auth.authError)).toContainText(/existe|déjà|compte/i);
+  });
+
+  test('signs in with valid credentials and shows dashboard tier', async ({ memberPage }) => {
+    await expect(memberPage).toHaveURL(/\/dashboard/);
+    await expect(memberPage.locator(selectors.dashboard.userName)).toBeVisible();
+    await expect(memberPage.locator(selectors.dashboard.tier)).toBeVisible();
+  });
+
+  test('rejects invalid signin without revealing whether email exists', async ({ page }) => {
+    await page.goto('/auth/signin');
+    await page.locator(selectors.auth.emailInput).fill('missing-e2e-user@example.com');
+    await page.locator(selectors.auth.passwordInput).fill('wrong-password');
+    await page.locator(selectors.auth.signinButton).click();
+    await expect(page.locator(selectors.auth.authError)).toContainText(/email ou mot de passe incorrect/i);
+    await expect(page.locator(selectors.auth.authError)).not.toContainText(/n.existe pas|introuvable/i);
+  });
+
+  test('shows Google OAuth signup entry point', async ({ page }) => {
+    await page.goto('/auth/signup');
+    await expect(page.locator(selectors.auth.googleButton)).toBeVisible();
+    await expect(page.locator(selectors.auth.googleButton)).toContainText(/google/i);
+  });
+
+  test('redirects unauthenticated protected routes to signin', async ({ page }) => {
+    await page.goto('/dashboard');
+    await page.waitForURL(/\/auth\/signin/);
+  });
+
+  test('redirects authenticated users away from signin', async ({ memberPage }) => {
+    await memberPage.goto('/auth/signin');
+    await memberPage.waitForURL(/\/dashboard/);
   });
 });

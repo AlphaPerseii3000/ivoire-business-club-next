@@ -42,8 +42,8 @@ export default async function DashboardPage() {
   const activationNoticeSubscription = showActivationNotice ? subscription : null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-2xl font-bold">Bienvenue, {user.name}</h1>
+    <div data-testid="dashboard-page" className="mx-auto max-w-4xl px-4 py-8">
+      <h1 data-testid="dashboard-user-name" className="text-2xl font-bold">Bienvenue, {user.name}</h1>
       <p className="mt-1 text-muted-foreground">Ton tableau de bord Ivoire Business Club</p>
 
       {activationNoticeSubscription ? (
@@ -60,13 +60,13 @@ export default async function DashboardPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div>
             <p className="text-sm text-muted-foreground">Plan</p>
-            <p className="text-lg font-semibold text-primary">
+            <p data-testid="dashboard-tier" className="text-lg font-semibold text-primary">
               {tierLabel[user.tier] ?? user.tier}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Statut</p>
-            <p className="text-lg font-semibold">
+            <p data-testid="dashboard-subscription-status" className="text-lg font-semibold">
               {subscription ? statusLabel[subscription.status] ?? subscription.status : "Aucun"}
             </p>
           </div>

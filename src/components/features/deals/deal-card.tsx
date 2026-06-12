@@ -40,7 +40,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   if (isTeaser) {
     const categoryLabel = deal.category ? deal.category : "Opportunité Privée";
     return (
-      <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] min-h-[300px] p-6 shadow-xl transition-all duration-300 hover:border-[#D4A847]/30">
+      <article data-testid="opportunity-card" className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] min-h-[300px] p-6 shadow-xl transition-all duration-300 hover:border-[#D4A847]/30">
         {/* Background WebP Image with low opacity for premium look */}
         <div className="absolute inset-0 z-0">
           <img
@@ -56,7 +56,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
           <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[#D4A847] bg-[#D4A847]/10 px-2 py-1 rounded">
             {categoryLabel}
           </span>
-          <h3 className="text-xl font-bold text-white leading-tight">
+          <h3 data-testid="opportunity-title" className="text-xl font-bold text-white leading-tight">
             {deal.title}
           </h3>
           <p className="inline-flex items-center gap-2 text-sm text-slate-400">
@@ -111,13 +111,13 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   const matchBadgeLabel = commonTagCount === 1 ? "1 tag commun" : `${commonTagCount} tags communs`;
 
   return (
-    <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
+    <article data-testid="opportunity-card" className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
       <Link href={`/dashboard/opportunities/${deal.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
         <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
         <div className="space-y-4 p-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <h2 className="text-lg font-semibold leading-snug">{deal.title}</h2>
+              <h2 data-testid="opportunity-title" className="text-lg font-semibold leading-snug">{deal.title}</h2>
               {shouldShowMatchBadge ? (
                 <span className="inline-flex min-h-7 items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                   {matchBadgeLabel}

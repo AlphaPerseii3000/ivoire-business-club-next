@@ -218,7 +218,7 @@ export function DocumentUploadSection({
   // Non-author non-admin viewers see only a counter, no upload or document list
   if (isMetadataHidden) {
     return (
-      <section className="rounded-xl border bg-card p-6">
+      <section data-testid="documents-hidden-metadata" className="rounded-xl border bg-card p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <Paperclip className="h-5 w-5" aria-hidden="true" />
           Documents juridiques
@@ -236,7 +236,7 @@ export function DocumentUploadSection({
   }
 
   return (
-    <section className="rounded-xl border bg-card p-6">
+    <section data-testid="documents-section" className="rounded-xl border bg-card p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -247,7 +247,7 @@ export function DocumentUploadSection({
           <p className="mt-1 text-sm text-muted-foreground">PDF, JPEG, PNG ou WebP · 10 Mo maximum par fichier</p>
         </div>
         {canUpload ? (
-          <Button type="button" className="min-h-11" onClick={() => inputRef.current?.click()}>
+          <Button type="button" data-testid="document-upload-button" className="min-h-11" onClick={() => inputRef.current?.click()}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
             Ajouter un document
           </Button>
@@ -257,6 +257,7 @@ export function DocumentUploadSection({
       <input
         ref={inputRef}
         type="file"
+        data-testid="document-upload-input"
         className="sr-only"
         multiple
         accept={DOCUMENT_ALLOWED_MIME_TYPES.join(",")}
