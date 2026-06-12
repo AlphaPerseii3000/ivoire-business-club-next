@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-11T21:30:00+02:00
+last_updated: 2026-06-12T09:30:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -42,16 +42,18 @@ development_status:
   5-2-score-de-fiabilite-et-badge-membre-platinum: done
   5-3-affichage-public-des-reviews-sur-profil: done
   epic-5-retrospective: done
-  epic-6: in-progress
+  epic-6: done
   6-1-tableau-de-bord-kanban-des-opportunites: done
   6-2-metriques-cles-et-analytics-admin: done
   6-3-gestion-des-documents-et-edition-des-opportunites: done
   6-4-audit-logs-et-conformite: done
   6-5-gestion-des-utilisateurs-et-emails-admin: done
   6-6-preparation-deploiement-production: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
   epic-7: done
   7-1-landing-page-avec-deals-teaser-et-seo: done
   7-2-mur-des-succes-et-presentation-des-tiers: done
   7-3-responsive-mobilefirst-et-accessibilite-finale: done
   epic-7-retrospective: done
+  epic-8: in-progress
+  8-1-tests-e2e-playwright-complet: ready-for-dev
