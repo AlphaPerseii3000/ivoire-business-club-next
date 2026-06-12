@@ -16,9 +16,9 @@ export const selectors = {
   pricing: {
     grid: '[data-testid="pricing-tier-grid"]',
     tierCard: '[data-testid="tier-card"]',
-    affranchiCard: '[data-testid="tier-affranchi-card"]',
-    grandFrereCard: '[data-testid="tier-grandfrere-card"]',
-    bossCard: '[data-testid="tier-boss-card"]',
+    affranchiCard: '[data-testid="tier-card"][data-tier="affranchi"]',
+    grandFrereCard: '[data-testid="tier-card"][data-tier="grandfrere"]',
+    bossCard: '[data-testid="tier-card"][data-tier="boss"]',
     continueButton: '[data-testid="pricing-continue-button"]',
   },
   bankTransfer: {

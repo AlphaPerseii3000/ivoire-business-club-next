@@ -52,7 +52,8 @@ export function TierCard({
 
   return (
     <Card
-      data-testid={`tier-${tier.toLowerCase().replace("_", "")}-card`}
+      data-testid="tier-card"
+      data-tier={tier.toLowerCase().replace("_", "")}
       className={cn(
         "relative h-full gap-5 border-2 p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/40",
         config.cardClassName,
