@@ -25,12 +25,7 @@ type DocumentUploadSectionProps = {
   onPendingFilesChange?: (files: File[]) => void;
 };
 
-type PresignResponse = {
-  data?: { signedUrl: string; r2Key: string; fileName: string };
-  error?: string;
-};
-
-type CompleteResponse = {
+type UploadResponse = {
   data?: LegalDocument;
   error?: string;
 };
@@ -46,56 +41,39 @@ function validateFile(file: File) {
 }
 
 function uploadWithProgress(url: string, file: File, onProgress: (progress: number) => void) {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<LegalDocument>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.setRequestHeader("Content-Type", file.type);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    xhr.open("POST", url);
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         onProgress(Math.round((event.loaded / event.total) * 100));
       }
     };
     xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
+      let body: UploadResponse = {};
+      try {
+        body = JSON.parse(xhr.responseText) as UploadResponse;
+      } catch {
+        body = {};
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300 && body.data) {
+        onProgress(100);
+        resolve(body.data);
       } else {
-        reject(new Error("Upload refusé"));
+        reject(new Error(body.error ?? "Upload refusé"));
       }
     };
     xhr.onerror = () => reject(new Error("Upload interrompu"));
-    xhr.send(file);
+    xhr.send(formData);
   });
 }
 
 export async function uploadLegalDocument(opportunityId: string, file: File, onProgress: (progress: number) => void) {
-  const presignRes = await fetch(`/api/opportunities/${opportunityId}/documents/presign-url`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fileName: file.name, mimeType: file.type, size: file.size }),
-  });
-  const presignBody = (await presignRes.json()) as PresignResponse;
-  if (!presignRes.ok || !presignBody.data) {
-    throw new Error(presignBody.error ?? "Impossible de préparer l'upload");
-  }
-
-  await uploadWithProgress(presignBody.data.signedUrl, file, onProgress);
-
-  const completeRes = await fetch(`/api/opportunities/${opportunityId}/documents`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      r2Key: presignBody.data.r2Key,
-      fileName: presignBody.data.fileName,
-      originalName: file.name,
-      mimeType: file.type,
-      size: file.size,
-    }),
-  });
-  const completeBody = (await completeRes.json()) as CompleteResponse;
-  if (!completeRes.ok || !completeBody.data) {
-    throw new Error(completeBody.error ?? "Impossible d'attacher le document");
-  }
-  return completeBody.data;
+  return uploadWithProgress(`/api/opportunities/${opportunityId}/documents/upload`, file, onProgress);
 }
 
 export async function uploadPendingLegalDocuments(opportunityId: string, files: File[]) {

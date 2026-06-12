@@ -41,6 +41,17 @@ export function isAwsConfigured() {
   return REQUIRED_AWS_ENV.every((key) => !!process.env[key]);
 }
 
+export function isCorsSupportedByProvider() {
+  if (!isAwsConfigured()) return true;
+
+  const endpoint = process.env.AWS_ENDPOINT?.toLowerCase() ?? "";
+  if (endpoint.includes("infomaniak") || endpoint.includes("swiss-backup")) {
+    return false;
+  }
+
+  return true;
+}
+
 export function getMissingR2Env() {
   if (isAwsConfigured()) return [];
   return REQUIRED_R2_ENV.filter((key) => !process.env[key]);
@@ -147,6 +158,18 @@ export async function createUploadSignedUrl(params: { key: string; mimeType: str
   });
 
   return getSignedUrl(getR2Client(), command, { expiresIn: params.expiresIn ?? 300 });
+}
+
+export async function uploadObjectToS3(key: string, buffer: Buffer, mimeType: string) {
+  const config = getR2Config();
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    }),
+  );
 }
 
 export async function createDownloadSignedUrl(params: { key: string; fileName?: string; mimeType?: string; expiresIn?: number }) {
