@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-11 22:45:51+02:00
+last_updated: 2026-06-11T21:30:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -50,8 +50,8 @@ development_status:
   6-5-gestion-des-utilisateurs-et-emails-admin: done
   6-6-preparation-deploiement-production: done
   epic-6-retrospective: optional
-  epic-7: in-progress
+  epic-7: done
   7-1-landing-page-avec-deals-teaser-et-seo: done
   7-2-mur-des-succes-et-presentation-des-tiers: done
   7-3-responsive-mobilefirst-et-accessibilite-finale: done
-  epic-7-retrospective: optional
+  epic-7-retrospective: done
