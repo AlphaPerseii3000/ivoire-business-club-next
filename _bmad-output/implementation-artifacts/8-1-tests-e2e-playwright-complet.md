@@ -1,6 +1,6 @@
 # Story 8.1: Tests E2E Playwright — Couverture complète du site en conditions réelles
 
-Status: ready-for-dev
+Status: "done"
 
 ## Story
 
