@@ -1,34 +1,56 @@
-import { expect, test } from '@playwright/test';
+import { test, expect, hasCredentials } from './fixtures/auth';
+
+const managedMemberLookup = process.env.E2E_ADMIN_MANAGED_MEMBER_EMAIL ?? process.env.E2E_ADMIN_MANAGED_MEMBER_NAME;
 
 test.describe('Admin flows', () => {
-  test.fixme('logs in as an administrator and opens the admin panel', async ({ page }) => {
-    // TODO: Log in with a seeded admin credentials account.
-    // TODO: Navigate to /admin and assert admin navigation/dashboard widgets are visible.
-    // TODO: Verify non-admin accounts are redirected or denied access to /admin.
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin/);
+  test('admin accesses dashboard kanban with visible columns', async ({ adminPage }) => {
+    await adminPage.goto('/admin/opportunities');
+    await expect(adminPage.getByRole('heading', { name: /workflow de vérification/i })).toBeVisible();
+    await expect(adminPage.getByText(/en attente|pending/i).first()).toBeVisible();
+    await expect(adminPage.getByText(/en cours|vérifié|verified|refusé|rejected/i).first()).toBeVisible();
   });
 
-  test.fixme('verifies a submitted opportunity', async ({ page }) => {
-    // TODO: Seed or submit a pending opportunity from a member account.
-    // TODO: Log in as admin and approve/verify the opportunity.
-    // TODO: Assert the opportunity appears as verified to eligible members.
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin/);
+  test('admin manages members by suspending and reactivating a seeded member', async ({ adminPage }) => {
+    test.skip(!managedMemberLookup, 'Requires E2E_ADMIN_MANAGED_MEMBER_EMAIL or E2E_ADMIN_MANAGED_MEMBER_NAME for safe member status mutation.');
+
+    await adminPage.goto('/admin/members');
+    await expect(adminPage.getByRole('heading', { name: /membres/i })).toBeVisible();
+    const row = adminPage.getByRole('row').filter({ hasText: managedMemberLookup! }).first();
+    await expect(row).toBeVisible();
+
+    const reactivateButton = row.getByRole('button', { name: /réactiver/i });
+    if (await reactivateButton.isVisible().catch(() => false)) {
+      await reactivateButton.click();
+      await expect(row.getByText(/compte réactivé|actif/i).first()).toBeVisible();
+      await adminPage.reload();
+    }
+
+    const refreshedRow = adminPage.getByRole('row').filter({ hasText: managedMemberLookup! }).first();
+    await refreshedRow.getByRole('button', { name: /suspendre/i }).click();
+    await adminPage.getByRole('button', { name: /confirmer la suspension/i }).click();
+    await expect(adminPage.getByText(/compte suspendu|suspendu/i).first()).toBeVisible();
+
+    await adminPage.reload();
+    const suspendedRow = adminPage.getByRole('row').filter({ hasText: managedMemberLookup! }).first();
+    await suspendedRow.getByRole('button', { name: /réactiver/i }).click();
+    await expect(adminPage.getByText(/compte réactivé|actif/i).first()).toBeVisible();
   });
 
-  test.fixme('rejects or requests changes for an opportunity', async ({ page }) => {
-    // TODO: Seed a pending opportunity that should be rejected or sent back for changes.
-    // TODO: Log in as admin, apply rejection/change request, and assert member notification/status.
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin/);
+  test('admin consults audit logs with filters', async ({ adminPage }) => {
+    await adminPage.goto('/admin/audit');
+    await expect(adminPage.getByRole('heading', { name: /journal d.audit/i })).toBeVisible();
+    await expect(adminPage.getByRole('heading', { name: /filtres/i })).toBeVisible();
+
+    await adminPage.getByLabel(/action/i).fill(process.env.E2E_AUDIT_ACTION_FILTER ?? 'SUBSCRIPTION');
+    await adminPage.getByRole('button', { name: /filtrer/i }).click();
+    await expect(adminPage).toHaveURL(/\/admin\/audit\?/);
+    await expect(adminPage.getByText(/événement|aucun événement|journal d.audit/i).first()).toBeVisible();
   });
 
-  test.fixme('manages member subscription tier and status', async ({ page }) => {
-    // TODO: Log in as admin and locate a seeded member account.
-    // TODO: Change subscription tier between AFFRANCHI, GRAND_FRERE, and BOSS.
-    // TODO: Verify dashboard access and premium gates reflect the updated tier.
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin/);
+  test('non-admin member is redirected or denied from admin routes', async ({ memberPage }) => {
+    test.skip(!hasCredentials('MEMBER') && !hasCredentials('AFFRANCHI'), 'Requires member credentials.');
+    await memberPage.goto('/admin');
+    await expect(memberPage).toHaveURL(/\/dashboard(?:\?.*)?$/);
+    await expect(memberPage.getByRole('heading', { name: /bienvenue|dashboard|tableau de bord/i }).or(memberPage.locator('[data-testid="dashboard-page"]'))).toBeVisible();
   });
 });
