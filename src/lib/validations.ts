@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { TAG_CATEGORIES, isValidTagOption } from "@/lib/tags";
-import { ArticleVisibility } from "@/generated/prisma/client";
+export enum ArticleVisibility {
+  PUBLIC = "PUBLIC",
+  AFFRANCHI = "AFFRANCHI",
+  GRAND_FRERE = "GRAND_FRERE",
+  BOSS = "BOSS",
+}
 
 const tagSchema = z
   .object({
@@ -163,7 +168,7 @@ export const articleCreateSchema = z.object({
   content: z.string().trim().min(10, "Le contenu doit contenir au moins 10 caractères"),
   category: z.string().trim().min(1, "La catégorie est requise").max(50, "La catégorie ne doit pas dépasser 50 caractères"),
   visibility: z.nativeEnum(ArticleVisibility, {
-    errorMap: () => ({ message: "Visibilité invalide" }),
+    message: "Visibilité invalide",
   }),
 });
 

@@ -5,6 +5,7 @@ import { articleCreateSchema } from "@/lib/validations";
 import { getAccessibleArticleVisibilities, generateUniqueSlug } from "@/lib/article-visibility";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { safeCreateAuditLog } from "@/lib/audit-log";
 
 export async function GET(req: Request) {
   try {
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
     let userTier = null;
 
     if (session?.user) {
-      isAdmin = session.user.role === "ADMIN";
+      isAdmin = (session.user as any).role === "ADMIN";
       if (!isAdmin) {
         hasActiveSub = await hasActiveSubscription(session.user.id);
         userTier = (session.user as any).tier;
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
@@ -99,6 +100,17 @@ export async function POST(req: Request) {
           slug,
           published: false,
           authorId: session.user.id,
+        },
+      });
+
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "ARTICLE_CREATE",
+        entityType: "ARTICLE",
+        entityId: article.id,
+        metadata: {
+          title: article.title,
+          visibility: article.visibility,
         },
       });
 

@@ -3,7 +3,7 @@ baseline_commit: 73e66145e3c4af28b3b6da6822704e1ffb55aab5
 ---
 # Story 9.2: Interface Admin CRUD Articles
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,30 +57,30 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Mise à jour des logs d'audit (AC: 7)**
-  - [ ] Ajouter les nouvelles actions d'audit dans `AUDIT_ACTIONS` au sein de [src/lib/audit-log.ts](file:///D:/Code/ivoire-business-club-next/src/lib/audit-log.ts) :
+- [x] **Mise à jour des logs d'audit (AC: 7)**
+  - [x] Ajouter les nouvelles actions d'audit dans `AUDIT_ACTIONS` au sein de [src/lib/audit-log.ts](file:///D:/Code/ivoire-business-club-next/src/lib/audit-log.ts) :
     - `ARTICLE_CREATE: "ARTICLE_CREATE"`
     - `ARTICLE_UPDATE: "ARTICLE_UPDATE"`
     - `ARTICLE_PUBLISH: "ARTICLE_PUBLISH"`
     - `ARTICLE_UNPUBLISH: "ARTICLE_UNPUBLISH"`
     - `ARTICLE_DELETE: "ARTICLE_DELETE"`
-  - [ ] Mettre à jour les routes d'API existantes pour écrire dans l'audit log :
+  - [x] Mettre à jour les routes d'API existantes pour écrire dans l'audit log :
     - Dans [src/app/api/articles/route.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/route.ts) (`POST`) : appeler `safeCreateAuditLog` après la création réussie de l'article avec l'action `ARTICLE_CREATE`.
     - Dans [src/app/api/articles/[id]/route.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/[id]/route.ts) (`PUT`) : appeler `safeCreateAuditLog` avec l'action `ARTICLE_UPDATE` lors de la modification. Si le statut de publication change (`published`), enregistrer également l'action `ARTICLE_PUBLISH` ou `ARTICLE_UNPUBLISH` correspondante.
     - Dans [src/app/api/articles/[id]/route.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/[id]/route.ts) (`DELETE`) : appeler `safeCreateAuditLog` avec l'action `ARTICLE_DELETE` avant la suppression définitive.
 
-- [ ] **Navigation Admin (AC: 1)**
-  - [ ] Ajouter un lien pour les articles dans la navigation desktop/mobile admin de [src/app/(admin)/layout.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(admin)/layout.tsx) : `{ href: "/admin/articles", label: "Articles", icon: "✍️" }`.
+- [x] **Navigation Admin (AC: 1)**
+  - [x] Ajouter un lien pour les articles dans la navigation desktop/mobile admin de [src/app/(admin)/layout.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(admin)/layout.tsx) : `{ href: "/admin/articles", label: "Articles", icon: "✍️" }`.
 
-- [ ] **Composants d'interface Admin (AC: 1, 2, 3, 5, 6)**
-  - [ ] Créer `src/components/features/admin/articles-list-table.tsx` (Composant Client) :
+- [x] **Composants d'interface Admin (AC: 1, 2, 3, 5, 6)**
+  - [x] Créer `src/components/features/admin/articles-list-table.tsx` (Composant Client) :
     - Utiliser le composant table de shadcn `src/components/ui/table.tsx` pour lister les articles.
     - Afficher des colonnes claires : Titre, Catégorie, Visibilité, Statut (Brouillon/Publié) et Date.
     - Utiliser des icônes et classes de badge standard de `src/lib/tier-config.ts` ou adaptées pour la visibilité (PUBLIC, AFFRANCHI, GRAND_FRERE, BOSS).
     - Ajouter les boutons Modifier (lien vers `/admin/articles/[id]/edit`), Supprimer (avec dialogue de confirmation), et Publier/Dépublier.
     - Utiliser `src/components/ui/dialog.tsx` pour le modal de confirmation de suppression.
     - Gérer les états de chargement (disabled) lors du clic sur les actions asynchrones (publication, suppression) et utiliser `sonner` pour notifier l'admin.
-  - [ ] Créer `src/components/features/admin/article-form.tsx` (Composant Client) :
+  - [x] Créer `src/components/features/admin/article-form.tsx` (Composant Client) :
     - Gérer la création et la modification d'un article avec React Hook Form et le résolveur Zod (`articleCreateSchema` / `articleUpdateSchema` depuis `src/lib/validations.ts`).
     - Utiliser les composants UI de base : `Input`, `Textarea`, `Select`, `Label`, `Button`.
     - Fournir un sélecteur (`Select`) pour la visibilité avec un aperçu en temps réel du badge correspondant au tier sélectionné.
@@ -88,30 +88,30 @@ Status: ready-for-dev
     - Intégrer un toggle ou une checkbox pour le statut initial de publication (facultatif ou draft par défaut).
     - Désactiver les boutons de soumission pendant le chargement.
 
-- [ ] **Pages et Routes Admin (AC: 1, 2, 3)**
-  - [ ] Créer `src/app/(admin)/admin/articles/page.tsx` (Page de liste Server Component) :
+- [x] **Pages et Routes Admin (AC: 1, 2, 3)**
+  - [x] Créer `src/app/(admin)/admin/articles/page.tsx` (Page de liste Server Component) :
     - Récupérer tous les articles via `prisma.article.findMany` triés par `createdAt desc` avec l'auteur associé.
     - Passer les données sérialisées au composant `ArticlesListTable`.
-  - [ ] Créer `src/app/(admin)/admin/articles/new/page.tsx` (Page de création) :
+  - [x] Créer `src/app/(admin)/admin/articles/new/page.tsx` (Page de création) :
     - Rendre le formulaire `ArticleForm` configuré pour la création.
-  - [ ] Créer `src/app/(admin)/admin/articles/[id]/edit/page.tsx` (Page d'édition) :
+  - [x] Créer `src/app/(admin)/admin/articles/[id]/edit/page.tsx` (Page d'édition) :
     - Charger l'article via l'ID fourni par `params` (destructuré de manière asynchrone).
     - Si l'article n'existe pas, appeler `notFound()`.
     - Passer les données de l'article au formulaire `ArticleForm` en mode édition.
 
-- [ ] **Tests Unitaires et d'Intégration (AC: 1, 2, 3, 4, 5, 7)**
-  - [ ] Créer `src/app/(admin)/admin/articles/page.test.tsx` pour tester :
+- [x] **Tests Unitaires et d'Intégration (AC: 1, 2, 3, 4, 5, 7)**
+  - [x] Créer `src/app/(admin)/admin/articles/page.test.tsx` pour tester :
     - La redirection des utilisateurs non authentifiés et non administrateurs.
     - Le bon chargement des articles et leur rendu.
-  - [ ] Créer `src/components/features/admin/articles-list-table.test.tsx` pour tester l'affichage et l'état des actions (boutons Publier/Dépublier, ouverture du modal de suppression).
-  - [ ] Créer `src/components/features/admin/article-form.test.tsx` pour valider :
+  - [x] Créer `src/components/features/admin/articles-list-table.test.tsx` pour tester l'affichage et l'état des actions (boutons Publier/Dépublier, ouverture du modal de suppression).
+  - [x] Créer `src/components/features/admin/article-form.test.tsx` pour valider :
     - La validation des champs requis par Zod.
     - La soumission du formulaire et l'affichage des erreurs.
-  - [ ] Mettre à jour les tests existants des API routes d'articles pour valider l'écriture correcte dans les logs d'audit.
+  - [x] Mettre à jour les tests existants des API routes d'articles pour valider l'écriture correcte dans les logs d'audit.
 
-- [ ] **Vérification finale**
-  - [ ] Lancer les tests unitaires via `npx vitest run` et s'assurer que tous les tests passent.
-  - [ ] Lancer `npm run build` pour valider l'absence d'erreurs TypeScript et d'incompatibilités Next.js 16 / React 19 (guardrail JSX).
+- [x] **Vérification finale**
+  - [x] Lancer les tests unitaires via `npx vitest run` et s'assurer que tous les tests passent.
+  - [x] Lancer `npm run build` pour valider l'absence d'erreurs TypeScript et d'incompatibilités Next.js 16 / React 19 (guardrail JSX).
 
 ## Dev Notes
 
@@ -156,4 +156,35 @@ Gemini 3.5 Flash (Medium)
 
 ### Completion Notes List
 
+- Implémentation des logs d'audit CRUD pour les articles (`ARTICLE_CREATE`, `ARTICLE_UPDATE`, `ARTICLE_PUBLISH`, `ARTICLE_UNPUBLISH`, `ARTICLE_DELETE`).
+- Ajout de l'onglet de navigation admin dans la barre latérale.
+- Création du composant de table de liste des articles `articles-list-table.tsx` avec Radix Dialog pour la suppression et boutons de bascule de statut.
+- Création du formulaire de création et modification `article-form.tsx` avec sélection dynamique de catégorie et d'aperçu de visibilité.
+- Création des pages d'administration `/admin/articles`, `/admin/articles/new` et `/admin/articles/[id]/edit`.
+- Écriture des suites de tests unitaires et d'intégration et exécution avec succès.
+- Vérification de la conformité du build de production Next.js.
+
 ### File List
+
+- `src/lib/audit-log.ts` (MODIFIED)
+- `src/lib/validations.ts` (MODIFIED)
+- `src/app/api/articles/route.ts` (MODIFIED)
+- `src/app/api/articles/[id]/route.ts` (MODIFIED)
+- `src/app/(admin)/layout.tsx` (MODIFIED)
+- `src/app/(admin)/admin/articles/page.tsx` (NEW)
+- `src/app/(admin)/admin/articles/new/page.tsx` (NEW)
+- `src/app/(admin)/admin/articles/[id]/edit/page.tsx` (NEW)
+- `src/components/features/admin/articles-list-table.tsx` (NEW)
+- `src/components/features/admin/article-form.tsx` (NEW)
+- `src/app/(admin)/admin/articles/page.test.tsx` (NEW)
+- `src/components/features/admin/articles-list-table.test.tsx` (NEW)
+- `src/components/features/admin/article-form.test.tsx` (NEW)
+- `src/app/api/articles/route.test.ts` (MODIFIED)
+- `src/app/api/articles/[id]/route.test.ts` (MODIFIED)
+
+## Change Log
+
+- Initialisé l'implémentation de la story 9.2 pour l'interface d'administration CRUD d'articles.
+- Intégré les logs d'audit et configuré les endpoints API avec journalisation.
+- Créé les pages de gestion, formulaires et tables admin.
+- Écrit et validé les tests unitaires et le build de production Next.js.

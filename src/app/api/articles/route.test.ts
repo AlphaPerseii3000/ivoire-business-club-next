@@ -9,6 +9,7 @@ const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
 const mockUserUpsert = vi.hoisted(() => vi.fn());
 const mockArticleDeleteMany = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -28,6 +29,9 @@ vi.mock("@/lib/prisma", () => ({
     },
     $disconnect: vi.fn(),
   },
+}));
+vi.mock("@/lib/audit-log", () => ({
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 
 function makePostRequest(body: unknown) {
@@ -244,6 +248,14 @@ describe("POST /api/articles", () => {
           published: false,
           authorId: "admin-1",
         }),
+      })
+    );
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "admin-1",
+        action: "ARTICLE_CREATE",
+        entityType: "ARTICLE",
+        entityId: "art-5",
       })
     );
   });

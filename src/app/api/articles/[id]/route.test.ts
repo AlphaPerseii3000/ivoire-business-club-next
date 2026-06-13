@@ -6,6 +6,7 @@ const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockArticleUpdate = vi.hoisted(() => vi.fn());
 const mockArticleDelete = vi.hoisted(() => vi.fn());
 const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -19,6 +20,9 @@ vi.mock("@/lib/prisma", () => ({
       delete: mockArticleDelete,
     },
   },
+}));
+vi.mock("@/lib/audit-log", () => ({
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 
 function makeRequest(method: string, body?: unknown) {
@@ -144,6 +148,45 @@ describe("PUT /api/articles/[id]", () => {
     const payload = await response.json();
     expect(payload.title).toBe("Titre mis à jour");
     expect(payload.slug).toBe("titre-mis-a-jour");
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "admin-1",
+        action: "ARTICLE_UPDATE",
+        entityType: "ARTICLE",
+        entityId: "art-1",
+      })
+    );
+  });
+
+  it("logs ARTICLE_PUBLISH when publishing an article", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockArticleFindFirst.mockResolvedValueOnce({
+      ...mockArticle,
+      published: false,
+    });
+    mockArticleUpdate.mockResolvedValue({
+      ...mockArticle,
+      published: true,
+    });
+
+    const response = await PUT(makeRequest("PUT", { published: true }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "admin-1",
+        action: "ARTICLE_UPDATE",
+      })
+    );
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "admin-1",
+        action: "ARTICLE_PUBLISH",
+        entityId: "art-1",
+      })
+    );
   });
 
   it("returns 400 when body has malformed JSON", async () => {
@@ -190,5 +233,13 @@ describe("DELETE /api/articles/[id]", () => {
     expect(mockArticleDelete).toHaveBeenCalledWith({
       where: { id: "art-1" },
     });
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "admin-1",
+        action: "ARTICLE_DELETE",
+        entityType: "ARTICLE",
+        entityId: "art-1",
+      })
+    );
   });
 });

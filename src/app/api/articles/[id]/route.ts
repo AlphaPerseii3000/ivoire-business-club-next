@@ -5,6 +5,7 @@ import { articleUpdateSchema } from "@/lib/validations";
 import { getAccessibleArticleVisibilities, generateUniqueSlug } from "@/lib/article-visibility";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { safeCreateAuditLog } from "@/lib/audit-log";
 
 export async function GET(
   req: Request,
@@ -18,7 +19,7 @@ export async function GET(
     let userTier = null;
 
     if (session?.user) {
-      isAdmin = session.user.role === "ADMIN";
+      isAdmin = (session.user as any).role === "ADMIN";
       if (!isAdmin) {
         hasActiveSub = await hasActiveSubscription(session.user.id);
         userTier = (session.user as any).tier;
@@ -66,7 +67,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
@@ -116,6 +117,30 @@ export async function PUT(
         where: { id: article.id },
         data,
       });
+
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "ARTICLE_UPDATE",
+        entityType: "ARTICLE",
+        entityId: updatedArticle.id,
+        metadata: {
+          title: updatedArticle.title,
+          visibility: updatedArticle.visibility,
+        },
+      });
+
+      if (article.published !== updatedArticle.published) {
+        await safeCreateAuditLog({
+          actorId: session.user.id,
+          action: updatedArticle.published ? "ARTICLE_PUBLISH" : "ARTICLE_UNPUBLISH",
+          entityType: "ARTICLE",
+          entityId: updatedArticle.id,
+          metadata: {
+            title: updatedArticle.title,
+          },
+        });
+      }
+
       return NextResponse.json(updatedArticle);
     } catch (dbError: any) {
       if (dbError.code === "P2002") {
@@ -139,7 +164,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
@@ -150,6 +175,16 @@ export async function DELETE(
     if (!article) {
       return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
     }
+
+    await safeCreateAuditLog({
+      actorId: session.user.id,
+      action: "ARTICLE_DELETE",
+      entityType: "ARTICLE",
+      entityId: article.id,
+      metadata: {
+        title: article.title,
+      },
+    });
 
     await prisma.article.delete({
       where: { id: article.id },
