@@ -1288,4 +1288,158 @@ Le public peut découvrir les deals teaser, le mur des succès et les tiers IBC 
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.0. Prêt pour implémentation par les agents de développement.*
+## Epic 9 : Contenu Éditorial & Ressources Membres
+
+**Objectif** : Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant aux visiteurs et membres du contenu gratuit (levier de conversion) et aux abonnés un accès progressif selon leur tier.
+
+**Business Value** : Entonnoir de conversion intermédiaire — les articles gratuits attirent le trafic SEO, les articles premium (visibilité tier) donnent un aperçu de la valeur réservée aux abonnés, augmentant le taux de conversion onboarding.
+
+**FR couverts** : FR46, FR47, FR48, FR49, FR50, FR51
+
+---
+
+### Story 9.1: Modèle Article, Migration et API Routes
+
+**En tant que** développeur,  
+**Je veux** un modèle Article persisté avec API routes complètes,  
+**Afin de** fournir les fondations données pour toutes les features éditoriales.
+
+**Acceptance Criteria :**
+
+**Given** le schéma Prisma mis à jour avec l'enum `ArticleVisibility` et le modèle `Article`  
+**When** `npx prisma migrate dev` est exécuté  
+**Then** la migration crée la table `articles` et l'enum sans erreur, et `npx prisma generate` fonctionne
+
+**Given** un admin authentifié  
+**When** il envoie `POST /api/articles` avec titre, excerpt, content, category, visibility  
+**Then** l'article est créé en base avec `published: false`, slug auto-généré du titre, et 201 retourné
+
+**Given** un admin authentifié  
+**When** il envoie `PUT /api/articles/[id]` avec des champs mis à jour  
+**Then** l'article est modifié, `updatedAt` est rafraîchi, et 200 retourné
+
+**Given** un admin authentifié  
+**When** il envoie `DELETE /api/articles/[id]`  
+**Then** l'article est supprimé (cascade) et 200 retourné
+
+**Given** un utilisateur (visiteur, membre, admin)  
+**When** il envoie `GET /api/articles`  
+**Then** seuls les articles publiés dont la visibilité est ≤ son tier (ou PUBLIC si non connecté) sont retournés, triés par `publishedAt` desc
+
+**Given** un utilisateur (visiteur, membre, admin)  
+**When** il envoie `GET /api/articles/[id]`  
+**Then** l'article est retourné si publié et visibilité ≤ tier utilisateur, sinon 404
+
+**Given** des données de seed  
+**When** `npx prisma db seed` est exécuté  
+**Then** 4 articles de démo sont créés (1 PUBLIC, 1 AFFRANCHI, 1 GRAND_FRERE, 1 BOSS) avec des contenus réalistes
+
+---
+
+### Story 9.2: Interface Admin CRUD Articles
+
+**En tant qu'** admin IBC,  
+**Je veux** une interface de gestion des articles avec sélecteur de visibilité par tier,  
+**Afin de** publier et organiser le contenu éditorial selon la stratégie de conversion.
+
+**Acceptance Criteria :**
+
+**Given** un admin sur `/admin/articles`  
+**When** la page se charge  
+**Then** un tableau affiche tous les articles (titre, catégorie, visibilité badge, statut published, date) avec actions modifier/supprimer/publier
+
+**Given** un admin sur `/admin/articles/new`  
+**When** il remplit le formulaire (titre, excerpt, contenu markdown, catégorie, visibilité) et soumet  
+**Then** l'article est créé en base avec `published: false`, slug auto-généré, et redirection vers la liste admin
+
+**Given** un admin sur `/admin/articles/[id]/edit`  
+**When** il modifie les champs et soumet  
+**Then** l'article est mis à jour en base et redirection vers la liste admin
+
+**Given** un admin sur la liste articles  
+**When** il clique "Publier" sur un article draft  
+**Then** l'article passe `published: true`, `publishedAt` est setté, et un audit log est créé
+
+**Given** un admin sur la liste articles  
+**When** il clique "Supprimer" et confirme  
+**Then** l'article est supprimé en base et un audit log est créé
+
+**Given** le sélecteur de visibilité dans le formulaire  
+**When** l'admin sélectionne une visibilité  
+**Then** le badge de visibilité affiche la valeur choisie (PUBLIC, Affranchi, Grands Frères, Boss) avec un indicateur visuel distinct par tier
+
+---
+
+### Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
+
+**En tant que** visiteur ou membre IBC,  
+**Je veux** parcourir et lire des articles selon mon niveau d'accès,  
+**Afin de** bénéficier de contenu éditorial gratuit et découvrir la valeur premium.
+
+**Acceptance Criteria :**
+
+**Given** un visiteur non connecté sur `/articles`  
+**When** la page se charge  
+**Then** seuls les articles `PUBLIC` publiés sont affichés, triés par date récente
+
+**Given** un membre avec tier AFFRANCHI et abonnement actif sur `/articles`  
+**When** la page se charge  
+**Then** les articles `PUBLIC` et `AFFRANCHI` sont affichés intégralement
+
+**Given** un membre sans abonnement actif sur `/articles`  
+**When** la page se charge  
+**Then** les articles `PUBLIC` sont affichés intégralement, les articles premium (AFFRANCHI+) affichent titre + excerpt + CTA "Abonnez-vous pour lire"
+
+**Given** un visiteur sur `/articles/comment-investir-abidjan`  
+**When** l'article est `PUBLIC` et publié  
+**Then** le contenu complet est affiché avec meta tags SEO
+
+**Given** un membre sans abonnement actif sur `/articles/guide-premium`  
+**When** l'article est `AFFRANCHI`  
+**Then** l'excerpt est affiché avec un CTA "Abonnez-vous pour lire l'article complet" et lien vers /pricing
+
+**Given** un utilisateur sur `/articles`  
+**When** il filtre par catégorie (conseil, guide, témoignage, actu)  
+**Then** seuls les articles de la catégorie sélectionnée et accessibles à son tier sont affichés
+
+**Given** un article inexistant ou non publié sur `/articles/[slug]`  
+**When** l'utilisateur accède à la page  
+**Then** une page 404 est affichée
+
+---
+
+### Story 9.4: SEO, Navigation et Intégration Site
+
+**En tant que** fondateur IBC,  
+**Je veux** que les articles soient optimisés pour le SEO et intégrés dans la navigation du site,  
+**Afin de** maximiser le trafic organique et la découverte du contenu.
+
+**Acceptance Criteria :**
+
+**Given** un article publié sur `/articles/[slug]`  
+**When** la page est rendue  
+**Then** les meta tags dynamiques (title, description, og:title, og:description, og:image) sont présents et corrects
+
+**Given** le sitemap XML du site  
+**When** il est généré  
+**Then** les articles publiés `PUBLIC` sont inclus avec leur URL, lastmod et priority
+
+**Given** la navigation principale du site  
+**When** l'utilisateur consulte le header/navbar  
+**Then** un lien "Articles" ou "Ressources" pointe vers `/articles`
+
+**Given** la landing page `/`  
+**When** un visiteur y accède  
+**Then** une section "Derniers articles" affiche les 3 derniers articles `PUBLIC` publiés (titre, excerpt, lien)
+
+**Given** un article publié  
+**When** la page est rendue  
+**Then** un structured data JSON-LD (schema.org/Article) est présent avec title, description, datePublished, author
+
+**Given** les tests E2E Playwright  
+**When** ils sont exécutés  
+**Then** les scénarios navigation articles, gate premium (visiteur vs membre), et SEO meta tags passent
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.1. Epic 9 ajouté via Sprint Change Proposal 2026-06-13.*
