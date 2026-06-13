@@ -39,7 +39,7 @@ describe("POST /api/user/avatar", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const formData = new FormData();
     formData.append("avatar", VALID_PNG);

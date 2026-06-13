@@ -92,7 +92,7 @@ describe("GET /api/subscriptions", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const res = await GET();
     const json = await res.json();
@@ -238,7 +238,7 @@ describe("POST /api/subscriptions", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const req = makeRequest({ tier: "AFFRANCHI", period: "MONTHLY" });
     const res = await POST(req);

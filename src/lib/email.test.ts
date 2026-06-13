@@ -114,4 +114,27 @@ describe("email helpers", () => {
       })
     );
   });
+
+  it("sends verification email with correct link and copy", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    const { sendEmailVerificationEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendEmailVerificationEmail({
+      to: "newmember@example.com",
+      name: "Jean",
+      token: "secret-token-123",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "newmember@example.com",
+        subject: "Vérifiez votre adresse email - Ivoire Business Club",
+        text: expect.stringContaining(
+          "https://ivoirebusinessclub.test/auth/verify-email?token=secret-token-123"
+        ),
+      })
+    );
+  });
 });

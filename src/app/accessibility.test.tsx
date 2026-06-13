@@ -2,12 +2,13 @@ import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { render } from "@testing-library/react";
 import { axe } from "vitest-axe";
-import { toHaveNoViolations } from "vitest-axe/matchers";
+import * as axeMatchers from "vitest-axe/matchers";
 import fs from "fs";
 import path from "path";
 import RootLayout from "./layout";
 
-expect.extend({ toHaveNoViolations });
+// @ts-ignore
+expect.extend(axeMatchers);
 
 // Mock next/font/google
 vi.mock("next/font/google", () => ({
@@ -57,6 +58,6 @@ describe("Accessibility and Core Layout Tests", () => {
       </main>
     );
     const results = await axe(container);
-    expect(results).toHaveNoViolations();
+    (expect(results) as any).toHaveNoViolations();
   });
 });

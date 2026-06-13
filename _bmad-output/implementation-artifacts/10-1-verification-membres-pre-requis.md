@@ -1,6 +1,9 @@
+---
+baseline_commit: 53e6274cb8da3975facd381c042ab90412583be0
+---
 # Story 10.1: Vérification membres — pré-requis automatiques et validation admin
 
-Status: ready-for-dev
+Status: ready-for-review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -47,57 +50,57 @@ so that seuls les profils actifs, complets et à email vérifié apparaissent da
 
 ## Tasks / Subtasks
 
-- [ ] Créer la logique centralisée `src/lib/verification.ts` (AC: 2, 6, 7)
-  - [ ] Exporter `isEligibleForVerification(user)` avec résultat explicite `{ eligible, missingPrerequisites }`.
-  - [ ] Exporter `getVerificationPrerequisites(user)` ou équivalent pour alimenter les UI admin/settings sans duplication.
-  - [ ] Exporter `autoTransitionVerificationStatus(userId)` : charge l'utilisateur, vérifie les pré-requis, met à jour uniquement `PENDING → EN_COURS`, retourne si un changement a eu lieu.
-  - [ ] Ne jamais rétrograder `VERIFIED`/`REJECTED`; ne pas passer un compte `SUSPENDED` en `EN_COURS`.
-  - [ ] Ajouter `src/lib/verification.test.ts` couvrant éligible, chaque critère manquant, chaînes vides/espaces, `PENDING → EN_COURS`, non-rétrogradation.
+- [x] Créer la logique centralisée `src/lib/verification.ts` (AC: 2, 6, 7)
+  - [x] Exporter `isEligibleForVerification(user)` avec résultat explicite `{ eligible, missingPrerequisites }`.
+  - [x] Exporter `getVerificationPrerequisites(user)` ou équivalent pour alimenter les UI admin/settings sans duplication.
+  - [x] Exporter `autoTransitionVerificationStatus(userId)` : charge l'utilisateur, vérifie les pré-requis, met à jour uniquement `PENDING → EN_COURS`, retourne si un changement a eu lieu.
+  - [x] Ne jamais rétrograder `VERIFIED`/`REJECTED`; ne pas passer un compte `SUSPENDED` en `EN_COURS`.
+  - [x] Ajouter `src/lib/verification.test.ts` couvrant éligible, chaque critère manquant, chaînes vides/espaces, `PENDING → EN_COURS`, non-rétrogradation.
 
-- [ ] Implémenter le flux email de vérification (AC: 1, 6, 7)
-  - [ ] Créer `src/app/api/auth/send-verification/route.ts` : exige session, refuse utilisateur introuvable, no-op/succès clair si email déjà vérifié.
-  - [ ] Ajouter un rate limiting strict sur `POST /api/auth/send-verification` en déclarant `verificationSendRateLimiter` (ex. 3 requêtes/minute par utilisateur/IP) dans `src/lib/rate-limit.ts`.
-  - [ ] Supprimer tout ancien `VerificationToken` associé à l'utilisateur avant la création d'un nouveau pour éviter le gaspillage d'espace DB.
-  - [ ] Générer un token sécurisé de haute entropie avec `crypto.randomBytes(32).toString("hex")` et fixer une expiration de 24 heures.
-  - [ ] Enregistrer le token en DB en laissant `identifier` s'auto-générer (CUID) pour contourner la contrainte de clé primaire de la table.
-  - [ ] Gérer les erreurs d'envoi d'email (SMTP) : attraper les exceptions de nodemailer, utiliser `sanitizeError(error)` pour logger de manière sécurisée sans fuiter de mot de passe SMTP, et retourner une erreur propre 500 en français.
-  - [ ] Ajouter `sendEmailVerificationEmail()` dans `src/lib/email.ts` avec sujet/copie française et lien `${APP_URL}/auth/verify-email?token=...`.
-  - [ ] Créer `src/app/api/auth/verify-email/route.ts` : valide le token, vérifie expiration, et dans une transaction Prisma unique, met `emailVerified = true`, supprime le token de la base, puis appelle `autoTransitionVerificationStatus()`.
-  - [ ] Créer `src/app/auth/verify-email/page.tsx` : page client ou server+client minimaliste qui lit `token`, appelle la route et affiche succès/erreur/action retour settings.
-  - [ ] Option recommandée : appeler l'envoi automatique après signup email dans `src/app/api/auth/signup/route.ts`; si l'email échoue, ne pas annuler la création du compte sauf décision explicite, mais loguer une erreur sanitisée.
-  - [ ] Tests : routes send/verify email (incluant rate limit, cleanup, et transaction), template email, token expiré/invalide, token supprimé, email déjà vérifié.
+- [x] Implémenter le flux email de vérification (AC: 1, 6, 7)
+  - [x] Créer `src/app/api/auth/send-verification/route.ts` : exige session, refuse utilisateur introuvable, no-op/succès clair si email déjà vérifié.
+  - [x] Ajouter un rate limiting strict sur `POST /api/auth/send-verification` en déclarant `verificationSendRateLimiter` (ex. 3 requêtes/minute par utilisateur/IP) dans `src/lib/rate-limit.ts`.
+  - [x] Supprimer tout ancien `VerificationToken` associé à l'utilisateur avant la création d'un nouveau pour éviter le gaspillage d'espace DB.
+  - [x] Générer un token sécurisé de haute entropie avec `crypto.randomBytes(32).toString("hex")` et fixer une expiration de 24 heures.
+  - [x] Enregistrer le token en DB en laissant `identifier` s'auto-générer (CUID) pour contourner la contrainte de clé primaire de la table.
+  - [x] Gérer les erreurs d'envoi d'email (SMTP) : attraper les exceptions de nodemailer, utiliser `sanitizeError(error)` pour logger de manière sécurisée sans fuiter de mot de passe SMTP, et retourner une erreur propre 500 en français.
+  - [x] Ajouter `sendEmailVerificationEmail()` dans `src/lib/email.ts` avec sujet/copie française et lien `${APP_URL}/auth/verify-email?token=...`.
+  - [x] Créer `src/app/api/auth/verify-email/route.ts` : valide le token, vérifie expiration, et dans une transaction Prisma unique, met `emailVerified = true`, supprime le token de la base, puis appelle `autoTransitionVerificationStatus()`.
+  - [x] Créer `src/app/auth/verify-email/page.tsx` : page client ou server+client minimaliste qui lit `token`, appelle la route et affiche succès/erreur/action retour settings.
+  - [x] Option recommandée : appeler l'envoi automatique après signup email dans `src/app/api/auth/signup/route.ts`; si l'email échoue, ne pas annuler la création du compte sauf décision explicite, mais loguer une erreur sanitisée.
+  - [x] Tests : routes send/verify email (incluant rate limit, cleanup, et transaction), template email, token expiré/invalide, token supprimé, email déjà vérifié.
 
-- [ ] Protéger la validation admin membre (AC: 3, 7)
-  - [ ] Modifier `src/app/api/admin/users/[id]/verify/route.ts` pour refuser les admins suspendus (`status === SUSPENDED`).
-  - [ ] Valider `action` explicitement : seuls `verify` et `reject` sont acceptés.
-  - [ ] Pour `action=verify`, charger les champs pré-requis (`emailVerified`, `bio`, `location`, `country`, `status`, `verificationStatus`) et utiliser `isEligibleForVerification()`.
-  - [ ] Retourner une erreur structurée avec `code` et `missingPrerequisites` si le membre n'est pas éligible.
-  - [ ] Préserver l'audit log existant uniquement lorsque le statut change réellement; l'audit doit rester avant toute future side effect fallible.
-  - [ ] Tests : non admin, admin suspendu, action invalide, utilisateur manquant, verify refusé si critères manquants, verify accepté si complet, reject accepté même incomplet, idempotence/audit.
+- [x] Protéger la validation admin membre (AC: 3, 7)
+  - [x] Modifier `src/app/api/admin/users/[id]/verify/route.ts` pour refuser les admins suspendus (`status === SUSPENDED`).
+  - [x] Valider `action` explicitement : seuls `verify` et `reject` sont acceptés.
+  - [x] Pour `action=verify`, charger les champs pré-requis (`emailVerified`, `bio`, `location`, `country`, `status`, `verificationStatus`) et utiliser `isEligibleForVerification()`.
+  - [x] Retourner une erreur structurée avec `code` et `missingPrerequisites` si le membre n'est pas éligible.
+  - [x] Préserver l'audit log existant uniquement lorsque le statut change réellement; l'audit doit rester avant toute future side effect fallible.
+  - [x] Tests : non admin, admin suspendu, action invalide, utilisateur manquant, verify refusé si critères manquants, verify accepté si complet, reject accepté même incomplet, idempotence/audit.
 
-- [ ] Mettre à jour `/admin/members` et `AdminMemberActions` (AC: 4, 7)
-  - [ ] Dans `src/app/(admin)/admin/members/page.tsx`, sélectionner `emailVerified`, `bio`, `location`, `country` en plus des champs existants.
-  - [ ] Calculer les pré-requis via `getVerificationPrerequisites()`/`isEligibleForVerification()` côté serveur et transmettre à `AdminMemberActions`.
-  - [ ] Afficher dans la colonne Vérification des icônes/labels lisibles : email, profil, compte actif, avec couleur + texte (pas couleur seule).
-  - [ ] Modifier `src/components/features/admin/admin-member-actions.tsx` : ajouter props `canVerifyMember`/`missingPrerequisites`, désactiver « Vérifier ✓ » si incomplet, encapsuler dans `Tooltip`/`TooltipTrigger`/`TooltipContent` existants.
-  - [ ] Garder « Envoyer email de confirmation » inchangé : c'est l'email de confirmation d'abonnement, pas l'email de vérification d'adresse.
-  - [ ] Tests component/page : props transmises, bouton désactivé, tooltip avec critères manquants, bouton actif si éligible, pas de régression self-suspend/email confirmation.
+- [x] Mettre à jour `/admin/members` et `AdminMemberActions` (AC: 4, 7)
+  - [x] Dans `src/app/(admin)/admin/members/page.tsx`, sélectionner `emailVerified`, `bio`, `location`, `country` en plus des champs existants.
+  - [x] Calculer les pré-requis via `getVerificationPrerequisites()`/`isEligibleForVerification()` côté serveur et transmettre à `AdminMemberActions`.
+  - [x] Afficher dans la colonne Vérification des icônes/labels lisibles : email, profil, compte actif, avec couleur + texte (pas couleur seule).
+  - [x] Modifier `src/components/features/admin/admin-member-actions.tsx` : ajouter props `canVerifyMember`/`missingPrerequisites`, désactiver « Vérifier ✓ » si incomplet, encapsuler dans `Tooltip`/`TooltipTrigger`/`TooltipContent` existants.
+  - [x] Garder « Envoyer email de confirmation » inchangé : c'est l'email de confirmation d'abonnement, pas l'email de vérification d'adresse.
+  - [x] Tests component/page : props transmises, bouton désactivé, tooltip avec critères manquants, bouton actif si éligible, pas de régression self-suspend/email confirmation.
 
-- [ ] Mettre à jour `/settings` côté membre (AC: 5, 7)
-  - [ ] Modifier `src/app/(dashboard)/settings/page.tsx` pour afficher le statut exact `PENDING`, `EN_COURS`, `VERIFIED`, `REJECTED`.
-  - [ ] Afficher la liste des pré-requis manquants via la même logique centralisée.
-  - [ ] Ajouter un petit composant client (ex. `src/components/features/auth/resend-verification-button.tsx`) pour appeler `POST /api/auth/send-verification` et afficher feedback accessible (`role="status"`).
-  - [ ] Supprimer/adapter le texte actuel « Réservé aux membres Boss » : la vérification membre concerne tous les membres visibles publiquement, pas uniquement Boss.
-  - [ ] Tests page/composant : rendu des quatre statuts, missing prereqs, bouton resend seulement si email non vérifié, feedback succès/erreur.
+- [x] Mettre à jour `/settings` côté membre (AC: 5, 7)
+  - [x] Modifier `src/app/(dashboard)/settings/page.tsx` pour afficher le statut exact `PENDING`, `EN_COURS`, `VERIFIED`, `REJECTED`.
+  - [x] Afficher la liste des pré-requis manquants via la même logique centralisée.
+  - [x] Ajouter un petit composant client (ex. `src/components/features/auth/resend-verification-button.tsx`) pour appeler `POST /api/auth/send-verification` et afficher feedback accessible (`role="status"`).
+  - [x] Supprimer/adapter le texte actuel « Réservé aux membres Boss » : la vérification membre concerne tous les membres visibles publiquement, pas uniquement Boss.
+  - [x] Tests page/composant : rendu des quatre statuts, missing prereqs, bouton resend seulement si email non vérifié, feedback succès/erreur.
 
-- [ ] Appeler l'auto-transition après mise à jour profil (AC: 6, 7)
-  - [ ] Modifier `src/app/api/user/profile/route.ts` après la transaction de mise à jour pour appeler `autoTransitionVerificationStatus(userId)`.
-  - [ ] S'assurer d'inclure le statut `verificationStatus` mis à jour dans l'objet retourné par l'API afin d'éviter une réponse obsolète (stale) côté client.
-  - [ ] Tests : profil incomplet ne transitionne pas; profil complet + email vérifié transitionne; `VERIFIED`/`REJECTED` ne rétrograde pas.
+- [x] Appeler l'auto-transition après mise à jour profil (AC: 6, 7)
+  - [x] Modifier `src/app/api/user/profile/route.ts` après la transaction de mise à jour pour appeler `autoTransitionVerificationStatus(userId)`.
+  - [x] S'assurer d'inclure le statut `verificationStatus` mis à jour dans l'objet retourné par l'API afin d'éviter une réponse obsolète (stale) côté client.
+  - [x] Tests : profil incomplet ne transitionne pas; profil complet + email vérifié transitionne; `VERIFIED`/`REJECTED` ne rétrograde pas.
 
-- [ ] Exécuter la validation finale (AC: 7)
-  - [ ] `cd /home/alphaperseii/projects/ibc && npx vitest run`
-  - [ ] `cd /home/alphaperseii/projects/ibc && npm run build`
+- [x] Exécuter la validation finale (AC: 7)
+  - [x] `cd /home/alphaperseii/projects/ibc && npx vitest run`
+  - [x] `cd /home/alphaperseii/projects/ibc && npm run build`
 
 ## Dev Notes
 
@@ -207,25 +210,44 @@ export function isEligibleForVerification(user: VerificationUser) {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Gemini 3.5 Flash (Medium)
 
 ### Debug Log References
+
+- dynamic bundler issues resolved by isolating db interactions in `src/lib/verification.server.ts`
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Centralized member verification prerequisites check helper created (`isEligibleForVerification()`, `getMissingVerificationPrerequisites()`).
+- Auto-transition logic implemented in a server-only environment (`src/lib/verification.server.ts`) to resolve Webpack bundling error on the client.
+- Implemented `POST /api/auth/send-verification` and `POST /api/auth/verify-email` with proper transactional execution, cleanup, and email notification templates.
+- Protected admin member verification routes with prerequisites checking and eligibility validation.
+- Disabled "Vérifier ✓" button on `/admin/members` table using Tooltips showing missing prereqs.
+- Member settings page `/settings` showing verification status details, missing prerequisites, and resend email verification button.
+- Integrated profile update auto-transition calls.
+- Validated all tests passing (524 tests, 89 test files) and build succeeding.
 
 ### File List
 
-- À créer : `src/lib/verification.ts`
-- À créer : `src/app/api/auth/send-verification/route.ts`
-- À créer : `src/app/api/auth/verify-email/route.ts`
-- À créer : `src/app/auth/verify-email/page.tsx`
-- À modifier : `src/lib/email.ts`
-- À modifier : `src/app/api/auth/signup/route.ts` (si envoi automatique à l'inscription retenu)
-- À modifier : `src/app/api/admin/users/[id]/verify/route.ts`
-- À modifier : `src/components/features/admin/admin-member-actions.tsx`
-- À modifier : `src/app/(admin)/admin/members/page.tsx`
-- À modifier : `src/app/(dashboard)/settings/page.tsx`
-- À modifier : `src/app/api/user/profile/route.ts`
-- Tests à créer/modifier selon la section Tests attendus.
+- Créé : `src/lib/verification.ts`
+- Créé : `src/lib/verification.server.ts`
+- Créé : `src/app/api/auth/send-verification/route.ts`
+- Créé : `src/app/api/auth/verify-email/route.ts`
+- Créé : `src/app/auth/verify-email/page.tsx`
+- Créé : `src/components/features/auth/resend-verification-button.tsx`
+- Créé : `src/lib/verification.test.ts`
+- Créé : `src/app/api/auth/send-verification/route.test.ts`
+- Créé : `src/app/api/auth/verify-email/route.test.ts`
+- Créé : `src/app/auth/verify-email/page.test.tsx`
+- Créé : `src/components/features/auth/resend-verification-button.test.tsx`
+- Créé : `src/components/features/admin/admin-member-actions.test.tsx`
+- Créé : `src/app/api/admin/users/[id]/verify/route.test.ts`
+- Créé : `src/app/(dashboard)/settings/page.test.tsx`
+- Modifié : `src/lib/email.ts`
+- Modifié : `src/app/api/auth/signup/route.ts`
+- Modifié : `src/app/api/admin/users/[id]/verify/route.ts`
+- Modifié : `src/components/features/admin/admin-member-actions.tsx`
+- Modifié : `src/app/(admin)/admin/members/page.tsx`
+- Modifié : `src/app/(dashboard)/settings/page.tsx`
+- Modifié : `src/app/api/user/profile/route.ts`

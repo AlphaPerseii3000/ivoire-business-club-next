@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { signupSchema } from "@/lib/validations";
 import { signupRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { roleForEmail } from "@/lib/admin-authorization";
+import { sendEmailVerificationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -38,6 +40,28 @@ export async function POST(req: Request) {
     const user = await prisma.user.create({
       data: { name, email, passwordHash, role: roleForEmail(email) },
     });
+
+    // Send verification email (non-blocking for registration success)
+    try {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await prisma.verificationToken.create({
+        data: {
+          token,
+          expires,
+          userId: user.id,
+        },
+      });
+
+      await sendEmailVerificationEmail({
+        to: user.email,
+        name: user.name,
+        token,
+      });
+    } catch (verifyEmailError) {
+      console.error("Failed to send initial email verification:", sanitizeError(verifyEmailError));
+    }
 
     return NextResponse.json(
       { id: user.id, email: user.email, name: user.name },

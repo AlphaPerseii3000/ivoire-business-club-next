@@ -110,6 +110,24 @@ async function sendEmail({
   }
 }
 
+export async function sendEmailVerificationEmail({
+  to,
+  name,
+  token,
+}: {
+  to: string;
+  name?: string | null;
+  token: string;
+}) {
+  const appUrl = process.env.APP_URL || "";
+  const verifyLink = `${appUrl}/auth/verify-email?token=${token}`;
+  await sendEmail({
+    to,
+    subject: "Vérifiez votre adresse email - Ivoire Business Club",
+    text: `${greeting(name)}\n\nMerci de vous être inscrit sur Ivoire Business Club. Veuillez vérifier votre adresse email en cliquant sur le lien suivant :\n\n${verifyLink}\n\nCe lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.`,
+  });
+}
+
 export async function sendSubscriptionActivatedEmail({
   to,
   name,

@@ -162,7 +162,7 @@ export async function createUploadSignedUrl(params: { key: string; mimeType: str
 
 export async function uploadObjectToS3(key: string, buffer: Buffer, mimeType: string) {
   const config = getR2Config();
-  await getR2Client().send(
+  await (getR2Client() as any).send(
     new PutObjectCommand({
       Bucket: config.bucketName,
       Key: key,

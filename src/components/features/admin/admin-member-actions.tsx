@@ -13,6 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { VERIFICATION_LABELS } from "@/lib/verification";
 
 type VerificationStatus = "PENDING" | "EN_COURS" | "VERIFIED" | "REJECTED";
 
@@ -22,6 +24,8 @@ type MemberActionsProps = {
   verificationStatus: VerificationStatus;
   isCurrentAdmin: boolean;
   hasEmail: boolean;
+  canVerifyMember: boolean;
+  missingPrerequisites: string[];
 };
 
 async function readApiError(response: Response) {
@@ -33,7 +37,15 @@ async function readApiError(response: Response) {
   }
 }
 
-export function AdminMemberActions({ userId, status, verificationStatus, isCurrentAdmin, hasEmail }: MemberActionsProps) {
+export function AdminMemberActions({
+  userId,
+  status,
+  verificationStatus,
+  isCurrentAdmin,
+  hasEmail,
+  canVerifyMember,
+  missingPrerequisites,
+}: MemberActionsProps) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -50,7 +62,7 @@ export function AdminMemberActions({ userId, status, verificationStatus, isCurre
   const disableSuspend = isPending || !canSuspend;
   const disableEmail = isPending || !canEmail;
   const isPendingVerification = verificationStatus === "PENDING" || verificationStatus === "EN_COURS" || verificationStatus === "REJECTED";
-  const canVerify = isPendingVerification && !isPending;
+  const canVerify = isPendingVerification && !isPending && canVerifyMember;
 
   function runStatusMutation() {
     startTransition(async () => {
@@ -137,29 +149,52 @@ export function AdminMemberActions({ userId, status, verificationStatus, isCurre
           </Dialog>
         )}
 
-        {canVerify ? (
+        {isPendingVerification ? (
           <>
-            <Button type="button" variant="default" className="min-h-11" disabled={isPending} onClick={() => setVerifyDialogOpen(true)}>
-              Vérifier ✓
-            </Button>
-            <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Confirmer la vérification</DialogTitle>
-                  <DialogDescription>
-                    Ce membre apparaîtra dans la section Membres du site et pourra accéder aux opportunités vérifiées.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="min-h-11" onClick={() => setVerifyDialogOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="button" className="min-h-11" disabled={isPending} onClick={() => runVerifyMutation("verify")}>
-                    Confirmer la vérification
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {canVerifyMember ? (
+              <>
+                <Button type="button" variant="default" className="min-h-11" disabled={isPending} onClick={() => setVerifyDialogOpen(true)}>
+                  Vérifier ✓
+                </Button>
+                <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirmer la vérification</DialogTitle>
+                      <DialogDescription>
+                        Ce membre apparaîtra dans la section Membres du site et pourra accéder aux opportunités vérifiées.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" className="min-h-11" onClick={() => setVerifyDialogOpen(false)}>
+                        Annuler
+                      </Button>
+                      <Button type="button" className="min-h-11" disabled={isPending} onClick={() => runVerifyMutation("verify")}>
+                        Confirmer la vérification
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <span className="inline-block cursor-not-allowed">
+                        <Button type="button" variant="default" className="min-h-11 pointer-events-none opacity-50" disabled>
+                          Vérifier ✓
+                        </Button>
+                      </span>
+                    }
+                  />
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Critères manquants : {missingPrerequisites.map(code => VERIFICATION_LABELS[code] || code).join(", ")}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
             <Button type="button" variant="outline" className="min-h-11" disabled={isPending} onClick={() => setRejectDialogOpen(true)}>
               Rejeter ✗

@@ -3,6 +3,7 @@ import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { isEligibleForVerification, getMissingVerificationPrerequisites } from "@/lib/verification";
 
 const tierLabels: Record<string, string> = {
   AFFRANCHI: "Affranchi",
@@ -64,6 +65,10 @@ export default async function AdminMembersPage() {
       tier: true,
       status: true,
       verificationStatus: true,
+      emailVerified: true,
+      bio: true,
+      location: true,
+      country: true,
       createdAt: true,
       subscriptions: {
         orderBy: { createdAt: "desc" },
@@ -116,6 +121,10 @@ export default async function AdminMembersPage() {
                 const hasEmail = Boolean(member.email);
                 const tierLabel = tierLabels[member.tier] ?? member.tier;
                 const accountBadgeClass = member.status === "SUSPENDED" ? "bg-destructive/10 text-destructive" : "bg-emerald-100 text-emerald-800";
+                const eligibility = isEligibleForVerification(member);
+                const emailOk = !eligibility.missingPrerequisites.includes("EMAIL_UNVERIFIED");
+                const profileOk = !eligibility.missingPrerequisites.includes("BIO_MISSING") && !eligibility.missingPrerequisites.includes("LOCATION_MISSING") && !eligibility.missingPrerequisites.includes("COUNTRY_MISSING");
+                const statusOk = !eligibility.missingPrerequisites.includes("ACCOUNT_SUSPENDED");
 
                 return (
                   <tr key={member.id} className="border-b hover:bg-muted/40">
@@ -139,7 +148,29 @@ export default async function AdminMembersPage() {
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${accountBadgeClass}`}>{accountLabel}</span>
                     </td>
                     <td className="px-4 py-4">
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${verificationBadge}`}>{verificationLabel}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium self-start ${verificationBadge}`}>{verificationLabel}</span>
+                        <div className="flex flex-wrap gap-2 text-[10px] font-medium mt-1">
+                          <span
+                            className={emailOk ? "text-emerald-700" : "text-muted-foreground/80"}
+                            title={emailOk ? "Email vérifié" : "Email non vérifié"}
+                          >
+                            {emailOk ? "✓ Email" : "✗ Email"}
+                          </span>
+                          <span
+                            className={profileOk ? "text-emerald-700" : "text-muted-foreground/80"}
+                            title={profileOk ? "Profil complété" : "Profil incomplet"}
+                          >
+                            {profileOk ? "✓ Profil" : "✗ Profil"}
+                          </span>
+                          <span
+                            className={statusOk ? "text-emerald-700" : "text-muted-foreground/80"}
+                            title={statusOk ? "Compte actif" : "Compte suspendu"}
+                          >
+                            {statusOk ? "✓ Actif" : "✗ Actif"}
+                          </span>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{dateLabel}</td>
                     <td className="px-4 py-4">
@@ -149,6 +180,8 @@ export default async function AdminMembersPage() {
                         verificationStatus={member.verificationStatus}
                         isCurrentAdmin={isCurrentAdmin}
                         hasEmail={hasEmail}
+                        canVerifyMember={eligibility.eligible}
+                        missingPrerequisites={eligibility.missingPrerequisites}
                       />
                     </td>
                   </tr>

@@ -4,6 +4,7 @@ import { POST } from "./route";
 const mockUserCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockSubscriptionCreate = vi.hoisted(() => vi.fn());
+const mockVerificationTokenCreate = vi.hoisted(() => vi.fn());
 const mockRateLimit = vi.hoisted(() => vi.fn(async () => ({ success: true, limit: 5, remaining: 4, reset: 0 })));
 
 vi.mock("@/lib/prisma", () => ({
@@ -14,6 +15,9 @@ vi.mock("@/lib/prisma", () => ({
     },
     subscription: {
       create: mockSubscriptionCreate,
+    },
+    verificationToken: {
+      create: mockVerificationTokenCreate,
     },
   },
 }));
@@ -27,6 +31,10 @@ vi.mock("@/lib/rate-limit", () => ({
     if (forwarded) return forwarded.split(",")[0].trim();
     return "unknown";
   }),
+}));
+
+vi.mock("@/lib/email", () => ({
+  sendEmailVerificationEmail: vi.fn(async () => {}),
 }));
 
 vi.mock("@/lib/sanitize-log", () => ({

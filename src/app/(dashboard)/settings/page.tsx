@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import DeleteAccountDialog from "@/components/features/auth/delete-account-dialog";
+import ResendVerificationButton from "@/components/features/auth/resend-verification-button";
+import { getMissingVerificationPrerequisites, VERIFICATION_LABELS } from "@/lib/verification";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -46,28 +48,53 @@ export default async function SettingsPage() {
 
       {/* Verification */}
       <section id="verification" className="mt-8">
-        <h2 className="text-lg font-semibold">Vérification d&apos;identité</h2>
+        <h2 className="text-lg font-semibold">Vérification de profil</h2>
         <div className="mt-4 rounded-xl border bg-card p-6">
-          <p className="text-sm text-muted-foreground">
-            Le <strong>cachet de conformité</strong> atteste que tu es un acteur vérifié et fiable.
-            Réservé aux membres Boss.
+          <p className="text-sm text-muted-foreground font-medium">
+            Le <strong>badge de vérification</strong> atteste que tu es un membre vérifié et de confiance de l&apos;Ivoire Business Club.
           </p>
-          {user.verificationStatus === "VERIFIED" ? (
-            <p className="mt-4 text-accent font-medium">✅ Identité vérifiée</p>
-          ) : (
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground">
-                Statut actuel : {user.verificationStatus === "PENDING" ? "⏳ En cours de vérification" : "❌ Non vérifié"}
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold">Statut actuel :</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {user.verificationStatus === "VERIFIED"
+                  ? "✅ Membre vérifié"
+                  : user.verificationStatus === "PENDING"
+                  ? "⏳ En attente de vérification"
+                  : user.verificationStatus === "EN_COURS"
+                  ? "🔄 Vérification en cours — un administrateur validera bientôt ton profil"
+                  : user.verificationStatus === "REJECTED"
+                  ? "❌ Vérification rejetée"
+                  : "Non vérifié"}
               </p>
-              {user.tier === "BOSS" ? (
-                user.verificationStatus !== "PENDING" ? (
-                  <button className="mt-4 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">
-                    Demander la vérification
-                  </button>
-                ) : null
-              ) : null}
             </div>
-          )}
+
+            {(() => {
+              const missing = getMissingVerificationPrerequisites(user);
+              const hasMissingPrerequisites = missing.length > 0;
+              return hasMissingPrerequisites ? (
+                <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive space-y-2">
+                  <p className="font-semibold">Critères restants pour soumettre à la validation admin :</p>
+                  <ul className="list-inside list-disc space-y-1">
+                    {missing.map((code) => {
+                      const label = VERIFICATION_LABELS[code] || code;
+                      return <li key={code}>{label}</li>;
+                    })}
+                  </ul>
+                </div>
+              ) : null;
+            })()}
+
+            {user.emailVerified === false ? (
+              <div className="mt-4 pt-4 border-t border-border space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Ton adresse email n&apos;est pas encore vérifiée. Valide ton compte pour soumettre ton profil à l&apos;administration.
+                </p>
+                <ResendVerificationButton />
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
 

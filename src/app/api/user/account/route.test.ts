@@ -74,7 +74,7 @@ describe("DELETE /api/user/account", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const req = makeDeleteRequest({ confirmation: "SUPPRIMER" });
     const res = await DELETE(req);
@@ -85,7 +85,7 @@ describe("DELETE /api/user/account", () => {
   });
 
   it("returns 401 if session has no user id", async () => {
-    mockAuth.mockResolvedValueOnce({ user: {} });
+    (mockAuth as any).mockResolvedValueOnce({ user: {} });
 
     const req = makeDeleteRequest({ confirmation: "SUPPRIMER" });
     const res = await DELETE(req);

@@ -56,3 +56,4 @@ export function getClientIdentifier(req: Request, userId?: string): string {
 export const signupRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
 export const signinRateLimiter = createRateLimiter({ requests: 10, windowSeconds: 60 });
 export const accountDeleteRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
+export const verificationSendRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });

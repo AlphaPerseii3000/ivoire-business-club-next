@@ -130,7 +130,7 @@ describe("DeleteAccountDialog", () => {
 
     const confirmButton = await waitFor(() => {
       const btns = screen.getAllByRole("button");
-      const cb = btns.find(b => b.textContent?.includes("Supprimer définitivement") && !b.disabled);
+      const cb = btns.find(b => b.textContent?.includes("Supprimer définitivement") && !(b as any).disabled);
       if (!cb) throw new Error("Confirm button not found or not enabled");
       return cb;
     });
@@ -159,7 +159,7 @@ describe("DeleteAccountDialog", () => {
 
     const confirmButton = await waitFor(() => {
       const btns = screen.getAllByRole("button");
-      const cb = btns.find(b => b.textContent?.includes("Supprimer définitivement") && !b.disabled);
+      const cb = btns.find(b => b.textContent?.includes("Supprimer définitivement") && !(b as any).disabled);
       if (!cb) throw new Error("Confirm button not found or not enabled");
       return cb;
     });

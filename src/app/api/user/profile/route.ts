@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { dedupeTags } from "@/lib/tags";
 import { profileUpdateSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { autoTransitionVerificationStatus } from "@/lib/verification.server";
 
 const profileSelect = {
   id: true,
@@ -94,11 +95,18 @@ export async function POST(req: Request) {
         }
       }
 
-      return tx.user.update({
+      const user = await tx.user.update({
         where: { id: userId },
         data: sanitizedData,
         select: profileSelect,
       });
+
+      const transition = await autoTransitionVerificationStatus(userId, tx);
+      if (transition.changed) {
+        user.verificationStatus = transition.status;
+      }
+
+      return user;
     });
 
     return NextResponse.json({ data: updatedUser });

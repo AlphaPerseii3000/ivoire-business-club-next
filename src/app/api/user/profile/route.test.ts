@@ -12,6 +12,7 @@ const mockTransaction = vi.hoisted(() => vi.fn((callback) => callback({
   user: { update: mockUserUpdate },
   userTag: { deleteMany: mockUserTagDeleteMany, createMany: mockUserTagCreateMany },
 })));
+const mockAutoTransition = vi.hoisted(() => vi.fn(async () => ({ changed: false, status: "PENDING" })));
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -29,6 +30,10 @@ vi.mock("@/lib/prisma", () => ({
       createMany: mockUserTagCreateMany,
     },
   },
+}));
+
+vi.mock("@/lib/verification.server", () => ({
+  autoTransitionVerificationStatus: mockAutoTransition,
 }));
 
 vi.mock("@/lib/sanitize-log", () => ({
@@ -83,7 +88,7 @@ describe("GET /api/user/profile", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const res = await GET();
     const json = await res.json();
@@ -142,7 +147,7 @@ describe("POST /api/user/profile", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    (mockAuth as any).mockResolvedValueOnce(null);
 
     const req = makeRequest({ name: "Test" });
     const res = await POST(req);
@@ -298,6 +303,24 @@ describe("POST /api/user/profile", () => {
     expect(res.status).toBe(400);
     expect(json.error).toBe("Données invalides");
     expect(json.details.name).toBeDefined();
+  });
+
+  it("calls autoTransitionVerificationStatus inside transaction and merges updated verification status", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserUpdate.mockResolvedValueOnce({
+      ...mockUserData,
+      name: "Jean Dupont",
+      verificationStatus: "PENDING",
+    });
+    mockAutoTransition.mockResolvedValueOnce({ changed: true, status: "EN_COURS" });
+
+    const req = makeRequest({ name: "Jean Dupont" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.verificationStatus).toBe("EN_COURS");
+    expect(mockAutoTransition).toHaveBeenCalledWith("user-123", expect.any(Object));
   });
 
   it("returns 500 on unexpected error", async () => {
