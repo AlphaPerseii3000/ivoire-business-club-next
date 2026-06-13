@@ -25,4 +25,8 @@
 - Lack of try-catch on top-level import in next.config.ts: In [next.config.ts](file:///d:/Code/ivoire-business-club-next/next.config.ts#L6), importing `./patch-readlink.js` at the top-level has no safety check, which could block the webpack compiler if the file is missing.
 - Sticky CTA Button on Mobile: In layout / page files, the spec requires a principal sticky CTA button at the bottom of the screen on mobile, which is deferred because: Reporter car cette fonctionnalité dépend de pages de détails non modifiées dans cette story.
 
+## Deferred from: code review of 9-1-modele-article-migration-et-api-routes.md (2026-06-13)
 
+- Typage faible de la session (session.user as any) dans `src/app/api/articles/route.ts:39` — pre-existing
+- Absence de pagination sur GET /api/articles dans `src/app/api/articles/route.ts:28` — pre-existing
+- Absence de validation réelle de l'intégrité de la base de données dans les tests (convention de mocking existante) dans `src/app/api/articles/route.test.ts` — pre-existing

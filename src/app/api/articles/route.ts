@@ -2,28 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { articleCreateSchema } from "@/lib/validations";
-import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
+import { getAccessibleArticleVisibilities, generateUniqueSlug } from "@/lib/article-visibility";
 import { hasActiveSubscription } from "@/lib/subscription-access";
-import { slugify } from "@/lib/utils";
-
-async function generateUniqueSlug(title: string): Promise<string> {
-  const baseSlug = slugify(title);
-  let slug = baseSlug;
-  let count = 0;
-
-  while (true) {
-    const existing = await prisma.article.findUnique({
-      where: { slug },
-      select: { id: true },
-    });
-    if (!existing) {
-      break;
-    }
-    count++;
-    slug = `${baseSlug}-${count}`;
-  }
-  return slug;
-}
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function GET(req: Request) {
   try {
@@ -50,7 +31,10 @@ export async function GET(req: Request) {
 
     const articles = await prisma.article.findMany({
       where: whereClause,
-      orderBy: { publishedAt: "desc" },
+      orderBy: [
+        { publishedAt: "desc" },
+        { id: "desc" }
+      ],
       include: {
         author: {
           select: {
@@ -63,7 +47,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ data: articles });
   } catch (error) {
-    console.error("List articles error:", error);
+    console.error("List articles error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
@@ -75,7 +59,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Corps de requête JSON invalide ou vide" },
+        { status: 400 }
+      );
+    }
+
     const parsed = articleCreateSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -87,24 +80,40 @@ export async function POST(req: Request) {
     }
 
     const { title, excerpt, content, category, visibility } = parsed.data;
-    const slug = await generateUniqueSlug(title);
+    
+    let slug;
+    try {
+      slug = await generateUniqueSlug(title);
+    } catch (slugError: any) {
+      return NextResponse.json({ error: slugError.message }, { status: 400 });
+    }
 
-    const article = await prisma.article.create({
-      data: {
-        title,
-        excerpt,
-        content,
-        category,
-        visibility,
-        slug,
-        published: false,
-        authorId: session.user.id,
-      },
-    });
+    try {
+      const article = await prisma.article.create({
+        data: {
+          title,
+          excerpt,
+          content,
+          category,
+          visibility,
+          slug,
+          published: false,
+          authorId: session.user.id,
+        },
+      });
 
-    return NextResponse.json(article, { status: 201 });
+      return NextResponse.json(article, { status: 201 });
+    } catch (dbError: any) {
+      if (dbError.code === "P2002") {
+        return NextResponse.json(
+          { error: "Un article avec ce titre ou slug existe déjà." },
+          { status: 409 }
+        );
+      }
+      throw dbError;
+    }
   } catch (error) {
-    console.error("Create article error:", error);
+    console.error("Create article error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

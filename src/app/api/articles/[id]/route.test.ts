@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, PUT, DELETE } from "./route";
 
 const mockAuth = vi.hoisted(() => vi.fn());
-const mockArticleFindUnique = vi.hoisted(() => vi.fn());
 const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockArticleUpdate = vi.hoisted(() => vi.fn());
 const mockArticleDelete = vi.hoisted(() => vi.fn());
@@ -15,7 +14,6 @@ vi.mock("@/lib/subscription-access", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     article: {
-      findUnique: mockArticleFindUnique,
       findFirst: mockArticleFindFirst,
       update: mockArticleUpdate,
       delete: mockArticleDelete,
@@ -50,7 +48,6 @@ describe("GET /api/articles/[id]", () => {
   });
 
   it("returns 404 if article is not found", async () => {
-    mockArticleFindUnique.mockResolvedValue(null);
     mockArticleFindFirst.mockResolvedValue(null);
 
     const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "unknown" }) });
@@ -59,7 +56,7 @@ describe("GET /api/articles/[id]", () => {
 
   it("returns 404 for visitor when article is not PUBLIC", async () => {
     mockAuth.mockResolvedValue(null);
-    mockArticleFindUnique.mockResolvedValue(mockArticle);
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
 
     const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
     expect(response.status).toBe(404);
@@ -67,7 +64,7 @@ describe("GET /api/articles/[id]", () => {
 
   it("returns 200 for visitor when article is PUBLIC and published", async () => {
     mockAuth.mockResolvedValue(null);
-    mockArticleFindUnique.mockResolvedValue({
+    mockArticleFindFirst.mockResolvedValue({
       ...mockArticle,
       visibility: "PUBLIC",
     });
@@ -81,7 +78,7 @@ describe("GET /api/articles/[id]", () => {
   it("returns 200 for subscribed member with matching tier", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER", tier: "AFFRANCHI" } });
     mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindUnique.mockResolvedValue(mockArticle);
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
 
     const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
     expect(response.status).toBe(200);
@@ -90,7 +87,7 @@ describe("GET /api/articles/[id]", () => {
   it("returns 404 for subscribed member with lower tier", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER", tier: "AFFRANCHI" } });
     mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindUnique.mockResolvedValue({
+    mockArticleFindFirst.mockResolvedValue({
       ...mockArticle,
       visibility: "BOSS",
     });
@@ -101,7 +98,7 @@ describe("GET /api/articles/[id]", () => {
 
   it("returns 200 for admin even if article is draft or higher tier", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockArticleFindUnique.mockResolvedValue({
+    mockArticleFindFirst.mockResolvedValue({
       ...mockArticle,
       published: false,
       visibility: "BOSS",
@@ -128,14 +125,16 @@ describe("PUT /api/articles/[id]", () => {
 
   it("updates fields and returns updated article for admin", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockArticleFindUnique.mockResolvedValue(mockArticle);
+    // First lookup in PUT gets the existing article, second lookup in generateUniqueSlug returns null (no collision)
+    mockArticleFindFirst
+      .mockResolvedValueOnce(mockArticle)
+      .mockResolvedValueOnce(null);
+
     mockArticleUpdate.mockResolvedValue({
       ...mockArticle,
       title: "Titre mis à jour",
       slug: "titre-mis-a-jour",
     });
-    // First lookup for slug collision finds no collision
-    mockArticleFindFirst.mockResolvedValue(null);
 
     const response = await PUT(makeRequest("PUT", { title: "Titre mis à jour" }), {
       params: Promise.resolve({ id: "art-1" }),
@@ -145,6 +144,20 @@ describe("PUT /api/articles/[id]", () => {
     const payload = await response.json();
     expect(payload.title).toBe("Titre mis à jour");
     expect(payload.slug).toBe("titre-mis-a-jour");
+  });
+
+  it("returns 400 when body has malformed JSON", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    const badRequest = new Request("http://localhost/api/articles/art-1", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: "{invalid-json",
+    });
+
+    const response = await PUT(badRequest, { params: Promise.resolve({ id: "art-1" }) });
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toBe("Corps de requête JSON invalide ou vide");
   });
 });
 
@@ -164,7 +177,7 @@ describe("DELETE /api/articles/[id]", () => {
 
   it("deletes article and returns ok: true for admin", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockArticleFindUnique.mockResolvedValue(mockArticle);
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
     mockArticleDelete.mockResolvedValue(mockArticle);
 
     const response = await DELETE(makeRequest("DELETE"), {

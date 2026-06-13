@@ -2,31 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { articleUpdateSchema } from "@/lib/validations";
-import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
+import { getAccessibleArticleVisibilities, generateUniqueSlug } from "@/lib/article-visibility";
 import { hasActiveSubscription } from "@/lib/subscription-access";
-import { slugify } from "@/lib/utils";
-
-async function generateUniqueSlug(title: string, excludeId?: string): Promise<string> {
-  const baseSlug = slugify(title);
-  let slug = baseSlug;
-  let count = 0;
-
-  while (true) {
-    const existing = await prisma.article.findFirst({
-      where: {
-        slug,
-        ...(excludeId ? { NOT: { id: excludeId } } : {}),
-      },
-      select: { id: true },
-    });
-    if (!existing) {
-      break;
-    }
-    count++;
-    slug = `${baseSlug}-${count}`;
-  }
-  return slug;
-}
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function GET(
   req: Request,
@@ -47,8 +25,8 @@ export async function GET(
       }
     }
 
-    let article = await prisma.article.findUnique({
-      where: { id },
+    const article = await prisma.article.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
       include: {
         author: {
           select: {
@@ -58,20 +36,6 @@ export async function GET(
         },
       },
     });
-
-    if (!article) {
-      article = await prisma.article.findUnique({
-        where: { slug: id },
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      });
-    }
 
     if (!article) {
       return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
@@ -84,13 +48,13 @@ export async function GET(
 
       const visibilities = getAccessibleArticleVisibilities(userTier, hasActiveSub);
       if (!visibilities.includes(article.visibility)) {
-        return NextResponse.json({ error: "Non autorisé" }, { status: 404 });
+        return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
       }
     }
 
     return NextResponse.json(article);
   } catch (error) {
-    console.error("Get article error:", error);
+    console.error("Get article error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
@@ -106,7 +70,13 @@ export async function PUT(
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Corps de requête JSON invalide ou vide" }, { status: 400 });
+    }
+
     const parsed = articleUpdateSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -117,15 +87,9 @@ export async function PUT(
       );
     }
 
-    let article = await prisma.article.findUnique({
-      where: { id },
+    const article = await prisma.article.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
     });
-
-    if (!article) {
-      article = await prisma.article.findUnique({
-        where: { slug: id },
-      });
-    }
 
     if (!article) {
       return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
@@ -134,7 +98,11 @@ export async function PUT(
     const data: any = { ...parsed.data };
 
     if (parsed.data.title && parsed.data.title !== article.title) {
-      data.slug = await generateUniqueSlug(parsed.data.title, article.id);
+      try {
+        data.slug = await generateUniqueSlug(parsed.data.title, article.id);
+      } catch (slugError: any) {
+        return NextResponse.json({ error: slugError.message }, { status: 400 });
+      }
     }
 
     if (data.published === true && !article.published) {
@@ -143,14 +111,23 @@ export async function PUT(
       data.publishedAt = null;
     }
 
-    const updatedArticle = await prisma.article.update({
-      where: { id: article.id },
-      data,
-    });
-
-    return NextResponse.json(updatedArticle);
+    try {
+      const updatedArticle = await prisma.article.update({
+        where: { id: article.id },
+        data,
+      });
+      return NextResponse.json(updatedArticle);
+    } catch (dbError: any) {
+      if (dbError.code === "P2002") {
+        return NextResponse.json(
+          { error: "Un article avec ce titre ou slug existe déjà." },
+          { status: 409 }
+        );
+      }
+      throw dbError;
+    }
   } catch (error) {
-    console.error("Update article error:", error);
+    console.error("Update article error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
@@ -166,15 +143,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    let article = await prisma.article.findUnique({
-      where: { id },
+    const article = await prisma.article.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
     });
-
-    if (!article) {
-      article = await prisma.article.findUnique({
-        where: { slug: id },
-      });
-    }
 
     if (!article) {
       return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
@@ -186,7 +157,7 @@ export async function DELETE(
 
     return NextResponse.json({ data: { ok: true } });
   } catch (error) {
-    console.error("Delete article error:", error);
+    console.error("Delete article error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

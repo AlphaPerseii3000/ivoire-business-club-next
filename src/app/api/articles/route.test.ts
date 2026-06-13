@@ -5,7 +5,10 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockArticleFindMany = vi.hoisted(() => vi.fn());
 const mockArticleCreate = vi.hoisted(() => vi.fn());
 const mockArticleFindUnique = vi.hoisted(() => vi.fn());
+const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
+const mockUserUpsert = vi.hoisted(() => vi.fn());
+const mockArticleDeleteMany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -17,7 +20,13 @@ vi.mock("@/lib/prisma", () => ({
       findMany: mockArticleFindMany,
       create: mockArticleCreate,
       findUnique: mockArticleFindUnique,
+      findFirst: mockArticleFindFirst,
+      deleteMany: mockArticleDeleteMany,
     },
+    user: {
+      upsert: mockUserUpsert,
+    },
+    $disconnect: vi.fn(),
   },
 }));
 
@@ -205,7 +214,7 @@ describe("POST /api/articles", () => {
 
   it("creates an article with default draft status and auto-generated slug for admin", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockArticleFindUnique.mockResolvedValue(null);
+    mockArticleFindFirst.mockResolvedValue(null);
     mockArticleCreate.mockResolvedValue({
       id: "art-5",
       title: "Nouveau titre",
@@ -242,7 +251,7 @@ describe("POST /api/articles", () => {
   it("handles slug collision correctly by appending counter", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     // First lookup finds a collision, second lookup finds no collision
-    mockArticleFindUnique
+    mockArticleFindFirst
       .mockResolvedValueOnce({ id: "existing-id" })
       .mockResolvedValueOnce(null);
 
@@ -270,5 +279,43 @@ describe("POST /api/articles", () => {
         }),
       })
     );
+  });
+
+  it("returns 400 when body has malformed JSON", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    const badRequest = new Request("http://localhost/api/articles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{invalid-json",
+    });
+
+    const response = await POST(badRequest);
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toBe("Corps de requête JSON invalide ou vide");
+  });
+});
+
+describe("Database Seeding", () => {
+  it("executes database seeding successfully", async () => {
+    mockUserUpsert.mockResolvedValue({ id: "admin-1", email: "admin@ivoirebusinessclub.com" });
+    mockArticleDeleteMany.mockResolvedValue({ count: 4 });
+    mockArticleCreate.mockResolvedValue({ id: "seeded-art", title: "seeded" });
+
+    // Mock console.log to avoid polluting output
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    // Run seed by importing dynamically
+    await import("../../../../prisma/seed");
+
+    expect(mockUserUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { email: "admin@ivoirebusinessclub.com" },
+      })
+    );
+    expect(mockArticleDeleteMany).toHaveBeenCalled();
+    expect(mockArticleCreate).toHaveBeenCalledTimes(4);
+
+    consoleLogSpy.mockRestore();
   });
 });

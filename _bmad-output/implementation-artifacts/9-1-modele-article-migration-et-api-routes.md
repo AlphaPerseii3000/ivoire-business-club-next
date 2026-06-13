@@ -3,7 +3,7 @@ baseline_commit: 95d694fb7c969451ebf5a4bc605ed2c714e49eea
 ---
 # Story 9.1: Modèle Article, Migration et API Routes
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -93,6 +93,25 @@ Status: review
     - [x] La génération correcte des slugs uniques.
     - [x] Le bon comportement du seeding.
   - [x] Lancer `npx vitest run` et vérifier que tous les tests passent.
+
+### Review Findings
+
+- [x] [Review][Decision] Incohérence du statut HTTP (404 au lieu de 403) pour accès restreint — Si un utilisateur demande un article existant mais que son tier est insuffisant, la route GET `/api/articles/[id]` renvoie un statut 404 avec l'erreur "Non autorisé". Il faut décider s'il convient de renvoyer un statut 403 Forbidden explicite ou de renvoyer un statut 404 Not Found avec un message neutre (ex: "Article non trouvé") afin de masquer l'existence de l'article aux non-abonnés.
+- [x] [Review][Patch] Non-utilisation de sanitizeError pour les logs d'erreurs [src/app/api/articles/route.ts:59]
+- [x] [Review][Patch] Duplication de la fonction generateUniqueSlug [src/app/api/articles/route.ts:9]
+- [x] [Review][Patch] Utilisation d'un enum Zod statique au lieu de z.nativeEnum [src/lib/validations.ts:162]
+- [x] [Review][Patch] Recherche séquentielle inefficace par ID puis par Slug [src/app/api/articles/[id]/route.ts:40]
+- [x] [Review][Patch] Appel destructif deleteMany inconditionnel dans le Seed [prisma/seed.ts:22]
+- [x] [Review][Patch] Risque de boucle infinie dans generateUniqueSlug avec des caractères non-standards [src/lib/utils.ts:8]
+- [x] [Review][Patch] Risque de conflit de concurrence (Race Condition) sur l'unicité du slug [src/app/api/articles/route.ts:14]
+- [x] [Review][Patch] Validation Zod laxiste autorisant des titres ou résumés vides [src/lib/validations.ts:159]
+- [x] [Review][Patch] Tri instable sur publishedAt pour les administrateurs [src/app/api/articles/route.ts:48]
+- [x] [Review][Patch] Erreur 500 sur requête avec corps JSON mal formé ou vide [src/app/api/articles/route.ts:76]
+- [x] [Review][Patch] Risque d'erreur ou d'accès indu si userId est absent dans hasActiveSubscription [src/lib/subscription-access.ts:3]
+- [x] [Review][Patch] Absence de cas de test pour le script de seeding [src/app/api/articles/route.test.ts]
+- [x] [Review][Defer] Typage faible de la session (session.user as any) [src/app/api/articles/route.ts:39] — deferred, pre-existing
+- [x] [Review][Defer] Absence de pagination sur GET /api/articles [src/app/api/articles/route.ts:28] — deferred, pre-existing
+- [x] [Review][Defer] Absence de validation réelle de l'intégrité de la base de données dans les tests (convention de mocking existante) [src/app/api/articles/route.test.ts] — deferred, pre-existing
 
 ## Dev Notes
 

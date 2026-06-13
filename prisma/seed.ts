@@ -2,6 +2,10 @@ import { prisma } from "../src/lib/prisma";
 import { ArticleVisibility, UserRole } from "../src/generated/prisma/client";
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    console.log("Seeding skipped in production environment.");
+    return;
+  }
   console.log("Starting seed...");
 
   // 1. Create or upsert a default admin user

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
-export async function hasActiveSubscription(userId: string): Promise<boolean> {
+export async function hasActiveSubscription(userId: string | null | undefined): Promise<boolean> {
+  if (!userId) return false;
   const activeSubscription = await prisma.subscription.findFirst({
     where: { userId, status: "ACTIVE" },
     select: { id: true },
