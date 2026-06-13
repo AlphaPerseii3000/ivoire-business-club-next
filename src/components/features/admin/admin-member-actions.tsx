@@ -14,9 +14,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+type VerificationStatus = "PENDING" | "EN_COURS" | "VERIFIED" | "REJECTED";
+
 type MemberActionsProps = {
   userId: string;
   status: "ACTIVE" | "SUSPENDED";
+  verificationStatus: VerificationStatus;
   isCurrentAdmin: boolean;
   hasEmail: boolean;
 };
@@ -30,11 +33,13 @@ async function readApiError(response: Response) {
   }
 }
 
-export function AdminMemberActions({ userId, status, isCurrentAdmin, hasEmail }: MemberActionsProps) {
+export function AdminMemberActions({ userId, status, verificationStatus, isCurrentAdmin, hasEmail }: MemberActionsProps) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   const isSuspended = status === "SUSPENDED";
   const statusAction = isSuspended ? "reactivate" : "suspend";
@@ -44,6 +49,8 @@ export function AdminMemberActions({ userId, status, isCurrentAdmin, hasEmail }:
   const canEmail = hasEmail;
   const disableSuspend = isPending || !canSuspend;
   const disableEmail = isPending || !canEmail;
+  const isPendingVerification = verificationStatus === "PENDING" || verificationStatus === "EN_COURS" || verificationStatus === "REJECTED";
+  const canVerify = isPendingVerification && !isPending;
 
   function runStatusMutation() {
     startTransition(async () => {
@@ -59,6 +66,26 @@ export function AdminMemberActions({ userId, status, isCurrentAdmin, hasEmail }:
       }
       setMessage(successLabel);
       setDialogOpen(false);
+      router.refresh();
+    });
+  }
+
+  function runVerifyMutation(action: "verify" | "reject") {
+    startTransition(async () => {
+      setMessage(null);
+      const formData = new FormData();
+      formData.set("action", action);
+      const response = await fetch(`/api/admin/users/${userId}/verify`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        setMessage(await readApiError(response));
+        return;
+      }
+      setMessage(action === "verify" ? "Membre vérifié ✓" : "Membre rejeté");
+      setVerifyDialogOpen(false);
+      setRejectDialogOpen(false);
       router.refresh();
     });
   }
@@ -109,6 +136,57 @@ export function AdminMemberActions({ userId, status, isCurrentAdmin, hasEmail }:
             </DialogContent>
           </Dialog>
         )}
+
+        {canVerify ? (
+          <>
+            <Button type="button" variant="default" className="min-h-11" disabled={isPending} onClick={() => setVerifyDialogOpen(true)}>
+              Vérifier ✓
+            </Button>
+            <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirmer la vérification</DialogTitle>
+                  <DialogDescription>
+                    Ce membre apparaîtra dans la section Membres du site et pourra accéder aux opportunités vérifiées.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button type="button" variant="outline" className="min-h-11" onClick={() => setVerifyDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="button" className="min-h-11" disabled={isPending} onClick={() => runVerifyMutation("verify")}>
+                    Confirmer la vérification
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Button type="button" variant="outline" className="min-h-11" disabled={isPending} onClick={() => setRejectDialogOpen(true)}>
+              Rejeter ✗
+            </Button>
+            <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirmer le rejet</DialogTitle>
+                  <DialogDescription>
+                    Ce membre ne pourra pas apparaître dans la section Membres. Il pourra être vérifié ultérieurement si nécessaire.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button type="button" variant="outline" className="min-h-11" onClick={() => setRejectDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="button" variant="destructive" className="min-h-11" disabled={isPending} onClick={() => runVerifyMutation("reject")}>
+                    Confirmer le rejet
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        ) : verificationStatus === "VERIFIED" ? (
+          <span className="inline-flex items-center text-sm text-emerald-700">✓ Vérifié</span>
+        ) : null}
+
         <Button type="button" variant="outline" className="min-h-11" disabled={disableEmail} onClick={sendConfirmationEmail}>
           Envoyer email de confirmation
         </Button>

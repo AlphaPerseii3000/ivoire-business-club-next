@@ -15,6 +15,20 @@ const accountStatusLabels: Record<string, string> = {
   SUSPENDED: "Suspendu",
 };
 
+const verificationStatusLabels: Record<string, string> = {
+  PENDING: "En attente",
+  EN_COURS: "En cours",
+  VERIFIED: "Vérifié ✓",
+  REJECTED: "Rejeté",
+};
+
+const verificationBadgeClasses: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  EN_COURS: "bg-blue-100 text-blue-800",
+  VERIFIED: "bg-emerald-100 text-emerald-800",
+  REJECTED: "bg-red-100 text-red-800",
+};
+
 const subscriptionStatusLabels: Record<string, string> = {
   TRIAL: "TRIAL",
   PENDING: "PENDING",
@@ -49,6 +63,7 @@ export default async function AdminMembersPage() {
       email: true,
       tier: true,
       status: true,
+      verificationStatus: true,
       createdAt: true,
       subscriptions: {
         orderBy: { createdAt: "desc" },
@@ -74,7 +89,7 @@ export default async function AdminMembersPage() {
 
       {hasMembers ? (
         <div className="mt-8 overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[980px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-muted/50">
               <tr className="border-b">
                 <th className="px-4 py-3 text-left font-medium">Membre</th>
@@ -82,6 +97,7 @@ export default async function AdminMembersPage() {
                 <th className="px-4 py-3 text-left font-medium">Tier</th>
                 <th className="px-4 py-3 text-left font-medium">Abonnement</th>
                 <th className="px-4 py-3 text-left font-medium">Statut compte</th>
+                <th className="px-4 py-3 text-left font-medium">Vérification</th>
                 <th className="px-4 py-3 text-left font-medium">Inscription</th>
                 <th className="px-4 py-3 text-left font-medium">Actions</th>
               </tr>
@@ -93,6 +109,8 @@ export default async function AdminMembersPage() {
                   ? subscriptionStatusLabels[latestSubscription.status] ?? latestSubscription.status
                   : "Aucun abonnement";
                 const accountLabel = accountStatusLabels[member.status] ?? member.status;
+                const verificationLabel = verificationStatusLabels[member.verificationStatus] ?? member.verificationStatus;
+                const verificationBadge = verificationBadgeClasses[member.verificationStatus] ?? "bg-muted text-muted-foreground";
                 const dateLabel = member.createdAt.toLocaleDateString("fr-FR");
                 const isCurrentAdmin = member.id === currentAdminId;
                 const hasEmail = Boolean(member.email);
@@ -120,11 +138,15 @@ export default async function AdminMembersPage() {
                     <td className="px-4 py-4">
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${accountBadgeClass}`}>{accountLabel}</span>
                     </td>
+                    <td className="px-4 py-4">
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${verificationBadge}`}>{verificationLabel}</span>
+                    </td>
                     <td className="px-4 py-4 text-muted-foreground">{dateLabel}</td>
                     <td className="px-4 py-4">
                       <AdminMemberActions
                         userId={member.id}
                         status={member.status}
+                        verificationStatus={member.verificationStatus}
                         isCurrentAdmin={isCurrentAdmin}
                         hasEmail={hasEmail}
                       />
