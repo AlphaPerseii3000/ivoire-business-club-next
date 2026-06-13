@@ -13,8 +13,8 @@ so that seuls les profils actifs, complets et à email vérifié apparaissent da
 ## Acceptance Criteria
 
 1. **Flux de vérification email utilisateur**
-   - **Given** un membre authentifié avec `emailVerified = false`, **when** il déclenche `POST /api/auth/send-verification`, **then** le système crée un `VerificationToken` lié au membre, envoie un email avec un lien `/auth/verify-email?token=...`, et retourne un succès sans exposer le token dans les logs.
-   - **Given** un token valide et non expiré, **when** la page `/auth/verify-email` appelle `POST /api/auth/verify-email`, **then** `user.emailVerified` passe à `true`, le token est supprimé et la transition automatique de vérification membre est évaluée.
+   - **Given** un membre authentifié avec `emailVerified = false`, **when** il déclenche `POST /api/auth/send-verification`, **then** le système vérifie le rate limiting, supprime tout ancien token de cet utilisateur, crée un `VerificationToken` de haute entropie expirant après 24 heures (laissant le champ `identifier` par défaut à son CUID auto-généré pour éviter les collisions de clé primaire), envoie un email avec un lien `/auth/verify-email?token=...`, et retourne un succès sans exposer le token dans les logs.
+   - **Given** un token valide et non expiré, **when** la page `/auth/verify-email` appelle `POST /api/auth/verify-email`, **then** dans une transaction Prisma unique, `user.emailVerified` passe à `true`, le token est supprimé et la transition automatique de vérification membre est évaluée.
    - **Given** un token absent, inconnu ou expiré, **when** `POST /api/auth/verify-email` est appelé, **then** la route retourne une erreur française claire (`400` ou `404`) sans modifier l'utilisateur.
 
 2. **Logique centralisée des pré-requis**
@@ -55,12 +55,17 @@ so that seuls les profils actifs, complets et à email vérifié apparaissent da
   - [ ] Ajouter `src/lib/verification.test.ts` couvrant éligible, chaque critère manquant, chaînes vides/espaces, `PENDING → EN_COURS`, non-rétrogradation.
 
 - [ ] Implémenter le flux email de vérification (AC: 1, 6, 7)
-  - [ ] Créer `src/app/api/auth/send-verification/route.ts` : exige session, refuse utilisateur introuvable, no-op/succès clair si email déjà vérifié, crée un token aléatoire sécurisé, expire le token, envoie l'email.
+  - [ ] Créer `src/app/api/auth/send-verification/route.ts` : exige session, refuse utilisateur introuvable, no-op/succès clair si email déjà vérifié.
+  - [ ] Ajouter un rate limiting strict sur `POST /api/auth/send-verification` en déclarant `verificationSendRateLimiter` (ex. 3 requêtes/minute par utilisateur/IP) dans `src/lib/rate-limit.ts`.
+  - [ ] Supprimer tout ancien `VerificationToken` associé à l'utilisateur avant la création d'un nouveau pour éviter le gaspillage d'espace DB.
+  - [ ] Générer un token sécurisé de haute entropie avec `crypto.randomBytes(32).toString("hex")` et fixer une expiration de 24 heures.
+  - [ ] Enregistrer le token en DB en laissant `identifier` s'auto-générer (CUID) pour contourner la contrainte de clé primaire de la table.
+  - [ ] Gérer les erreurs d'envoi d'email (SMTP) : attraper les exceptions de nodemailer, utiliser `sanitizeError(error)` pour logger de manière sécurisée sans fuiter de mot de passe SMTP, et retourner une erreur propre 500 en français.
   - [ ] Ajouter `sendEmailVerificationEmail()` dans `src/lib/email.ts` avec sujet/copie française et lien `${APP_URL}/auth/verify-email?token=...`.
-  - [ ] Créer `src/app/api/auth/verify-email/route.ts` : valide le token, vérifie expiration, met `emailVerified = true`, supprime le token, appelle `autoTransitionVerificationStatus()`.
+  - [ ] Créer `src/app/api/auth/verify-email/route.ts` : valide le token, vérifie expiration, et dans une transaction Prisma unique, met `emailVerified = true`, supprime le token de la base, puis appelle `autoTransitionVerificationStatus()`.
   - [ ] Créer `src/app/auth/verify-email/page.tsx` : page client ou server+client minimaliste qui lit `token`, appelle la route et affiche succès/erreur/action retour settings.
   - [ ] Option recommandée : appeler l'envoi automatique après signup email dans `src/app/api/auth/signup/route.ts`; si l'email échoue, ne pas annuler la création du compte sauf décision explicite, mais loguer une erreur sanitisée.
-  - [ ] Tests : routes send/verify email, template email, token expiré/invalide, token supprimé, email déjà vérifié.
+  - [ ] Tests : routes send/verify email (incluant rate limit, cleanup, et transaction), template email, token expiré/invalide, token supprimé, email déjà vérifié.
 
 - [ ] Protéger la validation admin membre (AC: 3, 7)
   - [ ] Modifier `src/app/api/admin/users/[id]/verify/route.ts` pour refuser les admins suspendus (`status === SUSPENDED`).
@@ -87,7 +92,7 @@ so that seuls les profils actifs, complets et à email vérifié apparaissent da
 
 - [ ] Appeler l'auto-transition après mise à jour profil (AC: 6, 7)
   - [ ] Modifier `src/app/api/user/profile/route.ts` après la transaction de mise à jour pour appeler `autoTransitionVerificationStatus(userId)`.
-  - [ ] Si la transition se produit, retourner les données mises à jour cohérentes (`verificationStatus = EN_COURS`) ou documenter/recharger le profil pour éviter une réponse stale.
+  - [ ] S'assurer d'inclure le statut `verificationStatus` mis à jour dans l'objet retourné par l'API afin d'éviter une réponse obsolète (stale) côté client.
   - [ ] Tests : profil incomplet ne transitionne pas; profil complet + email vérifié transitionne; `VERIFIED`/`REJECTED` ne rétrograde pas.
 
 - [ ] Exécuter la validation finale (AC: 7)
