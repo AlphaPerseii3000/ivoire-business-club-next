@@ -45,14 +45,15 @@ export async function POST(req: Request) {
     });
 
     // Generate high-entropy token and 24h expiration
-    const token = crypto.randomBytes(32).toString("hex");
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create VerificationToken
     // identifier is left out to let it auto-generate a CUID as @id in prisma/schema.prisma
     await prisma.verificationToken.create({
       data: {
-        token,
+        token: hashedToken,
         expires,
         userId,
       },
@@ -63,13 +64,13 @@ export async function POST(req: Request) {
       await sendEmailVerificationEmail({
         to: user.email,
         name: user.name,
-        token,
+        token: rawToken,
       });
     } catch (emailError) {
       console.error("[send-verification] Failed to send verification email:", sanitizeError(emailError));
       // Cleanup token on mail failure so they can retry without leaving orphaned db entries
       await prisma.verificationToken.deleteMany({
-        where: { token },
+        where: { token: hashedToken },
       });
       return NextResponse.json(
         { error: "Impossible d'envoyer l'email de vérification. Veuillez réessayer plus tard." },

@@ -2,10 +2,20 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { autoTransitionVerificationStatus } from "@/lib/verification.server";
 import { sanitizeError } from "@/lib/sanitize-log";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Requête malformée." },
+        { status: 400 }
+      );
+    }
+
     const { token } = body;
 
     if (!token || typeof token !== "string" || token.trim() === "") {
@@ -15,9 +25,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // Hash token to look up in the DB
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
     // Find verification token
     const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token },
+      where: { token: hashedToken },
     });
 
     if (!verificationToken) {
@@ -32,7 +45,7 @@ export async function POST(req: Request) {
       // Clean up expired token to save space
       try {
         await prisma.verificationToken.delete({
-          where: { token },
+          where: { token: hashedToken },
         });
       } catch (e) {
         console.warn("Could not delete expired token:", sanitizeError(e));
@@ -62,7 +75,7 @@ export async function POST(req: Request) {
 
       // 2. Delete the used token
       await tx.verificationToken.delete({
-        where: { token },
+        where: { token: hashedToken },
       });
 
       // 3. Evaluate and auto transition verification status

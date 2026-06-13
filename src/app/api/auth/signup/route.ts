@@ -20,7 +20,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Requête malformée." }, { status: 400 });
+    }
     const parsed = signupSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
@@ -43,12 +48,13 @@ export async function POST(req: Request) {
 
     // Send verification email (non-blocking for registration success)
     try {
-      const token = crypto.randomBytes(32).toString("hex");
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       await prisma.verificationToken.create({
         data: {
-          token,
+          token: hashedToken,
           expires,
           userId: user.id,
         },
@@ -57,7 +63,7 @@ export async function POST(req: Request) {
       await sendEmailVerificationEmail({
         to: user.email,
         name: user.name,
-        token,
+        token: rawToken,
       });
     } catch (verifyEmailError) {
       console.error("Failed to send initial email verification:", sanitizeError(verifyEmailError));

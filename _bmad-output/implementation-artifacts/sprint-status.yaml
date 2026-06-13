@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-13T14:47:40+02:00
+last_updated: 2026-06-13T22:09:57+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -59,9 +59,9 @@ development_status:
   8-1-tests-e2e-playwright-complet: done
   epic-8-retrospective: optional
   epic-9: in-progress
-  9-1-modele-article-migration-et-api-routes: backlog
+  9-1-modele-article-migration-et-api-routes: ready-for-dev
   9-2-interface-admin-crud-articles: backlog
   9-3-catalogue-public-et-pages-detail-avec-gate-premium: backlog
   9-4-seo-navigation-et-integration-site: backlog
   epic-10: in-progress
-  10-1-verification-membres-pre-requis: review
+  10-1-verification-membres-pre-requis: done

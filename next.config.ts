@@ -14,9 +14,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  distDir: ".next_build",
   output: "standalone",
-  turbopack: {},
   webpack: (config) => {
     config.resolve.symlinks = false;
     return config;

@@ -68,7 +68,7 @@ describe("SettingsPage", () => {
 
     render(await SettingsPage());
 
-    expect(screen.getByText("✅ Membre vérifié")).toBeInTheDocument();
+    expect(screen.getByText("✓ Membre vérifié")).toBeInTheDocument();
     expect(screen.queryByTestId("resend-verification-button")).not.toBeInTheDocument();
   });
 
@@ -98,7 +98,7 @@ describe("SettingsPage", () => {
     render(await SettingsPage());
 
     expect(
-      screen.getByText("🔄 Vérification en cours — un administrateur validera bientôt ton profil")
+      screen.getByText("🔄 Vérification en cours — un admin validera bientôt votre profil")
     ).toBeInTheDocument();
   });
 

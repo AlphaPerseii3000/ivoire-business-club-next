@@ -154,7 +154,7 @@ describe("verification helper tests", () => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it("should not transition if user status is not PENDING", async () => {
+    it("should not transition if user status is VERIFIED", async () => {
       const user = {
         id: "user-1",
         emailVerified: true,
@@ -207,6 +207,48 @@ describe("verification helper tests", () => {
       const result = await autoTransitionVerificationStatus("user-1");
       expect(result).toEqual({ changed: false, status: "PENDING" });
       expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should transition to EN_COURS if REJECTED and eligible", async () => {
+      const user = {
+        id: "user-1",
+        emailVerified: true,
+        bio: "Bio ok",
+        location: "Abidjan",
+        country: "Côte d'Ivoire",
+        status: "ACTIVE",
+        verificationStatus: "REJECTED",
+      };
+      mockFindUnique.mockResolvedValue(user);
+      mockUpdate.mockResolvedValue({ ...user, verificationStatus: "EN_COURS" });
+
+      const result = await autoTransitionVerificationStatus("user-1");
+      expect(result).toEqual({ changed: true, status: "EN_COURS" });
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: "user-1" },
+        data: { verificationStatus: "EN_COURS" },
+      });
+    });
+
+    it("should transition to PENDING if EN_COURS and not eligible", async () => {
+      const user = {
+        id: "user-1",
+        emailVerified: false, // not eligible
+        bio: "Bio ok",
+        location: "Abidjan",
+        country: "Côte d'Ivoire",
+        status: "ACTIVE",
+        verificationStatus: "EN_COURS",
+      };
+      mockFindUnique.mockResolvedValue(user);
+      mockUpdate.mockResolvedValue({ ...user, verificationStatus: "PENDING" });
+
+      const result = await autoTransitionVerificationStatus("user-1");
+      expect(result).toEqual({ changed: true, status: "PENDING" });
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: "user-1" },
+        data: { verificationStatus: "PENDING" },
+      });
     });
   });
 });

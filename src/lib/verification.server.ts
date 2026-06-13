@@ -24,21 +24,32 @@ export async function autoTransitionVerificationStatus(
     return { changed: false, status: "PENDING" };
   }
 
-  // Only transition PENDING -> EN_COURS.
-  // Do not transition if user is already EN_COURS, VERIFIED, or REJECTED.
-  if (user.verificationStatus !== "PENDING") {
-    return { changed: false, status: user.verificationStatus as VerificationStatus };
-  }
-
+  const currentStatus = user.verificationStatus;
   const { eligible } = isEligibleForVerification(user);
 
-  if (eligible) {
-    await db.user.update({
-      where: { id: userId },
-      data: { verificationStatus: "EN_COURS" },
-    });
-    return { changed: true, status: "EN_COURS" };
+  let newStatus = currentStatus;
+
+  if (currentStatus === "VERIFIED") {
+    return { changed: false, status: "VERIFIED" };
   }
 
-  return { changed: false, status: user.verificationStatus as VerificationStatus };
+  if (eligible) {
+    if (currentStatus === "PENDING" || currentStatus === "REJECTED") {
+      newStatus = "EN_COURS";
+    }
+  } else {
+    if (currentStatus === "EN_COURS") {
+      newStatus = "PENDING";
+    }
+  }
+
+  if (newStatus !== currentStatus) {
+    await db.user.update({
+      where: { id: userId },
+      data: { verificationStatus: newStatus },
+    });
+    return { changed: true, status: newStatus as VerificationStatus };
+  }
+
+  return { changed: false, status: currentStatus as VerificationStatus };
 }

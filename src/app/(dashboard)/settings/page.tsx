@@ -59,11 +59,11 @@ export default async function SettingsPage() {
               <p className="text-sm font-semibold">Statut actuel :</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {user.verificationStatus === "VERIFIED"
-                  ? "✅ Membre vérifié"
+                  ? "✓ Membre vérifié"
                   : user.verificationStatus === "PENDING"
                   ? "⏳ En attente de vérification"
                   : user.verificationStatus === "EN_COURS"
-                  ? "🔄 Vérification en cours — un administrateur validera bientôt ton profil"
+                  ? "🔄 Vérification en cours — un admin validera bientôt votre profil"
                   : user.verificationStatus === "REJECTED"
                   ? "❌ Vérification rejetée"
                   : "Non vérifié"}

@@ -3,7 +3,7 @@ baseline_commit: 53e6274cb8da3975facd381c042ab90412583be0
 ---
 # Story 10.1: Vérification membres — pré-requis automatiques et validation admin
 
-Status: ready-for-review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -101,6 +101,17 @@ so that seuls les profils actifs, complets et à email vérifié apparaissent da
 - [x] Exécuter la validation finale (AC: 7)
   - [x] `cd /home/alphaperseii/projects/ibc && npx vitest run`
   - [x] `cd /home/alphaperseii/projects/ibc && npm run build`
+
+### Review Findings
+
+- [x] [Review][Decision] Pas de retour au statut PENDING si un membre modifie son profil en statut EN_COURS — autoTransitionVerificationStatus s'arrête si le statut n'est pas PENDING. Si un membre avec le statut EN_COURS (en attente de validation admin) modifie son profil pour retirer des champs requis (bio, localisation, etc.), il reste dans l'état EN_COURS, mais le bouton admin pour le valider sera désactivé. [src/lib/verification.server.ts]
+- [x] [Review][Decision] Blocage permanent pour les utilisateurs rejetés (REJECTED) — Une fois qu'un utilisateur est marqué REJECTED par l'administrateur, il ne peut plus jamais repasser en EN_COURS ou soumettre à nouveau sa demande, même s'il corrige ses pré-requis. [src/lib/verification.server.ts]
+- [x] [Review][Decision] Stockage des jetons de vérification d'email en clair en base de données — Les jetons de vérification d'email générés sont stockés en clair dans la table VerificationToken. Si la base de données est compromise, un attaquant peut lire ces jetons et valider arbitrairement n'importe quel email. Il est recommandé de stocker un hash (par exemple SHA-256) du jeton en DB. [src/app/api/auth/send-verification/route.ts, src/app/api/auth/signup/route.ts]
+- [x] [Review][Patch] Répertoire .next_build non ignoré dans .gitignore [next.config.ts]
+- [x] [Review][Patch] Tutoiement au lieu du vouvoiement pour le statut EN_COURS dans /settings [src/app/(dashboard)/settings/page.tsx]
+- [x] [Review][Patch] Utilisation d'un caractère de croix ✗ au lieu de l'émoji ❌ pour le statut REJECTED dans /settings [src/app/(dashboard)/settings/page.tsx]
+- [x] [Review][Patch] Appels à req.json() non protégés dans les routes API [src/app/api/auth/verify-email/route.ts:8, src/app/api/auth/signup/route.ts:23, src/app/api/user/profile/route.ts:60]
+- [x] [Review][Patch] Appel à req.formData() non protégé dans la route de vérification admin [src/app/api/admin/users/[id]/verify/route.ts:22]
 
 ## Dev Notes
 

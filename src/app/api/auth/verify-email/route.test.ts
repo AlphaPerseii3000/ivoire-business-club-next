@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "./route";
+import crypto from "crypto";
 
 const mockTokenFindUnique = vi.hoisted(() => vi.fn());
 const mockTokenDelete = vi.hoisted(() => vi.fn());
@@ -63,28 +64,32 @@ describe("POST /api/auth/verify-email", () => {
   });
 
   it("returns 400 and deletes token when expired", async () => {
+    const rawToken = "expired-token";
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
     mockTokenFindUnique.mockResolvedValue({
-      token: "expired-token",
+      token: hashedToken,
       expires: new Date(Date.now() - 10000), // in the past
       userId: "user-123",
     });
 
-    const res = await POST(makeRequest({ token: "expired-token" }));
+    const res = await POST(makeRequest({ token: rawToken }));
     const json = await res.json();
 
     expect(res.status).toBe(400);
     expect(json.error).toBe("Le lien de vérification a expiré.");
-    expect(mockTokenDelete).toHaveBeenCalledWith({ where: { token: "expired-token" } });
+    expect(mockTokenDelete).toHaveBeenCalledWith({ where: { token: hashedToken } });
   });
 
   it("runs transaction, updates emailVerified, deletes token and calls autoTransition on success", async () => {
+    const rawToken = "valid-token";
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
     mockTokenFindUnique.mockResolvedValue({
-      token: "valid-token",
+      token: hashedToken,
       expires: new Date(Date.now() + 60000), // in the future
       userId: "user-123",
     });
 
-    const res = await POST(makeRequest({ token: "valid-token" }));
+    const res = await POST(makeRequest({ token: rawToken }));
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -94,7 +99,7 @@ describe("POST /api/auth/verify-email", () => {
       where: { id: "user-123" },
       data: { emailVerified: true },
     });
-    expect(mockTokenDelete).toHaveBeenCalledWith({ where: { token: "valid-token" } });
+    expect(mockTokenDelete).toHaveBeenCalledWith({ where: { token: hashedToken } });
     expect(mockAutoTransition).toHaveBeenCalledWith("user-123", expect.any(Object));
   });
 });

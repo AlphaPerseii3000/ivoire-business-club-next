@@ -19,7 +19,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const { id } = await params;
-  const formData = await req.formData();
+  let formData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return NextResponse.json({ error: "Formulaire invalide" }, { status: 400 });
+  }
   const action = formData.get("action") as string;
 
   // Validate action explicitly
