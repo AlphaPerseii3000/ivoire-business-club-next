@@ -155,3 +155,20 @@ export const UEMOA_COUNTRIES = [
   { code: "GN", label: "Guinée" },
   { code: "BJ", label: "Bénin" },
 ] as const;
+
+export const articleCreateSchema = z.object({
+  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères").max(200, "Le titre ne doit pas dépasser 200 caractères"),
+  excerpt: z.string().min(10, "Le résumé doit contenir au moins 10 caractères").max(500, "Le résumé ne doit pas dépasser 500 caractères"),
+  content: z.string().min(10, "Le contenu doit contenir au moins 10 caractères"),
+  category: z.string().min(1, "La catégorie est requise").max(50, "La catégorie ne doit pas dépasser 50 caractères"),
+  visibility: z.enum(["PUBLIC", "AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+    message: "Visibilité invalide",
+  }),
+});
+
+export const articleUpdateSchema = articleCreateSchema.partial().extend({
+  published: z.boolean().optional(),
+});
+
+export type ArticleCreateInput = z.infer<typeof articleCreateSchema>;
+export type ArticleUpdateInput = z.infer<typeof articleUpdateSchema>;

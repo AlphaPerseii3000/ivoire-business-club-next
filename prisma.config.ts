@@ -13,6 +13,7 @@ export default defineConfig({
   schema: explicitSchema ?? (usePostgres ? "prisma/schema.prisma" : "prisma/schema.dev.prisma"),
   migrations: {
     path: usePostgres ? "prisma/migrations-postgresql" : "prisma/migrations",
+    seed: "npx tsx prisma/seed.ts",
   },
   datasource: {
     url: databaseUrl,

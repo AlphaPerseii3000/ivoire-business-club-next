@@ -70,5 +70,8 @@
     "typescript": "^5",
     "vitest": "^4.1.6",
     "vitest-axe": "^0.1.0"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   }
 }

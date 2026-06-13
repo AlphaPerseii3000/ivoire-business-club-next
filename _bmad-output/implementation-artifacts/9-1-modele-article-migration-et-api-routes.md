@@ -3,7 +3,7 @@ baseline_commit: 95d694fb7c969451ebf5a4bc605ed2c714e49eea
 ---
 # Story 9.1: Modèle Article, Migration et API Routes
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,42 +57,42 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Modélisation & Migration de Données (AC: 1)**
-  - [ ] Ajouter l'enum `ArticleVisibility` et le modèle `Article` dans [prisma/schema.prisma](file:///D:/Code/ivoire-business-club-next/prisma/schema.prisma) avec indexation sur `[published, visibility, publishedAt]` et `[category, published]`.
-  - [ ] Ajouter la relation `articles Article[]` dans le modèle `User` existant.
-  - [ ] Exécuter la migration locale (`npx prisma migrate dev --name add_article_model`).
-  - [ ] S'assurer du bon fonctionnement de la génération automatique du client Prisma dans `src/generated/prisma`.
+- [x] **Modélisation & Migration de Données (AC: 1)**
+  - [x] Ajouter l'enum `ArticleVisibility` et le modèle `Article` dans [prisma/schema.prisma](file:///D:/Code/ivoire-business-club-next/prisma/schema.prisma) avec indexation sur `[published, visibility, publishedAt]` et `[category, published]`.
+  - [x] Ajouter la relation `articles Article[]` dans le modèle `User` existant.
+  - [x] Exécuter la migration locale (`npx prisma migrate dev --name add_article_model`).
+  - [x] S'assurer du bon fonctionnement de la génération automatique du client Prisma dans `src/generated/prisma`.
 
-- [ ] **Définition des Schémas de Validation & Utilitaires (AC: 2, 3)**
-  - [ ] Ajouter les schémas Zod `articleCreateSchema` et `articleUpdateSchema` dans [src/lib/validations.ts](file:///D:/Code/ivoire-business-club-next/src/lib/validations.ts).
-  - [ ] Exporter les types TypeScript correspondants (`ArticleCreateInput`, `ArticleUpdateInput`).
-  - [ ] Implémenter une fonction utilitaire de génération de slug robuste (sanitisation des caractères spéciaux, minuscules, tirets) dans [src/lib/utils.ts](file:///D:/Code/ivoire-business-club-next/src/lib/utils.ts) ou inline, en garantissant l'unicité en DB.
+- [x] **Définition des Schémas de Validation & Utilitaires (AC: 2, 3)**
+  - [x] Ajouter les schémas Zod `articleCreateSchema` et `articleUpdateSchema` dans [src/lib/validations.ts](file:///D:/Code/ivoire-business-club-next/src/lib/validations.ts).
+  - [x] Exporter les types TypeScript correspondants (`ArticleCreateInput`, `ArticleUpdateInput`).
+  - [x] Implémenter une fonction utilitaire de génération de slug robuste (sanitisation des caractères spéciaux, minuscules, tirets) dans [src/lib/utils.ts](file:///D:/Code/ivoire-business-club-next/src/lib/utils.ts) ou inline, en garantissant l'unicité en DB.
 
-- [ ] **Logique de Visibilité & Sécurité (AC: 5, 6)**
-  - [ ] Créer `src/lib/article-visibility.ts` pour implémenter la logique de filtrage par tier (ex: `getAccessibleArticleVisibilities(userTier, hasActiveSubscription)`).
-  - [ ] Associer cette logique à la vérification d'abonnement via `hasActiveSubscription(userId)` de [src/lib/subscription-access.ts](file:///D:/Code/ivoire-business-club-next/src/lib/subscription-access.ts).
+- [x] **Logique de Visibilité & Sécurité (AC: 5, 6)**
+  - [x] Créer `src/lib/article-visibility.ts` pour implémenter la logique de filtrage par tier (ex: `getAccessibleArticleVisibilities(userTier, hasActiveSubscription)`).
+  - [x] Associer cette logique à la vérification d'abonnement via `hasActiveSubscription(userId)` de [src/lib/subscription-access.ts](file:///D:/Code/ivoire-business-club-next/src/lib/subscription-access.ts).
 
-- [ ] **API Routes (AC: 2, 3, 4, 5, 6)**
-  - [ ] Créer `src/app/api/articles/route.ts` :
-    - [ ] Implémenter `GET` : Récupération des articles triés par `publishedAt desc`, filtrés selon les droits du visiteur (non connecté vs connecté non abonné vs connecté abonné par tier vs admin). Les admins peuvent voir tous les articles (y compris drafts).
-    - [ ] Implémenter `POST` : Protéger l'accès aux administrateurs actifs via la session `auth()`. Valider les données reçues, générer le slug et enregistrer en base (`published` par défaut à `false`).
-  - [ ] Créer `src/app/api/articles/[id]/route.ts` :
-    - [ ] Implémenter `GET` : Retourner l'article si compatible avec le tier de l'utilisateur ou si admin. Await le paramètre `params`.
-    - [ ] Implémenter `PUT` : Réservé aux administrateurs. Mettre à jour l'article et rafraîchir `updatedAt`.
-    - [ ] Implémenter `DELETE` : Réservé aux administrateurs. Supprimer l'article en cascade.
+- [x] **API Routes (AC: 2, 3, 4, 5, 6)**
+  - [x] Créer `src/app/api/articles/route.ts` :
+    - [x] Implémenter `GET` : Récupération des articles triés par `publishedAt desc`, filtrés selon les droits du visiteur (non connecté vs connecté non abonné vs connecté abonné par tier vs admin). Les admins peuvent voir tous les articles (y compris drafts).
+    - [x] Implémenter `POST` : Protéger l'accès aux administrateurs actifs via la session `auth()`. Valider les données reçues, générer le slug et enregistrer en base (`published` par défaut à `false`).
+  - [x] Créer `src/app/api/articles/[id]/route.ts` :
+    - [x] Implémenter `GET` : Retourner l'article si compatible avec le tier de l'utilisateur ou si admin. Await le paramètre `params`.
+    - [x] Implémenter `PUT` : Réservé aux administrateurs. Mettre à jour l'article et rafraîchir `updatedAt`.
+    - [x] Implémenter `DELETE` : Réservé aux administrateurs. Supprimer l'article en cascade.
 
-- [ ] **Mécanisme de Seeding (AC: 7)**
-  - [ ] Configurer le support du seed TypeScript dans [package.json](file:///D:/Code/ivoire-business-club-next/package.json) en ajoutant la clé `"prisma": { "seed": "tsx prisma/seed.ts" }` (ou utiliser `npx tsx` / un script adapté).
-  - [ ] Créer ou mettre à jour le fichier `prisma/seed.ts` pour générer 4 articles de test avec du contenu et des tiers de visibilité différents (PUBLIC, AFFRANCHI, GRAND_FRERE, BOSS).
-  - [ ] S'assurer que le script de seed est idempotent (utilise `upsert` ou nettoie avant d'écrire).
+- [x] **Mécanisme de Seeding (AC: 7)**
+  - [x] Configurer le support du seed TypeScript dans [package.json](file:///D:/Code/ivoire-business-club-next/package.json) en ajoutant la clé `"prisma": { "seed": "tsx prisma/seed.ts" }` (ou utiliser `npx tsx` / un script adapté).
+  - [x] Créer ou mettre à jour le fichier `prisma/seed.ts` pour générer 4 articles de test avec du contenu et des tiers de visibilité différents (PUBLIC, AFFRANCHI, GRAND_FRERE, BOSS).
+  - [x] S'assurer que le script de seed est idempotent (utilise `upsert` ou nettoie avant d'écrire).
 
-- [ ] **Tests Unitaires & d'Intégration (AC: 8)**
-  - [ ] Créer les fichiers de test `src/app/api/articles/route.test.ts` et `src/app/api/articles/[id]/route.test.ts` couvrant :
-    - [ ] Les scénarios de restriction de visibilité par tier (visiteur, membre non abonné, membre AFFRANCHI, etc.).
-    - [ ] Les restrictions d'accès admin pour les opérations d'écriture/modification.
-    - [ ] La génération correcte des slugs uniques.
-    - [ ] Le bon comportement du seeding.
-  - [ ] Lancer `npx vitest run` et vérifier que tous les tests passent.
+- [x] **Tests Unitaires & d'Intégration (AC: 8)**
+  - [x] Créer les fichiers de test `src/app/api/articles/route.test.ts` et `src/app/api/articles/[id]/route.test.ts` couvrant :
+    - [x] Les scénarios de restriction de visibilité par tier (visiteur, membre non abonné, membre AFFRANCHI, etc.).
+    - [x] Les restrictions d'accès admin pour les opérations d'écriture/modification.
+    - [x] La génération correcte des slugs uniques.
+    - [x] Le bon comportement du seeding.
+  - [x] Lancer `npx vitest run` et vérifier que tous les tests passent.
 
 ## Dev Notes
 
@@ -129,6 +129,36 @@ Gemini 3.5 Flash (Medium)
 
 ### Debug Log References
 
+- SQLite migration reset and db seed executed successfully with `NODE_ENV=development`.
+- 18 tests passed for articles and articles/[id] endpoints.
+- Full project regression test suite (544 tests) passed with 100% success.
+
 ### Completion Notes List
 
+- Added `Article` model and `ArticleVisibility` enum in the database.
+- Executed migration local and synced Prisma Client.
+- Set up Zod validations and TypeScript type definitions for article inputs.
+- Implemented visibility filters depending on the subscription tier of the authenticated user.
+- Created fully secure API routes for `/api/articles` (GET/POST) and `/api/articles/[id]` (GET/PUT/DELETE) supporting Next.js 16 async params.
+- Configured and executed database seeding using tsx tool.
+- Authored a solid test coverage validating slug collision handling, admin bypass, anonymous access, and tier-based restrictions.
+
 ### File List
+
+- [prisma/schema.prisma](file:///D:/Code/ivoire-business-club-next/prisma/schema.prisma) (MODIFIED)
+- [prisma/schema.dev.prisma](file:///D:/Code/ivoire-business-club-next/prisma/schema.dev.prisma) (MODIFIED)
+- [package.json](file:///D:/Code/ivoire-business-club-next/package.json) (MODIFIED)
+- [prisma.config.ts](file:///D:/Code/ivoire-business-club-next/prisma.config.ts) (MODIFIED)
+- [src/lib/validations.ts](file:///D:/Code/ivoire-business-club-next/src/lib/validations.ts) (MODIFIED)
+- [src/lib/utils.ts](file:///D:/Code/ivoire-business-club-next/src/lib/utils.ts) (MODIFIED)
+- [src/lib/article-visibility.ts](file:///D:/Code/ivoire-business-club-next/src/lib/article-visibility.ts) (NEW)
+- [prisma/seed.ts](file:///D:/Code/ivoire-business-club-next/prisma/seed.ts) (NEW)
+- [src/app/api/articles/route.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/route.ts) (NEW)
+- [src/app/api/articles/[id]/route.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/[id]/route.ts) (NEW)
+- [src/app/api/articles/route.test.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/route.test.ts) (NEW)
+- [src/app/api/articles/[id]/route.test.ts](file:///D:/Code/ivoire-business-club-next/src/app/api/articles/[id]/route.test.ts) (NEW)
+
+### Change Log
+
+- 2026-06-13: Implemented Prisma model, migration, seeding, validations, visibility logic, REST API endpoints, and comprehensive unit tests for editorial articles. All 18 tests passed. All 544 total regression tests passed.
+
