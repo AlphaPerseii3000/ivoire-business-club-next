@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-13T22:35:00+02:00
+last_updated: 2026-06-13T22:40:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -60,7 +60,7 @@ development_status:
   epic-8-retrospective: optional
   epic-9: in-progress
   9-1-modele-article-migration-et-api-routes: done
-  9-2-interface-admin-crud-articles: backlog
+  9-2-interface-admin-crud-articles: ready-for-dev
   9-3-catalogue-public-et-pages-detail-avec-gate-premium: backlog
   9-4-seo-navigation-et-integration-site: backlog
   epic-10: in-progress
