@@ -14,7 +14,7 @@ import { Footer } from "@/components/landing/footer";
 import { buttonVariants } from "@/components/ui/button";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import { cn } from "@/lib/utils";
-import { ArticleVisibility } from "@/generated/prisma/client";
+import { ArticleVisibility, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ interface ArticleDetailPageProps {
 
 interface CustomSessionUser {
   id?: string;
-  tier?: string | null;
+  tier?: Tier | null;
   role?: string;
 }
 
@@ -50,9 +50,30 @@ export async function generateMetadata({ params }: ArticleDetailPageProps): Prom
 
     if (!article) return {};
 
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
+    const pageUrl = `${siteUrl}/articles/${slug}`;
+    const imageUrl = `${siteUrl}/logo-ibc.webp`;
+
     return {
-      title: `${article.title} — Ivoire Business Club`,
+      title: {
+        absolute: `${article.title} — Ivoire Business Club`,
+      },
       description: article.excerpt,
+      openGraph: {
+        title: `${article.title} — Ivoire Business Club`,
+        description: article.excerpt,
+        type: "article",
+        url: pageUrl,
+        images: [
+          {
+            url: imageUrl,
+            width: 800,
+            height: 600,
+            alt: article.title,
+          },
+        ],
+        locale: "fr_FR",
+      },
     };
   } catch (e) {
     console.error("Failed to generate metadata:", sanitizeError(e));
@@ -105,8 +126,34 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   const badgeConfig = getTierBadgeConfig(article.visibility);
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.title,
+    "description": article.excerpt,
+    "datePublished": article.publishedAt ? new Date(article.publishedAt).toISOString() : new Date(article.createdAt).toISOString(),
+    "dateModified": new Date(article.updatedAt).toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": article.author.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Ivoire Business Club",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${siteUrl}/logo-ibc.webp`
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Navigation Header */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -119,7 +166,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
           </Link>
           <nav className="flex gap-6 text-sm items-center">
             <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
-              Catalogue
+              Articles
             </Link>
             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
@@ -193,7 +240,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               </h3>
               
               <p className="text-slate-300 max-w-md mx-auto mb-6 text-sm leading-relaxed">
-                Le contenu exclusif de l'Ivoire Business Club, y compris cette publication au niveau{" "}
+                Le contenu exclusif de l&apos;Ivoire Business Club, y compris cette publication au niveau{" "}
                 <span className="font-semibold text-teal-400">{badgeConfig.label}</span>, est réservé à nos membres actifs abonnés.
               </p>
 
@@ -205,7 +252,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                     "cursor-pointer w-full sm:w-auto bg-[#D4A847] text-black hover:bg-[#D4A847]/90 font-semibold"
                   )}
                 >
-                  Abonnez-vous pour lire l'article complet
+                  Abonnez-vous pour lire l&apos;article complet
                   <ArrowRight className="size-4 ml-1.5" />
                 </Link>
                 

@@ -7,7 +7,7 @@ import { hasActiveSubscription } from "@/lib/subscription-access";
 import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
 import { ArticleCard } from "@/components/features/articles/ArticleCard";
 import { Footer } from "@/components/landing/footer";
-import { ArticleVisibility, Prisma } from "@/generated/prisma/client";
+import { ArticleVisibility, Prisma, Article, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ interface ArticlesPageProps {
 
 interface CustomSessionUser {
   id?: string;
-  tier?: string | null;
+  tier?: Tier | null;
   role?: string;
 }
 
@@ -73,7 +73,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   }
 
   // 4. Fetch articles from Database
-  let articles: any[] = [];
+  let articles: Article[] = [];
   try {
     articles = await prisma.article.findMany({
       where: whereClause,
@@ -105,6 +105,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
             <Link href="/" className="text-slate-300 hover:text-white transition-colors">
               Accueil
             </Link>
+            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
+              Articles
+            </Link>
             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
             </Link>
@@ -128,7 +131,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
             Le Catalogue IBC
           </h1>
           <p className="mt-4 text-base text-slate-400 leading-relaxed">
-            Parcourez nos analyses, guides d'investissement et témoignages exclusifs pour réussir votre implantation ou vos investissements en Côte d'Ivoire.
+            Parcourez nos analyses, guides d&apos;investissement et témoignages exclusifs pour réussir votre implantation ou vos investissements en Côte d&apos;Ivoire.
           </p>
         </div>
 

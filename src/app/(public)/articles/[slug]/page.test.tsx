@@ -43,6 +43,7 @@ const mockArticle = {
   published: true,
   publishedAt: new Date("2026-06-11T12:00:00Z"),
   createdAt: new Date("2026-06-11T12:00:00Z"),
+  updatedAt: new Date("2026-06-11T12:00:00Z"),
   author: {
     name: "Alexandre",
   },
@@ -116,7 +117,9 @@ describe("Article Detail Page", () => {
       params: Promise.resolve({ slug: "guide-premium-abidjan" }),
     });
 
-    expect(metadata.title).toBe("Guide Premium Abidjan — Ivoire Business Club");
+    expect(metadata.title).toEqual({
+      absolute: "Guide Premium Abidjan — Ivoire Business Club",
+    });
     expect(metadata.description).toBe("Extrait de l'article premium");
   });
 });

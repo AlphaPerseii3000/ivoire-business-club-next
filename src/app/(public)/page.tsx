@@ -13,6 +13,7 @@ import { Footer } from '@/components/landing/footer';
 import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
+import { LatestArticles } from '@/components/landing/latest-articles';
 
 // Dynamic rendering avoids requiring database access during build.
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,20 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  let teasers: any[] = [];
+  let teasers: {
+    id: string;
+    title: string;
+    category: string | null;
+    location: string | null;
+  }[] = [];
+  let latestArticles: {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    category: string;
+    publishedAt: Date | null;
+  }[] = [];
   try {
     const opportunities = await prisma.opportunity.findMany({
       where: { verificationStatus: 'VERIFIED' },
@@ -66,6 +80,29 @@ export default async function HomePage() {
     // Graceful fallback if database is not reachable at build time
   }
 
+  try {
+    latestArticles = await prisma.article.findMany({
+      where: {
+        published: true,
+        visibility: 'PUBLIC',
+      },
+      orderBy: {
+        publishedAt: 'desc',
+      },
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        category: true,
+        publishedAt: true,
+      },
+    });
+  } catch (err) {
+    console.error('Error fetching articles for landing page:', err);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
 
@@ -88,6 +125,9 @@ export default async function HomePage() {
             <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
             </a>
+            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
+              Articles
+            </Link>
             <a
               href="/auth/signin"
               className="text-slate-300 hover:text-white transition-colors"
@@ -111,6 +151,7 @@ export default async function HomePage() {
 
         <SuccessWall />
         <OpportunityTeasers opportunities={teasers} />
+        <LatestArticles articles={latestArticles} />
         <TargetAudience />
         <Benefits />
         <Pricing />
