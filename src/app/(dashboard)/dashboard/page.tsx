@@ -90,7 +90,11 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Link href="/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+        <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+          <p className="text-lg font-semibold">📰 Articles</p>
+          <p className="mt-1 text-sm text-muted-foreground">Analyses, guides et témoignages</p>
+        </Link>
+        <Link href="/dashboard/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
           <p className="text-lg font-semibold">🎯 Opportunités</p>
           <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
         </Link>
