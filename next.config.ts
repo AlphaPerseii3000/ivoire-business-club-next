@@ -15,6 +15,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {},
   webpack: (config) => {
     config.resolve.symlinks = false;
     return config;

@@ -79,13 +79,30 @@ export const opportunityCreateSchema = z.object({
     (v) => (typeof v === "number" && isNaN(v) ? null : v),
     z.number().positive("Le montant doit être positif").nullable().optional(),
   ),
+  currency: z.enum(["EUR", "XOF"], {
+    message: "Devise invalide",
+  }).default("EUR"),
+  requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+    message: "Tier de visibilité invalide",
+  }).default("AFFRANCHI"),
   tags: z.array(tagSchema).optional(),
 });
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const opportunityOwnerUpdateSchema = opportunityCreateSchema
+  .pick({ title: true, description: true, category: true, amount: true, currency: true })
+  .extend({
+    requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+      message: "Tier de visibilité invalide",
+    }).optional(),
+  })
+  .partial();
+
+export type OpportunityOwnerUpdateInput = z.infer<typeof opportunityOwnerUpdateSchema>;
+
 export const opportunityAdminUpdateSchema = opportunityCreateSchema
-  .pick({ title: true, description: true, category: true, amount: true })
+  .pick({ title: true, description: true, category: true, amount: true, currency: true })
   .extend({
     requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
       message: "Tier requis invalide",

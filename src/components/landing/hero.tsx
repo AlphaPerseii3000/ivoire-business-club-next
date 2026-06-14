@@ -98,8 +98,7 @@ export function Hero() {
   return (
     <div
       ref={wrapperRef}
-      className="relative bg-[#090D16] mesh-gradient-bg"
-      style={{ height: '400vh' }}
+      className="relative bg-[#090D16] mesh-gradient-bg h-[200vh] md:h-[400vh]"
     >
       {/* Sticky container */}
       <div

@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   icons: {
-    icon: "/favicon-ibc.webp",
-    apple: "/logo-ibc.webp",
+    icon: "/favicon-ibc.webp?v=2",
+    apple: "/logo-ibc.webp?v=2",
   },
 };
 

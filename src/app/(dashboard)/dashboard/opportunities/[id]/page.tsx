@@ -13,6 +13,7 @@ import { TagChips } from "@/components/features/tags/tag-chips";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
+import { formatOpportunityAmount, CURRENCY_OPTIONS } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getOpportunityTrustLevel } from "@/lib/trust-level";
@@ -188,7 +189,7 @@ export default async function OpportunityDetailPage({
             <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
             {opportunity.amount ? (
               <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                {opportunity.amount.toLocaleString("fr-FR")} €
+                {formatOpportunityAmount(opportunity.amount, opportunity.currency)}
               </span>
             ) : null}
           </div>
@@ -234,15 +235,141 @@ export default async function OpportunityDetailPage({
 
           {canShowReviewForm ? <ReviewForm opportunityId={opportunity.id} /> : null}
 
-          {isAuthor ? (
-            <div>
-              <form action={`/api/opportunities/${opportunity.id}/delete`} method="POST">
-                <button type="submit" className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                  Supprimer cette opportunité
-                </button>
+          {isAuthor && opportunity.verificationStatus !== "VERIFIED" ? (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                data-action="toggle-edit"
+                className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                Modifier cette opportunité
+              </button>
+              <button
+                type="button"
+                data-action="delete-opportunity"
+                data-opportunity-id={opportunity.id}
+                className="min-h-11 rounded-md border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                Supprimer cette opportunité
+              </button>
+            </div>
+          ) : null}
+
+          {isAuthor && opportunity.verificationStatus !== "VERIFIED" ? (
+            <div id="edit-opportunity-form" className="hidden rounded-xl border bg-card p-6 space-y-4">
+              <h2 className="text-lg font-semibold">Modifier l&apos;opportunité</h2>
+              <form id="opportunity-edit-form" className="space-y-4">
+                <div>
+                  <label htmlFor="edit-title" className="block text-sm font-medium mb-1">Titre</label>
+                  <input id="edit-title" name="title" type="text" defaultValue={opportunity.title} maxLength={200} className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label htmlFor="edit-description" className="block text-sm font-medium mb-1">Description</label>
+                  <textarea id="edit-description" name="description" rows={6} maxLength={5000} className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.description} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="edit-category" className="block text-sm font-medium mb-1">Catégorie</label>
+                    <select id="edit-category" name="category" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.category}>
+                      <option value="IMMOBILIER">Immobilier</option>
+                      <option value="BUSINESS">Business</option>
+                      <option value="PARTENARIAT">Partenariat</option>
+                      <option value="INVESTISSEMENT">Investissement</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="edit-amount" className="block text-sm font-medium mb-1">Montant</label>
+                    <input id="edit-amount" name="amount" type="number" min="0" step="0.01" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.amount ?? ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-currency" className="block text-sm font-medium mb-1">Devise</label>
+                    <select id="edit-currency" name="currency" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.currency ?? "EUR"}>
+                      {CURRENCY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="edit-tier" className="block text-sm font-medium mb-1">Visibilité</label>
+                  <select id="edit-tier" name="requiredTier" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.requiredTier}>
+                    <option value="AFFRANCHI">Affranchi (tous)</option>
+                    <option value="GRAND_FRERE">Grand Frère</option>
+                    <option value="BOSS">Boss</option>
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="min-h-11 rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    Enregistrer les modifications
+                  </button>
+                  <button
+                    type="button"
+                    data-action="cancel-edit"
+                    className="min-h-11 rounded-md border px-6 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    Annuler
+                  </button>
+                </div>
+                <p id="edit-error" className="text-sm text-destructive hidden"></p>
               </form>
             </div>
           ) : null}
+
+          <script
+            data-opportunity-id={opportunity.id}
+            dangerouslySetInnerHTML={{
+              __html: `
+                document.addEventListener('DOMContentLoaded', function() {
+                  var scriptTag = document.currentScript || document.querySelector('script[data-opportunity-id]');
+                  var OPP_ID = scriptTag ? scriptTag.getAttribute('data-opportunity-id') : '';
+                  var toggleBtn = document.querySelector('[data-action="toggle-edit"]');
+                  var cancelBtn = document.querySelector('[data-action="cancel-edit"]');
+                  var deleteBtn = document.querySelector('[data-action="delete-opportunity"]');
+                  var editForm = document.getElementById('edit-opportunity-form');
+                  var editFormEl = document.getElementById('opportunity-edit-form');
+                  var errEl = document.getElementById('edit-error');
+
+                  if (toggleBtn) toggleBtn.addEventListener('click', function() { editForm.classList.toggle('hidden'); });
+                  if (cancelBtn) cancelBtn.addEventListener('click', function() { editForm.classList.add('hidden'); });
+
+                  if (deleteBtn) deleteBtn.addEventListener('click', function() {
+                    if (!confirm('\u00CAtes-vous s\u00FBr de vouloir supprimer cette opportunit\u00E9 ? Cette action est irr\u00E9versible.')) return;
+                    fetch('/api/opportunities/' + OPP_ID, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } })
+                      .then(function(r) {
+                        if (r.ok) { window.location.href = '/dashboard/opportunities'; }
+                        else { r.json().then(function(d) { alert(d.error || 'Erreur'); }); }
+                      })
+                      .catch(function() { alert('Erreur r\u00E9seau'); });
+                  });
+
+                  if (editFormEl) editFormEl.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    errEl.classList.add('hidden');
+                    var data = {
+                      title: document.getElementById('edit-title').value,
+                      description: document.getElementById('edit-description').value,
+                      category: document.getElementById('edit-category').value,
+                      amount: document.getElementById('edit-amount').value ? parseFloat(document.getElementById('edit-amount').value) : null,
+                      requiredTier: document.getElementById('edit-tier').value,
+                    };
+                    fetch('/api/opportunities/' + OPP_ID, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(data),
+                    })
+                    .then(function(r) {
+                      if (r.ok) { window.location.reload(); }
+                      else { r.json().then(function(d) { errEl.textContent = d.error || 'Erreur lors de la modification'; errEl.classList.remove('hidden'); }); }
+                    })
+                    .catch(function() { errEl.textContent = 'Erreur r\u00E9seau'; errEl.classList.remove('hidden'); });
+                  });
+                });
+              `,
+            }}
+          />
         </div>
 
         {/* Right Column: 40% (Sticky Sidebar) */}

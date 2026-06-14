@@ -4,8 +4,7 @@ import type { Metadata } from 'next';
 import { Hero } from '@/components/landing/hero';
 import { Mission } from '@/components/landing/mission';
 import { HowItWorks } from '@/components/landing/how-it-works';
-import { TargetAudience } from '@/components/landing/target-audience';
-import { Benefits } from '@/components/landing/benefits';
+
 import { Pricing } from '@/components/landing/pricing';
 import { OpportunityTeasers } from '@/components/landing/opportunity-teasers';
 import { LeadMagnet } from '@/components/landing/lead-magnet';
@@ -85,9 +84,6 @@ export default async function HomePage() {
       where: {
         published: true,
         visibility: 'PUBLIC',
-        publishedAt: {
-          lte: new Date(),
-        },
       },
       orderBy: {
         publishedAt: 'desc',
@@ -105,17 +101,6 @@ export default async function HomePage() {
   } catch (err) {
     console.error('Error fetching articles for landing page:', err);
   }
-
-  const serializedArticles = latestArticles.map((article) => ({
-    ...article,
-    publishedAt: article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())
-      ? new Date(article.publishedAt).toLocaleDateString('fr-FR', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-      : null,
-  }));
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
@@ -165,9 +150,7 @@ export default async function HomePage() {
 
         <SuccessWall />
         <OpportunityTeasers opportunities={teasers} />
-        <LatestArticles articles={serializedArticles} />
-        <TargetAudience />
-        <Benefits />
+        <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
         <Pricing />
         <LeadMagnet />
       </main>

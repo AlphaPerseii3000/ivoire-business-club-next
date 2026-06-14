@@ -32,6 +32,7 @@ export default async function AdminOpportunitiesPage() {
     description: opportunity.description,
     category: opportunity.category,
     amount: opportunity.amount,
+    currency: opportunity.currency,
     requiredTier: opportunity.requiredTier,
     verificationStatus: opportunity.verificationStatus,
     createdAt: opportunity.createdAt.toISOString(),

@@ -8,11 +8,13 @@ import { InterestButton } from "@/components/features/deals/interest-button";
 import type { OpportunityMatchMetadata } from "@/lib/matching";
 import type { SelectedTag } from "@/lib/tags";
 import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
+import { formatOpportunityAmount } from "@/lib/currency";
 
 type DealCardDeal = {
   id: string;
   title: string;
   amount?: number | null;
+  currency?: string;
   location?: string | null;
   verificationStatus?: string;
   documentCount?: number;
@@ -26,6 +28,7 @@ type DealCardDeal = {
   tags?: SelectedTag[];
   author?: { phone?: string | null };
   category?: string | null;
+  thumbnailUrl?: string | null;
 };
 
 type DealCardProps = {
@@ -97,7 +100,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
     );
   }
 
-  const amountLabel = typeof deal.amount === "number" ? `${deal.amount.toLocaleString("fr-FR")} €` : "Montant sur demande";
+  const amountLabel = formatOpportunityAmount(deal.amount, deal.currency);
   const trustLevel = deal.trustLevel ?? getSafeTrustLevel({
     documentCount: deal.documentCount ?? 0,
     verificationStatus: deal.verificationStatus ?? "PENDING",
@@ -113,7 +116,13 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   return (
     <article data-testid="opportunity-card" className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
       <Link href={`/dashboard/opportunities/${deal.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-        <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
+        {deal.thumbnailUrl ? (
+          <div className="aspect-video overflow-hidden bg-muted" aria-hidden="true">
+            <img src={deal.thumbnailUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        ) : (
+          <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
+        )}
         <div className="space-y-4 p-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
