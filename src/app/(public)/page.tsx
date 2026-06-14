@@ -150,7 +150,7 @@ export default async function HomePage() {
 
         <SuccessWall />
         <OpportunityTeasers opportunities={teasers} />
-        <LatestArticles articles={latestArticles} />
+        <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
         <Pricing />
         <LeadMagnet />
       </main>
