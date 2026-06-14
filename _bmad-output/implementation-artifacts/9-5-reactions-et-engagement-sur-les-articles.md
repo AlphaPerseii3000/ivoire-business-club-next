@@ -112,3 +112,15 @@ Gemini 3.5 Flash (Medium) & Antigravity pair-programming framework.
 - [x] [Review][Patch] Conflits d'asynchronisme dans les assertions Vitest pour `seed.ts` résolus par temporisation de l'event loop.
 - [x] [Review][Patch] Timeout de 5s dépassé sous Playwright à cause de la compilation webpack à la volée, résolu par l'élévation du timeout d'attente à 15s pour le composant.
 - [x] [Review][Patch] Erreur d'animation Framer Motion 12 sur les keyframes multiples spring résolue par l'usage d'une transition tween.
+- [x] [Review][Patch] Hardcoded local path in `playwright.config.ts` [playwright.config.ts:111]
+- [x] [Review][Patch] Non-atomic database operations in POST reaction API route [src/app/api/articles/[id]/reactions/route.ts:715]
+- [x] [Review][Patch] No click lock or request throttling on reaction buttons [src/components/features/articles/ArticleReactions.tsx:865]
+- [x] [Review][Patch] Missing cleanup function in fetch useEffect [src/components/features/articles/ArticleReactions.tsx:846]
+- [x] [Review][Patch] Anonymous visitors can interact visually with active reaction styles [src/components/features/articles/ArticleReactions.tsx:966]
+- [x] [Review][Patch] Missing E2E test for AC 4 restrictions [e2e/articles.spec.ts:65]
+- [x] [Review][Patch] Missing reaction API unit tests for visibility limits [src/app/api/articles/[id]/reactions/route.test.ts:1]
+- [x] [Review][Patch] Flaky 50ms delay in `src/app/api/articles/route.test.ts` [src/app/api/articles/route.test.ts:328]
+- [x] [Review][Patch] Missing `aria-pressed` attribute on reaction buttons [src/components/features/articles/ArticleReactions.tsx:152]
+- [x] [Review][Patch] Unused import of `AnimatePresence` in `ArticleReactions.tsx` [src/components/features/articles/ArticleReactions.tsx:6]
+- [x] [Review][Patch] Inconsistent subscription upsert in `prisma/seed.ts` [prisma/seed.ts:291]
+- [x] [Review][Patch] Extraneous spaces in schema `updatedAt` field declaration [prisma/schema.prisma:199]

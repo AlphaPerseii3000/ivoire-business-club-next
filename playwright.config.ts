@@ -35,5 +35,5 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
-  outputDir: 'C:/Users/para1/.gemini/antigravity-ide/brain/48c286b1-daf7-4c0e-b511-cac77511c3c0/test-results',
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR || 'test-results/e2e',
 });

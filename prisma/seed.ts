@@ -1,7 +1,7 @@
 import { prisma } from "../src/lib/prisma";
 import { ArticleVisibility, UserRole, Tier, SubscriptionStatus } from "../src/generated/prisma/client";
 
-async function main() {
+export async function main() {
   if (process.env.NODE_ENV === "production") {
     console.log("Seeding skipped in production environment.");
     return;
@@ -54,6 +54,8 @@ async function main() {
     await prisma.subscription.upsert({
       where: { id: `sub-${user.tier.toLowerCase()}` },
       update: {
+        userId: dbUser.id,
+        tier: user.tier,
         status: SubscriptionStatus.ACTIVE,
       },
       create: {
@@ -127,11 +129,13 @@ async function main() {
   console.log("Seed finished successfully!");
 }
 
-main()
-  .catch((e) => {
-    console.error("Seed error:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (!process.env.VITEST) {
+  main()
+    .catch((e) => {
+      console.error("Seed error:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

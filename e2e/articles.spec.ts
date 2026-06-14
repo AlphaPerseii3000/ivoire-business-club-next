@@ -158,4 +158,26 @@ test.describe('Articles, SEO et Navigation', () => {
     // Count should return to the initial count
     await expect(likeButton).toContainText(String(initialCount));
   });
+
+  test('Test des reactions sur les articles : visiteur anonyme ne peut pas reagir', async ({ page }) => {
+    // Navigate to a public article page
+    await page.goto('/articles/guide-de-l-investisseur-debutant');
+
+    // Wait for the reactions component header to be visible
+    const reactionHeading = page.getByRole('heading', { name: /Réactions communautaires/i });
+    await expect(reactionHeading).toBeVisible({ timeout: 15000 });
+
+    // Get the LIKE button
+    const likeButton = page.getByRole('button', { name: /J'aime/i });
+    await expect(likeButton).toBeVisible();
+
+    // Verify it has the cursor-not-allowed style
+    await expect(likeButton).toHaveClass(/cursor-not-allowed/);
+
+    // Click it
+    await likeButton.click();
+
+    // A toast error/message should appear inviting the user to authenticate
+    await expect(page.getByText(/Veuillez vous connecter pour réagir/i)).toBeVisible();
+  });
 });

@@ -73,6 +73,17 @@ describe("GET /api/articles/[id]/reactions", () => {
     expect(response.status).toBe(404);
   });
 
+  it("returns 404 for visitor when article visibility is restricted", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockArticleFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: "AFFRANCHI",
+    });
+
+    const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
+    expect(response.status).toBe(404);
+  });
+
   it("returns counts and null userReaction when not logged in", async () => {
     mockAuth.mockResolvedValue(null);
     mockArticleFindFirst.mockResolvedValue(mockArticle);
@@ -134,6 +145,20 @@ describe("POST /api/articles/[id]/reactions", () => {
       params: Promise.resolve({ id: "art-1" }),
     });
     expect(response.status).toBe(400);
+  });
+
+  it("returns 404 if user has no subscription and tries to react to a restricted article", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER", tier: null } });
+    mockArticleFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: "AFFRANCHI",
+    });
+    mockHasActiveSubscription.mockResolvedValue(false);
+
+    const response = await POST(makeRequest("POST", { type: "LIKE" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(404);
   });
 
   it("adds new reaction when none exists", async () => {

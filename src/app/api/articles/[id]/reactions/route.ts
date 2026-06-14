@@ -154,31 +154,38 @@ export async function POST(
       },
     });
 
-    if (existing) {
-      if (existing.type === type) {
-        // Toggle off: clicked the same reaction type
-        await prisma.articleReaction.delete({
-          where: { id: existing.id },
-        });
-        return NextResponse.json({ ok: true, action: "removed" });
+    try {
+      if (existing) {
+        if (existing.type === type) {
+          // Toggle off: clicked the same reaction type
+          await prisma.articleReaction.delete({
+            where: { id: existing.id },
+          });
+          return NextResponse.json({ ok: true, action: "removed" });
+        } else {
+          // Update type: clicked a different reaction type
+          const updated = await prisma.articleReaction.update({
+            where: { id: existing.id },
+            data: { type: type as ReactionType },
+          });
+          return NextResponse.json({ ok: true, action: "updated", type: updated.type });
+        }
       } else {
-        // Update type: clicked a different reaction type
-        const updated = await prisma.articleReaction.update({
-          where: { id: existing.id },
-          data: { type: type as ReactionType },
+        // Create new reaction
+        const created = await prisma.articleReaction.create({
+          data: {
+            userId,
+            articleId: article.id,
+            type: type as ReactionType,
+          },
         });
-        return NextResponse.json({ ok: true, action: "updated", type: updated.type });
+        return NextResponse.json({ ok: true, action: "added", type: created.type });
       }
-    } else {
-      // Create new reaction
-      const created = await prisma.articleReaction.create({
-        data: {
-          userId,
-          articleId: article.id,
-          type: type as ReactionType,
-        },
-      });
-      return NextResponse.json({ ok: true, action: "added", type: created.type });
+    } catch (e: any) {
+      if (e.code === "P2002" || e.code === "P2025") {
+        return NextResponse.json({ error: "Conflict", message: "Concurrent modification" }, { status: 409 });
+      }
+      throw e;
     }
   } catch (error) {
     console.error("Post article reaction error:", sanitizeError(error));

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { ThumbsUp, Heart, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -28,12 +28,14 @@ export function ArticleReactions({ articleId, isLoggedIn }: ArticleReactionsProp
   });
   const [userReaction, setUserReaction] = useState<ReactionType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
+    let active = true;
     async function fetchReactions() {
       try {
         const res = await fetch(`/api/articles/${articleId}/reactions`);
-        if (res.ok) {
+        if (res.ok && active) {
           const data = await res.json();
           setReactions(data.reactions);
           setUserReaction(data.userReaction);
@@ -41,11 +43,16 @@ export function ArticleReactions({ articleId, isLoggedIn }: ArticleReactionsProp
       } catch (err) {
         console.error("Failed to fetch article reactions:", err);
       } finally {
-        setIsLoading(false);
+        if (active) {
+          setIsLoading(false);
+        }
       }
     }
 
     fetchReactions();
+    return () => {
+      active = false;
+    };
   }, [articleId]);
 
   const handleReact = async (type: ReactionType) => {
@@ -55,6 +62,9 @@ export function ArticleReactions({ articleId, isLoggedIn }: ArticleReactionsProp
       });
       return;
     }
+
+    if (isPending) return;
+    setIsPending(true);
 
     // Optimistic Update
     const previousReactions = { ...reactions };
@@ -97,6 +107,8 @@ export function ArticleReactions({ articleId, isLoggedIn }: ArticleReactionsProp
       setReactions(previousReactions);
       setUserReaction(previousUserReaction);
       toast.error("Une erreur s'est produite lors de l'enregistrement de votre réaction.");
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -152,13 +164,15 @@ export function ArticleReactions({ articleId, isLoggedIn }: ArticleReactionsProp
             <motion.button
               key={option.type}
               onClick={() => handleReact(option.type)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={isLoggedIn ? { scale: 1.05 } : undefined}
+              whileTap={isLoggedIn ? { scale: 0.95 } : undefined}
+              aria-pressed={isActive}
               className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors cursor-pointer",
+                "inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors",
+                isLoggedIn ? "cursor-pointer" : "cursor-not-allowed opacity-50",
                 isActive
                   ? cn("border-solid", option.activeBg, option.activeColor)
-                  : cn("border-white/10 bg-transparent text-slate-400 border-dashed", option.hoverColor)
+                  : cn("border-white/10 bg-transparent text-slate-400 border-dashed", isLoggedIn && option.hoverColor)
               )}
               aria-label={`${option.label} (${count} réactions)`}
             >
