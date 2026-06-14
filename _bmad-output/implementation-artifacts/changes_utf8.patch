@@ -1,0 +1,588 @@
+﻿diff --git a/e2e/articles.spec.ts b/e2e/articles.spec.ts
+new file mode 100644
+index 0000000..051c9fd
+--- /dev/null
++++ b/e2e/articles.spec.ts
+@@ -0,0 +1,118 @@
++import { expect, test } from '@playwright/test';
++
++test.describe('Articles, SEO et Navigation', () => {
++  test.setTimeout(90000);
++
++  test('Test de navigation : le clic sur le lien Articles de la landing page m├¿ne ├á /articles', async ({ page }) => {
++    await page.goto('/');
++    
++    // Find the link "Articles" in the header and click it
++    const articlesLink = page.locator('header').getByRole('link', { name: /^articles$/i }).first();
++    await expect(articlesLink).toBeVisible();
++    await articlesLink.click();
++    
++    await page.waitForURL(/\/articles/);
++    await expect(page).toHaveURL(/\/articles/);
++    await expect(page.getByRole('heading', { name: /Le Catalogue IBC/i })).toBeVisible();
++  });
++
++  test('Test de la landing page : la section Derniers articles est visible et affiche les articles publics', async ({ page }) => {
++    await page.goto('/');
++    
++    // Check if the section "Actualit├®s & Conseils" / "Derniers articles" is visible
++    const sectionTitle = page.getByRole('heading', { name: /Derniers articles/i });
++    await expect(sectionTitle).toBeVisible();
++    
++    // The seeded public article should be visible in the section
++    const publicArticleTitle = page.getByRole('heading', { name: /Guide de l'Investisseur D├®butant/i });
++    await expect(publicArticleTitle).toBeVisible();
++  });
++
++  test('Test de la Gate Premium : visiteur anonyme sur un article public vs premium', async ({ page }) => {
++    // 1. Public article: readable entirely, gate is NOT visible
++    await page.goto('/articles/guide-de-l-investisseur-debutant');
++    
++    // Title should be visible
++    await expect(page.getByRole('heading', { name: "Guide de l'Investisseur D├®butant" })).toBeVisible();
++    
++    // Content should be visible
++    await expect(page.getByText("Ce guide couvre les bases fondamentales de l'investissement")).toBeVisible();
++    
++    // Premium gate should not be visible
++    await expect(page.locator('[data-testid="gate-panel"]')).toHaveCount(0);
++
++    // 2. Premium article: excerpt is visible, gate panel IS visible, premium content is NOT visible
++    await page.goto('/articles/opportunites-immobilieres-a-abidjan');
++    
++    // Title should be visible
++    await expect(page.getByRole('heading', { name: "Opportunit├®s Immobili├¿res ├á Abidjan" })).toBeVisible();
++    
++    // Excerpt should be visible
++    await expect(page.getByText("Analyse compl├¿te du march├® immobilier r├®sidentiel")).toBeVisible();
++    
++    // Gate panel must be visible
++    await expect(page.locator('[data-testid="gate-panel"]')).toBeVisible();
++    await expect(page.getByText(/Cet article est r├®serv├® aux membres Premium/i)).toBeVisible();
++    
++    // Detailed content must not be visible
++    await expect(page.getByText("Les quartiers en forte croissance comme Cocody")).toHaveCount(0);
++  });
++
++  test('Test des m├®tadonn├®es SEO et JSON-LD sur la page de d├®tail', async ({ page }) => {
++    await page.goto('/articles/guide-de-l-investisseur-debutant');
++
++    // 1. Verify Page Title
++    await expect(page).toHaveTitle("Guide de l'Investisseur D├®butant ÔÇö Ivoire Business Club");
++
++    // 2. Verify Meta tags
++    const descriptionMeta = page.locator('meta[name="description"]');
++    await expect(descriptionMeta).toHaveAttribute('content', "D├®couvrez les bases de l'investissement dans la sous-r├®gion ouest-africaine.");
++
++    const ogTitleMeta = page.locator('meta[property="og:title"]');
++    await expect(ogTitleMeta).toHaveAttribute('content', "Guide de l'Investisseur D├®butant ÔÇö Ivoire Business Club");
++
++    const ogDescMeta = page.locator('meta[property="og:description"]');
++    await expect(ogDescMeta).toHaveAttribute('content', "D├®couvrez les bases de l'investissement dans la sous-r├®gion ouest-africaine.");
++
++    const ogTypeMeta = page.locator('meta[property="og:type"]');
++    await expect(ogTypeMeta).toHaveAttribute('content', "article");
++
++    const ogImageMeta = page.locator('meta[property="og:image"]');
++    await expect(ogImageMeta).toHaveAttribute('content', /.*logo-ibc\.webp/);
++
++    const ogLocaleMeta = page.locator('meta[property="og:locale"]');
++    await expect(ogLocaleMeta).toHaveAttribute('content', "fr_FR");
++
++    // 3. Verify JSON-LD script
++    const jsonLdScript = page.locator('script[type="application/ld+json"]');
++    await expect(jsonLdScript).toHaveCount(1);
++    
++    const jsonLdContent = await jsonLdScript.textContent();
++    expect(jsonLdContent).not.toBeNull();
++    
++    const parsedJsonLd = JSON.parse(jsonLdContent!);
++    expect(parsedJsonLd['@context']).toBe('https://schema.org');
++    expect(parsedJsonLd['@type']).toBe('Article');
++    expect(parsedJsonLd['headline']).toBe("Guide de l'Investisseur D├®butant");
++    expect(parsedJsonLd['description']).toBe("D├®couvrez les bases de l'investissement dans la sous-r├®gion ouest-africaine.");
++    expect(parsedJsonLd['author']['@type']).toBe('Person');
++    expect(parsedJsonLd['publisher']['@type']).toBe('Organization');
++  });
++
++  test('Test du sitemap XML : la route /sitemap.xml est accessible et contient les URLs des articles', async ({ request }) => {
++    const response = await request.get('/sitemap.xml');
++    expect(response.status()).toBe(200);
++    
++    const headers = response.headers();
++    expect(headers['content-type']).toContain('xml');
++    
++    const body = await response.text();
++    // The sitemap should contain static paths and dynamic paths
++    expect(body).toContain('/articles');
++    expect(body).toContain('/pricing');
++    expect(body).toContain('/articles/guide-de-l-investisseur-debutant');
++    
++    // Premium/Private articles should not be present in the public sitemap
++    expect(body).not.toContain('/articles/opportunites-immobilieres-a-abidjan');
++  });
++});
+diff --git a/src/app/(public)/articles/[slug]/page.test.tsx b/src/app/(public)/articles/[slug]/page.test.tsx
+index 62038f4..0cf4106 100644
+--- a/src/app/(public)/articles/[slug]/page.test.tsx
++++ b/src/app/(public)/articles/[slug]/page.test.tsx
+@@ -43,6 +43,7 @@ const mockArticle = {
+   published: true,
+   publishedAt: new Date("2026-06-11T12:00:00Z"),
+   createdAt: new Date("2026-06-11T12:00:00Z"),
++  updatedAt: new Date("2026-06-11T12:00:00Z"),
+   author: {
+     name: "Alexandre",
+   },
+@@ -116,7 +117,9 @@ describe("Article Detail Page", () => {
+       params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+     });
+ 
+-    expect(metadata.title).toBe("Guide Premium Abidjan ÔÇö Ivoire Business Club");
++    expect(metadata.title).toEqual({
++      absolute: "Guide Premium Abidjan ÔÇö Ivoire Business Club",
++    });
+     expect(metadata.description).toBe("Extrait de l'article premium");
+   });
+ });
+diff --git a/src/app/(public)/articles/[slug]/page.tsx b/src/app/(public)/articles/[slug]/page.tsx
+index 142959f..91de2f7 100644
+--- a/src/app/(public)/articles/[slug]/page.tsx
++++ b/src/app/(public)/articles/[slug]/page.tsx
+@@ -14,7 +14,7 @@ import { Footer } from "@/components/landing/footer";
+ import { buttonVariants } from "@/components/ui/button";
+ import { getTierBadgeConfig } from "@/lib/tier-config";
+ import { cn } from "@/lib/utils";
+-import { ArticleVisibility } from "@/generated/prisma/client";
++import { ArticleVisibility, Tier } from "@/generated/prisma/client";
+ import { sanitizeError } from "@/lib/sanitize-log";
+ 
+ export const dynamic = "force-dynamic";
+@@ -25,7 +25,7 @@ interface ArticleDetailPageProps {
+ 
+ interface CustomSessionUser {
+   id?: string;
+-  tier?: string | null;
++  tier?: Tier | null;
+   role?: string;
+ }
+ 
+@@ -50,9 +50,30 @@ export async function generateMetadata({ params }: ArticleDetailPageProps): Prom
+ 
+     if (!article) return {};
+ 
++    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
++    const pageUrl = `${siteUrl}/articles/${slug}`;
++    const imageUrl = `${siteUrl}/logo-ibc.webp`;
++
+     return {
+-      title: `${article.title} ÔÇö Ivoire Business Club`,
++      title: {
++        absolute: `${article.title} ÔÇö Ivoire Business Club`,
++      },
+       description: article.excerpt,
++      openGraph: {
++        title: `${article.title} ÔÇö Ivoire Business Club`,
++        description: article.excerpt,
++        type: "article",
++        url: pageUrl,
++        images: [
++          {
++            url: imageUrl,
++            width: 800,
++            height: 600,
++            alt: article.title,
++          },
++        ],
++        locale: "fr_FR",
++      },
+     };
+   } catch (e) {
+     console.error("Failed to generate metadata:", sanitizeError(e));
+@@ -105,8 +126,34 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
+ 
+   const badgeConfig = getTierBadgeConfig(article.visibility);
+ 
++  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
++  const jsonLd = {
++    "@context": "https://schema.org",
++    "@type": "Article",
++    "headline": article.title,
++    "description": article.excerpt,
++    "datePublished": article.publishedAt ? new Date(article.publishedAt).toISOString() : new Date(article.createdAt).toISOString(),
++    "dateModified": new Date(article.updatedAt).toISOString(),
++    "author": {
++      "@type": "Person",
++      "name": article.author.name,
++    },
++    "publisher": {
++      "@type": "Organization",
++      "name": "Ivoire Business Club",
++      "logo": {
++        "@type": "ImageObject",
++        "url": `${siteUrl}/logo-ibc.webp`
++      }
++    }
++  };
++
+   return (
+     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++      <script
++        type="application/ld+json"
++        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
++      />
+       {/* Navigation Header */}
+       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+@@ -119,7 +166,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
+           </Link>
+           <nav className="flex gap-6 text-sm items-center">
+             <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
+-              Catalogue
++              Articles
+             </Link>
+             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
+               Tarifs
+@@ -193,7 +240,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
+               </h3>
+               
+               <p className="text-slate-300 max-w-md mx-auto mb-6 text-sm leading-relaxed">
+-                Le contenu exclusif de l'Ivoire Business Club, y compris cette publication au niveau{" "}
++                Le contenu exclusif de l&apos;Ivoire Business Club, y compris cette publication au niveau{" "}
+                 <span className="font-semibold text-teal-400">{badgeConfig.label}</span>, est r├®serv├® ├á nos membres actifs abonn├®s.
+               </p>
+ 
+@@ -205,7 +252,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
+                     "cursor-pointer w-full sm:w-auto bg-[#D4A847] text-black hover:bg-[#D4A847]/90 font-semibold"
+                   )}
+                 >
+-                  Abonnez-vous pour lire l'article complet
++                  Abonnez-vous pour lire l&apos;article complet
+                   <ArrowRight className="size-4 ml-1.5" />
+                 </Link>
+                 
+diff --git a/src/app/(public)/articles/page.tsx b/src/app/(public)/articles/page.tsx
+index fa7f800..895bbb5 100644
+--- a/src/app/(public)/articles/page.tsx
++++ b/src/app/(public)/articles/page.tsx
+@@ -7,7 +7,7 @@ import { hasActiveSubscription } from "@/lib/subscription-access";
+ import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
+ import { ArticleCard } from "@/components/features/articles/ArticleCard";
+ import { Footer } from "@/components/landing/footer";
+-import { ArticleVisibility, Prisma } from "@/generated/prisma/client";
++import { ArticleVisibility, Prisma, Article, Tier } from "@/generated/prisma/client";
+ import { sanitizeError } from "@/lib/sanitize-log";
+ 
+ export const dynamic = "force-dynamic";
+@@ -18,7 +18,7 @@ interface ArticlesPageProps {
+ 
+ interface CustomSessionUser {
+   id?: string;
+-  tier?: string | null;
++  tier?: Tier | null;
+   role?: string;
+ }
+ 
+@@ -73,7 +73,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps)
+   }
+ 
+   // 4. Fetch articles from Database
+-  let articles: any[] = [];
++  let articles: Article[] = [];
+   try {
+     articles = await prisma.article.findMany({
+       where: whereClause,
+@@ -105,6 +105,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps)
+             <Link href="/" className="text-slate-300 hover:text-white transition-colors">
+               Accueil
+             </Link>
++            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
++              Articles
++            </Link>
+             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
+               Tarifs
+             </Link>
+@@ -128,7 +131,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps)
+             Le Catalogue IBC
+           </h1>
+           <p className="mt-4 text-base text-slate-400 leading-relaxed">
+-            Parcourez nos analyses, guides d'investissement et t├®moignages exclusifs pour r├®ussir votre implantation ou vos investissements en C├┤te d'Ivoire.
++            Parcourez nos analyses, guides d&apos;investissement et t├®moignages exclusifs pour r├®ussir votre implantation ou vos investissements en C├┤te d&apos;Ivoire.
+           </p>
+         </div>
+ 
+diff --git a/src/app/(public)/page.tsx b/src/app/(public)/page.tsx
+index 59b06eb..987e30f 100644
+--- a/src/app/(public)/page.tsx
++++ b/src/app/(public)/page.tsx
+@@ -13,6 +13,7 @@ import { Footer } from '@/components/landing/footer';
+ import { prisma } from '@/lib/prisma';
+ import { SuccessWall } from '@/components/landing/success-wall';
+ import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
++import { LatestArticles } from '@/components/landing/latest-articles';
+ 
+ // Dynamic rendering avoids requiring database access during build.
+ export const dynamic = 'force-dynamic';
+@@ -41,7 +42,20 @@ export const metadata: Metadata = {
+ };
+ 
+ export default async function HomePage() {
+-  let teasers: any[] = [];
++  let teasers: {
++    id: string;
++    title: string;
++    category: string | null;
++    location: string | null;
++  }[] = [];
++  let latestArticles: {
++    id: string;
++    title: string;
++    slug: string;
++    excerpt: string;
++    category: string;
++    publishedAt: Date | null;
++  }[] = [];
+   try {
+     const opportunities = await prisma.opportunity.findMany({
+       where: { verificationStatus: 'VERIFIED' },
+@@ -66,6 +80,29 @@ export default async function HomePage() {
+     // Graceful fallback if database is not reachable at build time
+   }
+ 
++  try {
++    latestArticles = await prisma.article.findMany({
++      where: {
++        published: true,
++        visibility: 'PUBLIC',
++      },
++      orderBy: {
++        publishedAt: 'desc',
++      },
++      take: 3,
++      select: {
++        id: true,
++        title: true,
++        slug: true,
++        excerpt: true,
++        category: true,
++        publishedAt: true,
++      },
++    });
++  } catch (err) {
++    console.error('Error fetching articles for landing page:', err);
++  }
++
+   return (
+     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
+ 
+@@ -88,6 +125,9 @@ export default async function HomePage() {
+             <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">
+               Tarifs
+             </a>
++            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
++              Articles
++            </Link>
+             <a
+               href="/auth/signin"
+               className="text-slate-300 hover:text-white transition-colors"
+@@ -111,6 +151,7 @@ export default async function HomePage() {
+ 
+         <SuccessWall />
+         <OpportunityTeasers opportunities={teasers} />
++        <LatestArticles articles={latestArticles} />
+         <TargetAudience />
+         <Benefits />
+         <Pricing />
+diff --git a/src/app/(public)/pricing/page.tsx b/src/app/(public)/pricing/page.tsx
+index 7023696..51cd0db 100644
+--- a/src/app/(public)/pricing/page.tsx
++++ b/src/app/(public)/pricing/page.tsx
+@@ -15,6 +15,9 @@ export default async function PricingPage() {
+             IBC
+           </Link>
+           <nav className="flex items-center gap-3 text-sm sm:gap-6" aria-label="Navigation principale">
++            <Link href="/articles" className="inline-flex min-h-11 items-center rounded-md px-2 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
++              Articles
++            </Link>
+             {isAuthenticated ? (
+               <Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-md px-2 font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                 Tableau de bord
+diff --git a/src/app/sitemap.ts b/src/app/sitemap.ts
+new file mode 100644
+index 0000000..afe8f2d
+--- /dev/null
++++ b/src/app/sitemap.ts
+@@ -0,0 +1,57 @@
++import { prisma } from '@/lib/prisma';
++import { MetadataRoute } from 'next';
++
++export const dynamic = 'force-dynamic';
++
++export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
++  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ivoirebusinessclub.com';
++
++  // Fetch all published articles with visibility PUBLIC
++  let publicArticles: { slug: string; updatedAt: Date | null }[] = [];
++  try {
++    publicArticles = await prisma.article.findMany({
++      where: {
++        published: true,
++        visibility: 'PUBLIC',
++      },
++      select: {
++        slug: true,
++        updatedAt: true,
++      },
++    });
++  } catch (error) {
++    console.error('Error fetching articles for sitemap:', error);
++  }
++
++  // Static routes
++  const routes = [
++    {
++      url: siteUrl,
++      lastModified: new Date(),
++      changeFrequency: 'daily' as const,
++      priority: 1.0,
++    },
++    {
++      url: `${siteUrl}/articles`,
++      lastModified: new Date(),
++      changeFrequency: 'daily' as const,
++      priority: 0.8,
++    },
++    {
++      url: `${siteUrl}/pricing`,
++      lastModified: new Date(),
++      changeFrequency: 'monthly' as const,
++      priority: 0.8,
++    },
++  ];
++
++  // Dynamic article routes
++  const articleRoutes = publicArticles.map((article) => ({
++    url: `${siteUrl}/articles/${article.slug}`,
++    lastModified: article.updatedAt ? new Date(article.updatedAt) : new Date(),
++    changeFrequency: 'weekly' as const,
++    priority: 0.6,
++  }));
++
++  return [...routes, ...articleRoutes];
++}
+diff --git a/src/components/landing/latest-articles.tsx b/src/components/landing/latest-articles.tsx
+new file mode 100644
+index 0000000..d37bdae
+--- /dev/null
++++ b/src/components/landing/latest-articles.tsx
+@@ -0,0 +1,110 @@
++'use client';
++
++import Link from 'next/link';
++import { BlurReveal } from '@/components/ui/blur-reveal';
++
++type ArticleTeaser = {
++  id: string;
++  title: string;
++  slug: string;
++  excerpt: string;
++  category: string;
++  publishedAt?: Date | string | null;
++};
++
++type LatestArticlesProps = {
++  articles: ArticleTeaser[];
++};
++
++export function LatestArticles({ articles }: LatestArticlesProps) {
++  return (
++    <section id="actualites" className="bg-[#090D16] py-24 text-white">
++      <div className="mx-auto max-w-7xl px-4">
++        <BlurReveal>
++          <div className="mx-auto max-w-2xl text-center mb-16">
++            <span className="text-[#D4A847] text-sm font-semibold uppercase tracking-wider">
++              Actualit├®s & Conseils
++            </span>
++            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">Derniers articles</h2>
++            <p className="mt-4 text-slate-400">
++              Restez inform├® des derni├¿res tendances du march├® et d├®couvrez des conseils d&apos;experts pour r├®ussir en C├┤te d&apos;Ivoire.
++            </p>
++          </div>
++        </BlurReveal>
++
++        {articles && articles.length > 0 ? (
++          <div className="grid gap-8 md:grid-cols-3">
++            {articles.map((article, i) => {
++              const formattedDate = article.publishedAt
++                ? new Date(article.publishedAt).toLocaleDateString('fr-FR', {
++                    day: 'numeric',
++                    month: 'long',
++                    year: 'numeric',
++                  })
++                : '';
++
++              return (
++                <BlurReveal key={article.id} delay={i * 120}>
++                  <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A847]/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-[#D4A847]/5">
++                    {/* Decorative radial gradient glow */}
++                    <div className="absolute -right-20 -top-20 -z-10 size-40 rounded-full bg-gradient-to-br from-[#D4A847]/5 to-[#00b4d8]/5 blur-2xl transition-all duration-500 group-hover:scale-150" />
++
++                    <div>
++                      {/* Category Badge */}
++                      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded mb-4">
++                        {article.category}
++                      </span>
++
++                      {/* Title */}
++                      <h3 className="text-xl font-bold text-white transition-colors group-hover:text-[#D4A847] line-clamp-2 mb-3">
++                        <Link href={`/articles/${article.slug}`}>
++                          {article.title}
++                        </Link>
++                      </h3>
++
++                      {/* Excerpt */}
++                      <p className="text-sm text-slate-400 line-clamp-3 mb-6">
++                        {article.excerpt}
++                      </p>
++                    </div>
++
++                    {/* Date and Action Link */}
++                    <div className="flex items-center justify-between border-t border-white/5 pt-4 text-xs">
++                      <span className="text-slate-500">{formattedDate}</span>
++                      <Link
++                        href={`/articles/${article.slug}`}
++                        className="font-medium text-[#D4A847] hover:underline flex items-center gap-1"
++                      >
++                        Lire l&apos;article
++                        <span className="transition-transform duration-200 group-hover:translate-x-0.5">ÔåÆ</span>
++                      </Link>
++                    </div>
++                  </div>
++                </BlurReveal>
++              );
++            })}
++          </div>
++        ) : (
++          <BlurReveal>
++            <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-white/10 bg-[#0F172A] p-8 text-center text-slate-400">
++              Aucun article publi├® pour le moment.
++            </div>
++          </BlurReveal>
++        )}
++
++        <BlurReveal delay={400}>
++          <div className="mt-12 text-center">
++            <Link
++              href="/articles"
++              className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#D4A847] px-6 py-2 text-sm font-semibold text-[#D4A847] hover:bg-[#D4A847]/10 transition-all duration-300"
++            >
++              Voir tous les articles
++            </Link>
++          </div>
++        </BlurReveal>
++      </div>
++    </section>
++  );
++}
++
++export default LatestArticles;

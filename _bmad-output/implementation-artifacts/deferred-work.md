@@ -37,3 +37,12 @@
 - Absence de pagination dans la liste des articles (`src/app/(admin)/admin/articles/page.tsx`) — hors scope de la story
 - Contournement de la sécurité des types TypeScript (`session.user as any`) dans les endpoints d'articles — pre-existing pattern
 - Duplication et dérive potentielle de l'énumération `ArticleVisibility` dans `src/lib/validations.ts` — duplication pour compatibilité client/serveur
+
+## Deferred from: code review of 9-4-seo-navigation-et-integration-site.md (2026-06-14)
+
+- Redondance et duplication de l'URL de base (siteUrl) [src/app/sitemap.ts:7] — URL codée en dur à plusieurs endroits (pré-existant).
+- Utilisation d'une balise <a> standard pour la connexion [src/app/(public)/page.tsx:128] — Propose une navigation par rechargement complet de page plutôt qu'en mode SPA (pré-existant).
+- Incohérence et doublons dans la structure des en-têtes de navigation [src/app/(public)/page.tsx:88] — Design ad-hoc et duplicate du header (pré-existant).
+- Risque de plantage de la page d'accueil sur la récupération des opportunités [src/app/(public)/page.tsx:45] — Absence de chaînage optionnel sur `opportunity.author.location` (pré-existant).
+- Mauvaise gestion des paramètres de requête multiples pour la catégorie [src/app/(public)/articles/page.tsx:35] — Risque d'erreur si `category` est fourni plusieurs fois en query string (pré-existant).
+

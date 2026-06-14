@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/auth';
 
 test.describe('Articles, SEO et Navigation', () => {
   test.setTimeout(90000);
@@ -114,5 +114,19 @@ test.describe('Articles, SEO et Navigation', () => {
     
     // Premium/Private articles should not be present in the public sitemap
     expect(body).not.toContain('/articles/opportunites-immobilieres-a-abidjan');
+  });
+
+  test('Test de la Gate Premium : membre abonné (AFFRANCHI) accède à un article premium', async ({ affranchiPage }) => {
+    // AFFRANCHI has access to premium articles
+    await affranchiPage.goto('/articles/opportunites-immobilieres-a-abidjan');
+    
+    // Title should be visible
+    await expect(affranchiPage.getByRole('heading', { name: "Opportunités Immobilières à Abidjan" })).toBeVisible();
+    
+    // Detailed content (premium) should be visible
+    await expect(affranchiPage.getByText(/Les quartiers en forte croissance comme Cocody/i).first()).toBeVisible();
+    
+    // Premium gate should NOT be visible
+    await expect(affranchiPage.locator('[data-testid="gate-panel"]')).toHaveCount(0);
   });
 });

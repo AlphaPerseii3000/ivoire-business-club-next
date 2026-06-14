@@ -9,7 +9,7 @@ type ArticleTeaser = {
   slug: string;
   excerpt: string;
   category: string;
-  publishedAt?: Date | string | null;
+  publishedAt?: string | null;
 };
 
 type LatestArticlesProps = {
@@ -35,13 +35,7 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
         {articles && articles.length > 0 ? (
           <div className="grid gap-8 md:grid-cols-3">
             {articles.map((article, i) => {
-              const formattedDate = article.publishedAt
-                ? new Date(article.publishedAt).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })
-                : '';
+              const formattedDate = article.publishedAt || '';
 
               return (
                 <BlurReveal key={article.id} delay={i * 120}>

@@ -16,6 +16,18 @@ vi.mock('@/lib/prisma', () => ({
         },
       ]),
     },
+    article: {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'art-1',
+          title: 'Guide de l\'Investisseur',
+          slug: 'guide-de-l-investisseur',
+          excerpt: 'Un extrait...',
+          category: 'Conseils',
+          publishedAt: new Date('2026-06-11T12:00:00Z'),
+        },
+      ]),
+    },
   },
 }));
 

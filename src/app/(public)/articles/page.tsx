@@ -48,6 +48,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   // 3. Build Prisma query where clause
   const whereClause: Prisma.ArticleWhereInput = {
     published: true,
+    publishedAt: {
+      lte: new Date(),
+    },
   };
 
   // Filter by category if specified

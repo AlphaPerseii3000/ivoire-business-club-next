@@ -3,7 +3,7 @@ baseline_commit: 2fa0419852baa150150a74341ec35d0828d85139
 ---
 # Story 9.4: SEO, Navigation et Intégration Site
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -137,4 +137,22 @@ Gemini 3.5 Flash (Medium)
 - src/components/landing/latest-articles.tsx
 - src/app/sitemap.ts
 - e2e/articles.spec.ts
+
+### Review Findings
+
+- [x] [Review][Patch] Problème de sérialisation et d'hydratation des dates dans LatestArticles [src/app/(public)/page.tsx:80]
+- [x] [Review][Patch] Risque d'injection XSS dans le script JSON-LD de la page détail d'un article [src/app/(public)/articles/[slug]/page.tsx:150]
+- [x] [Review][Patch] Accès non sécurisé à la relation author dans la page détail d'un article [src/app/(public)/articles/[slug]/page.tsx:133]
+- [x] [Review][Patch] Crash potentiel sur la date de modification dans le JSON-LD [src/app/(public)/articles/[slug]/page.tsx:132]
+- [x] [Review][Patch] Crash potentiel lors du parsing de date dans LatestArticles [src/components/landing/latest-articles.tsx:38]
+- [x] [Review][Patch] Génération d'URLs invalides dans le sitemap avec double slash [src/app/sitemap.ts:7]
+- [x] [Review][Patch] Mauvaise pratique SEO avec modification de date dynamique sur pages statiques [src/app/sitemap.ts:29]
+- [x] [Review][Patch] Inclusion d'articles programmés dans le futur sur la page d'accueil [src/app/(public)/page.tsx:83]
+- [x] [Review][Patch] Couverture de tests E2E insuffisante pour les abonnés actifs [e2e/articles.spec.ts:1]
+- [x] [Review][Defer] Redondance et duplication de l'URL de base (siteUrl) [src/app/sitemap.ts:7] — deferred, pre-existing
+- [x] [Review][Defer] Utilisation d'une balise <a> standard pour la connexion [src/app/(public)/page.tsx:128] — deferred, pre-existing
+- [x] [Review][Defer] Incohérence et doublons dans la structure des en-têtes de navigation [src/app/(public)/page.tsx:88] — deferred, pre-existing
+- [x] [Review][Defer] Risque de plantage de la page d'accueil sur la récupération des opportunités [src/app/(public)/page.tsx:45] — deferred, pre-existing
+- [x] [Review][Defer] Mauvaise gestion des paramètres de requête multiples pour la catégorie [src/app/(public)/articles/page.tsx:35] — deferred, pre-existing
+
 

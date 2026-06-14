@@ -85,6 +85,9 @@ export default async function HomePage() {
       where: {
         published: true,
         visibility: 'PUBLIC',
+        publishedAt: {
+          lte: new Date(),
+        },
       },
       orderBy: {
         publishedAt: 'desc',
@@ -102,6 +105,17 @@ export default async function HomePage() {
   } catch (err) {
     console.error('Error fetching articles for landing page:', err);
   }
+
+  const serializedArticles = latestArticles.map((article) => ({
+    ...article,
+    publishedAt: article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())
+      ? new Date(article.publishedAt).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      : null,
+  }));
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
@@ -151,7 +165,7 @@ export default async function HomePage() {
 
         <SuccessWall />
         <OpportunityTeasers opportunities={teasers} />
-        <LatestArticles articles={latestArticles} />
+        <LatestArticles articles={serializedArticles} />
         <TargetAudience />
         <Benefits />
         <Pricing />

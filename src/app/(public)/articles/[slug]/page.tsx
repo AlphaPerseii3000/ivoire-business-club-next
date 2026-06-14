@@ -126,17 +126,21 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   const badgeConfig = getTierBadgeConfig(article.visibility);
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": article.title,
     "description": article.excerpt,
-    "datePublished": article.publishedAt ? new Date(article.publishedAt).toISOString() : new Date(article.createdAt).toISOString(),
-    "dateModified": new Date(article.updatedAt).toISOString(),
+    "datePublished": article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())
+      ? new Date(article.publishedAt).toISOString()
+      : new Date(article.createdAt).toISOString(),
+    "dateModified": article.updatedAt && !isNaN(new Date(article.updatedAt).getTime())
+      ? new Date(article.updatedAt).toISOString()
+      : new Date(article.createdAt).toISOString(),
     "author": {
       "@type": "Person",
-      "name": article.author.name,
+      "name": article.author?.name || "L'Équipe IBC",
     },
     "publisher": {
       "@type": "Organization",
@@ -152,7 +156,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       {/* Navigation Header */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
@@ -209,7 +213,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
           </h1>
 
           <div className="flex items-center gap-4 text-sm text-slate-400 pt-2 border-y border-white/5 py-3">
-            <span>Par <strong className="text-white">{article.author.name}</strong></span>
+            <span>Par <strong className="text-white">{article.author?.name || "L'Équipe IBC"}</strong></span>
             <span className="text-white/20">•</span>
             <span>{formattedDate}</span>
           </div>
