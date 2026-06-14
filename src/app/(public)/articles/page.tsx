@@ -1,17 +1,25 @@
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
 import { ArticleCard } from "@/components/features/articles/ArticleCard";
 import { Footer } from "@/components/landing/footer";
-import { ArticleVisibility } from "@/generated/prisma/client";
+import { ArticleVisibility, Prisma } from "@/generated/prisma/client";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
 interface ArticlesPageProps {
   searchParams: Promise<{ category?: string }>;
+}
+
+interface CustomSessionUser {
+  id?: string;
+  tier?: string | null;
+  role?: string;
 }
 
 const CATEGORIES = [
@@ -29,27 +37,30 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   // 1. Get current session and roles
   const session = await auth();
   const isLoggedIn = !!session?.user;
-  const userId = session?.user?.id;
-  const userTier = (session?.user as any)?.tier ?? null;
-  const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const user = session?.user as CustomSessionUser | undefined;
+  const userId = user?.id;
+  const userTier = user?.tier ?? null;
+  const isAdmin = user?.role === "ADMIN";
 
   // 2. Validate subscription status
   const hasActiveSub = userId ? await hasActiveSubscription(userId) : false;
 
   // 3. Build Prisma query where clause
-  const whereClause: any = {
+  const whereClause: Prisma.ArticleWhereInput = {
     published: true,
   };
 
   // Filter by category if specified
   if (activeCategory && activeCategory !== "Tous") {
-    if (activeCategory === "temoignage" || activeCategory === "témoignage") {
+    const searchCat = decodeURIComponent(activeCategory).toLowerCase().trim();
+    if (searchCat === "temoignage" || searchCat === "témoignage") {
       whereClause.category = {
-        in: ["temoignage", "témoignage"],
+        in: ["temoignage", "témoignage", "Temoignage", "Témoignage", "TEMOIGNAGE", "TÉMOIGNAGE"],
       };
     } else {
+      const capitalized = searchCat.charAt(0).toUpperCase() + searchCat.slice(1);
       whereClause.category = {
-        equals: activeCategory,
+        in: [searchCat, capitalized, searchCat.toUpperCase()],
       };
     }
   }
@@ -71,7 +82,8 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
       },
     });
   } catch (error) {
-    console.error("Failed to fetch articles:", error);
+    console.error("Failed to fetch articles:", sanitizeError(error));
+    throw error;
   }
 
   // 5. Calculate accessible article visibilities for the logged-in user
@@ -83,7 +95,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
+            <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
             <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
               Ivoire Business Club
             </span>

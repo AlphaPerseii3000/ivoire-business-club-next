@@ -132,7 +132,9 @@ describe("Articles Catalogue Page", () => {
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          category: { equals: "conseil" },
+          category: {
+            in: ["conseil", "Conseil", "CONSEIL"],
+          },
         }),
       })
     );

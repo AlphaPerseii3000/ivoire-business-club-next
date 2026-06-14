@@ -33,7 +33,10 @@ export const authConfig: NextAuthConfig = {
       const pathname = nextUrl.pathname;
       const isLoggedIn = !!auth?.user;
       const publicRoutes = ["/pricing", "/auth/signin", "/auth/signup", "/auth/error", "/articles"];
-      const isPublic = pathname === "/" || publicRoutes.some((route) => pathname.startsWith(route)) || pathname.startsWith("/api/auth");
+      const isPublic =
+        pathname === "/" ||
+        publicRoutes.some((route) => pathname === route || pathname.startsWith(route + "/")) ||
+        pathname.startsWith("/api/auth");
 
       if (pathname.startsWith("/admin")) {
         if (!isLoggedIn) return false;

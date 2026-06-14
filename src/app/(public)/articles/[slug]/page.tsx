@@ -1,8 +1,10 @@
 import * as React from "react";
+import { cache } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Lock, ArrowLeft, ArrowRight, ShieldAlert } from "lucide-react";
+import { Lock, ArrowLeft, ArrowRight } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
@@ -13,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import { cn } from "@/lib/utils";
 import { ArticleVisibility } from "@/generated/prisma/client";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
@@ -20,32 +23,15 @@ interface ArticleDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ArticleDetailPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  try {
-    const article = await prisma.article.findFirst({
-      where: { slug, published: true },
-      select: { title: true, excerpt: true },
-    });
-
-    if (!article) return {};
-
-    return {
-      title: `${article.title} — Ivoire Business Club`,
-      description: article.excerpt,
-    };
-  } catch (e) {
-    return {
-      title: "Article — Ivoire Business Club",
-    };
-  }
+interface CustomSessionUser {
+  id?: string;
+  tier?: string | null;
+  role?: string;
 }
 
-export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
-  const { slug } = await params;
-
-  // 1. Fetch the article with author details
-  const article = await prisma.article.findFirst({
+// Caches and deduplicates the database query per request
+const getArticleBySlug = cache(async (slug: string) => {
+  return prisma.article.findFirst({
     where: { slug, published: true },
     include: {
       author: {
@@ -55,6 +41,38 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
       },
     },
   });
+});
+
+export async function generateMetadata({ params }: ArticleDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const article = await getArticleBySlug(slug);
+
+    if (!article) return {};
+
+    return {
+      title: `${article.title} — Ivoire Business Club`,
+      description: article.excerpt,
+    };
+  } catch (e) {
+    console.error("Failed to generate metadata:", sanitizeError(e));
+    return {
+      title: "Article — Ivoire Business Club",
+    };
+  }
+}
+
+export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
+  const { slug } = await params;
+
+  // 1. Fetch the article with author details (guarded against db failures)
+  let article;
+  try {
+    article = await getArticleBySlug(slug);
+  } catch (error) {
+    console.error("Failed to fetch article details:", sanitizeError(error));
+    throw error;
+  }
 
   if (!article) {
     notFound();
@@ -63,9 +81,10 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
   // 2. Auth & permissions checks
   const session = await auth();
   const isLoggedIn = !!session?.user;
-  const userId = session?.user?.id;
-  const userTier = (session?.user as any)?.tier ?? null;
-  const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const user = session?.user as CustomSessionUser | undefined;
+  const userId = user?.id;
+  const userTier = user?.tier ?? null;
+  const isAdmin = user?.role === "ADMIN";
 
   const hasActiveSub = userId ? await hasActiveSubscription(userId) : false;
   const allowedVisibilities = getAccessibleArticleVisibilities(userTier, hasActiveSub);
@@ -92,7 +111,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
+            <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
             <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
               Ivoire Business Club
             </span>

@@ -78,7 +78,7 @@ export function ArticleCard({ article, hasAccess }: ArticleCardProps) {
               "cursor-pointer border-teal-500/30 text-teal-600 hover:bg-teal-500/5 dark:text-teal-400 group"
             )}
           >
-            Abonnez-vous
+            Abonnez-vous pour lire
             <Lock className="size-3.5 ml-1.5" />
           </Link>
         )}

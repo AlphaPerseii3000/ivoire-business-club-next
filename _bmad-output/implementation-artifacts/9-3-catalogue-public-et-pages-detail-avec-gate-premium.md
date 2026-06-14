@@ -3,7 +3,7 @@ baseline_commit: 7a6224f5b6770bad920445941a382f27558b4adb
 ---
 # Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -96,6 +96,23 @@ Status: review
     - La restriction d'accès avec Gate Panel (extrait + CTA) pour un article premium sans abonnement.
     - L'affichage de la page 404 (appel de `notFound`) pour un article inexistant ou non publié.
   - [x] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succès.
+
+### Review Findings
+
+- [x] [Review][Decision] Markdown Parser and Security — The custom Markdown parser in `ArticleContent.tsx` uses fragile regular expressions that can fail on nesting or multi-line structures, and it uses basic string replacements for escaping, bypassing production-tested sanitization like DOMPurify which creates XSS vulnerability risks. (Resolved: installed marked and isomorphic-dompurify)
+- [x] [Review][Patch] Overly Broad Public Route Matching Wildcard [src/lib/auth.config.ts:32-35]
+- [x] [Review][Patch] Widespread Character Encoding Corruption [src/app/(public)/articles/[slug]/page.tsx:292]
+- [x] [Review][Patch] CTA Button Text Mismatch [src/components/features/articles/ArticleCard.tsx:881-891]
+- [x] [Review][Patch] Direct console.error Without Log Sanitization [src/app/(public)/articles/page.tsx:705-707]
+- [x] [Review][Patch] Redundant Database Queries (No Request Deduplication) [src/app/(public)/articles/[slug]/page.tsx:281-302]
+- [x] [Review][Patch] Abuse of TypeScript any Type Casts [src/app/(public)/articles/page.tsx:33-35]
+- [x] [Review][Patch] Swallowed Errors in Metadata Generation [src/app/(public)/articles/[slug]/page.tsx:281-302]
+- [x] [Review][Patch] Misleading Error Handling on Empty States [src/app/(public)/articles/page.tsx:705-707]
+- [x] [Review][Patch] Unoptimized Logo Image Rendering [src/app/(public)/articles/[slug]/page.tsx:94-96]
+- [x] [Review][Patch] Duplicated Authorization and Session Handling [src/app/(public)/articles/page.tsx:29-38]
+- [x] [Review][Patch] Unused Imports in Server Component [src/app/(public)/articles/[slug]/page.tsx:5]
+- [x] [Review][Patch] Unguarded Database Failures on Article Fetch [src/app/(public)/articles/[slug]/page.tsx:305-316]
+- [x] [Review][Patch] French Category Encoding mismatch [src/app/(public)/articles/page.tsx:679-683]
 
 ## Dev Notes
 

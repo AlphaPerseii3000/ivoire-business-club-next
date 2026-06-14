@@ -1,0 +1,1012 @@
+﻿diff --git a/_bmad-output/implementation-artifacts/9-3-catalogue-public-et-pages-detail-avec-gate-premium.md b/_bmad-output/implementation-artifacts/9-3-catalogue-public-et-pages-detail-avec-gate-premium.md
+index cdd2e1f..8766838 100644
+--- a/_bmad-output/implementation-artifacts/9-3-catalogue-public-et-pages-detail-avec-gate-premium.md
++++ b/_bmad-output/implementation-artifacts/9-3-catalogue-public-et-pages-detail-avec-gate-premium.md
+@@ -1,6 +1,9 @@
++---
++baseline_commit: 7a6224f5b6770bad920445941a382f27558b4adb
++---
+ # Story 9.3: Catalogue Public et Pages D├®tail avec Gate Premium
+ 
+-Status: ready-for-dev
++Status: review
+ 
+ <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+ 
+@@ -49,21 +52,21 @@ Status: ready-for-dev
+ 
+ ## Tasks / Subtasks
+ 
+-- [ ] **Configuration des routes d'acc├¿s public (AC: 1, 4)**
+-  - [ ] Modifier [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) pour ajouter `"/articles"` au tableau `publicRoutes`. Cela permettra aux visiteurs anonymes d'acc├®der aux pages `/articles` et `/articles/[slug]` sans ├¬tre redirig├®s vers `/auth/signin`.
++- [x] **Configuration des routes d'acc├¿s public (AC: 1, 4)**
++  - [x] Modifier [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) pour ajouter `"/articles"` au tableau `publicRoutes`. Cela permettra aux visiteurs anonymes d'acc├®der aux pages `/articles` et `/articles/[slug]` sans ├¬tre redirig├®s vers `/auth/signin`.
+ 
+-- [ ] **Composants d'interface utilisateur (AC: 1, 2, 3, 5, 6)**
+-  - [ ] Cr├®er `src/components/features/articles/ArticleCard.tsx` :
++- [x] **Composants d'interface utilisateur (AC: 1, 2, 3, 5, 6)**
++  - [x] Cr├®er `src/components/features/articles/ArticleCard.tsx` :
+     - Recevoir l'article, un indicateur d'acc├¿s autoris├® (`hasAccess`) et le tier de l'article.
+     - Afficher le titre, l'extrait (`excerpt`), la cat├®gorie, la date de publication formatt├®e en fran├ºais.
+     - Afficher un badge de visibilit├® stylis├® selon les couleurs ├®tablies dans la story 9.2 (PUBLIC = gris/neutral, AFFRANCHI = teal, GRAND_FRERE = amber, BOSS = violet) avec une ic├┤ne de verrou si l'acc├¿s est bloqu├®.
+     - Si `hasAccess` est faux, rendre un bouton/lien "Abonnez-vous pour lire" pointant vers `/pricing` ou vers `/articles/[slug]` (o├╣ la gate sera affich├®e).
+     - Si `hasAccess` est vrai, rendre un bouton "Lire l'article" pointant vers `/articles/[slug]`.
+-  - [ ] Cr├®er `src/components/features/articles/ArticleContent.tsx` :
++  - [x] Cr├®er `src/components/features/articles/ArticleContent.tsx` :
+     - Rendre le contenu Markdown de l'article sous forme HTML de mani├¿re propre et s├®curis├®e (parseur basique sans biblioth├¿que lourde, transformant les paragraphes, les titres `#` / `##`, les listes ├á puces `-`, et le gras `**`).
+ 
+-- [ ] **Catalogue et D├®tail Articles (AC: 1, 2, 3, 4, 5, 6, 7)**
+-  - [ ] Cr├®er `src/app/(public)/articles/page.tsx` (Page catalogue Server Component) :
++- [x] **Catalogue et D├®tail Articles (AC: 1, 2, 3, 4, 5, 6, 7)**
++  - [x] Cr├®er `src/app/(public)/articles/page.tsx` (Page catalogue Server Component) :
+     - R├®cup├®rer la session actuelle via `auth()`.
+     - V├®rifier si l'utilisateur poss├¿de un abonnement actif avec `hasActiveSubscription(session?.user?.id)`.
+     - R├®cup├®rer le tier de l'utilisateur connect├® `(session?.user as any)?.tier`.
+@@ -73,7 +76,7 @@ Status: ready-for-dev
+       - Visiteur anonyme : n'afficher que les articles de visibilit├® `PUBLIC`.
+       - Membre connect├® : afficher tous les articles, mais calculer `hasAccess` pour chacun en utilisant `getAccessibleArticleVisibilities(userTier, hasActiveSub)`. Les articles non accessibles affichent le CTA "Abonnez-vous pour lire".
+     - Int├®grer l'en-t├¬te (Header) et le pied de page (Footer) de la landing page pour conserver une identit├® visuelle premium.
+-  - [ ] Cr├®er `src/app/(public)/articles/[slug]/page.tsx` (Page de d├®tail Server Component) :
++  - [x] Cr├®er `src/app/(public)/articles/[slug]/page.tsx` (Page de d├®tail Server Component) :
+     - Attendre et destructurer `params` asynchrones : `const { slug } = await params;`.
+     - R├®cup├®rer l'article correspondant au `slug` depuis Prisma. Si non trouv├® ou non publi├®, appeler `notFound()`.
+     - R├®cup├®rer la session, le statut d'abonnement actif et le tier de l'utilisateur.
+@@ -82,17 +85,17 @@ Status: ready-for-dev
+     - Si l'acc├¿s est restreint : afficher le titre, l'extrait (`excerpt`), et un bloc d'incitation premium (Gate Panel) avec une ic├┤ne de cadenas et un bouton CTA "Abonnez-vous pour lire l'article complet" pointant vers `/pricing`.
+     - Exposer des m├®tadonn├®es SEO basiques (titre de l'article, extrait en description).
+ 
+-- [ ] **Tests unitaires et de validation (AC: 1-7)**
+-  - [ ] Cr├®er `src/app/(public)/articles/page.test.tsx` pour tester :
++- [x] **Tests unitaires et de validation (AC: 1-7)**
++  - [x] Cr├®er `src/app/(public)/articles/page.test.tsx` pour tester :
+     - Le rendu de la page catalogue pour un visiteur anonyme (seuls les articles publics sont visibles).
+     - Le rendu pour un membre actif (acc├¿s complet aux articles de son tier).
+     - Le rendu pour un membre inactif (affichage des articles premium sous forme d'extrait + CTA d'upgrade).
+     - Le fonctionnement du filtre par cat├®gorie.
+-  - [ ] Cr├®er `src/app/(public)/articles/[slug]/page.test.tsx` pour tester :
++  - [x] Cr├®er `src/app/(public)/articles/[slug]/page.test.tsx` pour tester :
+     - L'acc├¿s complet ├á un article public.
+     - La restriction d'acc├¿s avec Gate Panel (extrait + CTA) pour un article premium sans abonnement.
+     - L'affichage de la page 404 (appel de `notFound`) pour un article inexistant ou non publi├®.
+-  - [ ] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succ├¿s.
++  - [x] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succ├¿s.
+ 
+ ## Dev Notes
+ 
+@@ -129,6 +132,27 @@ Gemini 3.5 Flash (Medium)
+ 
+ ### Debug Log References
+ 
++- Tests unitaires et de r├®gression r├®ussis ├á 100% (568/568 tests pass├®s avec succ├¿s).
++
+ ### Completion Notes List
+ 
++- Configuration de la route `/articles` comme route publique dans `src/lib/auth.config.ts`.
++- Cr├®ation du composant `ArticleCard.tsx` avec gestion de la visibilit├® des badges et ic├┤ne de verrou si l'acc├¿s est bloqu├®.
++- Cr├®ation du composant `ArticleContent.tsx` avec parseur de contenu Markdown vers HTML.
++- Cr├®ation de la page catalogue `/articles` avec filtres par cat├®gorie et application des filtres de visibilit├® c├┤t├® serveur.
++- Cr├®ation de la page d├®tail `/articles/[slug]` avec m├®tadonn├®es SEO dynamiques et affichage de l'encart premium (Gate Panel) pour les utilisateurs restreints.
++- ├ëcriture d'une suite de 9 tests unitaires avec Vitest (catalogue et d├®tail d'articles) validant tous les crit├¿res d'acceptation (AC 1-7).
++
+ ### File List
++
++- `src/lib/auth.config.ts` (MODIFIED)
++- `src/components/features/articles/ArticleCard.tsx` (NEW)
++- `src/components/features/articles/ArticleContent.tsx` (NEW)
++- `src/app/(public)/articles/page.tsx` (NEW)
++- `src/app/(public)/articles/[slug]/page.tsx` (NEW)
++- `src/app/(public)/articles/page.test.tsx` (NEW)
++- `src/app/(public)/articles/[slug]/page.test.tsx` (NEW)
++
++### Change Log
++
++- 2026-06-14 : Impl├®mentation et validation compl├¿te de la Story 9.3 (Catalogue et Pages D├®tail Articles avec Gate Premium).
+diff --git a/_bmad-output/implementation-artifacts/sprint-status.yaml b/_bmad-output/implementation-artifacts/sprint-status.yaml
+index 1c0a174..667c818 100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@ -1,5 +1,5 @@
+ generated: 2026-05-12 23:04:29+00:00
+-last_updated: 2026-06-14T08:59:49+02:00
++last_updated: 2026-06-14T09:15:00+02:00
+ project: ibc
+ project_key: NOKEY
+ tracking_system: file-system
+@@ -61,7 +61,7 @@ development_status:
+   epic-9: in-progress
+   9-1-modele-article-migration-et-api-routes: done
+   9-2-interface-admin-crud-articles: done
+-  9-3-catalogue-public-et-pages-detail-avec-gate-premium: ready-for-dev
++  9-3-catalogue-public-et-pages-detail-avec-gate-premium: review
+   9-4-seo-navigation-et-integration-site: backlog
+   epic-10: in-progress
+   10-1-verification-membres-pre-requis: done
+\ No newline at end of file
+diff --git a/src/app/(public)/articles/[slug]/page.test.tsx b/src/app/(public)/articles/[slug]/page.test.tsx
+new file mode 100644
+index 0000000..62038f4
+--- /dev/null
++++ b/src/app/(public)/articles/[slug]/page.test.tsx
+@@ -0,0 +1,122 @@
++import React from "react";
++import { render, screen } from "@testing-library/react";
++import { beforeEach, describe, expect, it, vi } from "vitest";
++import ArticleDetailPage, { generateMetadata } from "./page";
++import { ArticleVisibility } from "@/generated/prisma/client";
++
++// Mock Auth
++const mockAuth = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
++
++// Mock Subscription
++const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/subscription-access", () => ({
++  hasActiveSubscription: mockHasActiveSubscription,
++}));
++
++// Mock Prisma
++const mockFindFirst = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/prisma", () => ({
++  prisma: {
++    article: {
++      findFirst: mockFindFirst,
++    },
++  },
++}));
++
++// Mock next/navigation notFound
++const mockNotFound = vi.hoisted(() => vi.fn(() => {
++  throw new Error("NOT_FOUND");
++}));
++vi.mock("next/navigation", () => ({
++  notFound: mockNotFound,
++}));
++
++const mockArticle = {
++  id: "art-1",
++  title: "Guide Premium Abidjan",
++  slug: "guide-premium-abidjan",
++  excerpt: "Extrait de l'article premium",
++  content: "## Contenu complet secret",
++  category: "guide",
++  visibility: ArticleVisibility.AFFRANCHI,
++  published: true,
++  publishedAt: new Date("2026-06-11T12:00:00Z"),
++  createdAt: new Date("2026-06-11T12:00:00Z"),
++  author: {
++    name: "Alexandre",
++  },
++};
++
++describe("Article Detail Page", () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++  });
++
++  it("calls notFound when article doesn't exist or is unpublished", async () => {
++    mockFindFirst.mockResolvedValue(null);
++
++    await expect(
++      ArticleDetailPage({ params: Promise.resolve({ slug: "non-existent" }) })
++    ).rejects.toThrow("NOT_FOUND");
++
++    expect(mockNotFound).toHaveBeenCalled();
++  });
++
++  it("allows access to PUBLIC articles without auth", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindFirst.mockResolvedValue({
++      ...mockArticle,
++      visibility: ArticleVisibility.PUBLIC,
++    });
++
++    const page = await ArticleDetailPage({
++      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
++    });
++    render(page);
++
++    expect(screen.getByText("Contenu complet secret")).toBeInTheDocument();
++    expect(screen.queryByTestId("gate-panel")).not.toBeInTheDocument();
++  });
++
++  it("locks premium articles and renders Gate Panel (excerpt + CTA) for unsubscribed active users", async () => {
++    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
++    mockHasActiveSubscription.mockResolvedValue(false);
++    mockFindFirst.mockResolvedValue(mockArticle);
++
++    const page = await ArticleDetailPage({
++      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
++    });
++    render(page);
++
++    expect(screen.getByText("Extrait de l'article premium")).toBeInTheDocument();
++    expect(screen.queryByText("Contenu complet secret")).not.toBeInTheDocument();
++    expect(screen.getByTestId("gate-panel")).toBeInTheDocument();
++    expect(screen.getByText("Abonnez-vous pour lire l'article complet")).toBeInTheDocument();
++  });
++
++  it("allows full access to premium articles for subscribed users of appropriate tier", async () => {
++    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
++    mockHasActiveSubscription.mockResolvedValue(true);
++    mockFindFirst.mockResolvedValue(mockArticle);
++
++    const page = await ArticleDetailPage({
++      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
++    });
++    render(page);
++
++    expect(screen.getByText("Contenu complet secret")).toBeInTheDocument();
++    expect(screen.queryByTestId("gate-panel")).not.toBeInTheDocument();
++  });
++
++  it("generates correct dynamic SEO metadata", async () => {
++    mockFindFirst.mockResolvedValue(mockArticle);
++
++    const metadata = await generateMetadata({
++      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
++    });
++
++    expect(metadata.title).toBe("Guide Premium Abidjan ÔÇö Ivoire Business Club");
++    expect(metadata.description).toBe("Extrait de l'article premium");
++  });
++});
+diff --git a/src/app/(public)/articles/[slug]/page.tsx b/src/app/(public)/articles/[slug]/page.tsx
+new file mode 100644
+index 0000000..d3e25eb
+--- /dev/null
++++ b/src/app/(public)/articles/[slug]/page.tsx
+@@ -0,0 +1,223 @@
++import * as React from "react";
++import Link from "next/link";
++import { notFound } from "next/navigation";
++import type { Metadata } from "next";
++import { Lock, ArrowLeft, ArrowRight, ShieldAlert } from "lucide-react";
++import { auth } from "@/lib/auth";
++import { prisma } from "@/lib/prisma";
++import { hasActiveSubscription } from "@/lib/subscription-access";
++import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
++import { ArticleContent } from "@/components/features/articles/ArticleContent";
++import { Footer } from "@/components/landing/footer";
++import { buttonVariants } from "@/components/ui/button";
++import { getTierBadgeConfig } from "@/lib/tier-config";
++import { cn } from "@/lib/utils";
++import { ArticleVisibility } from "@/generated/prisma/client";
++
++export const dynamic = "force-dynamic";
++
++interface ArticleDetailPageProps {
++  params: Promise<{ slug: string }>;
++}
++
++export async function generateMetadata({ params }: ArticleDetailPageProps): Promise<Metadata> {
++  const { slug } = await params;
++  try {
++    const article = await prisma.article.findFirst({
++      where: { slug, published: true },
++      select: { title: true, excerpt: true },
++    });
++
++    if (!article) return {};
++
++    return {
++      title: `${article.title} ÔÇö Ivoire Business Club`,
++      description: article.excerpt,
++    };
++  } catch (e) {
++    return {
++      title: "Article ÔÇö Ivoire Business Club",
++    };
++  }
++}
++
++export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
++  const { slug } = await params;
++
++  // 1. Fetch the article with author details
++  const article = await prisma.article.findFirst({
++    where: { slug, published: true },
++    include: {
++      author: {
++        select: {
++          name: true,
++        },
++      },
++    },
++  });
++
++  if (!article) {
++    notFound();
++  }
++
++  // 2. Auth & permissions checks
++  const session = await auth();
++  const isLoggedIn = !!session?.user;
++  const userId = session?.user?.id;
++  const userTier = (session?.user as any)?.tier ?? null;
++  const isAdmin = (session?.user as any)?.role === "ADMIN";
++
++  const hasActiveSub = userId ? await hasActiveSubscription(userId) : false;
++  const allowedVisibilities = getAccessibleArticleVisibilities(userTier, hasActiveSub);
++
++  const hasAccess =
++    isAdmin ||
++    article.visibility === ArticleVisibility.PUBLIC ||
++    (hasActiveSub && allowedVisibilities.includes(article.visibility));
++
++  const rawDate = article.publishedAt ?? article.createdAt;
++  const formattedDate = rawDate
++    ? new Date(rawDate).toLocaleDateString("fr-FR", {
++        day: "numeric",
++        month: "long",
++        year: "numeric",
++      })
++    : "";
++
++  const badgeConfig = getTierBadgeConfig(article.visibility);
++
++  return (
++    <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++      {/* Navigation Header */}
++      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
++        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
++          <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
++            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
++            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
++              Ivoire Business Club
++            </span>
++            <span className="sm:hidden text-white">IBC</span>
++          </Link>
++          <nav className="flex gap-6 text-sm items-center">
++            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
++              Catalogue
++            </Link>
++            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
++              Tarifs
++            </Link>
++            {isLoggedIn ? (
++              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
++                Tableau de bord
++              </Link>
++            ) : (
++              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
++                Connexion
++              </Link>
++            )}
++          </nav>
++        </div>
++      </header>
++
++      {/* Main Layout */}
++      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
++        {/* Back Link */}
++        <Link href="/articles" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group">
++          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
++          Retour au catalogue
++        </Link>
++
++        {/* Article Metadata */}
++        <div className="space-y-4 mb-8">
++          <div className="flex items-center gap-3 flex-wrap">
++            <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded">
++              {article.category}
++            </span>
++            <span className={cn("px-2.5 py-0.5 text-xs font-medium rounded-full border", badgeConfig.className)}>
++              {!hasAccess ? <Lock className="size-3 mr-1.5 inline-block" /> : null}
++              {badgeConfig.label}
++            </span>
++          </div>
++
++          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl leading-tight">
++            {article.title}
++          </h1>
++
++          <div className="flex items-center gap-4 text-sm text-slate-400 pt-2 border-y border-white/5 py-3">
++            <span>Par <strong className="text-white">{article.author.name}</strong></span>
++            <span className="text-white/20">ÔÇó</span>
++            <span>{formattedDate}</span>
++          </div>
++        </div>
++
++        {/* Access Logic Render */}
++        {hasAccess ? (
++          <div className="bg-transparent rounded-xl">
++            <ArticleContent content={article.content} />
++          </div>
++        ) : (
++          <div className="space-y-8">
++            {/* Excerpt still shown */}
++            <p className="text-lg text-slate-300 leading-relaxed italic border-l-4 border-slate-500 pl-4 py-1">
++              {article.excerpt}
++            </p>
++
++            {/* Gate Panel (Encart Premium) */}
++            <div data-testid="gate-panel" className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-gradient-to-b from-[#0e1628] to-[#070b12] p-8 text-center shadow-xl shadow-teal-500/5">
++              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-24 bg-[#D4A847] rounded-b-full" />
++              
++              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-teal-500/10 text-[#D4A847] mb-6">
++                <Lock className="size-6" />
++              </div>
++
++              <h3 className="text-2xl font-bold tracking-tight text-white mb-3">
++                Cet article est r├®serv├® aux membres Premium
++              </h3>
++              
++              <p className="text-slate-300 max-w-md mx-auto mb-6 text-sm leading-relaxed">
++                Le contenu exclusif de l'Ivoire Business Club, y compris cette publication au niveau{" "}
++                <span className="font-semibold text-teal-400">{badgeConfig.label}</span>, est r├®serv├® ├á nos membres actifs abonn├®s.
++              </p>
++
++              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
++                <Link
++                  href="/pricing"
++                  className={cn(
++                    buttonVariants({ size: "lg" }),
++                    "cursor-pointer w-full sm:w-auto bg-[#D4A847] text-black hover:bg-[#D4A847]/90 font-semibold"
++                  )}
++                >
++                  Abonnez-vous pour lire l'article complet
++                  <ArrowRight className="size-4 ml-1.5" />
++                </Link>
++                
++                {isLoggedIn ? (
++                  <Link
++                    href="/dashboard/subscription"
++                    className={cn(
++                      buttonVariants({ size: "lg", variant: "outline" }),
++                      "cursor-pointer w-full sm:w-auto border-white/10 text-slate-300 hover:text-white"
++                    )}
++                  >
++                    V├®rifier mon abonnement
++                  </Link>
++                ) : (
++                  <Link
++                    href="/auth/signin"
++                    className={cn(
++                      buttonVariants({ size: "lg", variant: "outline" }),
++                      "cursor-pointer w-full sm:w-auto border-white/10 text-slate-300 hover:text-white"
++                    )}
++                  >
++                    Se connecter
++                  </Link>
++                )}
++              </div>
++            </div>
++          </div>
++        )}
++      </main>
++
++      <Footer />
++    </div>
++  );
++}
+diff --git a/src/app/(public)/articles/page.test.tsx b/src/app/(public)/articles/page.test.tsx
+new file mode 100644
+index 0000000..a5a1d3b
+--- /dev/null
++++ b/src/app/(public)/articles/page.test.tsx
+@@ -0,0 +1,140 @@
++import React from "react";
++import { render, screen } from "@testing-library/react";
++import { beforeEach, describe, expect, it, vi } from "vitest";
++import ArticlesPage from "./page";
++import { ArticleVisibility } from "@/generated/prisma/client";
++
++// Mock Auth
++const mockAuth = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
++
++// Mock Subscription
++const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/subscription-access", () => ({
++  hasActiveSubscription: mockHasActiveSubscription,
++}));
++
++// Mock Prisma
++const mockFindMany = vi.hoisted(() => vi.fn());
++vi.mock("@/lib/prisma", () => ({
++  prisma: {
++    article: {
++      findMany: mockFindMany,
++    },
++  },
++}));
++
++const mockArticles = [
++  {
++    id: "art-1",
++    title: "Article Public",
++    slug: "article-public",
++    excerpt: "Excerpt 1",
++    content: "Content 1",
++    category: "conseil",
++    visibility: ArticleVisibility.PUBLIC,
++    published: true,
++    publishedAt: new Date("2026-06-10T12:00:00Z"),
++    createdAt: new Date("2026-06-10T12:00:00Z"),
++  },
++  {
++    id: "art-2",
++    title: "Article Affranchi",
++    slug: "article-affranchi",
++    excerpt: "Excerpt 2",
++    content: "Content 2",
++    category: "guide",
++    visibility: ArticleVisibility.AFFRANCHI,
++    published: true,
++    publishedAt: new Date("2026-06-11T12:00:00Z"),
++    createdAt: new Date("2026-06-11T12:00:00Z"),
++  },
++  {
++    id: "art-3",
++    title: "Article Boss",
++    slug: "article-boss",
++    excerpt: "Excerpt 3",
++    content: "Content 3",
++    category: "actu",
++    visibility: ArticleVisibility.BOSS,
++    published: true,
++    publishedAt: new Date("2026-06-12T12:00:00Z"),
++    createdAt: new Date("2026-06-12T12:00:00Z"),
++  },
++];
++
++describe("Articles Catalogue Page", () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++  });
++
++  it("renders only public articles for anonymous visitors", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindMany.mockResolvedValue([mockArticles[0]]);
++
++    const page = await ArticlesPage({ searchParams: Promise.resolve({}) });
++    render(page);
++
++    expect(screen.getByText("Article Public")).toBeInTheDocument();
++    expect(screen.queryByText("Article Affranchi")).not.toBeInTheDocument();
++
++    expect(mockFindMany).toHaveBeenCalledWith(
++      expect.objectContaining({
++        where: expect.objectContaining({
++          visibility: ArticleVisibility.PUBLIC,
++        }),
++      })
++    );
++  });
++
++  it("renders all articles for logged in members, but locks premium ones if inactive/unsubscribed", async () => {
++    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
++    mockHasActiveSubscription.mockResolvedValue(false);
++    mockFindMany.mockResolvedValue(mockArticles);
++
++    const page = await ArticlesPage({ searchParams: Promise.resolve({}) });
++    render(page);
++
++    expect(screen.getByText("Article Public")).toBeInTheDocument();
++    expect(screen.getByText("Article Affranchi")).toBeInTheDocument();
++    expect(screen.getByText("Article Boss")).toBeInTheDocument();
++
++    const subscribeLinks = screen.getAllByRole("link", { name: /Abonnez-vous/i });
++    expect(subscribeLinks.length).toBe(2);
++  });
++
++  it("unlocks articles within the active user's tier for subscribed members", async () => {
++    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
++    mockHasActiveSubscription.mockResolvedValue(true);
++    mockFindMany.mockResolvedValue(mockArticles);
++
++    const page = await ArticlesPage({ searchParams: Promise.resolve({}) });
++    render(page);
++
++    expect(screen.getByText("Article Public")).toBeInTheDocument();
++    expect(screen.getByText("Article Affranchi")).toBeInTheDocument();
++    expect(screen.getByText("Article Boss")).toBeInTheDocument();
++
++    const readLinks = screen.getAllByRole("link", { name: /Lire l'article/i });
++    expect(readLinks.length).toBe(2);
++
++    const subscribeLinks = screen.getAllByRole("link", { name: /Abonnez-vous/i });
++    expect(subscribeLinks.length).toBe(1);
++  });
++
++  it("filters articles by category via searchParams", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindMany.mockResolvedValue([mockArticles[0]]);
++
++    const page = await ArticlesPage({ searchParams: Promise.resolve({ category: "conseil" }) });
++    render(page);
++
++    expect(mockFindMany).toHaveBeenCalledWith(
++      expect.objectContaining({
++        where: expect.objectContaining({
++          category: { equals: "conseil" },
++        }),
++      })
++    );
++  });
++});
+diff --git a/src/app/(public)/articles/page.tsx b/src/app/(public)/articles/page.tsx
+new file mode 100644
+index 0000000..b1c7656
+--- /dev/null
++++ b/src/app/(public)/articles/page.tsx
+@@ -0,0 +1,169 @@
++import * as React from "react";
++import Link from "next/link";
++import { auth } from "@/lib/auth";
++import { prisma } from "@/lib/prisma";
++import { hasActiveSubscription } from "@/lib/subscription-access";
++import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
++import { ArticleCard } from "@/components/features/articles/ArticleCard";
++import { Footer } from "@/components/landing/footer";
++import { ArticleVisibility } from "@/generated/prisma/client";
++
++export const dynamic = "force-dynamic";
++
++interface ArticlesPageProps {
++  searchParams: Promise<{ category?: string }>;
++}
++
++const CATEGORIES = [
++  { id: "Tous", label: "Tous" },
++  { id: "conseil", label: "Conseils" },
++  { id: "guide", label: "Guides" },
++  { id: "temoignage", label: "T├®moignages" },
++  { id: "actu", label: "Actualit├®s" },
++];
++
++export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
++  const resolvedSearchParams = await searchParams;
++  const activeCategory = resolvedSearchParams.category ?? "Tous";
++
++  // 1. Get current session and roles
++  const session = await auth();
++  const isLoggedIn = !!session?.user;
++  const userId = session?.user?.id;
++  const userTier = (session?.user as any)?.tier ?? null;
++  const isAdmin = (session?.user as any)?.role === "ADMIN";
++
++  // 2. Validate subscription status
++  const hasActiveSub = userId ? await hasActiveSubscription(userId) : false;
++
++  // 3. Build Prisma query where clause
++  const whereClause: any = {
++    published: true,
++  };
++
++  // Filter by category if specified
++  if (activeCategory && activeCategory !== "Tous") {
++    if (activeCategory === "temoignage" || activeCategory === "t├®moignage") {
++      whereClause.category = {
++        in: ["temoignage", "t├®moignage"],
++      };
++    } else {
++      whereClause.category = {
++        equals: activeCategory,
++      };
++    }
++  }
++
++  // Server-side visibility filtering rule:
++  // - Anonymous: can ONLY fetch PUBLIC articles
++  // - Authenticated: fetch all published articles, but check hasAccess individually
++  if (!isLoggedIn) {
++    whereClause.visibility = ArticleVisibility.PUBLIC;
++  }
++
++  // 4. Fetch articles from Database
++  let articles: any[] = [];
++  try {
++    articles = await prisma.article.findMany({
++      where: whereClause,
++      orderBy: {
++        publishedAt: "desc",
++      },
++    });
++  } catch (error) {
++    console.error("Failed to fetch articles:", error);
++  }
++
++  // 5. Calculate accessible article visibilities for the logged-in user
++  const allowedVisibilities = getAccessibleArticleVisibilities(userTier, hasActiveSub);
++
++  return (
++    <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++      {/* Navigation Header */}
++      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
++        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
++          <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
++            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
++            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
++              Ivoire Business Club
++            </span>
++            <span className="sm:hidden text-white">IBC</span>
++          </Link>
++          <nav className="flex gap-6 text-sm items-center">
++            <Link href="/" className="text-slate-300 hover:text-white transition-colors">
++              Accueil
++            </Link>
++            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
++              Tarifs
++            </Link>
++            {isLoggedIn ? (
++              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
++                Tableau de bord
++              </Link>
++            ) : (
++              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
++                Connexion
++              </Link>
++            )}
++          </nav>
++        </div>
++      </header>
++
++      {/* Main Content */}
++      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-12 md:py-16">
++        <div className="max-w-3xl mb-12">
++          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
++            Le Catalogue IBC
++          </h1>
++          <p className="mt-4 text-base text-slate-400 leading-relaxed">
++            Parcourez nos analyses, guides d'investissement et t├®moignages exclusifs pour r├®ussir votre implantation ou vos investissements en C├┤te d'Ivoire.
++          </p>
++        </div>
++
++        {/* Category Filters */}
++        <div className="flex flex-wrap gap-2 mb-10 border-b border-white/10 pb-6" aria-label="Filtrer par cat├®gorie">
++          {CATEGORIES.map((cat) => {
++            const isActive = activeCategory.toLowerCase() === cat.id.toLowerCase();
++            return (
++              <Link
++                key={cat.id}
++                href={cat.id === "Tous" ? "/articles" : `/articles?category=${cat.id}`}
++                className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
++                  isActive
++                    ? "bg-[#D4A847] text-black shadow-md shadow-[#D4A847]/10"
++                    : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
++                }`}
++              >
++                {cat.label}
++              </Link>
++            );
++          })}
++        </div>
++
++        {/* Articles Grid */}
++        {articles.length > 0 ? (
++          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="articles-grid">
++            {articles.map((article) => {
++              // Calculate hasAccess for each article
++              const hasAccess =
++                isAdmin ||
++                article.visibility === ArticleVisibility.PUBLIC ||
++                (hasActiveSub && allowedVisibilities.includes(article.visibility));
++
++              return <ArticleCard key={article.id} article={article} hasAccess={hasAccess} />;
++            })}
++          </div>
++        ) : (
++          <div className="text-center py-20 bg-white/2 rounded-2xl border border-white/5">
++            <p className="text-slate-400 text-lg">Aucun article trouv├® dans cette cat├®gorie.</p>
++            <Link href="/articles" className="mt-4 inline-block text-sm text-[#D4A847] hover:underline">
++              Voir tous les articles
++            </Link>
++          </div>
++        )}
++      </main>
++
++      <Footer />
++    </div>
++  );
++}
+diff --git a/src/components/features/articles/ArticleCard.tsx b/src/components/features/articles/ArticleCard.tsx
+new file mode 100644
+index 0000000..acd541b
+--- /dev/null
++++ b/src/components/features/articles/ArticleCard.tsx
+@@ -0,0 +1,88 @@
++import * as React from "react";
++import Link from "next/link";
++import { Lock, ArrowRight } from "lucide-react";
++import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
++import { Badge } from "@/components/ui/badge";
++import { buttonVariants } from "@/components/ui/button";
++import { getTierBadgeConfig } from "@/lib/tier-config";
++import { cn } from "@/lib/utils";
++import { ArticleVisibility } from "@/generated/prisma/client";
++
++export interface ArticleCardProps {
++  article: {
++    id: string;
++    title: string;
++    slug: string;
++    excerpt: string;
++    category: string;
++    visibility: ArticleVisibility;
++    publishedAt?: Date | string | null;
++    createdAt?: Date | string | null;
++  };
++  hasAccess: boolean;
++}
++
++export function ArticleCard({ article, hasAccess }: ArticleCardProps) {
++  const badgeConfig = getTierBadgeConfig(article.visibility);
++  const rawDate = article.publishedAt ?? article.createdAt;
++  const formattedDate = rawDate
++    ? new Date(rawDate).toLocaleDateString("fr-FR", {
++        day: "numeric",
++        month: "long",
++        year: "numeric",
++      })
++    : "";
++
++  return (
++    <Card className="h-full flex flex-col justify-between border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
++      <CardHeader className="gap-2">
++        <div className="flex items-center justify-between gap-2 flex-wrap">
++          <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded">
++            {article.category}
++          </span>
++          <div className="flex items-center gap-1.5">
++            <Badge className={cn("px-2 py-0.5 text-xs font-medium rounded-full", badgeConfig.className)}>
++              {!hasAccess ? <Lock className="size-3 mr-1 inline-block" /> : null}
++              {badgeConfig.label}
++            </Badge>
++          </div>
++        </div>
++        <CardTitle className="text-xl font-bold tracking-tight text-foreground mt-2 line-clamp-2">
++          <Link href={`/articles/${article.slug}`} className="hover:text-teal-500 transition-colors">
++            {article.title}
++          </Link>
++        </CardTitle>
++      </CardHeader>
++
++      <CardContent className="flex-1">
++        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
++          {article.excerpt}
++        </p>
++      </CardContent>
++
++      <CardFooter className="flex items-center justify-between pt-4 border-t border-border/20 bg-muted/20">
++        <span className="text-xs text-muted-foreground">{formattedDate}</span>
++        {hasAccess ? (
++          <Link
++            href={`/articles/${article.slug}`}
++            className={cn(buttonVariants({ size: "sm" }), "cursor-pointer group")}
++          >
++            Lire l'article
++            <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
++          </Link>
++        ) : (
++          <Link
++            href="/pricing"
++            className={cn(
++              buttonVariants({ size: "sm", variant: "outline" }),
++              "cursor-pointer border-teal-500/30 text-teal-600 hover:bg-teal-500/5 dark:text-teal-400 group"
++            )}
++          >
++            Abonnez-vous
++            <Lock className="size-3.5 ml-1.5" />
++          </Link>
++        )}
++      </CardFooter>
++    </Card>
++  );
++}
+diff --git a/src/components/features/articles/ArticleContent.tsx b/src/components/features/articles/ArticleContent.tsx
+new file mode 100644
+index 0000000..17b146e
+--- /dev/null
++++ b/src/components/features/articles/ArticleContent.tsx
+@@ -0,0 +1,84 @@
++import * as React from "react";
++
++export interface ArticleContentProps {
++  content: string;
++}
++
++function parseInline(text: string): string {
++  // First escape HTML to prevent XSS
++  let escaped = text
++    .replace(/&/g, "&amp;")
++    .replace(/</g, "&lt;")
++    .replace(/>/g, "&gt;")
++    .replace(/"/g, "&quot;")
++    .replace(/'/g, "&#039;");
++
++  // Bold **text**
++  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
++
++  // Italic *text*
++  escaped = escaped.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
++
++  // Code `text`
++  escaped = escaped.replace(/`(.*?)`/g, '<code class="bg-muted px-1.5 py-0.5 rounded font-mono text-sm">$1</code>');
++
++  return escaped;
++}
++
++function parseMarkdownToHtml(markdown: string): string {
++  if (!markdown) return "";
++
++  // Normalize newlines
++  const normalized = markdown.replace(/\r\n/g, "\n");
++
++  // Split into paragraphs/blocks by double newlines
++  const blocks = normalized.split(/\n\s*\n/);
++
++  const htmlBlocks = blocks.map((block) => {
++    const trimmed = block.trim();
++    if (!trimmed) return "";
++
++    // Check for Headings
++    if (trimmed.startsWith("# ")) {
++      const text = trimmed.substring(2);
++      return `<h1 class="text-3xl font-bold tracking-tight text-foreground mt-8 mb-4">${parseInline(text)}</h1>`;
++    }
++    if (trimmed.startsWith("## ")) {
++      const text = trimmed.substring(3);
++      return `<h2 class="text-2xl font-bold tracking-tight text-foreground mt-6 mb-3">${parseInline(text)}</h2>`;
++    }
++    if (trimmed.startsWith("### ")) {
++      const text = trimmed.substring(4);
++      return `<h3 class="text-xl font-semibold tracking-tight text-foreground mt-4 mb-2">${parseInline(text)}</h3>`;
++    }
++
++    // Check for Lists
++    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
++      const lines = trimmed.split("\n");
++      const listItems = lines
++        .map((line) => {
++          const itemText = line.replace(/^[-*]\s+/, "");
++          return `<li class="my-1.5">${parseInline(itemText)}</li>`;
++        })
++        .join("");
++      return `<ul class="list-disc pl-6 my-4 space-y-1 text-muted-foreground">${listItems}</ul>`;
++    }
++
++    // Default Paragraph
++    return `<p class="leading-relaxed text-muted-foreground my-4">${parseInline(trimmed)}</p>`;
++  });
++
++  return htmlBlocks.filter(Boolean).join("\n");
++}
++
++export function ArticleContent({ content }: ArticleContentProps) {
++  const htmlContent = React.useMemo(() => parseMarkdownToHtml(content), [content]);
++
++  return (
++    <article
++      data-testid="article-content"
++      className="prose prose-stone dark:prose-invert max-w-none"
++      dangerouslySetInnerHTML={{ __html: htmlContent }}
++    />
++  );
++}
+diff --git a/src/lib/auth.config.test.ts b/src/lib/auth.config.test.ts
+index 6bd8ca5..a6d9467 100644
+--- a/src/lib/auth.config.test.ts
++++ b/src/lib/auth.config.test.ts
+@@ -20,6 +20,8 @@ describe("authConfig authorized callback", () => {
+     expect(authorized(makeRequest("/auth/signup"))).toBe(true);
+     expect(authorized(makeRequest("/auth/error"))).toBe(true);
+     expect(authorized(makeRequest("/api/auth/signin"))).toBe(true);
++    expect(authorized(makeRequest("/articles"))).toBe(true);
++    expect(authorized(makeRequest("/articles/some-slug"))).toBe(true);
+   });
+ 
+   it("redirects unauthenticated requests from /dashboard to /auth/signin", () => {
+diff --git a/src/lib/auth.config.ts b/src/lib/auth.config.ts
+index fef4d3a..0749b5c 100644
+--- a/src/lib/auth.config.ts
++++ b/src/lib/auth.config.ts
+@@ -32,7 +32,7 @@ export const authConfig: NextAuthConfig = {
+     authorized({ auth, request: { nextUrl } }) {
+       const pathname = nextUrl.pathname;
+       const isLoggedIn = !!auth?.user;
+-      const publicRoutes = ["/pricing", "/auth/signin", "/auth/signup", "/auth/error"];
++      const publicRoutes = ["/pricing", "/auth/signin", "/auth/signup", "/auth/error", "/articles"];
+       const isPublic = pathname === "/" || publicRoutes.some((route) => pathname.startsWith(route)) || pathname.startsWith("/api/auth");
+ 
+       if (pathname.startsWith("/admin")) {
