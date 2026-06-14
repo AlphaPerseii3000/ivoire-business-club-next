@@ -100,6 +100,12 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
       },
       tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
       _count: { select: { documents: true, verificationApprovals: true } },
+      documents: {
+        where: { mimeType: { in: ["image/jpeg", "image/png", "image/webp"] } },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+        select: { publicUrl: true },
+      },
     },
   });
 
@@ -163,6 +169,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 authorStats: { validatedDealsCount: opportunity.author.opportunities?.length ?? 0, averageRating: null },
                 tags: opportunity.tags,
                 author: { phone: opportunity.author.phone },
+                thumbnailUrl: opportunity.documents[0]?.publicUrl ?? null,
               }}
             />
           ))}

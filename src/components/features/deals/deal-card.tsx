@@ -28,6 +28,7 @@ type DealCardDeal = {
   tags?: SelectedTag[];
   author?: { phone?: string | null };
   category?: string | null;
+  thumbnailUrl?: string | null;
 };
 
 type DealCardProps = {
@@ -115,7 +116,13 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   return (
     <article data-testid="opportunity-card" className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
       <Link href={`/dashboard/opportunities/${deal.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-        <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
+        {deal.thumbnailUrl ? (
+          <div className="aspect-video overflow-hidden bg-muted" aria-hidden="true">
+            <img src={deal.thumbnailUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        ) : (
+          <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-muted" aria-hidden="true" />
+        )}
         <div className="space-y-4 p-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
