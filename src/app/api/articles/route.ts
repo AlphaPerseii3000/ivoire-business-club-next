@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, excerpt, content, category, visibility } = parsed.data;
+    const { title, excerpt, content, category, visibility, imageUrl } = parsed.data;
     
     let slug;
     try {
@@ -97,6 +97,7 @@ export async function POST(req: Request) {
           content,
           category,
           visibility,
+          imageUrl,
           slug,
           published: false,
           authorId: session.user.id,

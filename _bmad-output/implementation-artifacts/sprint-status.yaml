@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-14T17:11:00+02:00
+last_updated: 2026-06-14T21:31:30+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -64,5 +64,6 @@ development_status:
   9-3-catalogue-public-et-pages-detail-avec-gate-premium: done
   9-4-seo-navigation-et-integration-site: done
   9-5-reactions-et-engagement-sur-les-articles: done
+  9-6-images-et-miniatures-articles: done
   epic-10: in-progress
   10-1-verification-membres-pre-requis: done

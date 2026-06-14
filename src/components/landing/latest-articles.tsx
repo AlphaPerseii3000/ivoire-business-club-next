@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { BlurReveal } from '@/components/ui/blur-reveal';
 
 type ArticleTeaser = {
@@ -9,6 +10,7 @@ type ArticleTeaser = {
   slug: string;
   excerpt: string;
   category: string;
+  imageUrl?: string | null;
   publishedAt?: string | null;
 };
 
@@ -39,25 +41,42 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
 
               return (
                 <BlurReveal key={article.id} delay={i * 120}>
-                  <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A847]/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-[#D4A847]/5">
+                  <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A847]/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-[#D4A847]/5">
                     {/* Decorative radial gradient glow */}
                     <div className="absolute -right-20 -top-20 -z-10 size-40 rounded-full bg-gradient-to-br from-[#D4A847]/5 to-[#00b4d8]/5 blur-2xl transition-all duration-500 group-hover:scale-150" />
 
                     <div>
+                      {/* Image / Thumbnail */}
+                      {article.imageUrl && article.imageUrl !== "" ? (
+                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl mb-4 border border-white/5">
+                          <Image
+                            src={article.imageUrl}
+                            alt={article.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl mb-4 bg-gradient-to-br from-white/5 to-white/[0.02] flex items-center justify-center border border-white/5">
+                          <span className="text-[#D4A847]/30 text-xs uppercase font-bold tracking-widest">IBC</span>
+                        </div>
+                      )}
+
                       {/* Category Badge */}
-                      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded mb-4">
+                      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded mb-3">
                         {article.category}
                       </span>
 
                       {/* Title */}
-                      <h3 className="text-xl font-bold text-white transition-colors group-hover:text-[#D4A847] line-clamp-2 mb-3">
+                      <h3 className="text-lg font-bold text-white transition-colors group-hover:text-[#D4A847] line-clamp-2 mb-2">
                         <Link href={`/articles/${article.slug}`}>
                           {article.title}
                         </Link>
                       </h3>
 
                       {/* Excerpt */}
-                      <p className="text-sm text-slate-400 line-clamp-3 mb-6">
+                      <p className="text-sm text-slate-400 line-clamp-3 mb-5">
                         {article.excerpt}
                       </p>
                     </div>

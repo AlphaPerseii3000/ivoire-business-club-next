@@ -220,6 +220,20 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
           </div>
         </div>
 
+        {/* Banner Image */}
+        {article.imageUrl && article.imageUrl !== "" ? (
+          <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl mb-8 border border-white/5">
+            <Image
+              src={article.imageUrl}
+              alt={article.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 1200px) 100vw, 1200px"
+            />
+          </div>
+        ) : null}
+
         {/* Access Logic Render */}
         {hasAccess ? (
           <div className="bg-transparent rounded-xl space-y-8">

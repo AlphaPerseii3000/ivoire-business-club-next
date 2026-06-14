@@ -1,0 +1,642 @@
+diff --git a/prisma/schema.dev.prisma b/prisma/schema.dev.prisma
+index eacb696..4ca5d4b 100644
+--- a/prisma/schema.dev.prisma
++++ b/prisma/schema.dev.prisma
+@@ -364,6 +364,7 @@ model Article {
+   excerpt     String
+   content     String
+   category    String
++  imageUrl    String?
+   visibility  ArticleVisibility @default(PUBLIC)
+   published   Boolean           @default(false)
+   publishedAt DateTime?
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index 2d73b19..4021dc7 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -364,6 +364,7 @@ model Article {
+   excerpt     String
+   content     String
+   category    String
++  imageUrl    String?
+   visibility  ArticleVisibility @default(PUBLIC)
+   published   Boolean           @default(false)
+   publishedAt DateTime?
+diff --git a/prisma/seed.ts b/prisma/seed.ts
+index 0a51774..d92e626 100644
+--- a/prisma/seed.ts
++++ b/prisma/seed.ts
+@@ -129,13 +129,11 @@ export async function main() {
+   console.log("Seed finished successfully!");
+ }
+ 
+-if (!process.env.VITEST) {
+-  main()
+-    .catch((e) => {
+-      console.error("Seed error:", e);
+-      process.exit(1);
+-    })
+-    .finally(async () => {
+-      await prisma.$disconnect();
+-    });
+-}
++export const seedPromise = main()
++  .catch((e) => {
++    console.error("Seed error:", e);
++    process.exit(1);
++  })
++  .finally(async () => {
++    await prisma.$disconnect();
++  });
+diff --git a/src/app/(public)/articles/[slug]/page.tsx b/src/app/(public)/articles/[slug]/page.tsx
+index afae5fa..6a1ec9c 100644
+--- a/src/app/(public)/articles/[slug]/page.tsx
++++ b/src/app/(public)/articles/[slug]/page.tsx
+@@ -220,6 +220,18 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
+           </div>
+         </div>
+ 
++        {/* Banner Image */}
++        {article.imageUrl ? (
++          <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl mb-8 border border-white/5">
++            {/* eslint-disable-next-line @next/next/no-img-element */}
++            <img
++              src={article.imageUrl}
++              alt={article.title}
++              className="object-cover w-full h-full"
++            />
++          </div>
++        ) : null}
++
+         {/* Access Logic Render */}
+         {hasAccess ? (
+           <div className="bg-transparent rounded-xl space-y-8">
+diff --git a/src/app/api/admin/articles/upload/route.ts b/src/app/api/admin/articles/upload/route.ts
+new file mode 100644
+index 0000000..6ecbd65
+--- /dev/null
++++ b/src/app/api/admin/articles/upload/route.ts
+@@ -0,0 +1,67 @@
++import { NextResponse } from "next/server";
++import { auth } from "@/lib/auth";
++import { getMissingR2Env, uploadObjectToS3, createPublicDocumentUrl, getDocumentExtension } from "@/lib/r2";
++import { writeFile, mkdir } from "fs/promises";
++import path from "path";
++
++export const runtime = "nodejs";
++
++const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
++const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
++
++export async function POST(req: Request) {
++  try {
++    const session = await auth();
++    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
++      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
++    }
++
++    const formData = await req.formData();
++    const file = formData.get("file");
++
++    if (!(file instanceof File)) {
++      return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 });
++    }
++
++    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
++      return NextResponse.json(
++        { error: "Type de fichier non supporté. Utilisez JPEG, PNG, WebP ou GIF." },
++        { status: 400 }
++      );
++    }
++
++    if (file.size > MAX_FILE_SIZE) {
++      return NextResponse.json(
++        { error: "Le fichier est trop volumineux. Taille maximale : 5 Mo." },
++        { status: 400 }
++      );
++    }
++
++    const buffer = Buffer.from(await file.arrayBuffer());
++    const extension = getDocumentExtension(file.name, file.type);
++    const uuid = crypto.randomUUID();
++    const fileName = `${uuid}.${extension}`;
++
++    const missingR2 = getMissingR2Env();
++
++    if (missingR2.length === 0) {
++      // S3/R2 is configured: Upload to cloud
++      const r2Key = `articles/${fileName}`;
++      await uploadObjectToS3(r2Key, buffer, file.type);
++      const publicUrl = createPublicDocumentUrl(r2Key);
++      return NextResponse.json({ data: { url: publicUrl } }, { status: 201 });
++    } else {
++      // Local fallback for development environment
++      const uploadDir = path.join(process.cwd(), "public", "uploads", "articles");
++      await mkdir(uploadDir, { recursive: true });
++      const filePath = path.join(uploadDir, fileName);
++      await writeFile(filePath, buffer);
++
++      const localUrl = `/uploads/articles/${fileName}`;
++      return NextResponse.json({ data: { url: localUrl } }, { status: 201 });
++    }
++  } catch (error) {
++    console.error("Article image upload error:", error);
++    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
++  }
++}
+diff --git a/src/app/api/articles/route.test.ts b/src/app/api/articles/route.test.ts
+index 48028fb..1e22892 100644
+--- a/src/app/api/articles/route.test.ts
++++ b/src/app/api/articles/route.test.ts
+@@ -327,9 +327,9 @@ describe("Database Seeding", () => {
+     // Mock console.log to avoid polluting output
+     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+ 
+-    // Run seed by importing dynamically and calling main
++    // Run seed by importing dynamically
+     const seed = await import("../../../../prisma/seed?update=" + Date.now());
+-    await seed.main();
++    await seed.seedPromise;
+ 
+     expect(mockUserUpsert).toHaveBeenCalledWith(
+       expect.objectContaining({
+diff --git a/src/app/api/articles/route.ts b/src/app/api/articles/route.ts
+index c8bd083..0b20f9a 100644
+--- a/src/app/api/articles/route.ts
++++ b/src/app/api/articles/route.ts
+@@ -80,7 +80,7 @@ export async function POST(req: Request) {
+       );
+     }
+ 
+-    const { title, excerpt, content, category, visibility } = parsed.data;
++    const { title, excerpt, content, category, visibility, imageUrl } = parsed.data;
+     
+     let slug;
+     try {
+@@ -97,6 +97,7 @@ export async function POST(req: Request) {
+           content,
+           category,
+           visibility,
++          imageUrl,
+           slug,
+           published: false,
+           authorId: session.user.id,
+diff --git a/src/components/features/admin/article-form.test.tsx b/src/components/features/admin/article-form.test.tsx
+index 7ff9186..2ba9911 100644
+--- a/src/components/features/admin/article-form.test.tsx
++++ b/src/components/features/admin/article-form.test.tsx
+@@ -61,6 +61,7 @@ describe("ArticleForm Component", () => {
+             content: "Le contenu de test de l'article doit être long également.",
+             category: "conseil",
+             visibility: ArticleVisibility.PUBLIC,
++            imageUrl: null,
+           }),
+         })
+       );
+@@ -143,6 +144,7 @@ describe("ArticleForm Component", () => {
+             content: "Un contenu de test pré-rempli",
+             category: "guide",
+             visibility: ArticleVisibility.GRAND_FRERE,
++            imageUrl: null,
+             published: true,
+           }),
+         })
+diff --git a/src/components/features/admin/article-form.tsx b/src/components/features/admin/article-form.tsx
+index acb3794..2823e0e 100644
+--- a/src/components/features/admin/article-form.tsx
++++ b/src/components/features/admin/article-form.tsx
+@@ -3,19 +3,16 @@
+ import { useForm, type FieldValues, type SubmitHandler } from "react-hook-form";
+ import { zodResolver } from "@hookform/resolvers/zod";
+ import { useRouter } from "next/navigation";
+-import { useState, useEffect } from "react";
++import { useState, useEffect, useRef } from "react";
+ import { toast } from "sonner";
+ import { z } from "zod";
+ import { articleCreateSchema, type ArticleCreateInput, ArticleVisibility } from "@/lib/validations";
+-
+-const articleFormSchema = articleCreateSchema.extend({
+-  published: z.boolean().optional(),
+-});
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+ import { Textarea } from "@/components/ui/textarea";
+ import { Label } from "@/components/ui/label";
+ import { Badge } from "@/components/ui/badge";
++import { Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+ import {
+   Select,
+   SelectContent,
+@@ -24,6 +21,10 @@ import {
+   SelectValue,
+ } from "@/components/ui/select";
+ 
++const articleFormSchema = articleCreateSchema.extend({
++  published: z.boolean().optional(),
++});
++
+ const CATEGORIES = [
+   { value: "conseil", label: "Conseil" },
+   { value: "guide", label: "Guide" },
+@@ -40,6 +41,7 @@ type ArticleFormProps = {
+     category: string;
+     visibility: ArticleVisibility;
+     published: boolean;
++    imageUrl?: string | null;
+   } | null;
+ };
+ 
+@@ -62,6 +64,12 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
+     return initialCategoryIsCustom ? initialData.category : "";
+   });
+ 
++  const [isUploadingCover, setIsUploadingCover] = useState(false);
++  const [isUploadingInline, setIsUploadingInline] = useState(false);
++
++  const coverInputRef = useRef<HTMLInputElement>(null);
++  const inlineInputRef = useRef<HTMLInputElement>(null);
++
+   const {
+     register,
+     handleSubmit,
+@@ -77,11 +85,13 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
+       category: initialData?.category ?? "conseil",
+       visibility: initialData?.visibility ?? ArticleVisibility.PUBLIC,
+       published: initialData?.published ?? false,
++      imageUrl: initialData?.imageUrl ?? "",
+     },
+   });
+ 
+   const watchVisibility = watch("visibility");
+   const watchCategory = watch("category");
++  const watchImageUrl = watch("imageUrl");
+ 
+   // Sync category type change with react-hook-form category value
+   useEffect(() => {
+@@ -103,6 +113,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
+         content: data.content,
+         category: data.category,
+         visibility: data.visibility,
++        imageUrl: data.imageUrl || null,
+         ...(isEdit ? { published: data.published } : {}),
+       };
+ 
+@@ -128,6 +139,92 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
+     }
+   };
+ 
++  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
++    const file = e.target.files?.[0];
++    if (!file) return;
++
++    setIsUploadingCover(true);
++    const formData = new FormData();
++    formData.append("file", file);
++
++    try {
++      const res = await fetch("/api/admin/articles/upload", {
++        method: "POST",
++        body: formData,
++      });
++
++      if (!res.ok) {
++        const errData = await res.json();
++        throw new Error(errData.error || "Erreur de téléversement");
++      }
++
++      const { data } = await res.json();
++      setValue("imageUrl", data.url, { shouldValidate: true });
++      toast.success("Image de couverture téléversée avec succès.");
++    } catch (err: any) {
++      toast.error(err.message || "Erreur lors du téléversement de l'image de couverture.");
++    } finally {
++      setIsUploadingCover(false);
++      if (coverInputRef.current) coverInputRef.current.value = "";
++    }
++  };
++
++  const handleInlineUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
++    const file = e.target.files?.[0];
++    if (!file) return;
++
++    setIsUploadingInline(true);
++    const formData = new FormData();
++    formData.append("file", file);
++
++    try {
++      const res = await fetch("/api/admin/articles/upload", {
++        method: "POST",
++        body: formData,
++      });
++
++      if (!res.ok) {
++        const errData = await res.json();
++        throw new Error(errData.error || "Erreur de téléversement");
++      }
++
++      const { data } = await res.json();
++      const markdownTag = `\n![${file.name}](${data.url})\n`;
++
++      const textarea = document.getElementById("content") as HTMLTextAreaElement;
++      if (textarea) {
++        const start = textarea.selectionStart;
++        const end = textarea.selectionEnd;
++        const text = textarea.value;
++        const before = text.substring(0, start);
++        const after = text.substring(end, text.length);
++
++        setValue("content", before + markdownTag + after, { shouldValidate: true });
++
++        setTimeout(() => {
++          textarea.focus();
++          textarea.selectionStart = textarea.selectionEnd = start + markdownTag.length;
++        }, 0);
++      } else {
++        // Fallback
++        const currentContent = watch("content") || "";
++        setValue("content", currentContent + markdownTag, { shouldValidate: true });
++      }
++
++      toast.success("Image en ligne téléversée avec succès.");
++    } catch (err: any) {
++      toast.error(err.message || "Erreur lors du téléversement de l'image en ligne.");
++    } finally {
++      setIsUploadingInline(false);
++      if (inlineInputRef.current) inlineInputRef.current.value = "";
++    }
++  };
++
++  const removeCoverImage = () => {
++    setValue("imageUrl", "", { shouldValidate: true });
++    toast.info("Image de couverture retirée.");
++  };
++
+   // Visibility badge preview styling
+   const renderVisibilityBadge = (visibility: ArticleVisibility) => {
+     switch (visibility) {
+@@ -267,8 +364,98 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
+         </div>
+       </div>
+ 
++      {/* Cover Image Upload Section */}
++      <div className="space-y-2">
++        <Label>Image de couverture (Bannière / Miniature)</Label>
++        
++        {watchImageUrl ? (
++          <div className="relative group rounded-lg overflow-hidden border bg-muted aspect-[21/9] max-h-60 flex items-center justify-center">
++            {/* eslint-disable-next-line @next/next/no-img-element */}
++            <img 
++              src={watchImageUrl} 
++              alt="Couverture" 
++              className="object-cover w-full h-full"
++            />
++            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
++              <Button
++                type="button"
++                variant="secondary"
++                size="sm"
++                onClick={() => coverInputRef.current?.click()}
++              >
++                Changer l'image
++              </Button>
++              <Button
++                type="button"
++                variant="destructive"
++                size="sm"
++                onClick={removeCoverImage}
++              >
++                <Trash2 className="h-4 w-4 mr-1" />
++                Supprimer
++              </Button>
++            </div>
++          </div>
++        ) : (
++          <div 
++            onClick={() => coverInputRef.current?.click()}
++            className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent/50 hover:border-accent transition-colors min-h-36 bg-card"
++          >
++            {isUploadingCover ? (
++              <>
++                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
++                <p className="text-sm text-muted-foreground">Téléversement de l'image...</p>
++              </>
++            ) : (
++              <>
++                <Upload className="h-8 w-8 text-muted-foreground" />
++                <p className="text-sm font-medium">Cliquez pour téléverser une image de couverture</p>
++                <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, GIF jusqu'à 5 Mo</p>
++              </>
++            )}
++          </div>
++        )}
++        <input 
++          type="file" 
++          ref={coverInputRef}
++          onChange={handleCoverUpload}
++          accept="image/*"
++          className="hidden"
++        />
++        <input type="hidden" {...register("imageUrl")} />
++      </div>
++
+       <div className="space-y-2">
+-        <Label htmlFor="content">Contenu (Markdown)</Label>
++        <div className="flex items-center justify-between">
++          <Label htmlFor="content">Contenu (Markdown)</Label>
++          
++          {/* Inline Image Uploader Button */}
++          <div>
++            <Button
++              type="button"
++              variant="outline"
++              size="xs"
++              className="h-8 gap-1.5"
++              onClick={() => inlineInputRef.current?.click()}
++              disabled={isUploadingInline}
++            >
++              {isUploadingInline ? (
++                <Loader2 className="h-3.5 w-3.5 animate-spin" />
++              ) : (
++                <ImageIcon className="h-3.5 w-3.5" />
++              )}
++              {isUploadingInline ? "Téléversement..." : "Insérer une image en ligne"}
++            </Button>
++            <input 
++              type="file" 
++              ref={inlineInputRef}
++              onChange={handleInlineUpload}
++              accept="image/*"
++              className="hidden"
++            />
++          </div>
++        </div>
++        
+         <Textarea
+           id="content"
+           data-testid="article-content-input"
+diff --git a/src/components/features/articles/ArticleCard.tsx b/src/components/features/articles/ArticleCard.tsx
+index 39b997c..42e7dec 100644
+--- a/src/components/features/articles/ArticleCard.tsx
++++ b/src/components/features/articles/ArticleCard.tsx
+@@ -15,6 +15,7 @@ export interface ArticleCardProps {
+     slug: string;
+     excerpt: string;
+     category: string;
++    imageUrl?: string | null;
+     visibility: ArticleVisibility;
+     publishedAt?: Date | string | null;
+     createdAt?: Date | string | null;
+@@ -34,33 +35,50 @@ export function ArticleCard({ article, hasAccess }: ArticleCardProps) {
+     : "";
+ 
+   return (
+-    <Card className="h-full flex flex-col justify-between border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
+-      <CardHeader className="gap-2">
+-        <div className="flex items-center justify-between gap-2 flex-wrap">
+-          <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded">
+-            {article.category}
+-          </span>
+-          <div className="flex items-center gap-1.5">
+-            <Badge className={cn("px-2 py-0.5 text-xs font-medium rounded-full", badgeConfig.className)}>
+-              {!hasAccess ? <Lock className="size-3 mr-1 inline-block" /> : null}
+-              {badgeConfig.label}
+-            </Badge>
++    <Card className="h-full flex flex-col justify-between overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
++      <div>
++        {article.imageUrl ? (
++          <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-border/10">
++            {/* eslint-disable-next-line @next/next/no-img-element */}
++            <img
++              src={article.imageUrl}
++              alt={article.title}
++              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
++            />
+           </div>
+-        </div>
+-        <CardTitle className="text-xl font-bold tracking-tight text-foreground mt-2 line-clamp-2">
+-          <Link href={`/articles/${article.slug}`} className="hover:text-teal-500 transition-colors">
+-            {article.title}
+-          </Link>
+-        </CardTitle>
+-      </CardHeader>
++        ) : (
++          <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-border/10 bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center">
++            <span className="text-muted-foreground/20 text-xs font-bold tracking-widest">IBC</span>
++          </div>
++        )}
++
++        <CardHeader className="gap-2 p-5">
++          <div className="flex items-center justify-between gap-2 flex-wrap">
++            <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded">
++              {article.category}
++            </span>
++            <div className="flex items-center gap-1.5">
++              <Badge className={cn("px-2 py-0.5 text-xs font-medium rounded-full", badgeConfig.className)}>
++                {!hasAccess ? <Lock className="size-3 mr-1 inline-block" /> : null}
++                {badgeConfig.label}
++              </Badge>
++            </div>
++          </div>
++          <CardTitle className="text-lg font-bold tracking-tight text-foreground mt-2 line-clamp-2">
++            <Link href={`/articles/${article.slug}`} className="hover:text-teal-500 transition-colors">
++              {article.title}
++            </Link>
++          </CardTitle>
++        </CardHeader>
+ 
+-      <CardContent className="flex-1">
+-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+-          {article.excerpt}
+-        </p>
+-      </CardContent>
++        <CardContent className="px-5 pb-5">
++          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
++            {article.excerpt}
++          </p>
++        </CardContent>
++      </div>
+ 
+-      <CardFooter className="flex items-center justify-between pt-4 border-t border-border/20 bg-muted/20">
++      <CardFooter className="flex items-center justify-between p-5 pt-4 border-t border-border/20 bg-muted/20">
+         <span className="text-xs text-muted-foreground">{formattedDate}</span>
+         {hasAccess ? (
+           <Link
+@@ -78,7 +96,7 @@ export function ArticleCard({ article, hasAccess }: ArticleCardProps) {
+               "cursor-pointer border-teal-500/30 text-teal-600 hover:bg-teal-500/5 dark:text-teal-400 group"
+             )}
+           >
+-            Abonnez-vous pour lire
++            Abonnez-vous
+             <Lock className="size-3.5 ml-1.5" />
+           </Link>
+         )}
+diff --git a/src/components/landing/latest-articles.tsx b/src/components/landing/latest-articles.tsx
+index 645052c..00a57fd 100644
+--- a/src/components/landing/latest-articles.tsx
++++ b/src/components/landing/latest-articles.tsx
+@@ -9,6 +9,7 @@ type ArticleTeaser = {
+   slug: string;
+   excerpt: string;
+   category: string;
++  imageUrl?: string | null;
+   publishedAt?: string | null;
+ };
+ 
+@@ -39,25 +40,41 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
+ 
+               return (
+                 <BlurReveal key={article.id} delay={i * 120}>
+-                  <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A847]/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-[#D4A847]/5">
++                  <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A847]/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-[#D4A847]/5">
+                     {/* Decorative radial gradient glow */}
+                     <div className="absolute -right-20 -top-20 -z-10 size-40 rounded-full bg-gradient-to-br from-[#D4A847]/5 to-[#00b4d8]/5 blur-2xl transition-all duration-500 group-hover:scale-150" />
+ 
+                     <div>
++                      {/* Image / Thumbnail */}
++                      {article.imageUrl ? (
++                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl mb-4 border border-white/5">
++                          {/* eslint-disable-next-line @next/next/no-img-element */}
++                          <img
++                            src={article.imageUrl}
++                            alt={article.title}
++                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
++                          />
++                        </div>
++                      ) : (
++                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl mb-4 bg-gradient-to-br from-[#141b2d] to-[#090d16] flex items-center justify-center border border-white/5">
++                          <span className="text-[#D4A847]/30 text-xs uppercase font-bold tracking-widest">IBC</span>
++                        </div>
++                      )}
++
+                       {/* Category Badge */}
+-                      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded mb-4">
++                      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded mb-3">
+                         {article.category}
+                       </span>
+ 
+                       {/* Title */}
+-                      <h3 className="text-xl font-bold text-white transition-colors group-hover:text-[#D4A847] line-clamp-2 mb-3">
++                      <h3 className="text-lg font-bold text-white transition-colors group-hover:text-[#D4A847] line-clamp-2 mb-2">
+                         <Link href={`/articles/${article.slug}`}>
+                           {article.title}
+                         </Link>
+                       </h3>
+ 
+                       {/* Excerpt */}
+-                      <p className="text-sm text-slate-400 line-clamp-3 mb-6">
++                      <p className="text-sm text-slate-400 line-clamp-3 mb-5">
+                         {article.excerpt}
+                       </p>
+                     </div>
+diff --git a/src/lib/validations.ts b/src/lib/validations.ts
+index aebe8b5..e1617c6 100644
+--- a/src/lib/validations.ts
++++ b/src/lib/validations.ts
+@@ -170,6 +170,7 @@ export const articleCreateSchema = z.object({
+   visibility: z.nativeEnum(ArticleVisibility, {
+     message: "Visibilité invalide",
+   }),
++  imageUrl: z.string().url("URL d'image invalide").or(z.literal("")).optional().nullable(),
+ });
+ 
+ export const articleUpdateSchema = articleCreateSchema.partial().extend({

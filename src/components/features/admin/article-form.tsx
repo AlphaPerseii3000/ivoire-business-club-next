@@ -3,19 +3,16 @@
 import { useForm, type FieldValues, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { articleCreateSchema, type ArticleCreateInput, ArticleVisibility } from "@/lib/validations";
-
-const articleFormSchema = articleCreateSchema.extend({
-  published: z.boolean().optional(),
-});
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,6 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const articleFormSchema = articleCreateSchema.extend({
+  published: z.boolean().optional(),
+});
 
 const CATEGORIES = [
   { value: "conseil", label: "Conseil" },
@@ -40,6 +41,7 @@ type ArticleFormProps = {
     category: string;
     visibility: ArticleVisibility;
     published: boolean;
+    imageUrl?: string | null;
   } | null;
 };
 
@@ -62,6 +64,13 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
     return initialCategoryIsCustom ? initialData.category : "";
   });
 
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingInline, setIsUploadingInline] = useState(false);
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const inlineInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
   const {
     register,
     handleSubmit,
@@ -77,11 +86,13 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
       category: initialData?.category ?? "conseil",
       visibility: initialData?.visibility ?? ArticleVisibility.PUBLIC,
       published: initialData?.published ?? false,
+      imageUrl: initialData?.imageUrl ?? "",
     },
   });
 
   const watchVisibility = watch("visibility");
   const watchCategory = watch("category");
+  const watchImageUrl = watch("imageUrl");
 
   // Sync category type change with react-hook-form category value
   useEffect(() => {
@@ -103,6 +114,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
         content: data.content,
         category: data.category,
         visibility: data.visibility,
+        imageUrl: data.imageUrl || null,
         ...(isEdit ? { published: data.published } : {}),
       };
 
@@ -113,8 +125,12 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
       });
 
       if (!res.ok) {
-        const body = await res.json();
-        toast.error(body.error ?? "Une erreur est survenue lors de l'enregistrement.");
+        let errMsg = "Une erreur est survenue lors de l'enregistrement.";
+        try {
+          const body = await res.json();
+          errMsg = body.error ?? errMsg;
+        } catch {}
+        toast.error(errMsg);
         return;
       }
 
@@ -126,6 +142,104 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
     } catch {
       toast.error("Erreur réseau. Veuillez réessayer.");
     }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingCover(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/articles/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        let errMsg = "Erreur de téléversement";
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errMsg;
+        } catch {}
+        throw new Error(errMsg);
+      }
+
+      const { data } = await res.json();
+      setValue("imageUrl", data.url, { shouldValidate: true });
+      toast.success("Image de couverture téléversée avec succès.");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors du téléversement de l'image de couverture.");
+    } finally {
+      setIsUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+    }
+  };
+
+  const handleInlineUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingInline(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/articles/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        let errMsg = "Erreur de téléversement";
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errMsg;
+        } catch {}
+        throw new Error(errMsg);
+      }
+
+      const { data } = await res.json();
+      // Sanitize file name for Markdown alt text (remove brackets and parentheses)
+      const cleanFileName = file.name
+        .replace(/[\[\]\(\)\*\#\?]/g, "")
+        .trim() || "image";
+      const markdownTag = `\n![${cleanFileName}](${data.url})\n`;
+
+      const textarea = contentRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const before = text.substring(0, start);
+        const after = text.substring(end, text.length);
+
+        setValue("content", before + markdownTag + after, { shouldValidate: true });
+
+        setTimeout(() => {
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = start + markdownTag.length;
+        }, 0);
+      } else {
+        // Fallback
+        const currentContent = watch("content") || "";
+        setValue("content", currentContent + markdownTag, { shouldValidate: true });
+      }
+
+      toast.success("Image en ligne téléversée avec succès.");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors du téléversement de l'image en ligne.");
+    } finally {
+      setIsUploadingInline(false);
+      if (inlineInputRef.current) inlineInputRef.current.value = "";
+    }
+  };
+
+  const removeCoverImage = () => {
+    setValue("imageUrl", "", { shouldValidate: true });
+    toast.info("Image de couverture retirée.");
   };
 
   // Visibility badge preview styling
@@ -267,14 +381,113 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
         </div>
       </div>
 
+      {/* Cover Image Upload Section */}
       <div className="space-y-2">
-        <Label htmlFor="content">Contenu (Markdown)</Label>
+        <Label>Image de couverture (Bannière / Miniature)</Label>
+        
+        {watchImageUrl ? (
+          <div className="relative group rounded-lg overflow-hidden border bg-muted aspect-[21/9] max-h-60 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={watchImageUrl} 
+              alt="Couverture" 
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => coverInputRef.current?.click()}
+              >
+                Changer l'image
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={removeCoverImage}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Supprimer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div 
+            onClick={() => coverInputRef.current?.click()}
+            className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent/50 hover:border-accent transition-colors min-h-36 bg-card"
+          >
+            {isUploadingCover ? (
+              <>
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Téléversement de l'image...</p>
+              </>
+            ) : (
+              <>
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium">Cliquez pour téléverser une image de couverture</p>
+                <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, GIF jusqu'à 5 Mo</p>
+              </>
+            )}
+          </div>
+        )}
+        <input 
+          type="file" 
+          ref={coverInputRef}
+          onChange={handleCoverUpload}
+          accept="image/*"
+          className="hidden"
+        />
+        <input type="hidden" {...register("imageUrl")} />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="content">Contenu (Markdown)</Label>
+          
+          {/* Inline Image Uploader Button */}
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              className="h-8 gap-1.5"
+              onClick={() => inlineInputRef.current?.click()}
+              disabled={isUploadingInline}
+            >
+              {isUploadingInline ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ImageIcon className="h-3.5 w-3.5" />
+              )}
+              {isUploadingInline ? "Téléversement..." : "Insérer une image en ligne"}
+            </Button>
+            <input 
+              type="file" 
+              ref={inlineInputRef}
+              onChange={handleInlineUpload}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+        </div>
+        
         <Textarea
           id="content"
           data-testid="article-content-input"
           placeholder="Rédigez votre article en Markdown ici..."
           className="min-h-80 font-mono text-sm leading-relaxed"
-          {...register("content")}
+          {...(() => {
+            const { ref, ...rest } = register("content");
+            return {
+              ...rest,
+              ref: (e: HTMLTextAreaElement | null) => {
+                ref(e);
+                (contentRef as any).current = e;
+              }
+            };
+          })()}
         />
         {errors.content ? (
           <p className="text-sm text-destructive">{errors.content.message}</p>
@@ -307,7 +520,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
         <Button
           type="submit"
           className="min-h-11"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingCover || isUploadingInline}
           data-testid="article-submit-button"
         >
           {isSubmitting ? "Enregistrement..." : isEdit ? "Enregistrer les modifications" : "Créer l'article"}

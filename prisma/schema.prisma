@@ -364,6 +364,7 @@ model Article {
   excerpt     String
   content     String
   category    String
+  imageUrl    String?
   visibility  ArticleVisibility @default(PUBLIC)
   published   Boolean           @default(false)
   publishedAt DateTime?

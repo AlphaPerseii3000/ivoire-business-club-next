@@ -129,13 +129,14 @@ export async function main() {
   console.log("Seed finished successfully!");
 }
 
-if (!process.env.VITEST) {
-  main()
-    .catch((e) => {
-      console.error("Seed error:", e);
+export const seedPromise = main()
+  .catch((e) => {
+    console.error("Seed error:", e);
+    if (!process.env.VITEST) {
       process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
-}
+    }
+    throw e;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

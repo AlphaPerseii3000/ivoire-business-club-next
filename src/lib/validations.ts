@@ -170,6 +170,16 @@ export const articleCreateSchema = z.object({
   visibility: z.nativeEnum(ArticleVisibility, {
     message: "Visibilité invalide",
   }),
+  imageUrl: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
+      { message: "L'URL de l'image doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+    )
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
 });
 
 export const articleUpdateSchema = articleCreateSchema.partial().extend({

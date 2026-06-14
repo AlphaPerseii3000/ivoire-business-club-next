@@ -61,6 +61,7 @@ describe("ArticleForm Component", () => {
             content: "Le contenu de test de l'article doit être long également.",
             category: "conseil",
             visibility: ArticleVisibility.PUBLIC,
+            imageUrl: null,
           }),
         })
       );
@@ -143,6 +144,7 @@ describe("ArticleForm Component", () => {
             content: "Un contenu de test pré-rempli",
             category: "guide",
             visibility: ArticleVisibility.GRAND_FRERE,
+            imageUrl: null,
             published: true,
           }),
         })

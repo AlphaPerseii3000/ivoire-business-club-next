@@ -327,9 +327,9 @@ describe("Database Seeding", () => {
     // Mock console.log to avoid polluting output
     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    // Run seed by importing dynamically and calling main
+    // Run seed by importing dynamically
     const seed = await import("../../../../prisma/seed?update=" + Date.now());
-    await seed.main();
+    await seed.seedPromise;
 
     expect(mockUserUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
