@@ -10,6 +10,7 @@ const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
 const mockUserUpsert = vi.hoisted(() => vi.fn());
 const mockArticleDeleteMany = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockSubscriptionUpsert = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -26,6 +27,9 @@ vi.mock("@/lib/prisma", () => ({
     },
     user: {
       upsert: mockUserUpsert,
+    },
+    subscription: {
+      upsert: mockSubscriptionUpsert,
     },
     $disconnect: vi.fn(),
   },
@@ -310,7 +314,13 @@ describe("POST /api/articles", () => {
 
 describe("Database Seeding", () => {
   it("executes database seeding successfully", async () => {
-    mockUserUpsert.mockResolvedValue({ id: "admin-1", email: "admin@ivoirebusinessclub.com" });
+    mockUserUpsert
+      .mockResolvedValueOnce({ id: "admin-1", email: "admin@ivoire-business-club.com" })
+      .mockResolvedValueOnce({ id: "member-1", email: "member-affranchi@test.com", tier: "AFFRANCHI" })
+      .mockResolvedValueOnce({ id: "member-2", email: "member-grandfrere@test.com", tier: "GRAND_FRERE" })
+      .mockResolvedValueOnce({ id: "member-3", email: "member-boss@test.com", tier: "BOSS" });
+
+    mockSubscriptionUpsert.mockResolvedValue({ id: "sub-1", status: "ACTIVE" });
     mockArticleDeleteMany.mockResolvedValue({ count: 4 });
     mockArticleCreate.mockResolvedValue({ id: "seeded-art", title: "seeded" });
 
@@ -318,11 +328,14 @@ describe("Database Seeding", () => {
     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     // Run seed by importing dynamically
-    await import("../../../../prisma/seed");
+    await import("../../../../prisma/seed?update=" + Date.now());
+
+    // Wait for the asynchronous main() execution in seed.ts to complete
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(mockUserUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { email: "admin@ivoirebusinessclub.com" },
+        where: { email: "admin@ivoire-business-club.com" },
       })
     );
     expect(mockArticleDeleteMany).toHaveBeenCalled();

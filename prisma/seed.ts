@@ -1,5 +1,5 @@
 import { prisma } from "../src/lib/prisma";
-import { ArticleVisibility, UserRole } from "../src/generated/prisma/client";
+import { ArticleVisibility, UserRole, Tier, SubscriptionStatus } from "../src/generated/prisma/client";
 
 async function main() {
   if (process.env.NODE_ENV === "production") {
@@ -8,21 +8,67 @@ async function main() {
   }
   console.log("Starting seed...");
 
+  const hash = "$2b$10$W1QRKtFhSt/9bSdJgpGnH.aXCR2Bs6UBti8N3pbBIW1g1bEGfLXtG"; // hash for 'change-me'
+
   // 1. Create or upsert a default admin user
   const admin = await prisma.user.upsert({
-    where: { email: "admin@ivoirebusinessclub.com" },
-    update: {},
+    where: { email: "admin@ivoire-business-club.com" },
+    update: {
+      role: UserRole.ADMIN,
+    },
     create: {
-      email: "admin@ivoirebusinessclub.com",
+      email: "admin@ivoire-business-club.com",
       name: "Admin IBC",
       role: UserRole.ADMIN,
-      passwordHash: "$2a$10$M68vJUp.Q6M.f7q7/5hTDeO2K8W7VbS/1fB2gZJ.UpeP.64/uR6G6", // dummy hash
+      passwordHash: hash,
     },
   });
 
   console.log("Admin user created/found:", admin.email);
 
-  // 2. Clear existing articles to ensure idempotency
+  // 2. Create E2E test users with active subscriptions
+  const e2eUsers = [
+    { email: "member-affranchi@test.com", name: "Affranchi Member", tier: Tier.AFFRANCHI },
+    { email: "member-grandfrere@test.com", name: "Grand Frere Member", tier: Tier.GRAND_FRERE },
+    { email: "member-boss@test.com", name: "Boss Member", tier: Tier.BOSS },
+  ];
+
+  for (const user of e2eUsers) {
+    const dbUser = await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        tier: user.tier,
+      },
+      create: {
+        email: user.email,
+        name: user.name,
+        role: UserRole.MEMBER,
+        passwordHash: hash,
+        tier: user.tier,
+      },
+    });
+
+    console.log(`User created/found: ${dbUser.email} (tier: ${dbUser.tier})`);
+
+    // Add active subscription
+    await prisma.subscription.upsert({
+      where: { id: `sub-${user.tier.toLowerCase()}` },
+      update: {
+        status: SubscriptionStatus.ACTIVE,
+      },
+      create: {
+        id: `sub-${user.tier.toLowerCase()}`,
+        userId: dbUser.id,
+        tier: user.tier,
+        period: "MONTHLY",
+        status: SubscriptionStatus.ACTIVE,
+        startDate: new Date(),
+      },
+    });
+    console.log(`Active subscription created/updated for ${dbUser.email}`);
+  }
+
+  // 3. Clear existing articles to ensure idempotency
   await prisma.article.deleteMany({});
   console.log("Cleared existing articles.");
 

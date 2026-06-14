@@ -100,6 +100,7 @@ model User {
   reviewsReceived    Review[] @relation("ReviewsReceived")
   auditLogs          AuditLog[] @relation("AuditLogActor")
   articles           Article[]
+  reactions          ArticleReaction[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -367,11 +368,33 @@ model Article {
   published   Boolean           @default(false)
   publishedAt DateTime?
   createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  updatedAt          DateTime          @updatedAt
   authorId    String
   author      User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions   ArticleReaction[]
 
   @@index([published, visibility, publishedAt])
   @@index([category, published])
   @@map("articles")
+}
+
+enum ReactionType {
+  LIKE
+  CLAP
+  INSIGHTFUL
+}
+
+model ArticleReaction {
+  id        String       @id @default(cuid())
+  userId    String
+  articleId String
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+  @@map("article_reactions")
 }

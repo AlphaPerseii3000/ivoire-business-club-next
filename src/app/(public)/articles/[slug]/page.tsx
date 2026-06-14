@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
 import { ArticleContent } from "@/components/features/articles/ArticleContent";
+import { ArticleReactions } from "@/components/features/articles/ArticleReactions";
 import { Footer } from "@/components/landing/footer";
 import { buttonVariants } from "@/components/ui/button";
 import { getTierBadgeConfig } from "@/lib/tier-config";
@@ -221,8 +222,11 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
         {/* Access Logic Render */}
         {hasAccess ? (
-          <div className="bg-transparent rounded-xl">
+          <div className="bg-transparent rounded-xl space-y-8">
             <ArticleContent content={article.content} />
+            <div className="border-t border-white/10 pt-8 mt-8">
+              <ArticleReactions articleId={article.id} isLoggedIn={isLoggedIn} />
+            </div>
           </div>
         ) : (
           <div className="space-y-8">

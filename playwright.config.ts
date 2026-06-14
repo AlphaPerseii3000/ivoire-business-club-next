@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load E2E environment variables
+dotenv.config({ path: path.resolve(__dirname, 'e2e/.env.test') });
 
 const productionBaseURL = 'https://ivoire-business-club.com';
 const baseURL = process.env.BASE_URL ?? productionBaseURL;
@@ -12,9 +17,9 @@ export default defineConfig({
   reporter: process.env.CI ? [['html'], ['github']] : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: 'off',
+    screenshot: 'off',
+    video: 'off',
   },
   projects: [
     {
@@ -30,5 +35,5 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
-  outputDir: 'test-results/e2e',
+  outputDir: 'C:/Users/para1/.gemini/antigravity-ide/brain/48c286b1-daf7-4c0e-b511-cac77511c3c0/test-results',
 });

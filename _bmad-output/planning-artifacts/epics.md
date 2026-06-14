@@ -258,6 +258,14 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 | FR43 | Epic 7 | 7.2 | Mur des succès testimonials |
 | FR44 | *Transverse* | Toutes | Site entièrement en français |
 | FR45 | *Transverse* | Toutes | Responsive mobile-first |
+| FR46 | Epic 9 | 9.2 | Création/édition/publication articles |
+| FR47 | Epic 9 | 9.2 | Sélection visibilité articles par tier |
+| FR48 | Epic 9 | 9.3 | Consultation articles publics par visiteur |
+| FR49 | Epic 9 | 9.3 | Consultation articles par tier membre |
+| FR50 | Epic 9 | 9.3 | Affichage CTA upgrade articles premium |
+| FR51 | Epic 9 | 9.4 | Accès articles via /articles et SEO |
+| FR52 | Epic 9 | 9.5 | Réagir aux articles (LIKE, CLAP, INSIGHTFUL) |
+| FR53 | Epic 9 | 9.5 | Décompte et affichage des réactions |
 
 ---
 
@@ -313,6 +321,13 @@ Le public peut découvrir les deals teaser, le mur des succès et les tiers IBC 
 **FRs couverts :** FR41, FR42, FR43, FR44, FR45
 **NFRs couverts :** NFR-P1, NFR-A1, NFR-A2, NFR-A3
 **UX-DRs couverts :** UX-DR29 (landing layout), UX-DR24 (responsive), UX-DR25 (touch targets), UX-DR26 (accessibilité), UX-DR27 (reduced motion)
+
+### Epic 9: Contenu Éditorial & Ressources Membres
+Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant aux visiteurs et membres du contenu gratuit et aux abonnés un accès progressif selon leur tier.
+
+**FRs couverts :** FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53
+**NFRs couverts :** NFR-P1, NFR-A1, NFR-A3
+**UX-DRs couverts :** UX-DR14 (formulaires), UX-DR19 (états chargement), UX-DR20 (états erreur)
 
 ---
 
@@ -1442,4 +1457,34 @@ Le public peut découvrir les deals teaser, le mur des succès et les tiers IBC 
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.1. Epic 9 ajouté via Sprint Change Proposal 2026-06-13.*
+### Story 9.5: Réactions et Engagement sur les Articles
+
+**En tant que** membre connecté,  
+**Je veux** réagir à un article en choisissant un type de réaction,  
+**Afin de** exprimer mon appréciation de manière interactive.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté sur `/articles/[slug]`  
+**When** il consulte un article auquel il a accès  
+**Then** un composant de réactions s'affiche avec 3 types de réactions : LIKE (J'aime), CLAP (Applaudissements) et INSIGHTFUL (Inspirant), affichant le nombre total de réactions pour chacune
+
+**Given** un membre connecté n'ayant pas encore réagi à l'article  
+**When** il clique sur l'une des réactions (ex: LIKE)  
+**Then** la réaction est enregistrée en base et le décompte visuel de cette réaction s'incrémente de 1
+
+**Given** un membre connecté ayant déjà réagi (ex: LIKE)  
+**When** il clique à nouveau sur la même réaction (LIKE)  
+**Then** la réaction est supprimée en base (toggle) et le décompte visuel se décrémente de 1
+
+**Given** un membre connecté ayant déjà réagi (ex: LIKE)  
+**When** il clique sur une réaction différente (ex: CLAP)  
+**Then** sa réaction de type LIKE est remplacée par CLAP en base et les décomptes visuels s'ajustent en conséquence
+
+**Given** un visiteur anonyme ou non connecté  
+**When** il consulte la page détail d'un article  
+**Then** les boutons de réactions sont désactivés ou le redirigent vers la page de connexion, et il voit uniquement le décompte statique des réactions existantes
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.2. Epic 9 complété avec la Story 9.5 via Sprint Change Proposal 2026-06-14.*

@@ -203,7 +203,7 @@ Un playbook public détaille les critères de vérification par catégorie de de
 
 ### 6.1 Freemium inversé (Cat #27)
 
-Les deals sont publics partiellement (teaser : titre + localisation), mais la mise en relation et le dossier complet sont payants. Cela augmente le SEO organique et convertit par la preuve de valeur.
+Les deals sont publics partiellement (teaser : titre + localisation), mais la mise en relation et le dossier complet sont payants. Les articles PUBLIC servent de levier de conversion gratuit : conseils investissement, guides juridiques, témoignages — les articles premium (visibilité tier) donnent un aperçu de la valeur réservée aux abonnés. Cela augmente le SEO organique et convertit par la preuve de valeur.
 
 ### 6.2 Crowd-due diligence future (Cat #28)
 
@@ -314,13 +314,21 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR39** : Le système logue toutes les actions d'admin (piste d'audit pour compliance)
 - **FR40** : L'admin peut envoyer un email de confirmation de virement à un membre
 
-### 8.7 Landing & Contenu
+### 8.7 Landing & Contenu Éditorial
 
 - **FR41** : La landing page affiche les deals teaser publics sans connexion
 - **FR42** : La landing page présente les trois tiers avec leurs avantages et prix
 - **FR43** : La landing page affiche le mur des succès (testimonials, deals closés)
 - **FR44** : Le site est entièrement en français
 - **FR45** : Le site est responsive et mobile-first
+- **FR46** : L'admin peut créer, éditer et publier des articles (titre, extrait, contenu riche, catégorie, visibilité)
+- **FR47** : L'admin peut définir la visibilité d'un article : PUBLIC (tous), AFFRANCHI, GRAND_FRERE, BOSS
+- **FR48** : Un visiteur non connecté peut consulter les articles publics (visibilité PUBLIC)
+- **FR49** : Un membre connecté peut consulter les articles dont la visibilité correspond à son tier ou inférieur
+- **FR50** : Un membre sans abonnement actif voit les articles PUBLIC uniquement, avec un CTA d'upgrade pour les articles premium
+- **FR51** : Les articles sont accessibles via /articles (catalogue) et /articles/[slug] (détail), optimisés pour le SEO
+- **FR52** : Un membre connecté peut réagir à un article publié en choisissant parmi plusieurs types de réactions (LIKE, CLAP, INSIGHTFUL). Cliquer à nouveau retire la réaction (toggle).
+- **FR53** : Le système comptabilise et affiche le nombre de réactions par type sur la page de détail de l'article en temps réel.
 
 ---
 

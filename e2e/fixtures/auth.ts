@@ -50,7 +50,7 @@ export async function loginAs(page: Page, account: TestAccount) {
   await page.locator(selectors.auth.passwordInput).fill(account.password);
   await page.locator(selectors.auth.signinButton).click();
   await page.waitForURL(/\/dashboard(?:\?.*)?$/, { timeout: 15_000 });
-  await expect(page.locator(selectors.dashboard.root).or(page.getByRole('heading', { name: /bienvenue/i }))).toBeVisible();
+  await expect(page.locator(selectors.dashboard.root).or(page.getByRole('heading', { name: /bienvenue/i })).first()).toBeVisible();
 }
 
 async function loginFixture(page: Page, prefix: 'ADMIN' | 'MEMBER' | 'AFFRANCHI' | 'BOSS') {

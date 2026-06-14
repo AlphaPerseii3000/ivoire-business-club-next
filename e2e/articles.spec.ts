@@ -3,7 +3,7 @@ import { expect, test } from './fixtures/auth';
 test.describe('Articles, SEO et Navigation', () => {
   test.setTimeout(90000);
 
-  test('Test de navigation : le clic sur le lien Articles de la landing page mène à /articles', async ({ page }) => {
+  test('Test de navigation : le clic sur le lien Articles de la landing page mene a /articles', async ({ page }) => {
     await page.goto('/');
     
     // Find the link "Articles" in the header and click it
@@ -58,7 +58,7 @@ test.describe('Articles, SEO et Navigation', () => {
     await expect(page.getByText("Les quartiers en forte croissance comme Cocody")).toHaveCount(0);
   });
 
-  test('Test des métadonnées SEO et JSON-LD sur la page de détail', async ({ page }) => {
+  test('Test des metadonnees SEO et JSON-LD sur la page de detail', async ({ page }) => {
     await page.goto('/articles/guide-de-l-investisseur-debutant');
 
     // 1. Verify Page Title
@@ -116,7 +116,7 @@ test.describe('Articles, SEO et Navigation', () => {
     expect(body).not.toContain('/articles/opportunites-immobilieres-a-abidjan');
   });
 
-  test('Test de la Gate Premium : membre abonné (AFFRANCHI) accède à un article premium', async ({ affranchiPage }) => {
+  test('Test de la Gate Premium : membre abonne (AFFRANCHI) accede a un article premium', async ({ affranchiPage }) => {
     // AFFRANCHI has access to premium articles
     await affranchiPage.goto('/articles/opportunites-immobilieres-a-abidjan');
     
@@ -128,5 +128,34 @@ test.describe('Articles, SEO et Navigation', () => {
     
     // Premium gate should NOT be visible
     await expect(affranchiPage.locator('[data-testid="gate-panel"]')).toHaveCount(0);
+  });
+
+  test('Test des reactions sur les articles : membre connecte peut reagir et toggle sa reaction', async ({ affranchiPage }) => {
+    // Navigate to a public article page
+    await affranchiPage.goto('/articles/guide-de-l-investisseur-debutant');
+
+    // Wait for the reactions component header to be visible (longer timeout for Next.js compilation)
+    const reactionHeading = affranchiPage.getByRole('heading', { name: /Réactions communautaires/i });
+    await expect(reactionHeading).toBeVisible({ timeout: 15000 });
+
+    // Get the LIKE button (represented by ThumbsUp/J'aime)
+    const likeButton = affranchiPage.getByRole('button', { name: /J'aime/i });
+    await expect(likeButton).toBeVisible();
+
+    // Get the starting reaction count
+    const initialText = await likeButton.innerText();
+    const initialCount = parseInt(initialText.replace(/\D/g, '') || '0', 10);
+
+    // Click to add a reaction
+    await likeButton.click();
+
+    // Count should increase by 1
+    await expect(likeButton).toContainText(String(initialCount + 1));
+
+    // Click again to toggle it off
+    await likeButton.click();
+
+    // Count should return to the initial count
+    await expect(likeButton).toContainText(String(initialCount));
   });
 });
