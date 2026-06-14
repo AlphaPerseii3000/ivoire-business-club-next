@@ -169,7 +169,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 authorStats: { validatedDealsCount: opportunity.author.opportunities?.length ?? 0, averageRating: null },
                 tags: opportunity.tags,
                 author: { phone: opportunity.author.phone },
-                thumbnailUrl: opportunity.documents[0]?.publicUrl ?? null,
+                thumbnailUrl: opportunity.documents.length > 0 ? `/api/opportunities/${opportunity.id}/thumbnail` : null,
               }}
             />
           ))}
