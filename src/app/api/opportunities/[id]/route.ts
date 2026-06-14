@@ -58,7 +58,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       );
     }
 
-    const { title, description, category, amount, requiredTier } = parsed.data;
+    const { title, description, category, amount, currency, requiredTier } = parsed.data;
 
     const updated = await prisma.opportunity.update({
       where: { id },
@@ -67,6 +67,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
         ...(description !== undefined && { description }),
         ...(category !== undefined && { category }),
         ...(amount !== undefined && { amount: typeof amount === "number" && isNaN(amount) ? null : amount ?? null }),
+        ...(currency !== undefined && { currency }),
         ...(requiredTier !== undefined && { requiredTier }),
       },
       include: {
@@ -88,6 +89,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
           description: description !== undefined,
           category: category !== undefined,
           amount: amount !== undefined,
+          currency: currency !== undefined,
           requiredTier: requiredTier !== undefined,
         },
       },
@@ -100,6 +102,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
         description: updated.description,
         category: updated.category,
         amount: updated.amount,
+        currency: updated.currency,
         requiredTier: updated.requiredTier,
         verificationStatus: updated.verificationStatus,
         createdAt: updated.createdAt.toISOString(),
@@ -231,6 +234,7 @@ export async function GET(req: Request, { params }: RouteContext) {
         description: opportunity.description,
         category: opportunity.category,
         amount: opportunity.amount,
+        currency: opportunity.currency,
         requiredTier: opportunity.requiredTier,
         verificationStatus: opportunity.verificationStatus,
         createdAt: opportunity.createdAt.toISOString(),

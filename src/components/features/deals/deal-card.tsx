@@ -8,11 +8,13 @@ import { InterestButton } from "@/components/features/deals/interest-button";
 import type { OpportunityMatchMetadata } from "@/lib/matching";
 import type { SelectedTag } from "@/lib/tags";
 import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
+import { formatOpportunityAmount } from "@/lib/currency";
 
 type DealCardDeal = {
   id: string;
   title: string;
   amount?: number | null;
+  currency?: string;
   location?: string | null;
   verificationStatus?: string;
   documentCount?: number;
@@ -97,7 +99,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
     );
   }
 
-  const amountLabel = typeof deal.amount === "number" ? `${deal.amount.toLocaleString("fr-FR")} €` : "Montant sur demande";
+  const amountLabel = formatOpportunityAmount(deal.amount, deal.currency);
   const trustLevel = deal.trustLevel ?? getSafeTrustLevel({
     documentCount: deal.documentCount ?? 0,
     verificationStatus: deal.verificationStatus ?? "PENDING",

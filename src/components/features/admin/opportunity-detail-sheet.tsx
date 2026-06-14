@@ -36,6 +36,7 @@ export type AdminOpportunity = {
   description: string;
   category: string;
   amount: number | null;
+  currency: string;
   requiredTier?: "AFFRANCHI" | "GRAND_FRERE" | "BOSS";
   verificationStatus: VerificationStatusInput;
   createdAt: string;
@@ -81,7 +82,7 @@ const REQUIRED_TIER_LABELS: Record<string, string> = {
   BOSS: "Boss",
 };
 
-const amountFormatter = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+import { formatOpportunityAmount, CURRENCY_OPTIONS } from "@/lib/currency";
 
 function initials(name: string) {
   return name
@@ -127,7 +128,7 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
 
   if (!opportunity) return null;
 
-  const amount = opportunity.amount !== null ? amountFormatter.format(opportunity.amount) : "Montant non précisé";
+  const amount = formatOpportunityAmount(opportunity.amount, opportunity.currency);
   const canStartReview = opportunity.verificationStatus === "PENDING";
   const canDecide = opportunity.verificationStatus === "PENDING" || opportunity.verificationStatus === "EN_COURS";
   const isSaving = editForm.formState.isSubmitting;
@@ -376,8 +377,8 @@ export function OpportunityDetailSheet({ opportunity, open, isMutating, error, o
   );
 }
 
-export function adminOpportunityAmount(amount: number | null) {
-  return amount !== null ? amountFormatter.format(amount) : "Montant non précisé";
+export function adminOpportunityAmount(amount: number | null, currency: string = "EUR") {
+  return formatOpportunityAmount(amount, currency);
 }
 
 export function adminOpportunityCategory(category: string) {

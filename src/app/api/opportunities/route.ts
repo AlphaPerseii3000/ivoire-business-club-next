@@ -79,6 +79,7 @@ export async function GET(req: Request) {
       description: opportunity.description,
       category: opportunity.category,
       amount: opportunity.amount,
+      currency: opportunity.currency,
       requiredTier: opportunity.requiredTier,
       verificationStatus: opportunity.verificationStatus,
       createdAt: opportunity.createdAt,
@@ -122,7 +123,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, description, category, amount, requiredTier } = parsed.data;
+    const { title, description, category, amount, currency, requiredTier } = parsed.data;
     const tags = dedupeTags(parsed.data.tags);
     const numericAmount = typeof amount === "number" ? amount : null;
     const requiresDoubleVerification = numericAmount !== null && numericAmount > 50000;
@@ -134,6 +135,7 @@ export async function POST(req: Request) {
         description,
         category,
         amount: numericAmount,
+        currency: currency ?? "EUR",
         requiredTier: requiredTier ?? "AFFRANCHI",
         requiresDoubleVerification,
         tags: {

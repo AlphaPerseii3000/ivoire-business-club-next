@@ -13,6 +13,7 @@ import { TagChips } from "@/components/features/tags/tag-chips";
 import { PremiumAccessBlockedPanel } from "@/components/premium-access-blocked-panel";
 import { auth } from "@/lib/auth";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
+import { formatOpportunityAmount, CURRENCY_OPTIONS } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getOpportunityTrustLevel } from "@/lib/trust-level";
@@ -188,7 +189,7 @@ export default async function OpportunityDetailPage({
             <span className="rounded-md bg-muted px-3 py-1 text-sm">{categoryLabels[opportunity.category] ?? opportunity.category}</span>
             {opportunity.amount ? (
               <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                {opportunity.amount.toLocaleString("fr-FR")} €
+                {formatOpportunityAmount(opportunity.amount, opportunity.currency)}
               </span>
             ) : null}
           </div>
@@ -277,8 +278,16 @@ export default async function OpportunityDetailPage({
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="edit-amount" className="block text-sm font-medium mb-1">Montant (€)</label>
+                    <label htmlFor="edit-amount" className="block text-sm font-medium mb-1">Montant</label>
                     <input id="edit-amount" name="amount" type="number" min="0" step="0.01" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.amount ?? ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-currency" className="block text-sm font-medium mb-1">Devise</label>
+                    <select id="edit-currency" name="currency" className="w-full rounded-md border bg-background px-3 py-2 text-sm" defaultValue={opportunity.currency ?? "EUR"}>
+                      {CURRENCY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div>

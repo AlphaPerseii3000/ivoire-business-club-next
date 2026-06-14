@@ -154,6 +154,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 id: opportunity.id,
                 title: opportunity.title,
                 amount: opportunity.amount,
+                currency: opportunity.currency,
                 location: opportunity.author.location,
                 verificationStatus: opportunity.verificationStatus,
                 documentCount: opportunity._count.documents,

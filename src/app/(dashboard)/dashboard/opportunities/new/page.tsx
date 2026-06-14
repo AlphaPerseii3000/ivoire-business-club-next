@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { opportunityCreateSchema, type OpportunityCreateInput } from "@/lib/validations";
 import { type MembershipTier } from "@/lib/tier-config";
+import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +54,7 @@ export default function NewOpportunityPage() {
       description: "",
       category: "BUSINESS",
       amount: undefined,
+      currency: "EUR",
       requiredTier: "AFFRANCHI",
       tags: [],
     },
@@ -74,6 +76,7 @@ export default function NewOpportunityPage() {
           description: data.description,
           category: data.category,
           amount: numericAmount,
+          currency: data.currency ?? "EUR",
           requiredTier: data.requiredTier ?? "AFFRANCHI",
           tags: data.tags ?? [],
         }),
@@ -182,7 +185,7 @@ export default function NewOpportunityPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="amount">Montant (€, optionnel)</Label>
+          <Label htmlFor="amount">Montant (optionnel)</Label>
           <Input
             id="amount"
             data-testid="opportunity-amount-input"
@@ -194,6 +197,19 @@ export default function NewOpportunityPage() {
           {errors.amount ? (
             <p className="text-sm text-destructive">{errors.amount.message}</p>
           ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="currency">Devise</Label>
+          <select
+            id="currency"
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            {...register("currency")}
+          >
+            {CURRENCY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">

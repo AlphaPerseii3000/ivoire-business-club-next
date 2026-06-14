@@ -59,6 +59,11 @@ enum PaymentProvider {
   BANK_TRANSFER
 }
 
+enum OpportunityCurrency {
+  EUR
+  XOF
+}
+
 // =====================
 // MODELS
 // =====================
@@ -180,6 +185,7 @@ model Opportunity {
   description        String
   category           OpportunityCategory
   amount             Float?
+  currency           OpportunityCurrency @default(EUR)
   requiredTier       Tier                 @default(AFFRANCHI)
   requiresDoubleVerification Boolean       @default(false)
   verificationStatus VerificationStatus   @default(PENDING)
