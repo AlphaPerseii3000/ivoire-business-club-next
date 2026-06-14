@@ -79,6 +79,9 @@ export const opportunityCreateSchema = z.object({
     (v) => (typeof v === "number" && isNaN(v) ? null : v),
     z.number().positive("Le montant doit être positif").nullable().optional(),
   ),
+  requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+    message: "Tier de visibilité invalide",
+  }).default("AFFRANCHI"),
   tags: z.array(tagSchema).optional(),
 });
 

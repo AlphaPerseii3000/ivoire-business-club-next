@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { opportunityCreateSchema, type OpportunityCreateInput } from "@/lib/validations";
+import { type MembershipTier } from "@/lib/tier-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +29,12 @@ const CATEGORIES = [
   { value: "IMMOBILIER", label: "Immobilier" },
 ] as const;
 
+const REQUIRED_TIERS: { value: MembershipTier; label: string; description: string }[] = [
+  { value: "AFFRANCHI", label: "Affranchi (29€/mois)", description: "Visible par tous les membres" },
+  { value: "GRAND_FRERE", label: "Grand Frère (49€/mois)", description: "Visible par les Grands Frères et Boss" },
+  { value: "BOSS", label: "Boss (99€/mois)", description: "Visible uniquement par les Boss" },
+];
+
 export default function NewOpportunityPage() {
   const router = useRouter();
   const [pendingDocuments, setPendingDocuments] = useState<File[]>([]);
@@ -46,11 +53,13 @@ export default function NewOpportunityPage() {
       description: "",
       category: "BUSINESS",
       amount: undefined,
+      requiredTier: "AFFRANCHI",
       tags: [],
     },
   });
 
   const selectedCategory = watch("category");
+  const selectedTier = watch("requiredTier") ?? "AFFRANCHI";
   const tagsValue = watch("tags") ?? [];
 
   const onSubmit: SubmitHandler<OpportunityCreateInput> = async (data) => {
@@ -65,6 +74,7 @@ export default function NewOpportunityPage() {
           description: data.description,
           category: data.category,
           amount: numericAmount,
+          requiredTier: data.requiredTier ?? "AFFRANCHI",
           tags: data.tags ?? [],
         }),
       });
@@ -139,6 +149,35 @@ export default function NewOpportunityPage() {
           </Select>
           {errors.category ? (
             <p className="text-sm text-destructive">{errors.category.message}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="requiredTier">Visibilité</Label>
+          <Select
+            value={selectedTier}
+            onValueChange={(val) =>
+              setValue("requiredTier", val as OpportunityCreateInput["requiredTier"], {
+                shouldValidate: true,
+              })
+            }
+          >
+            <SelectTrigger id="requiredTier">
+              <SelectValue placeholder="Choisir la visibilité" />
+            </SelectTrigger>
+            <SelectContent>
+              {REQUIRED_TIERS.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {REQUIRED_TIERS.find((t) => t.value === selectedTier)?.description}
+          </p>
+          {errors.requiredTier ? (
+            <p className="text-sm text-destructive">{errors.requiredTier.message}</p>
           ) : null}
         </div>
 

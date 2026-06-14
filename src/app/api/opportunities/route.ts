@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, description, category, amount } = parsed.data;
+    const { title, description, category, amount, requiredTier } = parsed.data;
     const tags = dedupeTags(parsed.data.tags);
     const numericAmount = typeof amount === "number" ? amount : null;
     const requiresDoubleVerification = numericAmount !== null && numericAmount > 50000;
@@ -134,6 +134,7 @@ export async function POST(req: Request) {
         description,
         category,
         amount: numericAmount,
+        requiredTier: requiredTier ?? "AFFRANCHI",
         requiresDoubleVerification,
         tags: {
           create: tags.map((tag) => ({ category: tag.category, value: tag.value })),
