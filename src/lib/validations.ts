@@ -87,6 +87,17 @@ export const opportunityCreateSchema = z.object({
 
 export type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 
+export const opportunityOwnerUpdateSchema = opportunityCreateSchema
+  .pick({ title: true, description: true, category: true, amount: true })
+  .extend({
+    requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+      message: "Tier de visibilité invalide",
+    }).optional(),
+  })
+  .partial();
+
+export type OpportunityOwnerUpdateInput = z.infer<typeof opportunityOwnerUpdateSchema>;
+
 export const opportunityAdminUpdateSchema = opportunityCreateSchema
   .pick({ title: true, description: true, category: true, amount: true })
   .extend({
