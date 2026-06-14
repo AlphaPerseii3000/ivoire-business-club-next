@@ -1,6 +1,9 @@
+---
+baseline_commit: 7a6224f5b6770bad920445941a382f27558b4adb
+---
 # Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -49,21 +52,21 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Configuration des routes d'accès public (AC: 1, 4)**
-  - [ ] Modifier [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) pour ajouter `"/articles"` au tableau `publicRoutes`. Cela permettra aux visiteurs anonymes d'accéder aux pages `/articles` et `/articles/[slug]` sans être redirigés vers `/auth/signin`.
+- [x] **Configuration des routes d'accès public (AC: 1, 4)**
+  - [x] Modifier [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) pour ajouter `"/articles"` au tableau `publicRoutes`. Cela permettra aux visiteurs anonymes d'accéder aux pages `/articles` et `/articles/[slug]` sans être redirigés vers `/auth/signin`.
 
-- [ ] **Composants d'interface utilisateur (AC: 1, 2, 3, 5, 6)**
-  - [ ] Créer `src/components/features/articles/ArticleCard.tsx` :
+- [x] **Composants d'interface utilisateur (AC: 1, 2, 3, 5, 6)**
+  - [x] Créer `src/components/features/articles/ArticleCard.tsx` :
     - Recevoir l'article, un indicateur d'accès autorisé (`hasAccess`) et le tier de l'article.
     - Afficher le titre, l'extrait (`excerpt`), la catégorie, la date de publication formattée en français.
     - Afficher un badge de visibilité stylisé selon les couleurs établies dans la story 9.2 (PUBLIC = gris/neutral, AFFRANCHI = teal, GRAND_FRERE = amber, BOSS = violet) avec une icône de verrou si l'accès est bloqué.
     - Si `hasAccess` est faux, rendre un bouton/lien "Abonnez-vous pour lire" pointant vers `/pricing` ou vers `/articles/[slug]` (où la gate sera affichée).
     - Si `hasAccess` est vrai, rendre un bouton "Lire l'article" pointant vers `/articles/[slug]`.
-  - [ ] Créer `src/components/features/articles/ArticleContent.tsx` :
+  - [x] Créer `src/components/features/articles/ArticleContent.tsx` :
     - Rendre le contenu Markdown de l'article sous forme HTML de manière propre et sécurisée (parseur basique sans bibliothèque lourde, transformant les paragraphes, les titres `#` / `##`, les listes à puces `-`, et le gras `**`).
 
-- [ ] **Catalogue et Détail Articles (AC: 1, 2, 3, 4, 5, 6, 7)**
-  - [ ] Créer `src/app/(public)/articles/page.tsx` (Page catalogue Server Component) :
+- [x] **Catalogue et Détail Articles (AC: 1, 2, 3, 4, 5, 6, 7)**
+  - [x] Créer `src/app/(public)/articles/page.tsx` (Page catalogue Server Component) :
     - Récupérer la session actuelle via `auth()`.
     - Vérifier si l'utilisateur possède un abonnement actif avec `hasActiveSubscription(session?.user?.id)`.
     - Récupérer le tier de l'utilisateur connecté `(session?.user as any)?.tier`.
@@ -73,7 +76,7 @@ Status: ready-for-dev
       - Visiteur anonyme : n'afficher que les articles de visibilité `PUBLIC`.
       - Membre connecté : afficher tous les articles, mais calculer `hasAccess` pour chacun en utilisant `getAccessibleArticleVisibilities(userTier, hasActiveSub)`. Les articles non accessibles affichent le CTA "Abonnez-vous pour lire".
     - Intégrer l'en-tête (Header) et le pied de page (Footer) de la landing page pour conserver une identité visuelle premium.
-  - [ ] Créer `src/app/(public)/articles/[slug]/page.tsx` (Page de détail Server Component) :
+  - [x] Créer `src/app/(public)/articles/[slug]/page.tsx` (Page de détail Server Component) :
     - Attendre et destructurer `params` asynchrones : `const { slug } = await params;`.
     - Récupérer l'article correspondant au `slug` depuis Prisma. Si non trouvé ou non publié, appeler `notFound()`.
     - Récupérer la session, le statut d'abonnement actif et le tier de l'utilisateur.
@@ -82,17 +85,17 @@ Status: ready-for-dev
     - Si l'accès est restreint : afficher le titre, l'extrait (`excerpt`), et un bloc d'incitation premium (Gate Panel) avec une icône de cadenas et un bouton CTA "Abonnez-vous pour lire l'article complet" pointant vers `/pricing`.
     - Exposer des métadonnées SEO basiques (titre de l'article, extrait en description).
 
-- [ ] **Tests unitaires et de validation (AC: 1-7)**
-  - [ ] Créer `src/app/(public)/articles/page.test.tsx` pour tester :
+- [x] **Tests unitaires et de validation (AC: 1-7)**
+  - [x] Créer `src/app/(public)/articles/page.test.tsx` pour tester :
     - Le rendu de la page catalogue pour un visiteur anonyme (seuls les articles publics sont visibles).
     - Le rendu pour un membre actif (accès complet aux articles de son tier).
     - Le rendu pour un membre inactif (affichage des articles premium sous forme d'extrait + CTA d'upgrade).
     - Le fonctionnement du filtre par catégorie.
-  - [ ] Créer `src/app/(public)/articles/[slug]/page.test.tsx` pour tester :
+  - [x] Créer `src/app/(public)/articles/[slug]/page.test.tsx` pour tester :
     - L'accès complet à un article public.
     - La restriction d'accès avec Gate Panel (extrait + CTA) pour un article premium sans abonnement.
     - L'affichage de la page 404 (appel de `notFound`) pour un article inexistant ou non publié.
-  - [ ] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succès.
+  - [x] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succès.
 
 ## Dev Notes
 
@@ -129,6 +132,27 @@ Gemini 3.5 Flash (Medium)
 
 ### Debug Log References
 
+- Tests unitaires et de régression réussis à 100% (568/568 tests passés avec succès).
+
 ### Completion Notes List
 
+- Configuration de la route `/articles` comme route publique dans `src/lib/auth.config.ts`.
+- Création du composant `ArticleCard.tsx` avec gestion de la visibilité des badges et icône de verrou si l'accès est bloqué.
+- Création du composant `ArticleContent.tsx` avec parseur de contenu Markdown vers HTML.
+- Création de la page catalogue `/articles` avec filtres par catégorie et application des filtres de visibilité côté serveur.
+- Création de la page détail `/articles/[slug]` avec métadonnées SEO dynamiques et affichage de l'encart premium (Gate Panel) pour les utilisateurs restreints.
+- Écriture d'une suite de 9 tests unitaires avec Vitest (catalogue et détail d'articles) validant tous les critères d'acceptation (AC 1-7).
+
 ### File List
+
+- `src/lib/auth.config.ts` (MODIFIED)
+- `src/components/features/articles/ArticleCard.tsx` (NEW)
+- `src/components/features/articles/ArticleContent.tsx` (NEW)
+- `src/app/(public)/articles/page.tsx` (NEW)
+- `src/app/(public)/articles/[slug]/page.tsx` (NEW)
+- `src/app/(public)/articles/page.test.tsx` (NEW)
+- `src/app/(public)/articles/[slug]/page.test.tsx` (NEW)
+
+### Change Log
+
+- 2026-06-14 : Implémentation et validation complète de la Story 9.3 (Catalogue et Pages Détail Articles avec Gate Premium).

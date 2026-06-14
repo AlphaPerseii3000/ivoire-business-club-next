@@ -20,6 +20,8 @@ describe("authConfig authorized callback", () => {
     expect(authorized(makeRequest("/auth/signup"))).toBe(true);
     expect(authorized(makeRequest("/auth/error"))).toBe(true);
     expect(authorized(makeRequest("/api/auth/signin"))).toBe(true);
+    expect(authorized(makeRequest("/articles"))).toBe(true);
+    expect(authorized(makeRequest("/articles/some-slug"))).toBe(true);
   });
 
   it("redirects unauthenticated requests from /dashboard to /auth/signin", () => {
