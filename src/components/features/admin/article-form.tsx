@@ -88,7 +88,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
     if (categoryType !== "custom") {
       setValue("category", categoryType, { shouldValidate: true });
     } else {
-      setValue("category", customCategory, { shouldValidate: true });
+      setValue("category", customCategory, { shouldValidate: false });
     }
   }, [categoryType, customCategory, setValue]);
 

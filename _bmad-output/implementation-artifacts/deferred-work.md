@@ -30,3 +30,10 @@
 - Typage faible de la session (session.user as any) dans `src/app/api/articles/route.ts:39` — pre-existing
 - Absence de pagination sur GET /api/articles dans `src/app/api/articles/route.ts:28` — pre-existing
 - Absence de validation réelle de l'intégrité de la base de données dans les tests (convention de mocking existante) dans `src/app/api/articles/route.test.ts` — pre-existing
+
+## Deferred from: code review of 9-2-interface-admin-crud-articles.md (2026-06-14)
+
+- Redondance de `promoteConfiguredAdminUser` sur chaque page d'administration (`src/app/(admin)/admin/articles/page.tsx`, etc.) — pre-existing pattern
+- Absence de pagination dans la liste des articles (`src/app/(admin)/admin/articles/page.tsx`) — hors scope de la story
+- Contournement de la sécurité des types TypeScript (`session.user as any`) dans les endpoints d'articles — pre-existing pattern
+- Duplication et dérive potentielle de l'énumération `ArticleVisibility` dans `src/lib/validations.ts` — duplication pour compatibilité client/serveur

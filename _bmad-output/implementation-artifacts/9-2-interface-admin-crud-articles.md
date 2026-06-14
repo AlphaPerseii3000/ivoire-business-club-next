@@ -3,7 +3,7 @@ baseline_commit: 73e66145e3c4af28b3b6da6822704e1ffb55aab5
 ---
 # Story 9.2: Interface Admin CRUD Articles
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -112,6 +112,15 @@ Status: review
 - [x] **Vérification finale**
   - [x] Lancer les tests unitaires via `npx vitest run` et s'assurer que tous les tests passent.
   - [x] Lancer `npm run build` pour valider l'absence d'erreurs TypeScript et d'incompatibilités Next.js 16 / React 19 (guardrail JSX).
+
+### Review Findings
+
+- [x] [Review][Patch] Journalisation d'audit prématurée lors de la suppression [src/app/api/articles/[id]/route.ts:179]
+- [x] [Review][Patch] Validation excessive lors de la saisie d'une catégorie personnalisée [src/components/features/admin/article-form.tsx:778]
+- [x] [Review][Defer] Redondance de promoteConfiguredAdminUser sur chaque page d'administration [src/app/(admin)/admin/articles/page.tsx:196] — deferred, pre-existing
+- [x] [Review][Defer] Absence de pagination dans la liste des articles [src/app/(admin)/admin/articles/page.tsx:199] — deferred, pre-existing
+- [x] [Review][Defer] Contournement de la sécurité des types TypeScript (as any) [src/app/api/articles/[id]/route.ts:167] — deferred, pre-existing
+- [x] [Review][Defer] Duplication et dérive potentielle de l'énumération ArticleVisibility [src/lib/validations.ts:1447] — deferred, pre-existing
 
 ## Dev Notes
 

@@ -176,6 +176,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
     }
 
+    await prisma.article.delete({
+      where: { id: article.id },
+    });
+
     await safeCreateAuditLog({
       actorId: session.user.id,
       action: "ARTICLE_DELETE",
@@ -184,10 +188,6 @@ export async function DELETE(
       metadata: {
         title: article.title,
       },
-    });
-
-    await prisma.article.delete({
-      where: { id: article.id },
     });
 
     return NextResponse.json({ data: { ok: true } });
