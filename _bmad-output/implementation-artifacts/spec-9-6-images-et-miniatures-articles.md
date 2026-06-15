@@ -89,5 +89,7 @@ context: []
 - [x] [Review][Patch] Database seed execution and process exit on module import [prisma/seed.ts]
 - [x] [Review][Patch] Silently failing ephemeral local storage in production [src/app/api/admin/articles/upload/route.ts]
 - [x] [Review][Patch] Hardcoded styling values in latest-articles preview fallback [src/components/landing/latest-articles.tsx]
+- [x] [Review][Patch] Avoid using 'any[]' type on remotePatterns in next.config.ts [next.config.ts:16]
+- [x] [Review][Patch] Add support for custom ports in dynamic remotePatterns [next.config.ts:25]
 
 

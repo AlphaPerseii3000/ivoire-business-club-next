@@ -13,9 +13,57 @@ const securityHeaders = [
   },
 ];
 
+type RemotePattern = {
+  protocol: "http" | "https";
+  hostname: string;
+  port?: string;
+  pathname?: string;
+};
+
+const remotePatterns: RemotePattern[] = [
+  { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
+  { protocol: "https", hostname: "*.r2.dev" },
+  { protocol: "https", hostname: "*.infomaniak.com" },
+  { protocol: "https", hostname: "*.swiss-backup.ch" },
+];
+
+if (process.env.R2_PUBLIC_URL) {
+  try {
+    const url = new URL(process.env.R2_PUBLIC_URL);
+    remotePatterns.push({
+      protocol: url.protocol.replace(":", "") as "http" | "https",
+      hostname: url.hostname,
+      port: url.port || "",
+    });
+  } catch (e) {
+    console.error("Invalid R2_PUBLIC_URL in next.config.ts:", e);
+  }
+}
+
+if (process.env.AWS_ENDPOINT) {
+  try {
+    const url = new URL(process.env.AWS_ENDPOINT);
+    remotePatterns.push({
+      protocol: url.protocol.replace(":", "") as "http" | "https",
+      hostname: url.hostname,
+      port: url.port || "",
+    });
+    remotePatterns.push({
+      protocol: url.protocol.replace(":", "") as "http" | "https",
+      hostname: `*.${url.hostname}`,
+      port: url.port || "",
+    });
+  } catch (e) {
+    console.error("Invalid AWS_ENDPOINT in next.config.ts:", e);
+  }
+}
+
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {},
+  images: {
+    remotePatterns,
+  },
   webpack: (config) => {
     config.resolve.symlinks = false;
     return config;
