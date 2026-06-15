@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { SubscriptionActivationNotice } from "@/components/subscription-activation-notice";
+import ResendVerificationButton from "@/components/features/auth/resend-verification-button";
 
 const ACTIVATION_NOTICE_DAYS = 7;
 
@@ -11,7 +12,14 @@ function isRecent(date: Date, days: number) {
   return Date.now() - date.getTime() <= days * 24 * 60 * 60 * 1000;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const justSignedUp = params["verify-email"] === "1";
+
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
@@ -43,6 +51,27 @@ export default async function DashboardPage() {
 
   return (
     <div data-testid="dashboard-page" className="mx-auto max-w-4xl px-4 py-8">
+      {!user.emailVerified ? (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+          {justSignedUp ? (
+            <p className="mb-2 text-sm font-medium">
+              📧 Un email de vérification vient de t&apos;être envoyé. Consulte ta boîte de réception !
+            </p>
+          ) : null}
+          <p className="text-sm">
+            ⚠️ Ton adresse email n&apos;est pas encore vérifiée. Consulte ta boîte de réception pour valider ton compte.
+          </p>
+          <div className="mt-3 flex items-center gap-4">
+            <ResendVerificationButton />
+            <Link
+              href="/settings#verification"
+              className="text-sm text-amber-700 underline hover:text-amber-900"
+            >
+              Vérifier dans les paramètres
+            </Link>
+          </div>
+        </div>
+      ) : null}
       <h1 data-testid="dashboard-user-name" className="text-2xl font-bold">Bienvenue, {user.name}</h1>
       <p className="mt-1 text-muted-foreground">Ton tableau de bord Ivoire Business Club</p>
 

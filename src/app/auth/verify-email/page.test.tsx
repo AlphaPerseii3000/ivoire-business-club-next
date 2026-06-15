@@ -54,7 +54,7 @@ describe("VerifyEmailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Félicitations !")).toBeInTheDocument();
       expect(screen.getByText("Votre adresse email a été validée avec succès. Vous pouvez maintenant accéder à l'intégralité de votre espace membre.")).toBeInTheDocument();
-      expect(screen.getByText("Aller aux paramètres")).toBeInTheDocument();
+      expect(screen.getByText("Accéder au tableau de bord")).toBeInTheDocument();
     });
   });
 

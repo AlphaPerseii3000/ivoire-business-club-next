@@ -84,10 +84,10 @@ function VerifyEmailContent() {
               </p>
             </div>
             <Link
-              href="/settings"
+              href="/dashboard"
               className="inline-flex w-full items-center justify-center rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 min-h-11 transition-colors"
             >
-              Aller aux paramètres
+              Accéder au tableau de bord
             </Link>
           </div>
         ) : null}

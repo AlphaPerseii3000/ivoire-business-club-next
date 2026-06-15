@@ -67,7 +67,7 @@ export default function SignUpPage() {
         redirect: false,
       });
       if (result?.ok) {
-        window.location.href = "/dashboard";
+        window.location.href = "/dashboard?verify-email=1";
       } else {
         window.location.href = "/auth/signin";
       }
