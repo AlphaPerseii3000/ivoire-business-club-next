@@ -53,6 +53,7 @@ export default async function HomePage() {
     slug: string;
     excerpt: string;
     category: string;
+    imageUrl: string | null;
     publishedAt: Date | null;
   }[] = [];
   try {
@@ -95,6 +96,7 @@ export default async function HomePage() {
         slug: true,
         excerpt: true,
         category: true,
+        imageUrl: true,
         publishedAt: true,
       },
     });
