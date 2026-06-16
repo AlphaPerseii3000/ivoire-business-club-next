@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { profileUpdateSchema, UEMOA_COUNTRIES, type ProfileUpdateInput } from "@/lib/validations";
+import { profileUpdateSchema, ALL_COUNTRIES, type ProfileUpdateInput } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -181,7 +181,7 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
             <SelectValue placeholder="Sélectionne un pays" />
           </SelectTrigger>
           <SelectContent>
-            {UEMOA_COUNTRIES.map((c) => (
+            {ALL_COUNTRIES.map((c) => (
               <SelectItem key={c.code} value={c.code}>
                 {c.label}
               </SelectItem>
