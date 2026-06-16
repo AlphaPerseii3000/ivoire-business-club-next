@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { documentCompleteSchema } from "@/lib/validations";
 import { createPublicDocumentUrl, getMissingR2Env } from "@/lib/r2";
+import { getUserPremiumAccess } from "@/lib/subscription-access";
+import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
+import { canManageDocuments, getAccessStatusForDocuments } from "@/lib/document-access";
+import { sanitizeError } from "@/lib/sanitize-log";
 import {
-  canManageDocuments,
   documentAccessDenied,
   documentNotFound,
   getDocumentSession,
@@ -20,16 +24,71 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const opportunity = await getOpportunityForDocuments(id);
     if (!opportunity) return documentNotFound();
-    if (!canManageDocuments(session, opportunity.authorId)) return documentAccessDenied();
+
+    const isAuthorOrAdmin = canManageDocuments(session, opportunity.authorId);
+
+    // For non-author/non-admin, verify active subscription and tier access
+    if (!isAuthorOrAdmin) {
+      const premiumAccess = await getUserPremiumAccess(session.userId);
+      if (!premiumAccess.hasAccess) {
+        return NextResponse.json(
+          { error: "Abonnement actif requis pour accéder aux documents." },
+          { status: 403 },
+        );
+      }
+
+      // Get user tier for opportunity access check
+      const fullSession = await auth();
+      const userTier = (fullSession?.user as unknown as Record<string, unknown>)?.tier ?? "AFFRANCHI";
+
+      // Fetch opportunity with requiredTier
+      const oppWithTier = await prisma.opportunity.findUnique({
+        where: { id },
+        select: { requiredTier: true },
+      });
+      if (!oppWithTier || !canUserAccessOpportunity(oppWithTier.requiredTier, userTier)) {
+        return documentAccessDenied();
+      }
+    }
 
     const documents = await prisma.document.findMany({
       where: { opportunityId: id },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ data: documents.map(serializeDocument) });
+    // For author/admin, return full document details
+    if (isAuthorOrAdmin) {
+      return NextResponse.json({ data: documents.map(serializeDocument) });
+    }
+
+    // For members, return documents with access status
+    const documentIds = documents.map((d) => d.id);
+    const accessStatusMap = await getAccessStatusForDocuments(session.userId, documentIds);
+
+    const documentsWithAccessStatus = documents.map((doc) => {
+      const accessStatus = accessStatusMap.get(doc.id) ?? "locked";
+      const hasAccess = accessStatus === "approved";
+
+      return {
+        id: doc.id,
+        opportunityId: doc.opportunityId,
+        uploadedById: doc.uploadedById,
+        fileName: doc.fileName,
+        originalName: doc.originalName,
+        mimeType: doc.mimeType,
+        size: doc.size,
+        // NEVER serialize r2Key or publicUrl for non-author/non-admin
+        createdAt: doc.createdAt.toISOString(),
+        updatedAt: doc.updatedAt.toISOString(),
+        accessStatus,
+        // Only include publicUrl if access is approved (and even then, it's typically null for sensitive docs)
+        ...(hasAccess ? { publicUrl: doc.publicUrl } : {}),
+      };
+    });
+
+    return NextResponse.json({ data: documentsWithAccessStatus });
   } catch (error) {
-    console.error("List documents error:", error instanceof Error ? error.message : "unknown");
+    console.error("List documents error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
@@ -81,7 +140,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     return NextResponse.json({ data: serializeDocument(document) }, { status: 201 });
   } catch (error) {
-    console.error("Complete document upload error:", error instanceof Error ? error.message : "unknown");
+    console.error("Complete document upload error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

@@ -30,6 +30,13 @@ export function documentAccessDenied() {
   return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 }
 
+export function documentAccessDeniedNoRequest() {
+  return NextResponse.json(
+    { error: "Accès refusé — demandez l'accès à ce document" },
+    { status: 403 },
+  );
+}
+
 export function documentNotFound() {
   return NextResponse.json({ error: "Document introuvable" }, { status: 404 });
 }

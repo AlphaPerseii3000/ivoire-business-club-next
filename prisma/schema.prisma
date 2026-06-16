@@ -106,6 +106,8 @@ model User {
   auditLogs          AuditLog[] @relation("AuditLogActor")
   articles           Article[]
   reactions          ArticleReaction[]
+  documentAccessRequests DocumentAccessRequest[] @relation("DocumentAccessRequester")
+  reviewedAccessRequests DocumentAccessRequest[] @relation("DocumentAccessReviewer")
 
   @@index([status, createdAt])
   @@map("users")
@@ -302,10 +304,31 @@ model Document {
 
   opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
   uploadedBy  User        @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  accessRequests DocumentAccessRequest[]
 
   @@index([opportunityId])
   @@index([uploadedById])
   @@map("opportunity_documents")
+}
+
+model DocumentAccessRequest {
+  id          String                    @id @default(cuid())
+  requesterId String
+  documentId  String
+  status      DocumentAccessRequestStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  requester  User    @relation("DocumentAccessRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("DocumentAccessReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@unique([requesterId, documentId])
+  @@index([documentId, status])
+  @@index([requesterId, status])
+  @@map("document_access_requests")
 }
 
 model Notification {
@@ -354,6 +377,12 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([action, createdAt])
   @@map("audit_logs")
+}
+
+enum DocumentAccessRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
 }
 
 enum ArticleVisibility {
