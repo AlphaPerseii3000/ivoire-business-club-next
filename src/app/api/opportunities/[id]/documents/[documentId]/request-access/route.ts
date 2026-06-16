@@ -10,7 +10,7 @@ import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function POST(
   _req: Request,
-  { params }: { params: Promise<{ id: string; docId: string }> },
+  { params }: { params: Promise<{ id: string; documentId: string }> },
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function POST(
     const userRole = String((session.user as unknown as Record<string, unknown>).role ?? "MEMBER");
     const userTier = (session.user as unknown as Record<string, unknown>).tier ?? "AFFRANCHI";
 
-    const { id: opportunityId, docId: documentId } = await params;
+    const { id: opportunityId, documentId } = await params;
 
     // Verify active subscription
     const premiumAccess = await getUserPremiumAccess(userId);

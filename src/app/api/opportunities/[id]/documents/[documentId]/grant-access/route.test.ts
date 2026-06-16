@@ -34,7 +34,7 @@ vi.mock("@/lib/document-access", () => ({
 }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: (error: unknown) => String(error) }));
 
-const context = { params: Promise.resolve({ id: "opp-1", docId: "doc-1" }) };
+const context = { params: Promise.resolve({ id: "opp-1", documentId: "doc-1" }) };
 
 function makeRequest(body: { requestIds: string[]; action: string }) {
   return new Request("http://localhost/api/opportunities/opp-1/documents/doc-1/grant-access", {
@@ -53,7 +53,7 @@ function baseDocument(overrides = {}) {
   };
 }
 
-describe("PATCH /api/opportunities/[id]/documents/[docId]/grant-access", () => {
+describe("PATCH /api/opportunities/[id]/documents/[documentId]/grant-access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "author-1", role: "MEMBER", status: "ACTIVE" } });
