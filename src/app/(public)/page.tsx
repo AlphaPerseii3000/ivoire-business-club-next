@@ -115,7 +115,6 @@ export default async function HomePage() {
             <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
               Ivoire Business Club
             </span>
-            <span className="sm:hidden text-white">IBC</span>
           </Link>
           <nav className="flex gap-6 text-sm items-center">
             <a href="#mission" className="text-slate-300 hover:text-white transition-colors">
