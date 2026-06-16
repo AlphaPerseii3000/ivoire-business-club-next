@@ -5,6 +5,8 @@ import OpportunityDetailPage from "./page";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockGetUserPremiumAccess = vi.hoisted(() => vi.fn());
+const mockGetAccessStatusForDocuments = vi.hoisted(() => vi.fn());
+const mockGetPendingAccessRequests = vi.hoisted(() => vi.fn());
 const mockOpportunityFindUnique = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockUserUpdateMany = vi.hoisted(() => vi.fn());
@@ -12,6 +14,12 @@ const mockNotFound = vi.hoisted(() => vi.fn(() => { throw new Error("notFound");
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({ getUserPremiumAccess: mockGetUserPremiumAccess }));
+vi.mock("@/lib/document-access", () => ({
+  getAccessStatusForDocuments: mockGetAccessStatusForDocuments,
+  getPendingAccessRequests: mockGetPendingAccessRequests,
+  canManageDocuments: (session: { userId: string; role: string }, authorId: string) =>
+    session.userId === authorId || session.role === "ADMIN",
+}));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     opportunity: { findUnique: mockOpportunityFindUnique },
@@ -56,6 +64,8 @@ describe("OpportunityDetailPage premium and tier access gating", () => {
     mockAuth.mockResolvedValue({ user: { id: "member-1" } });
     mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI" });
     mockUserUpdateMany.mockResolvedValue({ count: 1 });
+    mockGetAccessStatusForDocuments.mockResolvedValue(new Map());
+    mockGetPendingAccessRequests.mockResolvedValue([]);
   });
 
   it("blocks premium deal details for non-active members", async () => {

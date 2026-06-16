@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
 import { DocumentUploadSection } from "@/components/features/deals/document-upload-section";
+import { DocumentAccessRequests } from "@/components/features/deals/document-access-requests";
 import { InterestButton } from "@/components/features/deals/interest-button";
 import { ReviewForm } from "@/components/features/deals/review-form";
 import { PlatinumBadge } from "@/components/features/reputation/platinum-badge";
@@ -18,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateReliabilityScore, ensurePlatinumAwarded } from "@/lib/reputation";
 import { getOpportunityTrustLevel } from "@/lib/trust-level";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
+import { getAccessStatusForDocuments, getPendingAccessRequests } from "@/lib/document-access";
 import { notFound, redirect } from "next/navigation";
 
 export default async function OpportunityDetailPage({
@@ -167,6 +169,27 @@ export default async function OpportunityDetailPage({
     authorStats: { validatedDealsCount, averageRating },
   });
 
+  // Compute per-document access status for non-author/non-admin members
+  const documentIds = (opportunity.documents ?? []).map((d) => d.id);
+  const accessStatusMapResult = (!isAuthor && !isAdmin && canViewDocuments && documentIds.length > 0)
+    ? await getAccessStatusForDocuments(session.user.id, documentIds)
+    : null;
+  const accessStatusMap = accessStatusMapResult
+    ? Object.fromEntries(accessStatusMapResult)
+    : undefined;
+
+  // Fetch pending access requests for author/admin
+  const pendingAccessRequests = (isAuthor || isAdmin)
+    ? await getPendingAccessRequests(opportunity.id)
+    : [];
+  const hasPendingRequests = pendingAccessRequests.length > 0;
+  const serializedPendingRequests = pendingAccessRequests.map((r) => ({
+    id: r.id,
+    requester: { id: r.requester.id, name: r.requester.name, email: r.requester.email },
+    document: { id: r.document.id, originalName: r.document.originalName },
+    createdAt: r.createdAt.toISOString(),
+  }));
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Link href="/dashboard/opportunities" className="text-sm text-muted-foreground hover:text-primary">← Retour aux opportunités</Link>
@@ -230,8 +253,16 @@ export default async function OpportunityDetailPage({
               documentCount={documentCount}
               canUpload={canManageDocuments}
               canPreview={canViewDocuments}
+              accessStatusMap={accessStatusMap}
             />
           </div>
+
+          {hasPendingRequests ? (
+            <DocumentAccessRequests
+              opportunityId={opportunity.id}
+              requests={serializedPendingRequests}
+            />
+          ) : null}
 
           {canShowReviewForm ? <ReviewForm opportunityId={opportunity.id} /> : null}
 

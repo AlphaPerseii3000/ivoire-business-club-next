@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DOCUMENT_ALLOWED_MIME_TYPES, DOCUMENT_MAX_SIZE_BYTES } from "@/lib/validations";
 import { DocumentRow, type LegalDocument } from "./document-row";
+import { RequestDocumentAccessButton } from "./request-document-access-button";
+
+type DocumentAccessStatus = "locked" | "pending" | "denied" | "approved";
 
 type PendingDocument = {
   id: string;
@@ -22,6 +25,7 @@ type DocumentUploadSectionProps = {
   documentCount?: number;
   canUpload?: boolean;
   canPreview?: boolean;
+  accessStatusMap?: Record<string, DocumentAccessStatus>;
   onPendingFilesChange?: (files: File[]) => void;
 };
 
@@ -91,6 +95,7 @@ export function DocumentUploadSection({
   documentCount,
   canUpload = true,
   canPreview = true,
+  accessStatusMap,
   onPendingFilesChange,
 }: DocumentUploadSectionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +192,7 @@ export function DocumentUploadSection({
     toast.success("Document supprimé.");
   };
 
-  const isMetadataHidden = !canUpload && !canPreview;
+  const isMetadataHidden = !canUpload && !canPreview && !accessStatusMap;
 
   // Use server-provided count only when full metadata is intentionally hidden; otherwise
   // keep the visible counter in sync with local upload/delete state.
@@ -255,16 +260,61 @@ export function DocumentUploadSection({
             canPreview={false}
           />
         ))}
-        {documents.map((document) => (
-          <DocumentRow
-            key={document.id}
-            document={document}
-            canPreview={canPreview}
-            onPreview={openPreview}
-            onDownload={downloadDocument}
-            onDelete={canUpload ? deleteDocument : undefined}
-          />
-        ))}
+        {documents.map((document) => {
+          const accessStatus = accessStatusMap?.[document.id];
+          const showAccessControl = accessStatus && accessStatus !== "approved";
+          const docCanPreview = showAccessControl ? false : canPreview;
+          const docCanDownload = showAccessControl ? false : canPreview;
+          const docCanDelete = showAccessControl ? false : canUpload;
+
+          return (
+            <div key={document.id} className="space-y-2">
+              <DocumentRow
+                document={document}
+                canPreview={docCanPreview}
+                onPreview={docCanPreview ? openPreview : undefined}
+                onDownload={docCanDownload ? downloadDocument : undefined}
+                onDelete={docCanDelete ? deleteDocument : undefined}
+              />
+              {showAccessControl ? (
+                <div className="flex items-center gap-2 pl-1">
+                  {accessStatus === "locked" ? (
+                    <RequestDocumentAccessButton
+                      opportunityId={opportunityId ?? ""}
+                      documentId={document.id}
+                      variant="locked"
+                    />
+                  ) : null}
+                  {accessStatus === "pending" ? (
+                    <span
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-sm font-medium text-yellow-700"
+                      role="status"
+                      aria-label="En attente de validation"
+                    >
+                      ⏳ En attente de validation
+                    </span>
+                  ) : null}
+                  {accessStatus === "denied" ? (
+                    <>
+                      <span
+                        className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+                        role="status"
+                        aria-label="Accès refusé"
+                      >
+                        ✗ Accès refusé
+                      </span>
+                      <RequestDocumentAccessButton
+                        opportunityId={opportunityId ?? ""}
+                        documentId={document.id}
+                        variant="denied"
+                      />
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
         {displayCount === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             Aucun document juridique attaché pour le moment.
