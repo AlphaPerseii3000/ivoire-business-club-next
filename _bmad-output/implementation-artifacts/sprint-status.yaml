@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-14T21:31:30+02:00
+last_updated: 2026-06-16T10:47:35+0200
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -67,3 +67,4 @@ development_status:
   9-6-images-et-miniatures-articles: done
   epic-10: in-progress
   10-1-verification-membres-pre-requis: done
+  10-2-data-room-securisee: ready-for-dev
