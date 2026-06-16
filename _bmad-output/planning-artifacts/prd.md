@@ -329,6 +329,10 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR51** : Les articles sont accessibles via /articles (catalogue) et /articles/[slug] (détail), optimisés pour le SEO
 - **FR52** : Un membre connecté peut réagir à un article publié en choisissant parmi plusieurs types de réactions (LIKE, CLAP, INSIGHTFUL). Cliquer à nouveau retire la réaction (toggle).
 - **FR53** : Le système comptabilise et affiche le nombre de réactions par type sur la page de détail de l'article en temps réel.
+- **FR54** : L'administrateur dispose d'un éditeur de texte riche ou Markdown interactif doté d'une barre d'outils (Titres, Gras, Italique, Listes) et d'une prévisualisation en temps réel pour créer/modifier des articles. Les articles sont stockés sous format Markdown valide dans la base de données.
+- **FR55** : Les membres connectés ayant un abonnement actif peuvent lire et publier des commentaires sous les articles. L'accès est bloqué pour les visiteurs anonymes et les abonnements inactifs.
+- **FR56** : L'administrateur peut associer un article à une opportunité existante. L'article affiche l'opportunité via le composant `DealCard` sous réserve que l'utilisateur ait le tier requis pour cette opportunité.
+- **FR57** : Les articles affichent des boutons de partage sur les réseaux sociaux (WhatsApp, LinkedIn, Twitter/X, Email, Copier le lien) utilisant des URLs de partage propres et dynamiques.
 
 ---
 

@@ -1354,18 +1354,27 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 ### Story 9.2: Interface Admin CRUD Articles
 
 **En tant qu'** admin IBC,  
-**Je veux** une interface de gestion des articles avec sélecteur de visibilité par tier,  
-**Afin de** publier et organiser le contenu éditorial selon la stratégie de conversion.
+**Je veux** une interface de gestion des articles avec un éditeur Markdown enrichi (barre d'outils de formatage et prévisualisation en temps réel), un sélecteur de visibilité par tier et la possibilité d'associer une opportunité,  
+**Afin de** rédiger confortablement et de lier le contenu éditorial aux opportunités d'affaires.
 
 **Acceptance Criteria :**
 
 **Given** un admin sur `/admin/articles`  
 **When** la page se charge  
-**Then** un tableau affiche tous les articles (titre, catégorie, visibilité badge, statut published, date) avec actions modifier/supprimer/publier
+**Then** un tableau affiche tous les articles (titre, catégorie, visibilité badge, statut published, date, opportunité associée) avec actions modifier/supprimer/publier
+
+**Given** un admin sur `/admin/articles/new` ou d'édition `/admin/articles/[id]`  
+**When** il rédige l'article  
+**Then** il dispose d'une barre d'outils de formatage (Titres, Gras, Italique, Listes) et d'une prévisualisation du rendu en temps réel  
+**And** le contenu est stocké sous format Markdown valide dans la base de données
+
+**Given** un admin sur `/admin/articles/new` ou d'édition `/admin/articles/[id]`  
+**When** il remplit le formulaire  
+**Then** il peut sélectionner facultativement une opportunité existante à associer via un sélecteur d'opportunités (affichant les opportunités vérifiées)
 
 **Given** un admin sur `/admin/articles/new`  
-**When** il remplit le formulaire (titre, excerpt, contenu markdown, catégorie, visibilité) et soumet  
-**Then** l'article est créé en base avec `published: false`, slug auto-généré, et redirection vers la liste admin
+**When** il remplit le formulaire et soumet  
+**Then** l'article est créé en base avec `published: false`, slug auto-généré, relation opportunité optionnelle configurée, et redirection vers la liste admin
 
 **Given** un admin sur `/admin/articles/[id]/edit`  
 **When** il modifie les champs et soumet  
@@ -1379,17 +1388,13 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 **When** il clique "Supprimer" et confirme  
 **Then** l'article est supprimé en base et un audit log est créé
 
-**Given** le sélecteur de visibilité dans le formulaire  
-**When** l'admin sélectionne une visibilité  
-**Then** le badge de visibilité affiche la valeur choisie (PUBLIC, Affranchi, Grands Frères, Boss) avec un indicateur visuel distinct par tier
-
 ---
 
 ### Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
 
 **En tant que** visiteur ou membre IBC,  
-**Je veux** parcourir et lire des articles selon mon niveau d'accès,  
-**Afin de** bénéficier de contenu éditorial gratuit et découvrir la valeur premium.
+**Je veux** parcourir et lire des articles selon mon niveau d'accès, voir l'opportunité associée et partager l'article sur les réseaux sociaux,  
+**Afin de** bénéficier du contenu, évaluer les deals connexes et diffuser les analyses intéressantes.
 
 **Acceptance Criteria :**
 
@@ -1420,6 +1425,15 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 **Given** un article inexistant ou non publié sur `/articles/[slug]`  
 **When** l'utilisateur accède à la page  
 **Then** une page 404 est affichée
+
+**Given** un membre connecté éligible lisant un article sur `/articles/[slug]`  
+**When** cet article est associé à une opportunité  
+**Then** un encart "Opportunité associée" s'affiche sous l'article en utilisant le composant `DealCard` (sous réserve que l'utilisateur ait le tier requis pour cette opportunité)
+
+**Given** la page détail d'un article sur `/articles/[slug]`  
+**When** elle est rendue  
+**Then** des boutons de partage (WhatsApp, LinkedIn, Twitter/X, Email, et Copier le lien) sont disponibles  
+**And** ils utilisent des URLs de partage propres et dynamiques basées sur les métadonnées SEO existantes de l'article
 
 ---
 
@@ -1487,4 +1501,45 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.2. Epic 9 complété avec la Story 9.5 via Sprint Change Proposal 2026-06-14.*
+### Story 9.7: Système de Commentaires — Modèle, Migration et API
+
+**En tant que** développeur,  
+**Je veux** ajouter le modèle Prisma pour les commentaires, exécuter la migration et créer les API routes GET et POST `/api/articles/[id]/comments`,  
+**Afin de** stocker et d'exposer les commentaires des membres de manière sécurisée.
+
+**Acceptance Criteria :**
+
+**Given** le schéma Prisma mis à jour avec le modèle `Comment`  
+**When** la migration est lancée via `npx prisma migrate dev`  
+**Then** la table `article_comments` est créée avec relation vers `articles` et `users` et suppression en cascade en cas de suppression de l'article ou de l'utilisateur
+
+**Given** un membre connecté avec un abonnement actif  
+**When** il envoie une requête `POST /api/articles/[id]/comments` avec un contenu valide  
+**Then** le commentaire est persisté en base et associé à l'utilisateur et à l'article, retournant un code 201
+
+**Given** un visiteur anonyme ou un membre abonné inactif  
+**When** il tente d'accéder aux API routes `GET` ou `POST` de commentaires  
+**Then** l'API renvoie une erreur `401 Unauthorized` ou `403 Forbidden`
+
+---
+
+### Story 9.8: Section Commentaires UI
+
+**En tant que** membre connecté ayant un abonnement actif,  
+**Je veux** voir la liste des commentaires et soumettre mon propre commentaire sous un article,  
+**Afin de** participer aux discussions autour des analyses et ressources du club.
+
+**Acceptance Criteria :**
+
+**Given** un membre abonné actif sur `/articles/[slug]`  
+**When** il consulte un article  
+**Then** une section "Commentaires" apparaît sous l'article affichant l'auteur (avatar, nom), la date de création et le contenu  
+**And** un formulaire permet de rédiger et soumettre un nouveau commentaire (avec état loading et validation de longueur minimale)
+
+**Given** un membre sans abonnement actif ou un visiteur anonyme  
+**When** il consulte la page détail de l'article  
+**Then** la section des commentaires est remplacée par un encart d'incitation : "Devenez membre actif pour consulter et participer aux discussions."
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.3. Epic 9 mis à jour avec les Stories 9.2, 9.3 modifiées et 9.7, 9.8 ajoutées via Sprint Change Proposal 2026-06-16.*
