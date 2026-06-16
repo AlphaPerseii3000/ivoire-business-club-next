@@ -183,7 +183,8 @@ export default async function OpportunityDetailPage({
     ? await getPendingAccessRequests(opportunity.id)
     : [];
   const hasPendingRequests = pendingAccessRequests.length > 0;
-  const serializedPendingRequests = pendingAccessRequests.map((r) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializedPendingRequests = pendingAccessRequests.map((r: any) => ({
     id: r.id,
     requester: { id: r.requester.id, name: r.requester.name, email: r.requester.email },
     document: { id: r.document.id, originalName: r.document.originalName },

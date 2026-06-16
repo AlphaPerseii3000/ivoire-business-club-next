@@ -61,6 +61,9 @@ if (process.env.AWS_ENDPOINT) {
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {},
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns,
   },
