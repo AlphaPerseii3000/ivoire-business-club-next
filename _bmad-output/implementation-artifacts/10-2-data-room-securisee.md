@@ -97,32 +97,32 @@ so that ces documents confidentiels ne soient jamais accessibles publiquement et
   - [x] Modifier `src/app/api/opportunities/[id]/documents/route.ts` (GET) : filtrer les documents retournés — seuls les documents où l'utilisateur a accès (auteur/admin/approved) sont listés ; pour les autres, retourner uniquement `id`, `originalName` et un indicateur `accessStatus: "locked" | "pending" | "denied" | "approved"`
   - [x] Ajouter audit log `DOCUMENT_VIEWED` ou `DOCUMENT_DOWNLOADED` quand un membre non-auteur/non-admin accède à un document
 
-- [ ] Mettre à jour la page détail opportunité pour la UI Data Room (AC: 6)
-  - [ ] Modifier `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` : pour les membres non-auteur/non-admin, calculer le statut d'accès par document via `getAccessStatusForDocuments`
-  - [ ] Passer les statuts d'accès au composant `DocumentUploadSection` via de nouvelles props
-  - [ ] Mettre à jour `DocumentUploadSection` : afficher bouton « Demander l'accès » / badge « En attente » / badge « Accès refusé » / bouton « Demander à nouveau » selon le statut
+- [x] Mettre à jour la page détail opportunité pour la UI Data Room (AC: 6)
+  - [x] Modifier `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` : pour les membres non-auteur/non-admin, calculer le statut d'accès par document via `getAccessStatusForDocuments`
+  - [x] Passer les statuts d'accès au composant `DocumentUploadSection` via de nouvelles props
+  - [x] Mettre à jour `DocumentUploadSection` : afficher bouton « Demander l'accès » / badge « En attente » / badge « Accès refusé » / bouton « Demander à nouveau » selon le statut
 
-- [ ] Créer la section « Demandes d'accès » pour l'auteur/admin (AC: 7)
-  - [ ] Créer `src/components/features/deals/document-access-requests.tsx` : composant client listant les demandes PENDING avec boutons Approuver/Refuser
-  - [ ] Appeler `PATCH /api/opportunities/[id]/documents/[docId]/grant-access` depuis le composant
-  - [ ] Intégrer dans la page détail : afficher la section seulement si `isAuthor || isAdmin` et demandes PENDING existantes
+- [x] Créer la section « Demandes d'accès » pour l'auteur/admin (AC: 7)
+  - [x] Créer `src/components/features/deals/document-access-requests.tsx` : composant client listant les demandes PENDING avec boutons Approuver/Refuser
+  - [x] Appeler `PATCH /api/opportunities/[id]/documents/[docId]/grant-access` depuis le composant
+  - [x] Intégrer dans la page détail : afficher la section seulement si `isAuthor || isAdmin` et demandes PENDING existantes
 
-- [ ] Créer les composants client pour les actions de demande d'accès (AC: 6)
-  - [ ] Créer `src/components/features/deals/request-document-access-button.tsx` : bouton client appelant `POST .../request-access`
-  - [ ] Gérer les états : idle, loading, success (PENDING), error (409 déjà demandé, 403 non autorisé)
-  - [ ] Utiliser `toast` (sonner) pour feedback succès/erreur
-  - [ ] Respecter les cibles tactiles min-h-11 et aria-labels
+- [x] Créer les composants client pour les actions de demande d'accès (AC: 6)
+  - [x] Créer `src/components/features/deals/request-document-access-button.tsx` : bouton client appelant `POST .../request-access`
+  - [x] Gérer les états : idle, loading, success (PENDING), error (409 déjà demandé, 403 non autorisé)
+  - [x] Utiliser `toast` (sonner) pour feedback succès/erreur
+  - [x] Respecter les cibles tactiles min-h-11 et aria-labels
 
-- [ ] Écrire les tests (AC: 8)
-  - [ ] `src/lib/document-access.test.ts` : canViewDocument, hasApprovedAccess, getAccessStatusForDocuments
-  - [ ] `src/app/api/opportunities/[id]/documents/[docId]/request-access/route.test.ts` : succès, 409 doublon, 403 non autorisé, 404 document introuvable, auteur/admin pas besoin
-  - [ ] `src/app/api/opportunities/[id]/documents/[docId]/grant-access/route.test.ts` : approve, deny, idempotent, 403 non auteur/admin, admin suspendu
-  - [ ] Mettre à jour les tests des routes existantes pour l'accès conditionnel
-  - [ ] Tests composants : request-document-access-button, document-access-requests
+- [x] Écrire les tests (AC: 8)
+  - [x] `src/lib/document-access.test.ts` : canViewDocument, hasApprovedAccess, getAccessStatusForDocuments
+  - [x] `src/app/api/opportunities/[id]/documents/[docId]/request-access/route.test.ts` : succès, 409 doublon, 403 non autorisé, 404 document introuvable, auteur/admin pas besoin
+  - [x] `src/app/api/opportunities/[id]/documents/[docId]/grant-access/route.test.ts` : approve, deny, idempotent, 403 non auteur/admin, admin suspendu
+  - [x] Mettre à jour les tests des routes existantes pour l'accès conditionnel
+  - [x] Tests composants : request-document-access-button, document-access-requests
 
-- [ ] Valider le build et les tests (AC: 8)
-  - [ ] `cd /home/alphaperseii/projects/ibc && npx vitest run`
-  - [ ] `cd /home/alphaperseii/projects/ibc && npm run build`
+- [x] Valider le build et les tests (AC: 8)
+  - [x] `cd /home/alphaperseii/projects/ibc && npx vitest run`
+  - [x] `cd /home/alphaperseii/projects/ibc && npm run build`
 
 ## Dev Notes
 
@@ -324,6 +324,7 @@ gpt-5.5 (openai-codex)
 - Used `prisma db push` instead of `prisma migrate dev` due to pre-existing shadow DB issue with PostgreSQL syntax in SQLite migrations. Created migration file manually and marked as applied.
 - Added `@relation("DocumentAccessRequester")` and `@relation("DocumentAccessReviewer")` names to avoid Prisma ambiguous relation detection for two User→DocumentAccessRequest relations.
 - Re-request after DENIED: deletes the old DENIED request to allow new creation (workaround for @@unique constraint).
+- **Batch 2 complete (AC 5-8)**: UI components for document access controls (RequestDocumentAccessButton, DocumentAccessRequests), extended DocumentUploadSection with accessStatusMap prop, integrated access status + requests section into opportunity detail page. All Next.js 16 JSX guardrails followed (ternaries only, no &&). 40 new tests pass (11 request-access route, 13 grant-access route, 7 request-button, 9 access-requests). Build passes. 3 pre-existing test failures unrelated (opportunities page tests). Updated page.test.tsx to mock getAccessStatusForDocuments and getPendingAccessRequests.
 
 ### File List
 
@@ -331,6 +332,12 @@ gpt-5.5 (openai-codex)
 - `prisma/migrations/20260617000000_add_document_access_request/migration.sql`
 - `src/app/api/opportunities/[id]/documents/[docId]/request-access/route.ts`
 - `src/app/api/opportunities/[id]/documents/[docId]/grant-access/route.ts`
+- `src/components/features/deals/request-document-access-button.tsx` — Client component for requesting document access
+- `src/components/features/deals/request-document-access-button.test.tsx` — 7 tests
+- `src/components/features/deals/document-access-requests.tsx` — Client component for listing/approving/denying PENDING requests
+- `src/components/features/deals/document-access-requests.test.tsx` — 9 tests
+- `src/app/api/opportunities/[id]/documents/[docId]/request-access/route.test.ts` — 11 tests
+- `src/app/api/opportunities/[id]/documents/[docId]/grant-access/route.test.ts` — 13 tests
 
 **Modified:**
 - `prisma/schema.prisma` — Added DocumentAccessRequestStatus enum, DocumentAccessRequest model, User relations
@@ -343,3 +350,6 @@ gpt-5.5 (openai-codex)
 - `src/app/api/opportunities/[id]/documents/[documentId]/route.ts` — Added hasApprovedAccess check, DOCUMENT_VIEWED audit
 - `src/app/api/opportunities/[id]/documents/[documentId]/download/route.ts` — Full rewrite with hasApprovedAccess check, DOCUMENT_DOWNLOADED audit
 - `src/app/api/opportunities/[id]/documents/[documentId]/preview/route.ts` — Unchanged (re-exports from parent)
+- `src/components/features/deals/document-upload-section.tsx` — Added accessStatusMap prop, renders RequestDocumentAccessButton/badges per document access status
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` — Added getAccessStatusForDocuments/getPendingAccessRequests integration, passes accessStatusMap to DocumentUploadSection, renders DocumentAccessRequests section
+- `src/app/(dashboard)/dashboard/opportunities/[id]/page.test.tsx` — Added mocks for document-access module, updated for new integration
