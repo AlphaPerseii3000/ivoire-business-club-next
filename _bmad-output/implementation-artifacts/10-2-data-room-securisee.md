@@ -3,7 +3,7 @@ baseline_commit: d8b4f47
 ---
 # Story 10.2: Data Room Sécurisée — Accès conditionnel aux documents juridiques sensibles
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
