@@ -25,6 +25,9 @@ const remotePatterns: RemotePattern[] = [
   { protocol: "https", hostname: "*.r2.dev" },
   { protocol: "https", hostname: "*.infomaniak.com" },
   { protocol: "https", hostname: "*.swiss-backup.ch" },
+  // Self-hosted article images served by Nginx from /var/www/ibc/shared/uploads/
+  // Needed because Next.js standalone can't resolve the symlink at runtime
+  { protocol: "https", hostname: "ivoire-business-club.com", pathname: "/uploads/**" },
 ];
 
 if (process.env.R2_PUBLIC_URL) {
