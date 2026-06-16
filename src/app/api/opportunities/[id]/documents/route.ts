@@ -78,11 +78,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         mimeType: doc.mimeType,
         size: doc.size,
         // NEVER serialize r2Key or publicUrl for non-author/non-admin
+        // Approved members must use presigned URLs via the detail/download routes
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString(),
         accessStatus,
-        // Only include publicUrl if access is approved (and even then, it's typically null for sensitive docs)
-        ...(hasAccess ? { publicUrl: doc.publicUrl } : {}),
       };
     });
 
