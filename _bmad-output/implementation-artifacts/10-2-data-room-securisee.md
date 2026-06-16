@@ -3,7 +3,7 @@ baseline_commit: d8b4f47
 ---
 # Story 10.2: Data Room Sécurisée — Accès conditionnel aux documents juridiques sensibles
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -59,43 +59,43 @@ so that ces documents confidentiels ne soient jamais accessibles publiquement et
 
 ## Tasks / Subtasks
 
-- [ ] Ajouter le modèle DocumentAccessRequest au schéma Prisma (AC: 1)
-  - [ ] Créer l'enum `DocumentAccessRequestStatus` avec valeurs `PENDING`, `APPROVED`, `DENIED`
-  - [ ] Créer le modèle `DocumentAccessRequest` avec champs : `id`, `requesterId`, `documentId`, `status`, `reviewedById?`, `reviewedAt?`, `createdAt`, `updatedAt`
-  - [ ] Ajouter relations : `requester User`, `document Document`, `reviewedBy User?`
-  - [ ] Ajouter contrainte `@@unique([requesterId, documentId])` pour empêcher les doublons
-  - [ ] Ajouter index sur `[documentId, status]` et `[requesterId, status]`
-  - [ ] Ajouter `documentAccessRequests DocumentAccessRequest[]` aux modèles `User` et `Document`
-  - [ ] Exécuter `npx prisma migrate dev` et `npx prisma generate`
+- [x] Ajouter le modèle DocumentAccessRequest au schéma Prisma (AC: 1)
+  - [x] Créer l'enum `DocumentAccessRequestStatus` avec valeurs `PENDING`, `APPROVED`, `DENIED`
+  - [x] Créer le modèle `DocumentAccessRequest` avec champs : `id`, `requesterId`, `documentId`, `status`, `reviewedById?`, `reviewedAt?`, `createdAt`, `updatedAt`
+  - [x] Ajouter relations : `requester User`, `document Document`, `reviewedBy User?`
+  - [x] Ajouter contrainte `@@unique([requesterId, documentId])` pour empêcher les doublons
+  - [x] Ajouter index sur `[documentId, status]` et `[requesterId, status]`
+  - [x] Ajouter `documentAccessRequests DocumentAccessRequest[]` aux modèles `User` et `Document`
+  - [x] Exécuter `npx prisma migrate dev` et `npx prisma generate`
 
-- [ ] Ajouter les actions d'audit dans `src/lib/audit-log.ts` (AC: 2, 3, 4, 5)
-  - [ ] Ajouter `DOCUMENT_ACCESS_REQUESTED`, `DOCUMENT_ACCESS_APPROVED`, `DOCUMENT_ACCESS_DENIED`, `DOCUMENT_VIEWED`, `DOCUMENT_DOWNLOADED` à `AUDIT_ACTIONS`
+- [x] Ajouter les actions d'audit dans `src/lib/audit-log.ts` (AC: 2, 3, 4, 5)
+  - [x] Ajouter `DOCUMENT_ACCESS_REQUESTED`, `DOCUMENT_ACCESS_APPROVED`, `DOCUMENT_ACCESS_DENIED`, `DOCUMENT_VIEWED`, `DOCUMENT_DOWNLOADED` à `AUDIT_ACTIONS`
 
-- [ ] Créer le helper d'accès documents dans `src/lib/document-access.ts` (AC: 4, 5)
-  - [ ] Étendre `canManageDocuments` existant ou créer `canViewDocument(session, document)` qui vérifie : auteur de l'opportunité OU admin OU demande APPROVED existante pour ce requesterId + documentId
-  - [ ] Créer `hasApprovedAccess(requesterId, documentId)` : query Prisma vérifiant existence d'une DocumentAccessRequest APPROVED
-  - [ ] Créer `getPendingAccessRequests(opportunityId)` : retourne toutes les demandes PENDING pour les documents d'une opportunité
-  - [ ] Créer `getAccessStatusForDocuments(userId, documentIds)` : retourne un Map<documentId, status> pour affichage UI batch
+- [x] Créer le helper d'accès documents dans `src/lib/document-access.ts` (AC: 4, 5)
+  - [x] Étendre `canManageDocuments` existant ou créer `canViewDocument(session, document)` qui vérifie : auteur de l'opportunité OU admin OU demande APPROVED existante pour ce requesterId + documentId
+  - [x] Créer `hasApprovedAccess(requesterId, documentId)` : query Prisma vérifiant existence d'une DocumentAccessRequest APPROVED
+  - [x] Créer `getPendingAccessRequests(opportunityId)` : retourne toutes les demandes PENDING pour les documents d'une opportunité
+  - [x] Créer `getAccessStatusForDocuments(userId, documentIds)` : retourne un Map<documentId, status> pour affichage UI batch
 
-- [ ] Implémenter `POST /api/opportunities/[id]/documents/[docId]/request-access` (AC: 2)
-  - [ ] Vérifier session authentifiée, abonnement actif (`getUserPremiumAccess`), tier access (`canUserAccessOpportunity`)
-  - [ ] Vérifier que le document appartient à l'opportunité
-  - [ ] Refuser si l'utilisateur est l'auteur ou admin (pas besoin de demande)
-  - [ ] Refuser si demande existante (PENDING ou APPROVED) → `409`
-  - [ ] Créer la demande PENDING + audit log `DOCUMENT_ACCESS_REQUESTED`
-  - [ ] Retourner `{ data: { id, status, createdAt } }` avec `201`
+- [x] Implémenter `POST /api/opportunities/[id]/documents/[docId]/request-access` (AC: 2)
+  - [x] Vérifier session authentifiée, abonnement actif (`getUserPremiumAccess`), tier access (`canUserAccessOpportunity`)
+  - [x] Vérifier que le document appartient à l'opportunité
+  - [x] Refuser si l'utilisateur est l'auteur ou admin (pas besoin de demande)
+  - [x] Refuser si demande existante (PENDING ou APPROVED) → `409`
+  - [x] Créer la demande PENDING + audit log `DOCUMENT_ACCESS_REQUESTED`
+  - [x] Retourner `{ data: { id, status, createdAt } }` avec `201`
 
-- [ ] Implémenter `PATCH /api/opportunities/[id]/documents/[docId]/grant-access` (AC: 3)
-  - [ ] Vérifier session authentifiée + auteur de l'opportunité OU admin + admin non suspendu
-  - [ ] Valider `requestIds` (array de strings) et `action` ("approve" | "deny")
-  - [ ] Pour chaque requestId : si déjà traitée (APPROVED/DENIED), ignorer (idempotent) ; si PENDING, mettre à jour status, reviewedById, reviewedAt
-  - [ ] Créer audit log `DOCUMENT_ACCESS_APPROVED` ou `DOCUMENT_ACCESS_DENIED` uniquement pour les changements réels
-  - [ ] Retourner `{ data: { processed: number } }`
+- [x] Implémenter `PATCH /api/opportunities/[id]/documents/[docId]/grant-access` (AC: 3)
+  - [x] Vérifier session authentifiée + auteur de l'opportunité OU admin + admin non suspendu
+  - [x] Valider `requestIds` (array de strings) et `action` ("approve" | "deny")
+  - [x] Pour chaque requestId : si déjà traitée (APPROVED/DENIED), ignorer (idempotent) ; si PENDING, mettre à jour status, reviewedById, reviewedAt
+  - [x] Créer audit log `DOCUMENT_ACCESS_APPROVED` ou `DOCUMENT_ACCESS_DENIED` uniquement pour les changements réels
+  - [x] Retourner `{ data: { processed: number } }`
 
-- [ ] Modifier les routes existantes de consultation/téléchargement pour l'accès conditionnel (AC: 4, 5)
-  - [ ] Modifier `src/app/api/opportunities/[id]/documents/[documentId]/route.ts` (GET) : ajouter vérification `hasApprovedAccess` si non auteur/admin → `403`
-  - [ ] Modifier `src/app/api/opportunities/[id]/documents/route.ts` (GET) : filtrer les documents retournés — seuls les documents où l'utilisateur a accès (auteur/admin/approved) sont listés ; pour les autres, retourner uniquement `id`, `originalName` et un indicateur `accessStatus: "locked" | "pending" | "denied" | "approved"`
-  - [ ] Ajouter audit log `DOCUMENT_VIEWED` ou `DOCUMENT_DOWNLOADED` quand un membre non-auteur/non-admin accède à un document
+- [x] Modifier les routes existantes de consultation/téléchargement pour l'accès conditionnel (AC: 4, 5)
+  - [x] Modifier `src/app/api/opportunities/[id]/documents/[documentId]/route.ts` (GET) : ajouter vérification `hasApprovedAccess` si non auteur/admin → `403`
+  - [x] Modifier `src/app/api/opportunities/[id]/documents/route.ts` (GET) : filtrer les documents retournés — seuls les documents où l'utilisateur a accès (auteur/admin/approved) sont listés ; pour les autres, retourner uniquement `id`, `originalName` et un indicateur `accessStatus: "locked" | "pending" | "denied" | "approved"`
+  - [x] Ajouter audit log `DOCUMENT_VIEWED` ou `DOCUMENT_DOWNLOADED` quand un membre non-auteur/non-admin accède à un document
 
 - [ ] Mettre à jour la page détail opportunité pour la UI Data Room (AC: 6)
   - [ ] Modifier `src/app/(dashboard)/dashboard/opportunities/[id]/page.tsx` : pour les membres non-auteur/non-admin, calculer le statut d'accès par document via `getAccessStatusForDocuments`
@@ -320,5 +320,26 @@ gpt-5.5 (openai-codex)
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- **Batch 1 complete (AC 1-4)**: Prisma model + migration, audit actions, document-access helpers (hasApprovedAccess, canViewDocument, getAccessStatusForDocuments, getPendingAccessRequests), request-access and grant-access API routes, conditional access guards on existing document routes (GET detail, GET list, download, preview). Build passes. 15/15 document-access tests pass. Pre-existing test failures unrelated to this story (validations UEMOA countries count, opportunities page test).
+- Used `prisma db push` instead of `prisma migrate dev` due to pre-existing shadow DB issue with PostgreSQL syntax in SQLite migrations. Created migration file manually and marked as applied.
+- Added `@relation("DocumentAccessRequester")` and `@relation("DocumentAccessReviewer")` names to avoid Prisma ambiguous relation detection for two User→DocumentAccessRequest relations.
+- Re-request after DENIED: deletes the old DENIED request to allow new creation (workaround for @@unique constraint).
 
 ### File List
+
+**Created:**
+- `prisma/migrations/20260617000000_add_document_access_request/migration.sql`
+- `src/app/api/opportunities/[id]/documents/[docId]/request-access/route.ts`
+- `src/app/api/opportunities/[id]/documents/[docId]/grant-access/route.ts`
+
+**Modified:**
+- `prisma/schema.prisma` — Added DocumentAccessRequestStatus enum, DocumentAccessRequest model, User relations
+- `prisma/schema.dev.prisma` — Same changes for SQLite dev schema
+- `src/lib/audit-log.ts` — Added 5 new audit actions
+- `src/lib/document-access.ts` — Added hasApprovedAccess, canViewDocument, getAccessStatusForDocuments, getPendingAccessRequests
+- `src/lib/document-access.test.ts` — Extended with tests for new helpers (15 tests)
+- `src/app/api/opportunities/[id]/documents/_helpers.ts` — Added documentAccessDeniedNoRequest helper
+- `src/app/api/opportunities/[id]/documents/route.ts` — Added member access with access status, conditional serialization
+- `src/app/api/opportunities/[id]/documents/[documentId]/route.ts` — Added hasApprovedAccess check, DOCUMENT_VIEWED audit
+- `src/app/api/opportunities/[id]/documents/[documentId]/download/route.ts` — Full rewrite with hasApprovedAccess check, DOCUMENT_DOWNLOADED audit
+- `src/app/api/opportunities/[id]/documents/[documentId]/preview/route.ts` — Unchanged (re-exports from parent)
