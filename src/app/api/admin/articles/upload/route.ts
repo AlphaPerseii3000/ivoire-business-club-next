@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getMissingR2Env, uploadObjectToS3, createPublicDocumentUrl, getDocumentExtension } from "@/lib/r2";
+import { getDocumentExtension } from "@/lib/r2";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -8,6 +8,20 @@ export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+/**
+ * Resolve the persistent uploads directory.
+ * In production on the VPS: /var/www/ibc/shared/uploads/articles
+ * (symlinked into public/uploads → shared/uploads)
+ * In development: <project>/public/uploads/articles
+ */
+function getUploadDir(): string {
+  const sharedDir = "/var/www/ibc/shared/uploads/articles";
+  if (process.env.NODE_ENV === "production") {
+    return sharedDir;
+  }
+  return path.join(process.cwd(), "public", "uploads", "articles");
+}
 
 export async function POST(req: Request) {
   try {
@@ -56,40 +70,14 @@ export async function POST(req: Request) {
     const uuid = crypto.randomUUID();
     const fileName = `${uuid}.${extension}`;
 
-    const missingR2 = getMissingR2Env();
+    // Always store locally on the VPS persistent directory
+    const uploadDir = getUploadDir();
+    await mkdir(uploadDir, { recursive: true });
+    const filePath = path.join(uploadDir, fileName);
+    await writeFile(filePath, buffer);
 
-    if (missingR2.length === 0) {
-      // S3/R2 is configured: Upload to cloud
-      const r2Key = `articles/${fileName}`;
-      await uploadObjectToS3(r2Key, buffer, file.type);
-      const publicUrl = createPublicDocumentUrl(r2Key);
-      return NextResponse.json({ data: { url: publicUrl } }, { status: 201 });
-    } else {
-      // Local fallback for development environment only
-      if (process.env.NODE_ENV === "production") {
-        console.error("Production upload failed: S3/R2 configuration is incomplete:", missingR2);
-        return NextResponse.json(
-          { error: "Le stockage cloud R2 n'est pas configuré en production." },
-          { status: 500 }
-        );
-      }
-
-      try {
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "articles");
-        await mkdir(uploadDir, { recursive: true });
-        const filePath = path.join(uploadDir, fileName);
-        await writeFile(filePath, buffer);
-
-        const localUrl = `/uploads/articles/${fileName}`;
-        return NextResponse.json({ data: { url: localUrl } }, { status: 201 });
-      } catch (fsError) {
-        console.error("Local file system write error:", fsError);
-        return NextResponse.json(
-          { error: "Échec de l'écriture locale de l'image de couverture." },
-          { status: 500 }
-        );
-      }
-    }
+    const localUrl = `/uploads/articles/${fileName}`;
+    return NextResponse.json({ data: { url: localUrl } }, { status: 201 });
   } catch (error) {
     console.error("Article image upload error:", error);
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
