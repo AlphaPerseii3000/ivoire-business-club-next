@@ -408,7 +408,7 @@ certbot --version
 ### 2.8 Créer l'arborescence applicative
 
 ```bash
-sudo mkdir -p /var/www/ibc/releases /var/www/ibc/shared /var/www/ibc/backups
+sudo mkdir -p /var/www/ibc/releases /var/www/ibc/shared/uploads /var/www/ibc/backups
 sudo chown -R deploy:deploy /var/www/ibc
 sudo chmod -R 755 /var/www/ibc
 ```
@@ -513,6 +513,13 @@ rsync -az --delete \
 ssh -i ~/.ssh/ibc_hetzner_ed25519 deploy@$IBC_IPV4 "\
   ln -sfn /var/www/ibc/releases/$RELEASE /var/www/ibc/current && \
   mkdir -p /var/www/ibc/current/logs && \
+  mkdir -p /var/www/ibc/shared/uploads && \
+  rm -rf /var/www/ibc/current/public/uploads && \
+  ln -sfn /var/www/ibc/shared/uploads /var/www/ibc/current/public/uploads && \
+  if [ -d /var/www/ibc/current/.next/standalone/public ]; then \
+    rm -rf /var/www/ibc/current/.next/standalone/public/uploads && \
+    ln -sfn /var/www/ibc/shared/uploads /var/www/ibc/current/.next/standalone/public/uploads; \
+  fi && \
   chmod 755 /var/www/ibc/current && \
   find /var/www/ibc/releases/$RELEASE -type d -exec chmod 755 {} \; && \
   find /var/www/ibc/releases/$RELEASE -type f -exec chmod 644 {} \; && \

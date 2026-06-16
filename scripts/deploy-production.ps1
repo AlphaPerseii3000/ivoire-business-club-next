@@ -33,6 +33,19 @@ test -f "`$NEW/.next/standalone/server.js"
 ln -sfn "`$NEW" "`$REMOTE_ROOT/current"
 cd "`$REMOTE_ROOT/current"
 
+# Ensure the shared uploads directory exists
+mkdir -p "`$REMOTE_ROOT/shared/uploads"
+
+# Symlink the shared uploads into the release public folder
+rm -rf public/uploads
+ln -sfn "`$REMOTE_ROOT/shared/uploads" public/uploads
+
+# Symlink the shared uploads into Next.js standalone public folder if it exists
+if [ -d .next/standalone/public ]; then
+  rm -rf .next/standalone/public/uploads
+  ln -sfn "`$REMOTE_ROOT/shared/uploads" .next/standalone/public/uploads
+fi
+
 if [ -n "`$PREVIOUS" ] && [ -f "`$PREVIOUS/.env" ]; then
   cp "`$PREVIOUS/.env" .env
 fi
