@@ -30,7 +30,7 @@ export function Pricing() {
               Trois niveaux simples pour accéder aux deals vérifiés, aux événements et au mentorat IBC.
             </p>
             <p className="mt-3 text-sm font-medium text-[#D4A847]">
-              Prix mensuels clairs : €29, €49 et €99.
+              Prix mensuels clairs : €29 (19 000 CFA), €49 (32 000 CFA) et €99 (65 000 CFA).
             </p>
           </div>
         </BlurReveal>
@@ -69,6 +69,7 @@ export function Pricing() {
                     <div className="flex flex-col gap-2">
                       <span className="text-xl font-bold text-white">Affranchis</span>
                       <span className="text-sm text-[#D4A847]">€29 / mois</span>
+                      <span className="text-xs text-[#D4A847]">19 000 CFA / mois</span>
                       <a
                         href="/auth/signup?tier=AFFRANCHI"
                         className="mt-2 text-center text-xs font-semibold py-2 px-4 rounded border border-white/20 text-white hover:bg-white/10 hover:border-white transition-all min-h-11 flex items-center justify-center"
@@ -87,6 +88,7 @@ export function Pricing() {
                         </div>
                       </div>
                       <span className="text-sm text-[#D4A847]">€49 / mois</span>
+                      <span className="text-xs text-[#D4A847]">32 000 CFA / mois</span>
                       <a
                         href="/auth/signup?tier=GRAND_FRERE"
                         className="mt-2 text-center text-xs font-semibold py-2 px-4 rounded bg-[#D4A847] text-black hover:bg-[#bfa03f] transition-all min-h-11 flex items-center justify-center"
@@ -99,6 +101,7 @@ export function Pricing() {
                     <div className="flex flex-col gap-2">
                       <span className="text-xl font-bold text-white">Boss</span>
                       <span className="text-sm text-[#D4A847]">€99 / mois</span>
+                      <span className="text-xs text-[#D4A847]">65 000 CFA / mois</span>
                       <a
                         href="/auth/signup?tier=BOSS"
                         className="mt-2 text-center text-xs font-semibold py-2 px-4 rounded border border-white/20 text-white hover:bg-white/10 hover:border-white transition-all min-h-11 flex items-center justify-center"
@@ -136,9 +139,18 @@ export function Pricing() {
                 </tr>
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-6 font-semibold text-slate-300">Tarif mensuel</td>
-                  <td className="p-6 text-[#D4A847] font-semibold">€29 / mois</td>
-                  <td className="p-6 text-[#D4A847] font-bold border-x border-white/5 bg-white/5">€49 / mois</td>
-                  <td className="p-6 text-[#D4A847] font-semibold">€99 / mois</td>
+                  <td className="p-6">
+                    <span className="text-sm text-[#D4A847] font-semibold">€29 / mois</span>
+                    <span className="block text-xs text-[#D4A847]">19 000 CFA / mois</span>
+                  </td>
+                  <td className="p-6 border-x border-white/5 bg-white/5">
+                    <span className="text-sm text-[#D4A847] font-bold">€49 / mois</span>
+                    <span className="block text-xs text-[#D4A847]">32 000 CFA / mois</span>
+                  </td>
+                  <td className="p-6">
+                    <span className="text-sm text-[#D4A847] font-semibold">€99 / mois</span>
+                    <span className="block text-xs text-[#D4A847]">65 000 CFA / mois</span>
+                  </td>
                 </tr>
               </tbody>
             </table>

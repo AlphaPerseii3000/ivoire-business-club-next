@@ -1,4 +1,4 @@
-import { BANK_TRANSFER_CONFIG } from "@/lib/bank-transfer-config";
+import { BANK_TRANSFER_CONFIG, XOF_ROUNDED_AMOUNTS, formatNumber } from "@/lib/bank-transfer-config";
 
 export type MembershipTier = "AFFRANCHI" | "GRAND_FRERE" | "BOSS";
 
@@ -15,11 +15,12 @@ type TierConfig = {
   accent: TierAccent;
   price: number;
   priceLabel: string;
+  xofPriceLabel: string;
   cardClassName: string;
   badgeClassName: string;
 };
 
-const tierCopy: Record<MembershipTier, Omit<TierConfig, "tier" | "price" | "priceLabel">> = {
+const tierCopy: Record<MembershipTier, Omit<TierConfig, "tier" | "price" | "priceLabel" | "xofPriceLabel">> = {
   AFFRANCHI: {
     label: "Affranchis",
     shortDescription: "accès deals vérifiés",
@@ -68,6 +69,12 @@ export function getTierPriceLabel(tier: MembershipTier): string {
   return `€${BANK_TRANSFER_CONFIG.amounts[tier]}/mois`;
 }
 
+export function getXofPriceLabel(tier: MembershipTier): string {
+  const eurPrice = BANK_TRANSFER_CONFIG.amounts[tier];
+  const xofPrice = XOF_ROUNDED_AMOUNTS[eurPrice] ?? 0;
+  return `${formatNumber(xofPrice)} CFA/mois`;
+}
+
 export function getTierConfig(tier: MembershipTier): TierConfig {
   const copy = tierCopy[tier];
   const price = BANK_TRANSFER_CONFIG.amounts[tier];
@@ -77,6 +84,7 @@ export function getTierConfig(tier: MembershipTier): TierConfig {
     ...copy,
     price,
     priceLabel: getTierPriceLabel(tier),
+    xofPriceLabel: getXofPriceLabel(tier),
   };
 }
 

@@ -78,6 +78,9 @@ export function TierCard({
         <p className="text-3xl font-bold text-foreground" aria-label={`${config.price} euros par mois`}>
           {config.priceLabel}
         </p>
+        <p className="text-xs font-medium text-[#D4A847]">
+          {config.xofPriceLabel}
+        </p>
         {statusArea}
       </CardHeader>
 
