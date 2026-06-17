@@ -107,10 +107,11 @@ export function ArticleCommentsSection({ articleId, userId, isAuthorized }: Arti
   const isContentTooShort = trimmedContent.length < 2;
   const isContentTooLong = content.length > MAX_CONTENT_LENGTH;
   const isSubmittable = trimmedContent.length >= 2 && content.length <= MAX_CONTENT_LENGTH;
+  const hasTrimmedContent = trimmedContent.length > 0;
+  const nextTooShort = hasTrimmedContent && trimmedContent.length < 2;
+  const nextTooLong = content.length > MAX_CONTENT_LENGTH;
 
   useEffect(() => {
-    const nextTooShort = trimmedContent.length > 0 && trimmedContent.length < 2;
-    const nextTooLong = content.length > MAX_CONTENT_LENGTH;
     if (nextTooShort) {
       setValidationError("Le commentaire doit contenir au moins 2 caractères.");
     } else if (nextTooLong) {
@@ -118,7 +119,7 @@ export function ArticleCommentsSection({ articleId, userId, isAuthorized }: Arti
     } else {
       setValidationError(null);
     }
-  }, [trimmedContent.length, content.length]);
+  }, [nextTooShort, nextTooLong]);
 
   function formatDate(isoDate: string): string {
     const date = new Date(isoDate);
@@ -196,6 +197,8 @@ export function ArticleCommentsSection({ articleId, userId, isAuthorized }: Arti
   const showMembershipCta = error === "membership-required";
   const showLoadError = error === "load-failed";
   const isLoggedIn = Boolean(userId);
+  const showLoadErrorBlock = showLoadError && !isLoading;
+  const showCommentsBlock = !isLoading && !showLoadError;
 
   if (!isAuthorized || showMembershipCta) {
     return (
@@ -239,7 +242,7 @@ export function ArticleCommentsSection({ articleId, userId, isAuthorized }: Arti
         </div>
       ) : null}
 
-      {showLoadError && !isLoading ? (
+      {showLoadErrorBlock ? (
         <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
           <p className="text-slate-300 text-sm mb-4">Impossible de charger les commentaires. Veuillez réessayer.</p>
           <Button
@@ -255,7 +258,7 @@ export function ArticleCommentsSection({ articleId, userId, isAuthorized }: Arti
         </div>
       ) : null}
 
-      {!isLoading && !showLoadError ? (
+      {showCommentsBlock ? (
         <div className="space-y-4">
           {comments.length > 0 ? (
             <ul className="space-y-4" data-testid="comments-list">

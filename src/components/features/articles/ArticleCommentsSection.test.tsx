@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -151,8 +151,10 @@ describe("ArticleCommentsSection", () => {
     const textarea = screen.getByTestId("comment-textarea");
     const submitButton = screen.getByTestId("comment-submit-button");
 
-    await user.type(textarea, "Nouveau commentaire");
-    await user.click(submitButton);
+    await act(async () => {
+      await user.type(textarea, "Nouveau commentaire");
+      await user.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Nouveau commentaire")).toBeInTheDocument();
@@ -182,8 +184,10 @@ describe("ArticleCommentsSection", () => {
     const textarea = screen.getByTestId("comment-textarea");
     const submitButton = screen.getByTestId("comment-submit-button");
 
-    await user.type(textarea, "a");
-    await user.click(submitButton);
+    await act(async () => {
+      await user.type(textarea, "a");
+      await user.click(submitButton);
+    });
 
     expect(screen.getByTestId("comment-validation-error")).toHaveTextContent(
       "Le commentaire doit contenir au moins 2 caractères."
@@ -254,8 +258,10 @@ describe("ArticleCommentsSection", () => {
     const textarea = screen.getByTestId("comment-textarea");
     const submitButton = screen.getByTestId("comment-submit-button");
 
-    await user.type(textarea, "Mon commentaire");
-    await user.click(submitButton);
+    await act(async () => {
+      await user.type(textarea, "Mon commentaire");
+      await user.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("comment-submit-button")).toHaveTextContent("Envoi en cours...");
@@ -300,8 +306,10 @@ describe("ArticleCommentsSection", () => {
     const textarea = screen.getByTestId("comment-textarea");
     const submitButton = screen.getByTestId("comment-submit-button");
 
-    await user.type(textarea, "ab");
-    await user.click(submitButton);
+    await act(async () => {
+      await user.type(textarea, "ab");
+      await user.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith("Le commentaire est trop court");
@@ -334,7 +342,9 @@ describe("ArticleCommentsSection", () => {
     });
 
     const retryButton = screen.getByRole("button", { name: /Réessayer/i });
-    await user.click(retryButton);
+    await act(async () => {
+      await user.click(retryButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Premier commentaire")).toBeInTheDocument();

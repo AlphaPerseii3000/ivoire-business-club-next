@@ -4,7 +4,7 @@ baseline_commit: 02a82aa
 
 # Story 9.8: Section Commentaires UI
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -167,7 +167,8 @@ kimi-k2.7-code
 
 ### Review Findings
 
-- [x] [Review][Check] Aucun usage de `&&` dans le JSX des nouveaux fichiers et de la page modifiée.
+- [x] [Review][Patch] Usage de `&&` dans le JSX de `ArticleCommentsSection.tsx` — violation de la règle Next.js 16 strict JSX [src/components/features/articles/ArticleCommentsSection.tsx:242,258]. Les expressions `showLoadError && !isLoading` et `!isLoading && !showLoadError` utilisées dans des ternaires sont explicitement interdites par architecture.md ; il faut pré-calculer les booléens composés avant le `return`.
+- [x] [Review][Patch] Tests unitaires émettent des avertissements React `act(...)` lors de la soumission ; utiliser `waitFor`/`act` pour encapsuler les mises à jour d'état asynchrones.
 - [x] [Review][Check] Directive `"use client"` présente sur le composant formulaire/liste.
 - [x] [Review][Check] Encart d'incitation textuel exact conforme à l'AC2.
 - [x] [Review][Check] Tests unitaires couvrant au minimum les cas actif, inactif/anonyme, vide, erreur et validation.
