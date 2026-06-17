@@ -271,6 +271,42 @@ describe("POST /api/articles", () => {
     );
   });
 
+  it("creates an article associated with an opportunity", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockArticleFindFirst.mockResolvedValue(null);
+    mockArticleCreate.mockResolvedValue({
+      id: "art-55",
+      title: "Article lié",
+      slug: "article-lie",
+      published: false,
+      opportunityId: "opp-123",
+    });
+
+    const response = await POST(
+      makePostRequest({
+        title: "Article lié",
+        excerpt: "Ceci est un extrait d'article suffisant",
+        content: "Ceci est le contenu de l'article de test assez long",
+        category: "Investissement",
+        visibility: "PUBLIC",
+        opportunityId: "opp-123",
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockArticleCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: "Article lié",
+          slug: "article-lie",
+          published: false,
+          authorId: "admin-1",
+          opportunityId: "opp-123",
+        }),
+      })
+    );
+  });
+
   it("handles slug collision correctly by appending counter", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     // First lookup finds a collision, second lookup finds no collision

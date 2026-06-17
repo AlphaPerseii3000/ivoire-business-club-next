@@ -28,6 +28,15 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
     notFound();
   }
 
+  const opportunities = await prisma.opportunity.findMany({
+    where: { verificationStatus: "VERIFIED" },
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      title: true,
+    },
+  });
+
   const serializedArticle = {
     id: article.id,
     title: article.title,
@@ -36,6 +45,7 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
     category: article.category,
     visibility: article.visibility as unknown as ArticleVisibility,
     published: article.published,
+    opportunityId: article.opportunityId,
   };
 
   return (
@@ -48,7 +58,7 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
       </div>
 
       <div className="bg-card rounded-lg border p-6">
-        <ArticleForm initialData={serializedArticle} />
+        <ArticleForm initialData={serializedArticle} opportunities={opportunities} />
       </div>
     </div>
   );

@@ -158,6 +158,30 @@ describe("PUT /api/articles/[id]", () => {
     );
   });
 
+  it("updates opportunityId for admin", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockArticleFindFirst.mockResolvedValueOnce(mockArticle);
+
+    mockArticleUpdate.mockResolvedValue({
+      ...mockArticle,
+      opportunityId: "opp-new-id",
+    });
+
+    const response = await PUT(makeRequest("PUT", { opportunityId: "opp-new-id" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockArticleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "art-1" },
+        data: expect.objectContaining({
+          opportunityId: "opp-new-id",
+        }),
+      })
+    );
+  });
+
   it("logs ARTICLE_PUBLISH when publishing an article", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     mockArticleFindFirst.mockResolvedValueOnce({

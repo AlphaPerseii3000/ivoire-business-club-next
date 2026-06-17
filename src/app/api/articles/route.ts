@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, excerpt, content, category, visibility, imageUrl } = parsed.data;
+    const { title, excerpt, content, category, visibility, imageUrl, opportunityId } = parsed.data;
     
     let slug;
     try {
@@ -101,6 +101,7 @@ export async function POST(req: Request) {
           slug,
           published: false,
           authorId: session.user.id,
+          opportunityId,
         },
       });
 

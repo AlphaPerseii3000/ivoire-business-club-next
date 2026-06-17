@@ -62,6 +62,7 @@ describe("ArticleForm Component", () => {
             category: "conseil",
             visibility: ArticleVisibility.PUBLIC,
             imageUrl: null,
+            opportunityId: null,
           }),
         })
       );
@@ -145,6 +146,7 @@ describe("ArticleForm Component", () => {
             category: "guide",
             visibility: ArticleVisibility.GRAND_FRERE,
             imageUrl: null,
+            opportunityId: null,
             published: true,
           }),
         })
@@ -167,5 +169,75 @@ describe("ArticleForm Component", () => {
 
     expect(await screen.findByText("Le titre doit contenir au moins 3 caractères")).toBeInTheDocument();
     expect(await screen.findByText("Le résumé doit contenir au moins 10 caractères")).toBeInTheDocument();
+  });
+
+  it("renders opportunity selector and submits selected opportunityId", async () => {
+    const user = userEvent.setup();
+    const opportunities = [
+      { id: "opp-1", title: "Opportunité Immobilière Abidjan" },
+      { id: "opp-2", title: "Projet Solaire Korhogo" },
+    ];
+
+    render(<ArticleForm initialData={null} opportunities={opportunities} />);
+
+    // Fill fields
+    await user.type(screen.getByTestId("article-title-input"), "Titre article");
+    await user.type(screen.getByTestId("article-excerpt-input"), "Résumé article long");
+    await user.type(screen.getByTestId("article-content-input"), "Contenu article long");
+
+    // Click Opportunity trigger and select Proj Solaire
+    const oppTrigger = screen.getByTestId("article-opportunity-trigger");
+    await user.click(oppTrigger);
+
+    const option = await screen.findByRole("option", { name: "Projet Solaire Korhogo" });
+    await user.click(option);
+
+    const submitBtn = screen.getByTestId("article-submit-button");
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/articles",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"opportunityId":"opp-2"'),
+        })
+      );
+    });
+  });
+
+  it("inserts markdown syntax correctly using toolbar buttons", async () => {
+    const user = userEvent.setup();
+    render(<ArticleForm initialData={null} />);
+
+    const contentInput = screen.getByTestId("article-content-input") as HTMLTextAreaElement;
+    await user.type(contentInput, "Hello");
+
+    // Click bold button
+    const boldBtn = screen.getByTestId("markdown-bold-btn");
+    await user.click(boldBtn);
+
+    expect(contentInput.value).toContain("**texte**");
+
+    // Select "Hello" and click bold button
+    contentInput.setSelectionRange(0, 5);
+    await user.click(boldBtn);
+    expect(contentInput.value).toContain("**Hello**");
+  });
+
+  it("renders markdown preview correctly when switching tabs", async () => {
+    const user = userEvent.setup();
+    render(<ArticleForm initialData={null} />);
+
+    const contentInput = screen.getByTestId("article-content-input");
+    await user.type(contentInput, "Hello **World**");
+
+    // Click preview tab
+    const previewTrigger = screen.getByTestId("markdown-preview-trigger");
+    await user.click(previewTrigger);
+
+    const previewContainer = screen.getByTestId("markdown-preview");
+    expect(previewContainer).toBeInTheDocument();
+    expect(previewContainer.innerHTML).toContain("<strong>World</strong>");
   });
 });

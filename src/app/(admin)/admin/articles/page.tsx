@@ -24,6 +24,12 @@ export default async function AdminArticlesPage() {
           name: true,
         },
       },
+      opportunity: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
     },
   });
 
@@ -34,6 +40,12 @@ export default async function AdminArticlesPage() {
     updatedAt: art.updatedAt.toISOString(),
     publishedAt: art.publishedAt ? art.publishedAt.toISOString() : null,
     visibility: art.visibility as unknown as ArticleVisibility,
+    opportunity: art.opportunity
+      ? {
+          id: art.opportunity.id,
+          title: art.opportunity.title,
+        }
+      : null,
   }));
 
   return (

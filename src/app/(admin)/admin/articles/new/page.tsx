@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { redirect } from "next/navigation";
 
+import { prisma } from "@/lib/prisma";
 import ArticleForm from "@/components/features/admin/article-form";
 
 export default async function NewArticlePage() {
@@ -11,6 +12,15 @@ export default async function NewArticlePage() {
 
   const admin = await promoteConfiguredAdminUser(currentAdminId);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
+
+  const opportunities = await prisma.opportunity.findMany({
+    where: { verificationStatus: "VERIFIED" },
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      title: true,
+    },
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -22,7 +32,7 @@ export default async function NewArticlePage() {
       </div>
 
       <div className="bg-card rounded-lg border p-6">
-        <ArticleForm initialData={null} />
+        <ArticleForm initialData={null} opportunities={opportunities} />
       </div>
     </div>
   );

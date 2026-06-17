@@ -37,6 +37,10 @@ type Article = {
   author?: {
     name: string | null;
   } | null;
+  opportunity?: {
+    id: string;
+    title: string;
+  } | null;
 };
 
 type ArticlesListTableProps = {
@@ -141,6 +145,7 @@ export default function ArticlesListTable({ articles }: ArticlesListTableProps) 
               <TableHead>Catégorie</TableHead>
               <TableHead>Visibilité</TableHead>
               <TableHead>Statut</TableHead>
+              <TableHead>Opportunité liée</TableHead>
               <TableHead>Date de création</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -148,7 +153,7 @@ export default function ArticlesListTable({ articles }: ArticlesListTableProps) 
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                   Aucun article trouvé.
                 </TableCell>
               </TableRow>
@@ -179,6 +184,15 @@ export default function ArticlesListTable({ articles }: ArticlesListTableProps) 
                       </Badge>
                     ) : (
                       <Badge variant="secondary">Brouillon</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate text-xs" title={article.opportunity?.title ?? ""}>
+                    {article.opportunity ? (
+                      <span className="font-medium text-foreground">
+                        {article.opportunity.title}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{formattedDate}</TableCell>

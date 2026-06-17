@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { Image as ImageIcon, Loader2, Trash2, Upload, Bold, Italic, Heading, List } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,6 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { marked } from "marked";
+import DOMPurify from "isomorphic-dompurify";
 
 const articleFormSchema = articleCreateSchema.extend({
   published: z.boolean().optional(),
@@ -42,10 +45,12 @@ type ArticleFormProps = {
     visibility: ArticleVisibility;
     published: boolean;
     imageUrl?: string | null;
+    opportunityId?: string | null;
   } | null;
+  opportunities?: { id: string; title: string }[];
 };
 
-export default function ArticleForm({ initialData }: ArticleFormProps) {
+export default function ArticleForm({ initialData, opportunities = [] }: ArticleFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
 
@@ -71,6 +76,58 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
   const inlineInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
+  const [activeEditorTab, setActiveEditorTab] = useState<string>("write");
+
+  const insertMarkdown = (syntax: "bold" | "italic" | "heading" | "list") => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+
+    let replacement = "";
+    let cursorOffset = 0;
+
+    switch (syntax) {
+      case "bold":
+        replacement = `**${selectedText || "texte"}**`;
+        cursorOffset = selectedText ? replacement.length : 2;
+        break;
+      case "italic":
+        replacement = `*${selectedText || "texte"}*`;
+        cursorOffset = selectedText ? replacement.length : 1;
+        break;
+      case "heading": {
+        const needsNewlineBefore = start > 0 && text[start - 1] !== "\n";
+        const prefix = needsNewlineBefore ? "\n# " : "# ";
+        replacement = `${prefix}${selectedText || "Titre"}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case "list": {
+        const needsNewlineBeforeList = start > 0 && text[start - 1] !== "\n";
+        const listPrefix = needsNewlineBeforeList ? "\n- " : "- ";
+        replacement = `${listPrefix}${selectedText || "Élément"}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+    }
+
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+    const newValue = before + replacement + after;
+
+    setValue("content", newValue, { shouldValidate: true });
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = start + (syntax === "bold" && !selectedText ? 2 : syntax === "italic" && !selectedText ? 1 : cursorOffset);
+      textarea.selectionEnd = textarea.selectionStart + (selectedText ? selectedText.length : 0);
+    }, 0);
+  };
+
   const {
     register,
     handleSubmit,
@@ -87,12 +144,14 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
       visibility: initialData?.visibility ?? ArticleVisibility.PUBLIC,
       published: initialData?.published ?? false,
       imageUrl: initialData?.imageUrl ?? "",
+      opportunityId: initialData?.opportunityId ?? "",
     },
   });
 
   const watchVisibility = watch("visibility");
   const watchCategory = watch("category");
   const watchImageUrl = watch("imageUrl");
+  const watchOpportunityId = watch("opportunityId");
 
   // Sync category type change with react-hook-form category value
   useEffect(() => {
@@ -115,6 +174,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
         category: data.category,
         visibility: data.visibility,
         imageUrl: data.imageUrl || null,
+        opportunityId: data.opportunityId || null,
         ...(isEdit ? { published: data.published } : {}),
       };
 
@@ -381,6 +441,33 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="opportunityId">Opportunité d'investissement liée (optionnel)</Label>
+        <Select
+          value={watchOpportunityId || "none"}
+          onValueChange={(val) => {
+            setValue("opportunityId", val === "none" ? "" : val, {
+              shouldValidate: true,
+            });
+          }}
+        >
+          <SelectTrigger id="opportunityId" data-testid="article-opportunity-trigger">
+            <SelectValue placeholder="Associer une opportunité" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Aucune opportunité</SelectItem>
+            {opportunities.map((opp) => (
+              <SelectItem key={opp.id} value={opp.id}>
+                {opp.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.opportunityId ? (
+          <p className="text-sm text-destructive">{errors.opportunityId.message}</p>
+        ) : null}
+      </div>
+
       {/* Cover Image Upload Section */}
       <div className="space-y-2">
         <Label>Image de couverture (Bannière / Miniature)</Label>
@@ -473,22 +560,92 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
           </div>
         </div>
         
-        <Textarea
-          id="content"
-          data-testid="article-content-input"
-          placeholder="Rédigez votre article en Markdown ici..."
-          className="min-h-80 font-mono text-sm leading-relaxed"
-          {...(() => {
-            const { ref, ...rest } = register("content");
-            return {
-              ...rest,
-              ref: (e: HTMLTextAreaElement | null) => {
-                ref(e);
-                (contentRef as any).current = e;
-              }
-            };
-          })()}
-        />
+        <Tabs value={activeEditorTab} onValueChange={setActiveEditorTab} className="w-full">
+          <div className="flex items-center justify-between border-b pb-2 mb-2">
+            <TabsList className="h-8 p-0.5 bg-muted rounded-md">
+              <TabsTrigger value="write" className="px-3 py-1 text-xs">Écrire</TabsTrigger>
+              <TabsTrigger value="preview" className="px-3 py-1 text-xs" data-testid="markdown-preview-trigger">Prévisualiser</TabsTrigger>
+            </TabsList>
+            
+            {activeEditorTab === "write" ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => insertMarkdown("heading")}
+                  title="Titre"
+                  data-testid="markdown-heading-btn"
+                >
+                  <Heading className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => insertMarkdown("bold")}
+                  title="Gras"
+                  data-testid="markdown-bold-btn"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => insertMarkdown("italic")}
+                  title="Italique"
+                  data-testid="markdown-italic-btn"
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => insertMarkdown("list")}
+                  title="Liste à puces"
+                  data-testid="markdown-list-btn"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : null}
+          </div>
+          
+          <TabsContent value="write" className="outline-none mt-0">
+            <Textarea
+              id="content"
+              data-testid="article-content-input"
+              placeholder="Rédigez votre article en Markdown ici..."
+              className="min-h-80 font-mono text-sm leading-relaxed"
+              {...(() => {
+                const { ref, ...rest } = register("content");
+                return {
+                  ...rest,
+                  ref: (e: HTMLTextAreaElement | null) => {
+                    ref(e);
+                    (contentRef as any).current = e;
+                  }
+                };
+              })()}
+            />
+          </TabsContent>
+          
+          <TabsContent value="preview" className="outline-none mt-0">
+            <div 
+              className="min-h-80 p-4 border rounded-md bg-muted/20 prose dark:prose-invert max-w-none overflow-y-auto"
+              data-testid="markdown-preview"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(marked.parse(watch("content") || "") as string)
+              }}
+            />
+          </TabsContent>
+        </Tabs>
         {errors.content ? (
           <p className="text-sm text-destructive">{errors.content.message}</p>
         ) : null}
