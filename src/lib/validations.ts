@@ -407,3 +407,13 @@ export const commentCreateSchema = z.object({
 });
 
 export type CommentCreateInput = z.infer<typeof commentCreateSchema>;
+
+export const leadMagnetSchema = z.object({
+  email: z
+    .string({ message: "L'email est requis" })
+    .trim()
+    .min(1, "L'email est requis")
+    .email("Email invalide"),
+});
+
+export type LeadMagnetInput = z.infer<typeof leadMagnetSchema>;

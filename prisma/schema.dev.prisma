@@ -455,3 +455,12 @@ model Comment {
   @@index([userId])
   @@map("article_comments")
 }
+
+model LeadMagnet {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  createdAt   DateTime  @default(now())
+  guideSentAt DateTime?
+
+  @@map("lead_magnets")
+}
