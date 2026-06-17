@@ -391,3 +391,13 @@ export const articleUpdateSchema = articleCreateSchema.partial().extend({
 
 export type ArticleCreateInput = z.infer<typeof articleCreateSchema>;
 export type ArticleUpdateInput = z.infer<typeof articleUpdateSchema>;
+
+export const commentCreateSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(2, "Le commentaire doit contenir au moins 2 caractères")
+    .max(1000, "Le commentaire ne doit pas dépasser 1000 caractères"),
+});
+
+export type CommentCreateInput = z.infer<typeof commentCreateSchema>;

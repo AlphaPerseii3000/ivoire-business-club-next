@@ -7,7 +7,10 @@ CREATE TABLE "document_access_requests" (
     "reviewedById" TEXT,
     "reviewedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    FOREIGN KEY ("requesterId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY ("documentId") REFERENCES "opportunity_documents"("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY ("reviewedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION
 );
 
 -- CreateIndex
@@ -18,12 +21,3 @@ CREATE INDEX "document_access_requests_documentId_status_idx" ON "document_acces
 
 -- CreateIndex
 CREATE INDEX "document_access_requests_requesterId_status_idx" ON "document_access_requests"("requesterId", "status");
-
--- AddForeignKey
-ALTER TABLE "document_access_requests" ADD CONSTRAINT "document_access_requests_requesterId_fkey" FOREIGN KEY ("requesterId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "document_access_requests" ADD CONSTRAINT "document_access_requests_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "opportunity_documents"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "document_access_requests" ADD CONSTRAINT "document_access_requests_reviewedById_fkey" FOREIGN KEY ("reviewedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;

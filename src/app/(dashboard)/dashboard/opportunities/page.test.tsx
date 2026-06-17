@@ -54,6 +54,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         createdAt: new Date("2026-05-14T00:00:00.000Z"),
         author: { id: "author-1", name: "Koffi", phone: "+22501020304", location: "Abidjan" },
         _count: { documents: 2 },
+        documents: [],
       },
     ]);
 
@@ -120,6 +121,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         tags: [{ category: "SECTEUR", value: "tech" }],
         author: { id: "author-1", name: "Koffi", phone: null, location: "Abidjan", opportunities: [] },
         _count: { documents: 1, verificationApprovals: 0 },
+        documents: [],
       },
       {
         id: "opp-2",
@@ -132,6 +134,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }],
         author: { id: "author-2", name: "Aya", phone: null, location: "Cocody", opportunities: [] },
         _count: { documents: 2, verificationApprovals: 0 },
+        documents: [],
       },
     ]);
 

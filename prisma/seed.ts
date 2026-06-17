@@ -126,6 +126,46 @@ export async function main() {
     console.log(`Created article: ${article.title} (${article.visibility})`);
   }
 
+  // 4. Create comments
+  await prisma.comment.deleteMany({});
+  console.log("Cleared existing comments.");
+
+  const affranchiUser = await prisma.user.findUniqueOrThrow({ where: { email: "member-affranchi@test.com" } });
+  const grandFrereUser = await prisma.user.findUniqueOrThrow({ where: { email: "member-grandfrere@test.com" } });
+  const bossUser = await prisma.user.findUniqueOrThrow({ where: { email: "member-boss@test.com" } });
+
+  const createdArticles = await prisma.article.findMany({});
+  
+  for (const article of createdArticles) {
+    if (article.slug === "guide-de-l-investisseur-debutant") {
+      await prisma.comment.create({
+        data: {
+          content: "Excellent guide, merci pour le partage !",
+          userId: affranchiUser.id,
+          articleId: article.id,
+        },
+      });
+      await prisma.comment.create({
+        data: {
+          content: "Très instructif pour débuter dans l'immobilier ou la tech.",
+          userId: grandFrereUser.id,
+          articleId: article.id,
+        },
+      });
+    }
+    
+    if (article.slug === "opportunites-immobilieres-a-abidjan") {
+      await prisma.comment.create({
+        data: {
+          content: "Les prix à Cocody ont explosé cette année.",
+          userId: bossUser.id,
+          articleId: article.id,
+        },
+      });
+    }
+  }
+  console.log("Comments seeded.");
+
   console.log("Seed finished successfully!");
 }
 

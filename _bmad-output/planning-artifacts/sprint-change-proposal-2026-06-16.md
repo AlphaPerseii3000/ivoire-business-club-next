@@ -189,3 +189,11 @@ Ajout des exigences suivantes après FR53 :
   - Rédaction d'un article en admin avec mise en forme et vérification de la persistance sous format Markdown.
   - Vérification de l'affichage de l'encart `DealCard` sous l'article pour un membre éligible (et masquage/remplacement pour un membre non éligible).
   - Test des boutons de partage et copie de lien.
+
+### 5.3 Ordre d'Implémentation Recommandé
+L'équipe de développement doit exécuter les modifications dans l'ordre suivant pour limiter les conflits de dépendance :
+1. **Modèle de données et Migration (Story 9.7) :** Mise à jour de `schema.prisma` (modèle `Comment` + relation Article <-> Opportunity) et exécution de `prisma migrate dev`.
+2. **API Routes de Commentaires (Story 9.7) :** Écriture et sécurisation des endpoints GET et POST `/api/articles/[id]/comments` (restriction aux membres connectés avec abonnement actif).
+3. **Éditeur Markdown & Association Admin (Story 9.2) :** Remplacement du textarea brut par un éditeur Markdown enrichi (barre d'outils et prévisualisation) dans les formulaires admin et ajout du champ de liaison optionnelle à une opportunité.
+4. **Intégration Encart Opportunity & Partage Social (Story 9.3) :** Affichage conditionnel de la `DealCard` sous l'article et ajout des boutons de partage social dynamique sur la page de détail.
+5. **Section Commentaires UI (Story 9.8) :** Implémentation de la liste des commentaires et du formulaire de saisie en bas d'article avec filtrage d'accès membre actif.

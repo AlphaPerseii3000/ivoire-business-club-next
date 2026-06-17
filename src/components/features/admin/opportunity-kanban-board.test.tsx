@@ -16,6 +16,7 @@ function makeOpportunity(overrides: Partial<AdminOpportunity> = {}): AdminOpport
     description: "Dossier complet avec documents juridiques.",
     category: "IMMOBILIER",
     amount: 25000,
+    currency: "XOF",
     requiredTier: "AFFRANCHI",
     verificationStatus: "PENDING",
     createdAt: "2026-05-14T00:00:00.000Z",

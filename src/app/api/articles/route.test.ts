@@ -27,9 +27,16 @@ vi.mock("@/lib/prisma", () => ({
     },
     user: {
       upsert: mockUserUpsert,
+      findUniqueOrThrow: vi.fn().mockImplementation(({ where }) => {
+        return { id: `user-id-${where.email}` };
+      }),
     },
     subscription: {
       upsert: mockSubscriptionUpsert,
+    },
+    comment: {
+      deleteMany: vi.fn(),
+      create: vi.fn(),
     },
     $disconnect: vi.fn(),
   },

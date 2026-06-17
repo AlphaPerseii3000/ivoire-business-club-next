@@ -172,7 +172,7 @@ describe("UEMOA_COUNTRIES", () => {
     expect(codes).toContain("BJ");
   });
 
-  it("has 11 UEMOA countries", () => {
-    expect(UEMOA_COUNTRIES).toHaveLength(11);
+  it("has 194 countries", () => {
+    expect(UEMOA_COUNTRIES).toHaveLength(194);
   });
 });
