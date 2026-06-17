@@ -87,33 +87,37 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
     const text = textarea.value;
     const selectedText = text.substring(start, end);
 
-    let replacement = "";
-    let cursorOffset = 0;
+    let prefix = "";
+    let suffix = "";
+    let placeholder = "";
 
     switch (syntax) {
       case "bold":
-        replacement = `**${selectedText || "texte"}**`;
-        cursorOffset = selectedText ? replacement.length : 2;
+        prefix = "**";
+        suffix = "**";
+        placeholder = "texte";
         break;
       case "italic":
-        replacement = `*${selectedText || "texte"}*`;
-        cursorOffset = selectedText ? replacement.length : 1;
+        prefix = "*";
+        suffix = "*";
+        placeholder = "texte";
         break;
       case "heading": {
         const needsNewlineBefore = start > 0 && text[start - 1] !== "\n";
-        const prefix = needsNewlineBefore ? "\n# " : "# ";
-        replacement = `${prefix}${selectedText || "Titre"}`;
-        cursorOffset = replacement.length;
+        prefix = needsNewlineBefore ? "\n# " : "# ";
+        placeholder = "Titre";
         break;
       }
       case "list": {
         const needsNewlineBeforeList = start > 0 && text[start - 1] !== "\n";
-        const listPrefix = needsNewlineBeforeList ? "\n- " : "- ";
-        replacement = `${listPrefix}${selectedText || "Élément"}`;
-        cursorOffset = replacement.length;
+        prefix = needsNewlineBeforeList ? "\n- " : "- ";
+        placeholder = "Élément";
         break;
       }
     }
+
+    const innerText = selectedText || placeholder;
+    const replacement = prefix + innerText + suffix;
 
     const before = text.substring(0, start);
     const after = text.substring(end, text.length);
@@ -121,10 +125,13 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
 
     setValue("content", newValue, { shouldValidate: true });
 
+    const newSelectionStart = start + prefix.length;
+    const newSelectionEnd = newSelectionStart + innerText.length;
+
     setTimeout(() => {
       textarea.focus();
-      textarea.selectionStart = start + (syntax === "bold" && !selectedText ? 2 : syntax === "italic" && !selectedText ? 1 : cursorOffset);
-      textarea.selectionEnd = textarea.selectionStart + (selectedText ? selectedText.length : 0);
+      textarea.selectionStart = newSelectionStart;
+      textarea.selectionEnd = newSelectionEnd;
     }, 0);
   };
 
@@ -641,7 +648,9 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
               className="min-h-80 p-4 border rounded-md bg-muted/20 prose dark:prose-invert max-w-none overflow-y-auto"
               data-testid="markdown-preview"
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(marked.parse(watch("content") || "") as string)
+                __html: activeEditorTab === "preview"
+                  ? DOMPurify.sanitize(marked.parse(watch("content") || "") as string)
+                  : ""
               }}
             />
           </TabsContent>

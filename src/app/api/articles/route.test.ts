@@ -11,6 +11,7 @@ const mockUserUpsert = vi.hoisted(() => vi.fn());
 const mockArticleDeleteMany = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 const mockSubscriptionUpsert = vi.hoisted(() => vi.fn());
+const mockOpportunityFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -24,6 +25,9 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: mockArticleFindUnique,
       findFirst: mockArticleFindFirst,
       deleteMany: mockArticleDeleteMany,
+    },
+    opportunity: {
+      findFirst: mockOpportunityFindFirst,
     },
     user: {
       upsert: mockUserUpsert,
@@ -274,6 +278,7 @@ describe("POST /api/articles", () => {
   it("creates an article associated with an opportunity", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     mockArticleFindFirst.mockResolvedValue(null);
+    mockOpportunityFindFirst.mockResolvedValue({ id: "opp-123", verificationStatus: "VERIFIED" });
     mockArticleCreate.mockResolvedValue({
       id: "art-55",
       title: "Article lié",
@@ -305,6 +310,26 @@ describe("POST /api/articles", () => {
         }),
       })
     );
+  });
+
+  it("returns 400 if opportunity is not found or not verified on POST", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockOpportunityFindFirst.mockResolvedValue(null);
+
+    const response = await POST(
+      makePostRequest({
+        title: "Article lié invalide",
+        excerpt: "Ceci est un extrait d'article suffisant",
+        content: "Ceci est le contenu de l'article de test assez long",
+        category: "Investissement",
+        visibility: "PUBLIC",
+        opportunityId: "opp-invalid",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toBe("L'opportunité associée est introuvable ou non validée.");
   });
 
   it("handles slug collision correctly by appending counter", async () => {

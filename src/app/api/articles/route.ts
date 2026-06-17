@@ -82,6 +82,18 @@ export async function POST(req: Request) {
 
     const { title, excerpt, content, category, visibility, imageUrl, opportunityId } = parsed.data;
     
+    if (opportunityId) {
+      const opp = await prisma.opportunity.findFirst({
+        where: { id: opportunityId, verificationStatus: "VERIFIED" },
+      });
+      if (!opp) {
+        return NextResponse.json(
+          { error: "L'opportunité associée est introuvable ou non validée." },
+          { status: 400 }
+        );
+      }
+    }
+    
     let slug;
     try {
       slug = await generateUniqueSlug(title);

@@ -98,6 +98,18 @@ export async function PUT(
 
     const data: any = { ...parsed.data };
 
+    if (data.opportunityId) {
+      const opp = await prisma.opportunity.findFirst({
+        where: { id: data.opportunityId, verificationStatus: "VERIFIED" },
+      });
+      if (!opp) {
+        return NextResponse.json(
+          { error: "L'opportunité associée est introuvable ou non validée." },
+          { status: 400 }
+        );
+      }
+    }
+
     if (parsed.data.title && parsed.data.title !== article.title) {
       try {
         data.slug = await generateUniqueSlug(parsed.data.title, article.id);

@@ -5,6 +5,7 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockArticleUpdate = vi.hoisted(() => vi.fn());
 const mockArticleDelete = vi.hoisted(() => vi.fn());
+const mockOpportunityFindFirst = vi.hoisted(() => vi.fn());
 const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
@@ -18,6 +19,9 @@ vi.mock("@/lib/prisma", () => ({
       findFirst: mockArticleFindFirst,
       update: mockArticleUpdate,
       delete: mockArticleDelete,
+    },
+    opportunity: {
+      findFirst: mockOpportunityFindFirst,
     },
   },
 }));
@@ -161,6 +165,7 @@ describe("PUT /api/articles/[id]", () => {
   it("updates opportunityId for admin", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     mockArticleFindFirst.mockResolvedValueOnce(mockArticle);
+    mockOpportunityFindFirst.mockResolvedValueOnce({ id: "opp-new-id", verificationStatus: "VERIFIED" });
 
     mockArticleUpdate.mockResolvedValue({
       ...mockArticle,
@@ -180,6 +185,20 @@ describe("PUT /api/articles/[id]", () => {
         }),
       })
     );
+  });
+
+  it("returns 400 if opportunity is not found or not verified on PUT", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockArticleFindFirst.mockResolvedValueOnce(mockArticle);
+    mockOpportunityFindFirst.mockResolvedValueOnce(null);
+
+    const response = await PUT(makeRequest("PUT", { opportunityId: "opp-invalid" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toBe("L'opportunité associée est introuvable ou non validée.");
   });
 
   it("logs ARTICLE_PUBLISH when publishing an article", async () => {

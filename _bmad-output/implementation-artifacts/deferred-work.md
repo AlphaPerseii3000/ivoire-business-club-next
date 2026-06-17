@@ -52,4 +52,11 @@
 - Risque d'inondation de commentaires (Spam/Flood) [src/app/api/articles/[id]/comments/route.ts:54-128]
 - Duplication des schémas Prisma (PostgreSQL vs SQLite) [prisma/schema.prisma:1-398]
 
+## Deferred from: code review of 9-2-interface-admin-crud-articles.md (2026-06-17)
+
+- Duplication de la requête Prisma de récupération des opportunités vérifiées [src/app/(admin)/admin/articles/new/page.tsx, src/app/(admin)/admin/articles/[id]/edit/page.tsx]
+- Cast de type non sécurisé `as any` sur la référence de la Textarea [src/components/features/admin/article-form.tsx:836]
+- Absence de pagination pour la liste des articles admin [src/app/(admin)/admin/articles/page.tsx]
+
+
 

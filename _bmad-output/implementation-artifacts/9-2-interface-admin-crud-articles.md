@@ -3,7 +3,7 @@ baseline_commit: 73e66145e3c4af28b3b6da6822704e1ffb55aab5
 ---
 # Story 9.2: Interface Admin CRUD Articles
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -146,3 +146,13 @@ Gemini 3.5 Flash (Medium)
 - src/components/features/admin/article-form.test.tsx
 - src/app/api/articles/route.test.ts
 - src/app/api/articles/[id]/route.test.ts
+
+### Review Findings
+
+- [x] [Review][Patch] Comportement buggé de la sélection dans la barre d'outils Markdown [src/components/features/admin/article-form.tsx]
+- [x] [Review][Patch] Rendu Markdown et désinfection inconditionnels à chaque frappe de touche [src/components/features/admin/article-form.tsx:844]
+- [x] [Review][Patch] Absence de validation de l'existence et du statut de l'opportunité dans l'API [src/app/api/articles/route.ts:101]
+- [x] [Review][Defer] Duplication de la requête Prisma de récupération des opportunités vérifiées [src/app/(admin)/admin/articles/new/page.tsx] — deferred, pre-existing
+- [x] [Review][Defer] Cast de type non sécurisé `as any` sur la référence de la Textarea [src/components/features/admin/article-form.tsx:836] — deferred, pre-existing
+- [x] [Review][Defer] Absence de pagination pour la liste des articles admin [src/app/(admin)/admin/articles/page.tsx] — deferred, pre-existing
+
