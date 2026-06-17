@@ -649,7 +649,7 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
               data-testid="markdown-preview"
               dangerouslySetInnerHTML={{
                 __html: activeEditorTab === "preview"
-                  ? DOMPurify.sanitize(marked.parse(watch("content") || "") as string)
+                  ? DOMPurify.sanitize(marked.parse(watch("content") || "", { breaks: true }) as string)
                   : ""
               }}
             />
