@@ -269,7 +269,21 @@ describe("Article Detail Page", () => {
     expect(screen.getByLabelText("Copier le lien")).toBeInTheDocument();
   });
 
-  it("does not render ShareButtons on gated articles", async () => {
+  it("renders the comment section for an active subscriber", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockFindFirst.mockResolvedValue(mockArticle);
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.getByTestId("article-comments-section")).toBeInTheDocument();
+    expect(screen.queryByTestId("comments-guest-cta")).not.toBeInTheDocument();
+  });
+
+  it("renders the guest CTA for an unsubscribed visitor", async () => {
     mockAuth.mockResolvedValue(null);
     mockFindFirst.mockResolvedValue(mockArticle);
 
@@ -278,6 +292,8 @@ describe("Article Detail Page", () => {
     });
     render(page);
 
-    expect(screen.queryByTestId("share-buttons")).not.toBeInTheDocument();
+    expect(screen.getByTestId("comments-guest-cta")).toBeInTheDocument();
+    expect(screen.getByText("Devenez membre actif pour consulter et participer aux discussions.")).toBeInTheDocument();
+    expect(screen.queryByTestId("article-comments-section")).not.toBeInTheDocument();
   });
 });

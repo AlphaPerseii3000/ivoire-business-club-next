@@ -13,6 +13,7 @@ import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { ArticleContent } from "@/components/features/articles/ArticleContent";
 import { ArticleReactions } from "@/components/features/articles/ArticleReactions";
 import { ShareButtons } from "@/components/features/articles/ShareButtons";
+import { ArticleCommentsSection } from "@/components/features/articles/ArticleCommentsSection";
 import { DealCard } from "@/components/features/deals/deal-card";
 import { Footer } from "@/components/landing/footer";
 import { buttonVariants } from "@/components/ui/button";
@@ -334,9 +335,19 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                 </div>
               </section>
             ) : null}
+            <ArticleCommentsSection
+              articleId={article.id}
+              userId={userId}
+              isAuthorized={hasAccess}
+            />
           </div>
         ) : (
           <div className="space-y-8">
+            <ArticleCommentsSection
+              articleId={article.id}
+              userId={userId}
+              isAuthorized={hasAccess}
+            />
             {/* Excerpt still shown */}
             <p className="text-lg text-slate-300 leading-relaxed italic border-l-4 border-slate-500 pl-4 py-1">
               {article.excerpt}

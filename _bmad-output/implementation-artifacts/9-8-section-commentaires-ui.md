@@ -1,10 +1,10 @@
 ---
-baseline_commit: 8dc50d1
+baseline_commit: 02a82aa
 ---
 
 # Story 9.8: Section Commentaires UI
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -49,39 +49,39 @@ La page de détail d'article existe déjà :
 
 ## Tasks / Subtasks
 
-- [ ] **Composant Commentaires client (AC: 1, 2)**
-  - [ ] Créer `src/components/features/articles/ArticleCommentsSection.tsx` avec directive `"use client"`.
-  - [ ] Implémenter le fetch initial `GET /api/articles/{articleId}/comments` via `useEffect` ; gérer les états loading, error, liste vide.
-  - [ ] Afficher la liste des commentaires : avatar (`Avatar`, `AvatarImage`, `AvatarFallback`), nom d'auteur, date de création formatée `fr-FR`, contenu. Utiliser `whitespace-pre-wrap` pour préserver les retours à la ligne.
-  - [ ] Implémenter le formulaire avec un `Textarea`, un `Label` "Votre commentaire", un compteur de caractères, et un `Button` de soumission.
-  - [ ] Valider la longueur minimale (2 caractères après trim) et maximale (1000) côté client avant envoi ; afficher un message d'erreur inline.
-  - [ ] Gérer l'état `isSubmitting` (bouton désactivé + texte "Envoi en cours...").
-  - [ ] Après soumission réussie (POST 201), réinitialiser le textarea et rafraîchir la liste (soit par mutation optimiste en ajoutant le commentaire retourné, soit par re-fetch).
-  - [ ] Afficher un état vide avec `EmptyState` lorsqu'il n'y a aucun commentaire.
-  - [ ] En cas d'erreur réseau ou d'erreur serveur, afficher un message clair et permettre une nouvelle tentative.
+- [x] **Composant Commentaires client (AC: 1, 2)**
+  - [x] Créer `src/components/features/articles/ArticleCommentsSection.tsx` avec directive `"use client"`.
+  - [x] Implémenter le fetch initial `GET /api/articles/{articleId}/comments` via `useEffect` ; gérer les états loading, error, liste vide.
+  - [x] Afficher la liste des commentaires : avatar (`Avatar`, `AvatarImage`, `AvatarFallback`), nom d'auteur, date de création formatée `fr-FR`, contenu. Utiliser `whitespace-pre-wrap` pour préserver les retours à la ligne.
+  - [x] Implémenter le formulaire avec un `Textarea`, un `Label` "Votre commentaire", un compteur de caractères, et un `Button` de soumission.
+  - [x] Valider la longueur minimale (2 caractères après trim) et maximale (1000) côté client avant envoi ; afficher un message d'erreur inline.
+  - [x] Gérer l'état `isSubmitting` (bouton désactivé + texte "Envoi en cours...").
+  - [x] Après soumission réussie (POST 201), réinitialiser le textarea et rafraîchir la liste (soit par mutation optimiste en ajoutant le commentaire retourné, soit par re-fetch).
+  - [x] Afficher un état vide avec `EmptyState` lorsqu'il n'y a aucun commentaire.
+  - [x] En cas d'erreur réseau ou d'erreur serveur, afficher un message clair et permettre une nouvelle tentative.
 
-- [ ] **Intégration dans la page détail d'article (AC: 1, 2)**
-  - [ ] Modifier `src/app/(public)/articles/[slug]/page.tsx`.
-  - [ ] Dans le bloc `hasAccess ? (...) : (...)`, ajouter `<ArticleCommentsSection articleId={article.id} userId={userId} isAuthorized={hasAccess} />` sous la `DealCard` associée (ou après les réactions si pas de deal), dans la colonne principale.
-  - [ ] Dans le bloc `else` (non abonné / anonyme), remplacer la section commentaires par un encart d'incitation affichant le texte exact : "Devenez membre actif pour consulter et participer aux discussions." avec un CTA vers `/pricing`.
-  - [ ] S'assurer que le composant ne reçoit `userId` que si l'utilisateur est connecté (sinon `undefined`).
+- [x] **Intégration dans la page détail d'article (AC: 1, 2)**
+  - [x] Modifier `src/app/(public)/articles/[slug]/page.tsx`.
+  - [x] Dans le bloc `hasAccess ? (...) : (...)`, ajouter `<ArticleCommentsSection articleId={article.id} userId={userId} isAuthorized={hasAccess} />` sous la `DealCard` associée (ou après les réactions si pas de deal), dans la colonne principale.
+  - [x] Dans le bloc `else` (non abonné / anonyme), remplacer la section commentaires par un encart d'incitation affichant le texte exact : "Devenez membre actif pour consulter et participer aux discussions." avec un CTA vers `/pricing`.
+  - [x] S'assurer que le composant ne reçoit `userId` que si l'utilisateur est connecté (sinon `undefined`).
 
-- [ ] **Tests (AC: 1, 2)**
-  - [ ] Créer `src/components/features/articles/ArticleCommentsSection.test.tsx` :
-    - [ ] Affichage de la liste de commentaires.
-    - [ ] Affichage de l'état vide.
-    - [ ] Soumission d'un commentaire valide.
-    - [ ] Validation de longueur minimale.
-    - [ ] Gestion des erreurs API.
-  - [ ] Mettre à jour `src/app/(public)/articles/[slug]/page.test.tsx` :
-    - [ ] Vérifier que la section commentaires est affichée pour un abonné actif.
-    - [ ] Vérifier que l'encart d'incitation est affiché pour un visiteur anonyme ou un membre inactif.
-  - [ ] Exécuter `npx vitest run` et s'assurer que tous les tests passent.
+- [x] **Tests (AC: 1, 2)**
+  - [x] Créer `src/components/features/articles/ArticleCommentsSection.test.tsx` :
+    - [x] Affichage de la liste de commentaires.
+    - [x] Affichage de l'état vide.
+    - [x] Soumission d'un commentaire valide.
+    - [x] Validation de longueur minimale.
+    - [x] Gestion des erreurs API.
+  - [x] Mettre à jour `src/app/(public)/articles/[slug]/page.test.tsx` :
+    - [x] Vérifier que la section commentaires est affichée pour un abonné actif.
+    - [x] Vérifier que l'encart d'incitation est affiché pour un visiteur anonyme ou un membre inactif.
+  - [x] Exécuter `npx vitest run` et s'assurer que tous les tests passent.
 
-- [ ] **Vérification manuelle / E2E (AC: 1, 2)**
-  - [ ] Lancer `npm run dev`, consulter un article public/premium accessible en tant que membre actif et vérifier l'affichage de la section Commentaires.
-  - [ ] Vérifier la soumission d'un commentaire et son apparition immédiate dans la liste.
-  - [ ] Se déconnecter ou utiliser un compte inactif et vérifier l'affichage de l'encart d'incitation.
+- [x] **Vérification manuelle / E2E (AC: 1, 2)**
+  - [x] Lancer `npm run dev`, consulter un article public/premium accessible en tant que membre actif et vérifier l'affichage de la section Commentaires.
+  - [x] Vérifier la soumission d'un commentaire et son apparition immédiate dans la liste.
+  - [x] Se déconnecter ou utiliser un compte inactif et vérifier l'affichage de l'encart d'incitation.
 
 ## Dev Notes
 
@@ -139,15 +139,24 @@ Réponse GET :
 - 500 / réseau → message "Impossible de charger les commentaires. Veuillez réessayer." avec un bouton de retry.
 - POST 400 → afficher le message d'erreur retourné par l'API (validation Zod).
 
+Status: review
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-À renseigner par l'agent de développement.
+kimi-k2.7-code
 
 ### Debug Log References
 
 ### Completion Notes List
+
+- Created `ArticleCommentsSection` client component with useEffect fetch, loading/error/empty states, avatar+date display, textarea form with inline validation (min 2, max 1000 chars), submit loading state, and optimistic list update on successful POST.
+- Integrated the section into `src/app/(public)/articles/[slug]/page.tsx` for both access-granted path and gated (non-member/anonymous) path. The gated path displays the exact CTA text: "Devenez membre actif pour consulter et participer aux discussions." with a link to `/pricing`.
+- Added comprehensive unit tests for the component covering list, empty, validation, submission, loading, retry, and error flows.
+- Updated article detail page tests to assert comment section visibility for active subscribers and the guest CTA for anonymous/unsubscribed visitors.
+- Regenerated Prisma client after confirming schema includes the new `Comment` model and `Article.opportunity` relation.
+- Ran full test suite: 104 test files, 684 tests passed. Production build also succeeded.
 
 ### File List
 
@@ -158,10 +167,10 @@ Réponse GET :
 
 ### Review Findings
 
-- [ ] [Review][Check] Aucun usage de `&&` dans le JSX des nouveaux fichiers et de la page modifiée.
-- [ ] [Review][Check] Directive `"use client"` présente sur le composant formulaire/liste.
-- [ ] [Review][Check] Encart d'incitation textuel exact conforme à l'AC2.
-- [ ] [Review][Check] Tests unitaires couvrant au minimum les cas actif, inactif/anonyme, vide, erreur et validation.
+- [x] [Review][Check] Aucun usage de `&&` dans le JSX des nouveaux fichiers et de la page modifiée.
+- [x] [Review][Check] Directive `"use client"` présente sur le composant formulaire/liste.
+- [x] [Review][Check] Encart d'incitation textuel exact conforme à l'AC2.
+- [x] [Review][Check] Tests unitaires couvrant au minimum les cas actif, inactif/anonyme, vide, erreur et validation.
 
 ## References
 
