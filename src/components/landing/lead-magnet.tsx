@@ -5,11 +5,44 @@ import { BlurReveal } from '@/components/ui/blur-reveal';
 
 export function LeadMagnet() {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setIsError(false);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/lead-magnet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubmitted(true);
+        setMessage(data.message || 'Merci ! Vérifie ta boîte email pour télécharger le guide.');
+      } else if (response.status === 400) {
+        setIsError(true);
+        setMessage('Veuillez saisir une adresse email valide.');
+      } else if (response.status === 429) {
+        setIsError(true);
+        setMessage('Trop de tentatives. Réessayez dans une minute.');
+      } else {
+        setIsError(true);
+        setMessage('Une erreur est survenue. Veuillez réessayer plus tard.');
+      }
+    } catch {
+      setIsError(true);
+      setMessage('Une erreur est survenue. Veuillez réessayer plus tard.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +66,7 @@ export function LeadMagnet() {
 
             {submitted ? (
               <p className="mt-8 text-lg font-bold text-[#D4A847] animate-fade-in">
-                Merci ! Vérifie ta boîte email pour télécharger le guide.
+                {message}
               </p>
             ) : (
               <form
@@ -44,20 +77,35 @@ export function LeadMagnet() {
                   type="email"
                   required
                   value={email}
+                  disabled={loading}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Ex: jean.dupont@email.com"
-                  className="min-h-11 flex-1 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A847]"
+                  className="min-h-11 flex-1 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A847] disabled:opacity-50"
                   aria-label="Votre adresse email pour recevoir le guide"
                 />
                 <button
                   type="submit"
-                  className="min-h-11 rounded-md bg-[#D4A847] text-black font-semibold text-sm px-6 py-2 hover:bg-[#D4A847]/90 transition-all cursor-pointer"
+                  disabled={loading || !email.trim()}
+                  className="min-h-11 rounded-md bg-[#D4A847] text-black font-semibold text-sm px-6 py-2 hover:bg-[#D4A847]/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   aria-label="Télécharger le guide"
                 >
-                  Télécharger
+                  {loading ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                      Envoi...
+                    </>
+                  ) : (
+                    'Télécharger'
+                  )}
                 </button>
               </form>
             )}
+
+            {isError ? (
+              <p className="mt-4 text-sm text-red-400" role="alert">
+                {message}
+              </p>
+            ) : null}
           </div>
         </BlurReveal>
       </div>

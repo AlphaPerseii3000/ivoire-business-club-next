@@ -209,6 +209,21 @@ export async function sendOpportunityRejectedEmail({
   });
 }
 
+const GUIDE_FILE_NAME = "Investir en Côte d'Ivoire 2026.pdf";
+
+function guideLink() {
+  const appUrl = process.env.APP_URL || "";
+  return `${appUrl}/guides/${encodeURIComponent(GUIDE_FILE_NAME)}`;
+}
+
+export async function sendGuideEmail({ to }: { to: string }) {
+  await sendEmail({
+    to,
+    subject: "Votre guide gratuit — Investir en Côte d'Ivoire 2026",
+    text: `Bonjour,\n\nMerci pour votre intérêt pour Ivoire Business Club.\n\nVoici votre guide gratuit « Investir en Côte d'Ivoire 2026 » :\n\n${guideLink()}\n\nBonne lecture,\nL'équipe IBC`,
+  });
+}
+
 // Reset transporter (for tests)
 export function _resetTransporter() {
   _transporter = null;
