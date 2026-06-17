@@ -1,17 +1,17 @@
 ---
-baseline_commit: 7a6224f5b6770bad920445941a382f27558b4adb
+baseline_commit: 3686d44903c443f7ce4c7d3e74177640dcaab4ae
 ---
 # Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
 
-Status: done
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
 
 **En tant que** visiteur ou membre IBC,  
-**Je veux** parcourir et lire des articles selon mon niveau d'accès,  
-**Afin de** bénéficier de contenu éditorial gratuit et découvrir la valeur premium.
+**Je veux** parcourir et lire des articles selon mon niveau d'accès, voir l'opportunité d'investissement associée et pouvoir partager l'article sur les réseaux sociaux,  
+**Afin de** bénéficier du contenu éditorial gratuit, évaluer les deals connexes pour convertir, et diffuser les analyses intéressantes du club.
 
 ## Acceptance Criteria
 
@@ -50,69 +50,61 @@ Status: done
    - **When** l'article n'existe pas en base de données ou n'est pas publié (`published: false`)
    - **Then** une page 404 standard (via `notFound()`) est affichée.
 
+8. **Association Opportunité & DealCard (Nouveau - SCP 2026-06-16)**
+   - **Given** un membre connecté éligible lisant un article publié sur `/articles/[slug]`
+   - **When** cet article est associé à une opportunité d'investissement (`opportunityId` non nul)
+   - **And** l'utilisateur a accès au tier requis de cette opportunité (vérifié via `canUserAccessOpportunity`)
+   - **Then** un encart "Opportunité associée" s'affiche sous l'article en utilisant le composant `DealCard`.
+   - **Given** un visiteur anonyme, un membre inactif ou un membre avec un tier insuffisant
+   - **When** il lit la page de l'article associé
+   - **Then** l'encart d'opportunité associée (`DealCard`) n'est pas affiché (masquage strict par sécurité).
+
+9. **Boutons de partage social (Nouveau - SCP 2026-06-16)**
+   - **Given** la page détail d'un article sur `/articles/[slug]`
+   - **When** l'article est rendu et accessible
+   - **Then** des boutons de partage (WhatsApp, LinkedIn, Twitter/X, Email, et Copier le lien) sont disponibles sous le contenu de l'article.
+   - **And** ils utilisent des URLs de partage propres et dynamiques basées sur les métadonnées SEO existantes de l'article.
+   - **And** cliquer sur "Copier le lien" copie l'URL de l'article dans le presse-papiers et affiche une notification de succès ("Lien copié !").
+
 ## Tasks / Subtasks
 
-- [x] **Configuration des routes d'accès public (AC: 1, 4)**
-  - [x] Modifier [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) pour ajouter `"/articles"` au tableau `publicRoutes`. Cela permettra aux visiteurs anonymes d'accéder aux pages `/articles` et `/articles/[slug]` sans être redirigés vers `/auth/signin`.
+- [x] **Mise à jour des requêtes de base de données (AC: 8)**
+  - [x] Modifier la fonction `getArticleBySlug` dans [src/app/(public)/articles/[slug]/page.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.tsx) pour inclure la relation `opportunity` avec toutes les données nécessaires pour le composant `DealCard` :
+    - `author`: `select` { `name`, `id`, `phone`, `location`, `opportunities` (vérifiées) }
+    - `tags`: triés et sélectionnés { `category`, `value` }
+    - `_count`: select { `documents`, `verificationApprovals` }
+    - `documents`: uniquement les images de couverture pour la miniature (comme dans le feed).
 
-- [x] **Composants d'interface utilisateur (AC: 1, 2, 3, 5, 6)**
-  - [x] Créer `src/components/features/articles/ArticleCard.tsx` :
-    - Recevoir l'article, un indicateur d'accès autorisé (`hasAccess`) et le tier de l'article.
-    - Afficher le titre, l'extrait (`excerpt`), la catégorie, la date de publication formattée en français.
-    - Afficher un badge de visibilité stylisé selon les couleurs établies dans la story 9.2 (PUBLIC = gris/neutral, AFFRANCHI = teal, GRAND_FRERE = amber, BOSS = violet) avec une icône de verrou si l'accès est bloqué.
-    - Si `hasAccess` est faux, rendre un bouton/lien "Abonnez-vous pour lire" pointant vers `/pricing` ou vers `/articles/[slug]` (où la gate sera affichée).
-    - Si `hasAccess` est vrai, rendre un bouton "Lire l'article" pointant vers `/articles/[slug]`.
-  - [x] Créer `src/components/features/articles/ArticleContent.tsx` :
-    - Rendre le contenu Markdown de l'article sous forme HTML de manière propre et sécurisée (parseur basique sans bibliothèque lourde, transformant les paragraphes, les titres `#` / `##`, les listes à puces `-`, et le gras `**`).
+- [x] **Contrôle d'accès à l'opportunité associée (AC: 8)**
+  - [x] Importer `canUserAccessOpportunity` depuis [src/lib/opportunity-visibility.ts](file:///D:/Code/ivoire-business-club-next/src/lib/opportunity-visibility.ts).
+  - [x] Dans [src/app/(public)/articles/[slug]/page.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.tsx), si l'article possède une opportunité associée (`article.opportunity` existe) :
+    - Calculer si l'utilisateur y a accès : `isAdmin || (isLoggedIn && hasActiveSub && canUserAccessOpportunity(article.opportunity.requiredTier, userTier))`.
+    - Si oui, passer les données formatées de l'opportunité au composant `DealCard`.
 
-- [x] **Catalogue et Détail Articles (AC: 1, 2, 3, 4, 5, 6, 7)**
-  - [x] Créer `src/app/(public)/articles/page.tsx` (Page catalogue Server Component) :
-    - Récupérer la session actuelle via `auth()`.
-    - Vérifier si l'utilisateur possède un abonnement actif avec `hasActiveSubscription(session?.user?.id)`.
-    - Récupérer le tier de l'utilisateur connecté `(session?.user as any)?.tier`.
-    - Récupérer tous les articles publiés (`published: true`) depuis Prisma, triés par date décroissante.
-    - Gérer le filtrage par catégorie en utilisant le paramètre de requête d'URL `category` (ex: `/articles?category=conseil`).
-    - Appliquer le filtrage de visibilité côté serveur :
-      - Visiteur anonyme : n'afficher que les articles de visibilité `PUBLIC`.
-      - Membre connecté : afficher tous les articles, mais calculer `hasAccess` pour chacun en utilisant `getAccessibleArticleVisibilities(userTier, hasActiveSub)`. Les articles non accessibles affichent le CTA "Abonnez-vous pour lire".
-    - Intégrer l'en-tête (Header) et le pied de page (Footer) de la landing page pour conserver une identité visuelle premium.
-  - [x] Créer `src/app/(public)/articles/[slug]/page.tsx` (Page de détail Server Component) :
-    - Attendre et destructurer `params` asynchrones : `const { slug } = await params;`.
-    - Récupérer l'article correspondant au `slug` depuis Prisma. Si non trouvé ou non publié, appeler `notFound()`.
-    - Récupérer la session, le statut d'abonnement actif et le tier de l'utilisateur.
-    - Calculer les droits d'accès complets : `isAdmin || article.visibility === "PUBLIC" || (hasActiveSub && visibilities.includes(article.visibility))`.
-    - Si l'accès est autorisé : afficher le titre, les métadonnées (catégorie, auteur, date) et le contenu complet via le composant `ArticleContent`.
-    - Si l'accès est restreint : afficher le titre, l'extrait (`excerpt`), et un bloc d'incitation premium (Gate Panel) avec une icône de cadenas et un bouton CTA "Abonnez-vous pour lire l'article complet" pointant vers `/pricing`.
-    - Exposer des métadonnées SEO basiques (titre de l'article, extrait en description).
+- [x] **Création du composant client ShareButtons (AC: 9)**
+  - [x] Créer `src/components/features/articles/ShareButtons.tsx` (Client Component) :
+    - Recevoir en props le `title` de l'article, l'excerpt ou description, et le `slug` (ou l'URL absolue calculée côté serveur).
+    - Fournir les liens de partage dynamiques et sécurisés pour :
+      - **WhatsApp** : `https://api.whatsapp.com/send?text=[title]%20[url]`
+      - **LinkedIn** : `https://www.linkedin.com/sharing/share-offsite/?url=[url]`
+      - **Twitter/X** : `https://twitter.com/intent/tweet?text=[title]&url=[url]`
+      - **Email** : `mailto:?subject=[title]&body=[url]`
+      - **Copier le lien** : Implémenter le copier dans le presse-papiers avec `navigator.clipboard.writeText` et afficher un toast success avec `toast.success("Lien copié !")` de la bibliothèque `sonner`.
+    - Utiliser des icônes Lucide appropriées (`Share2`, `Linkedin`, `Twitter` / `X` customisé, `Mail`, `Link`).
+    - Appliquer un style visuel haut de gamme (fond sombre, bordure subtile, hover fluide avec micro-animations de scale, couleurs de marque discrètes ou dorées d'Ivoire Business Club).
 
-- [x] **Tests unitaires et de validation (AC: 1-7)**
-  - [x] Créer `src/app/(public)/articles/page.test.tsx` pour tester :
-    - Le rendu de la page catalogue pour un visiteur anonyme (seuls les articles publics sont visibles).
-    - Le rendu pour un membre actif (accès complet aux articles de son tier).
-    - Le rendu pour un membre inactif (affichage des articles premium sous forme d'extrait + CTA d'upgrade).
-    - Le fonctionnement du filtre par catégorie.
-  - [x] Créer `src/app/(public)/articles/[slug]/page.test.tsx` pour tester :
-    - L'accès complet à un article public.
-    - La restriction d'accès avec Gate Panel (extrait + CTA) pour un article premium sans abonnement.
-    - L'affichage de la page 404 (appel de `notFound`) pour un article inexistant ou non publié.
-  - [x] Lancer les tests avec `npx vitest run` et s'assurer que tout passe avec succès.
+- [x] **Intégration UI sur la page détail de l'article (AC: 8, 9)**
+  - [x] Dans [src/app/(public)/articles/[slug]/page.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.tsx) :
+    - Importer `DealCard` depuis [src/components/features/deals/deal-card.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/deals/deal-card.tsx).
+    - Rendre le composant `ShareButtons` directement sous l'article (au-dessus des réactions) ou à côté.
+    - Si l'utilisateur est éligible et que l'article a un deal associé, afficher une section `"Opportunité associée"` contenant le composant `DealCard` en bas de page.
 
-### Review Findings
-
-- [x] [Review][Decision] Markdown Parser and Security — The custom Markdown parser in `ArticleContent.tsx` uses fragile regular expressions that can fail on nesting or multi-line structures, and it uses basic string replacements for escaping, bypassing production-tested sanitization like DOMPurify which creates XSS vulnerability risks. (Resolved: installed marked and isomorphic-dompurify)
-- [x] [Review][Patch] Overly Broad Public Route Matching Wildcard [src/lib/auth.config.ts:32-35]
-- [x] [Review][Patch] Widespread Character Encoding Corruption [src/app/(public)/articles/[slug]/page.tsx:292]
-- [x] [Review][Patch] CTA Button Text Mismatch [src/components/features/articles/ArticleCard.tsx:881-891]
-- [x] [Review][Patch] Direct console.error Without Log Sanitization [src/app/(public)/articles/page.tsx:705-707]
-- [x] [Review][Patch] Redundant Database Queries (No Request Deduplication) [src/app/(public)/articles/[slug]/page.tsx:281-302]
-- [x] [Review][Patch] Abuse of TypeScript any Type Casts [src/app/(public)/articles/page.tsx:33-35]
-- [x] [Review][Patch] Swallowed Errors in Metadata Generation [src/app/(public)/articles/[slug]/page.tsx:281-302]
-- [x] [Review][Patch] Misleading Error Handling on Empty States [src/app/(public)/articles/page.tsx:705-707]
-- [x] [Review][Patch] Unoptimized Logo Image Rendering [src/app/(public)/articles/[slug]/page.tsx:94-96]
-- [x] [Review][Patch] Duplicated Authorization and Session Handling [src/app/(public)/articles/page.tsx:29-38]
-- [x] [Review][Patch] Unused Imports in Server Component [src/app/(public)/articles/[slug]/page.tsx:5]
-- [x] [Review][Patch] Unguarded Database Failures on Article Fetch [src/app/(public)/articles/[slug]/page.tsx:305-316]
-- [x] [Review][Patch] French Category Encoding mismatch [src/app/(public)/articles/page.tsx:679-683]
+- [x] **Mise à jour et écriture des Tests Unitaires (AC: 8, 9)**
+  - [x] Mettre à jour [src/app/(public)/articles/[slug]/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.test.tsx) :
+    - Ajouter un test vérifiant que si l'article a une opportunité associée et que l'utilisateur a le tier requis, l'encart `DealCard` apparaît avec le titre de l'opportunité.
+    - Ajouter un test vérifiant que si l'utilisateur n'est pas connecté ou n'a pas le tier requis, le `DealCard` de l'opportunité associée ne s'affiche pas.
+    - Ajouter des tests pour vérifier le rendu du composant de partage d'article.
+  - [x] S'assurer du passage au vert de la suite de tests complète avec `npx vitest run`.
 
 ## Dev Notes
 
@@ -120,56 +112,51 @@ Status: done
 
 - **Next.js 16 / React 19 Params** : Dans les composants serveurs de Next.js 16, destructurer `params` de façon asynchrone (ex: `const { slug } = await params;`).
 - **Garde-fous JSX** : Remplacer systématiquement les court-circuits logiques `condition && <Component />` par des ternaires explicites `condition ? <Component /> : null` pour éviter les crashs de rendu sous React 19.
-- **Accès Premium** : Utiliser exclusivement `hasActiveSubscription(userId)` de [src/lib/subscription-access.ts](file:///D:/Code/ivoire-business-club-next/src/lib/subscription-access.ts) pour vérifier le statut de paiement. Ne jamais faire confiance au tier de l'utilisateur sans valider l'abonnement actif.
+- **Accès Premium** : Utiliser exclusivement `hasActiveSubscription(userId)` pour vérifier le statut de paiement. Ne jamais faire confiance au tier de l'utilisateur sans valider l'abonnement actif.
 - **Sécurisation des logs** : Passer toutes les erreurs attrapées dans les blocs `try/catch` à `sanitizeError` de `@/lib/sanitize-log` avant de faire un `console.error`.
+- **Zéro Nesting d'Ancres (Crucial)** : Le composant `DealCard` contient déjà une balise `<Link>` englobante vers `/dashboard/opportunities/[id]`. Ne jamais englober le `DealCard` dans un autre lien de redirection pour éviter des exceptions de rendu et de réhydratation HTML.
 
 ### Fichiers impactés ou créés
 
-- [src/lib/auth.config.ts](file:///D:/Code/ivoire-business-club-next/src/lib/auth.config.ts) (MODIFIED) - Ajout de `/articles` aux routes publiques.
-- `src/components/features/articles/ArticleCard.tsx` (NEW) - Carte d'article avec gate et badge.
-- `src/components/features/articles/ArticleContent.tsx` (NEW) - Rendu du contenu Markdown.
-- `src/app/(public)/articles/page.tsx` (NEW) - Catalogue public des articles.
-- `src/app/(public)/articles/[slug]/page.tsx` (NEW) - Page détail article avec premium gate.
-- `src/app/(public)/articles/page.test.tsx` (NEW) - Suite de tests unitaires pour le catalogue.
-- `src/app/(public)/articles/[slug]/page.test.tsx` (NEW) - Suite de tests unitaires pour le détail.
+- [src/app/(public)/articles/[slug]/page.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.tsx) (MODIFIED) - Inclusion de la jointure d'opportunité, contrôle d'accès tier, rendu de la DealCard et des ShareButtons.
+- `src/components/features/articles/ShareButtons.tsx` (NEW) - Composant de partage social dynamique.
+- [src/app/(public)/articles/[slug]/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(public)/articles/[slug]/page.test.tsx) (MODIFIED) - Tests unitaires de validation pour l'intégration de l'opportunité associée et des boutons de partage.
 
 ### Références
 
-- Définition d'Epic 9 : [epics.md#L1373-L1409](file:///D:/Code/ivoire-business-club-next/_bmad-output/planning-artifacts/epics.md#L1373-L1409)
-- Modèle de données Prisma : [prisma/schema.prisma#L359-L377](file:///D:/Code/ivoire-business-club-next/prisma/schema.prisma#L359-L377)
-- Logique de visibilité : [src/lib/article-visibility.ts](file:///D:/Code/ivoire-business-club-next/src/lib/article-visibility.ts)
-- Vérification d'abonnement : [src/lib/subscription-access.ts](file:///D:/Code/ivoire-business-club-next/src/lib/subscription-access.ts)
-- Proposition de modification de Sprint : [sprint-change-proposal-2026-06-13.md](file:///D:/Code/ivoire-business-club-next/_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-13.md)
+- Définition d'Epic 9 : [epics.md#L1306-L1314](file:///D:/Code/ivoire-business-club-next/_bmad-output/planning-artifacts/epics.md#L1306-L1314)
+- Modèle de données Prisma : [prisma/schema.prisma#L397-L421](file:///D:/Code/ivoire-business-club-next/prisma/schema.prisma#L397-L421)
+- Logique de visibilité d'opportunités : [src/lib/opportunity-visibility.ts](file:///D:/Code/ivoire-business-club-next/src/lib/opportunity-visibility.ts)
+- Proposition de modification de Sprint : [sprint-change-proposal-2026-06-16.md](file:///D:/Code/ivoire-business-club-next/_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-16.md)
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-Gemini 3.5 Flash (Medium)
+Claude Opus 4.6 (Thinking)
 
 ### Debug Log References
 
-- Tests unitaires et de régression réussis à 100% (568/568 tests passés avec succès).
+- lucide-react v1.17.0 ne contient pas l'icône `Linkedin` — remplacé par SVG custom (`LinkedInIcon`).
+- Renommé l'import `Link` de lucide en `LinkIcon` pour éviter la collision avec `next/link`.
 
 ### Completion Notes List
 
-- Configuration de la route `/articles` comme route publique dans `src/lib/auth.config.ts`.
-- Création du composant `ArticleCard.tsx` avec gestion de la visibilité des badges et icône de verrou si l'accès est bloqué.
-- Création du composant `ArticleContent.tsx` avec parseur de contenu Markdown vers HTML.
-- Création de la page catalogue `/articles` avec filtres par catégorie et application des filtres de visibilité côté serveur.
-- Création de la page détail `/articles/[slug]` avec métadonnées SEO dynamiques et affichage de l'encart premium (Gate Panel) pour les utilisateurs restreints.
-- Écriture d'une suite de 9 tests unitaires avec Vitest (catalogue et détail d'articles) validant tous les critères d'acceptation (AC 1-7).
+- ✅ Requête Prisma `getArticleBySlug` étendue pour inclure la relation `opportunity` complète (author, tags, _count, documents thumbnail).
+- ✅ Contrôle d'accès opportunité : `isAdmin || (isLoggedIn && hasActiveSub && canUserAccessOpportunity())` — masquage strict par sécurité.
+- ✅ Composant `ShareButtons` créé — 5 canaux : WhatsApp, LinkedIn, X, Email, Copier le lien. Design premium, micro-animations, toast sonner.
+- ✅ Intégration UI : ShareButtons sous le contenu (au-dessus des réactions), DealCard en section « Opportunité associée » en bas. Zéro nesting d'ancres respecté.
+- ✅ Type `DealCardDeal` exporté depuis `deal-card.tsx` pour réutilisation type-safe.
+- ✅ 12 tests passent (5 originaux + 7 nouveaux) couvrant AC 8 et AC 9.
 
 ### File List
 
-- `src/lib/auth.config.ts` (MODIFIED)
-- `src/components/features/articles/ArticleCard.tsx` (NEW)
-- `src/components/features/articles/ArticleContent.tsx` (NEW)
-- `src/app/(public)/articles/page.tsx` (NEW)
-- `src/app/(public)/articles/[slug]/page.tsx` (NEW)
-- `src/app/(public)/articles/page.test.tsx` (NEW)
-- `src/app/(public)/articles/[slug]/page.test.tsx` (NEW)
+- `src/app/(public)/articles/[slug]/page.tsx` (MODIFIED) — Prisma query étendue, imports, access logic, ShareButtons + DealCard rendering
+- `src/components/features/articles/ShareButtons.tsx` (NEW) — Composant client de partage social
+- `src/components/features/deals/deal-card.tsx` (MODIFIED) — Export du type `DealCardDeal`
+- `src/app/(public)/articles/[slug]/page.test.tsx` (MODIFIED) — 7 nouveaux tests pour AC 8 & 9
 
 ### Change Log
 
-- 2026-06-14 : Implémentation et validation complète de la Story 9.3 (Catalogue et Pages Détail Articles avec Gate Premium).
+- 2026-06-17 : Mise à jour de la Story 9.3 pour intégrer l'association d'opportunité avec `DealCard` sous contrôle de tier et les boutons de partage social dynamique.
+- 2026-06-17 : Implémentation complète — query Prisma, contrôle d'accès, ShareButtons, intégration UI, 12 tests verts.

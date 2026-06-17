@@ -10,7 +10,7 @@ import type { SelectedTag } from "@/lib/tags";
 import { getSafeTrustLevel, type TrustLevel } from "@/lib/trust-level";
 import { formatOpportunityAmount } from "@/lib/currency";
 
-type DealCardDeal = {
+export type DealCardDeal = {
   id: string;
   title: string;
   amount?: number | null;

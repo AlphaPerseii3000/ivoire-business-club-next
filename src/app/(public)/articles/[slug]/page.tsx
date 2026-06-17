@@ -9,14 +9,18 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
+import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { ArticleContent } from "@/components/features/articles/ArticleContent";
 import { ArticleReactions } from "@/components/features/articles/ArticleReactions";
+import { ShareButtons } from "@/components/features/articles/ShareButtons";
+import { DealCard } from "@/components/features/deals/deal-card";
 import { Footer } from "@/components/landing/footer";
 import { buttonVariants } from "@/components/ui/button";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import { cn } from "@/lib/utils";
 import { ArticleVisibility, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
+import type { DealCardDeal } from "@/components/features/deals/deal-card";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +42,48 @@ const getArticleBySlug = cache(async (slug: string) => {
       author: {
         select: {
           name: true,
+        },
+      },
+      opportunity: {
+        select: {
+          id: true,
+          title: true,
+          amount: true,
+          currency: true,
+          requiredTier: true,
+          verificationStatus: true,
+          requiresDoubleVerification: true,
+          category: true,
+          author: {
+            select: {
+              name: true,
+              id: true,
+              phone: true,
+              location: true,
+              opportunities: {
+                where: { verificationStatus: "VERIFIED" },
+                select: { id: true },
+              },
+            },
+          },
+          tags: {
+            orderBy: { category: "asc" },
+            select: { category: true, value: true },
+          },
+          _count: {
+            select: {
+              documents: true,
+              verificationApprovals: true,
+            },
+          },
+          documents: {
+            where: {
+              mimeType: { startsWith: "image/" },
+            },
+            take: 1,
+            orderBy: { createdAt: "asc" },
+            select: { publicUrl: true },
+          },
         },
       },
     },
@@ -115,6 +161,39 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     isAdmin ||
     article.visibility === ArticleVisibility.PUBLIC ||
     (hasActiveSub && allowedVisibilities.includes(article.visibility));
+
+  // 3. Opportunity access check (AC 8)
+  let dealCardData: DealCardDeal | null = null;
+  if (article.opportunity) {
+    const opp = article.opportunity;
+    const canAccessOpp =
+      isAdmin ||
+      (isLoggedIn && hasActiveSub && canUserAccessOpportunity(opp.requiredTier, userTier));
+
+    if (canAccessOpp) {
+      dealCardData = {
+        id: opp.id,
+        title: opp.title,
+        amount: opp.amount,
+        currency: opp.currency,
+        location: opp.author?.location ?? null,
+        verificationStatus: opp.verificationStatus,
+        documentCount: opp._count.documents,
+        requiresDoubleVerification: opp.requiresDoubleVerification,
+        approvalCount: opp._count.verificationApprovals,
+        authorStats: {
+          validatedDealsCount: opp.author?.opportunities?.length ?? 0,
+        },
+        tags: opp.tags.map((t) => ({ category: t.category, value: t.value })),
+        author: { phone: opp.author?.phone ?? null },
+        category: opp.category,
+        thumbnailUrl: opp.documents[0]?.publicUrl ?? null,
+      };
+    }
+  }
+
+  // 4. Build article URL for sharing (AC 9)
+  const articleUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "")}/articles/${slug}`;
 
   const rawDate = article.publishedAt ?? article.createdAt;
   const formattedDate = rawDate
@@ -238,9 +317,23 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         {hasAccess ? (
           <div className="bg-transparent rounded-xl space-y-8">
             <ArticleContent content={article.content} />
-            <div className="border-t border-white/10 pt-8 mt-8">
+            <div className="border-t border-white/10 pt-6 mt-8">
+              <ShareButtons title={article.title} excerpt={article.excerpt} articleUrl={articleUrl} />
+            </div>
+            <div className="border-t border-white/10 pt-8">
               <ArticleReactions articleId={article.id} isLoggedIn={isLoggedIn} />
             </div>
+            {dealCardData ? (
+              <section data-testid="associated-opportunity" className="border-t border-white/10 pt-8">
+                <h2 className="text-lg font-bold tracking-tight text-white mb-4 flex items-center gap-2">
+                  <span className="inline-block size-1.5 rounded-full bg-[#D4A847]" />
+                  Opportunité associée
+                </h2>
+                <div className="max-w-md">
+                  <DealCard deal={dealCardData} />
+                </div>
+              </section>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-8">

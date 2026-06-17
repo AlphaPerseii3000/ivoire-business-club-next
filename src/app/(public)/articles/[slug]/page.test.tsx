@@ -32,6 +32,14 @@ vi.mock("next/navigation", () => ({
   notFound: mockNotFound,
 }));
 
+// Mock sonner
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 const mockArticle = {
   id: "art-1",
   title: "Guide Premium Abidjan",
@@ -47,6 +55,34 @@ const mockArticle = {
   author: {
     name: "Alexandre",
   },
+  opportunity: null,
+};
+
+const mockOpportunity = {
+  id: "opp-1",
+  title: "Terrain Abidjan Cocody",
+  amount: 50000,
+  currency: "EUR",
+  requiredTier: "AFFRANCHI",
+  verificationStatus: "VERIFIED",
+  requiresDoubleVerification: false,
+  category: "IMMOBILIER",
+  author: {
+    name: "Ibrahim",
+    id: "user-opp-author",
+    phone: "+225070000000",
+    location: "Abidjan",
+    opportunities: [{ id: "opp-1" }, { id: "opp-2" }],
+  },
+  tags: [
+    { category: "SECTEUR", value: "immobilier" },
+    { category: "LOCALISATION", value: "abidjan" },
+  ],
+  _count: {
+    documents: 3,
+    verificationApprovals: 1,
+  },
+  documents: [{ publicUrl: "https://example.com/thumb.jpg" }],
 };
 
 describe("Article Detail Page", () => {
@@ -121,5 +157,127 @@ describe("Article Detail Page", () => {
       absolute: "Guide Premium Abidjan — Ivoire Business Club",
     });
     expect(metadata.description).toBe("Extrait de l'article premium");
+  });
+
+  // ===== NEW TESTS: Associated Opportunity (AC 8) =====
+
+  it("displays DealCard when article has an associated opportunity and user has required tier", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      opportunity: mockOpportunity,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.getByTestId("associated-opportunity")).toBeInTheDocument();
+    expect(screen.getByText("Opportunité associée")).toBeInTheDocument();
+    expect(screen.getByText("Terrain Abidjan Cocody")).toBeInTheDocument();
+  });
+
+  it("hides DealCard when user is not logged in", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      opportunity: mockOpportunity,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.queryByTestId("associated-opportunity")).not.toBeInTheDocument();
+  });
+
+  it("hides DealCard when user does not have active subscription", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(false);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      opportunity: mockOpportunity,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.queryByTestId("associated-opportunity")).not.toBeInTheDocument();
+  });
+
+  it("hides DealCard when user tier is insufficient for the opportunity", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      opportunity: { ...mockOpportunity, requiredTier: "BOSS" },
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.queryByTestId("associated-opportunity")).not.toBeInTheDocument();
+  });
+
+  it("shows DealCard for ADMIN even without active subscription", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", tier: "AFFRANCHI", role: "ADMIN" } });
+    mockHasActiveSubscription.mockResolvedValue(false);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      opportunity: { ...mockOpportunity, requiredTier: "BOSS" },
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.getByTestId("associated-opportunity")).toBeInTheDocument();
+  });
+
+  // ===== NEW TESTS: ShareButtons (AC 9) =====
+
+  it("renders ShareButtons on accessible articles", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.getByTestId("share-buttons")).toBeInTheDocument();
+    expect(screen.getByLabelText("Partager sur WhatsApp")).toBeInTheDocument();
+    expect(screen.getByLabelText("Partager sur LinkedIn")).toBeInTheDocument();
+    expect(screen.getByLabelText("Partager sur X")).toBeInTheDocument();
+    expect(screen.getByLabelText("Partager sur Email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Copier le lien")).toBeInTheDocument();
+  });
+
+  it("does not render ShareButtons on gated articles", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue(mockArticle);
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    render(page);
+
+    expect(screen.queryByTestId("share-buttons")).not.toBeInTheDocument();
   });
 });
