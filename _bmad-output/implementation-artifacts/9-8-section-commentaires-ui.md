@@ -139,7 +139,7 @@ Réponse GET :
 - 500 / réseau → message "Impossible de charger les commentaires. Veuillez réessayer." avec un bouton de retry.
 - POST 400 → afficher le message d'erreur retourné par l'API (validation Zod).
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 
