@@ -187,7 +187,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         tags: opp.tags.map((t) => ({ category: t.category, value: t.value })),
         author: { phone: opp.author?.phone ?? null },
         category: opp.category,
-        thumbnailUrl: opp.documents[0]?.publicUrl ?? null,
+        thumbnailUrl: opp.documents.length > 0 ? `/api/opportunities/${opp.id}/thumbnail` : null,
       };
     }
   }
