@@ -3,7 +3,7 @@ baseline_commit: fd0f26f
 ---
 # Story 9.9: Lead Magnet — Envoi Automatique du Guide Gratuit
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
