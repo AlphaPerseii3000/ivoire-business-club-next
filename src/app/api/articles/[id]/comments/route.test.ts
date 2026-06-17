@@ -94,13 +94,39 @@ describe("GET /api/articles/[id]/comments", () => {
     const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
     expect(response.status).toBe(200);
     const payload = await response.json();
-    expect(payload).toEqual(JSON.parse(JSON.stringify(mockComments)));
+    expect(payload).toEqual({ comments: JSON.parse(JSON.stringify(mockComments)) });
     expect(mockCommentFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { articleId: "art-1" },
         orderBy: { createdAt: "asc" },
+        take: 100,
       })
     );
+  });
+
+  it("returns 404 if article is not published and user is not admin", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockArticleFindFirst.mockImplementation(({ where }) => {
+      // Simulate no article found because where clause enforces published: true for MEMBER
+      if (where.published === true) return Promise.resolve(null);
+      return Promise.resolve(mockArticle);
+    });
+
+    const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 200 with comments if article is not published but user is admin", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
+    mockCommentFindMany.mockResolvedValue(mockComments);
+
+    const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload).toEqual({ comments: JSON.parse(JSON.stringify(mockComments)) });
   });
 });
 
@@ -228,5 +254,19 @@ describe("POST /api/articles/[id]/comments", () => {
         },
       })
     );
+  });
+
+  it("returns 404 if article is not published and user is not admin", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockArticleFindFirst.mockImplementation(({ where }) => {
+      if (where.published === true) return Promise.resolve(null);
+      return Promise.resolve(mockArticle);
+    });
+
+    const response = await POST(makeRequest("POST", { content: "Un commentaire" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(404);
   });
 });

@@ -46,3 +46,10 @@
 - Risque de plantage de la page d'accueil sur la récupération des opportunités [src/app/(public)/page.tsx:45] — Absence de chaînage optionnel sur `opportunity.author.location` (pré-existant).
 - Mauvaise gestion des paramètres de requête multiples pour la catégorie [src/app/(public)/articles/page.tsx:35] — Risque d'erreur si `category` est fourni plusieurs fois en query string (pré-existant).
 
+## Deferred from: code review of 9-7-systeme-de-commentaires-modele-migration-et-api.md (2026-06-17)
+
+- Manque de fonctionnalités de modification/suppression des commentaires [src/app/api/articles/[id]/comments/route.ts:1-128]
+- Risque d'inondation de commentaires (Spam/Flood) [src/app/api/articles/[id]/comments/route.ts:54-128]
+- Duplication des schémas Prisma (PostgreSQL vs SQLite) [prisma/schema.prisma:1-398]
+
+

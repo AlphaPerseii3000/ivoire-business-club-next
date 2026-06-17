@@ -3,7 +3,7 @@ baseline_commit: fc8284fe9cbb1cd7dfeeff2a5bbe803ee15e145a
 ---
 # Story 9.7: Système de Commentaires — Modèle, Migration et API
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -77,6 +77,21 @@ Status: review
     - [x] Le retour 404 si l'article ciblé n'existe pas.
     - [x] La validation de la longueur minimale et maximale du contenu du commentaire.
   - [x] Exécuter la suite de tests via `npx vitest run` et s'assurer que tous les tests passent.
+### Review Findings
+
+- [x] [Review][Decision] Structure de réponse GET non extensible — Résolu (Choix 1A : envelopper dans un objet { comments })
+- [x] [Review][Decision] Choix de suppression en cascade sur la relation User-Comment — Résolu (Choix 2A : onDelete: SetNull)
+- [x] [Review][Patch] Envelopper la réponse GET de l'API de commentaires dans un objet { comments } [src/app/api/articles/[id]/comments/route.ts:47]
+- [x] [Review][Patch] Configurer la relation User-Comment en onDelete: SetNull dans les schémas Prisma et exécuter la migration [prisma/schema.prisma:390]
+- [x] [Review][Patch] Risque de déni de service et de dégradation de performance par manque de pagination [src/app/api/articles/[id]/comments/route.ts:33-48]
+- [x] [Review][Patch] Divulgation d'informations et création de commentaires sur des articles non publiés [src/app/api/articles/[id]/comments/route.ts:24-27]
+- [x] [Review][Patch] Performance des requêtes sur la relation Article-Opportunity [prisma/schema.prisma:410-415]
+- [x] [Review][Patch] Validation Zod incomplète pour les articles liés à une opportunité [src/lib/validations.ts:390]
+- [x] [Review][Patch] Risque de retour d'erreur 500 après persistance en cas d'échec de l'audit log [src/app/api/articles/[id]/comments/route.ts:117-127]
+- [x] [Review][Patch] Risque XSS par absence de sanitisation de l'input utilisateur [src/app/api/articles/[id]/comments/route.ts:86]
+- [x] [Review][Defer] Manque de fonctionnalités de modification/suppression des commentaires [src/app/api/articles/[id]/comments/route.ts:1-128] — deferred, pre-existing
+- [x] [Review][Defer] Risque d'inondation de commentaires (Spam/Flood) [src/app/api/articles/[id]/comments/route.ts:54-128] — deferred, pre-existing
+- [x] [Review][Defer] Duplication des schémas Prisma (PostgreSQL vs SQLite) [prisma/schema.prisma:1-398] — deferred, pre-existing
 
 ## Dev Notes
 

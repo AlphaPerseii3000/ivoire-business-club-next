@@ -383,6 +383,12 @@ export const articleCreateSchema = z.object({
     .transform((val) => (val === "" ? null : val))
     .optional()
     .nullable(),
+  opportunityId: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
 });
 
 export const articleUpdateSchema = articleCreateSchema.partial().extend({

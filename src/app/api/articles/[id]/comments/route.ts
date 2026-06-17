@@ -5,6 +5,7 @@ import { commentCreateSchema } from "@/lib/validations";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(
   req: Request,
@@ -22,8 +23,12 @@ export async function GET(
       return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
     }
 
+    const isAdmin = session.user.role === "ADMIN";
     const article = await prisma.article.findFirst({
-      where: { OR: [{ id }, { slug: id }] },
+      where: {
+        OR: [{ id }, { slug: id }],
+        ...(!isAdmin ? { published: true } : {}),
+      },
     });
 
     if (!article) {
@@ -44,9 +49,10 @@ export async function GET(
       orderBy: {
         createdAt: "asc",
       },
+      take: 100,
     });
 
-    return NextResponse.json(comments);
+    return NextResponse.json({ comments });
   } catch (error) {
     console.error("Get comments error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
@@ -69,8 +75,12 @@ export async function POST(
       return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
     }
 
+    const isAdmin = session.user.role === "ADMIN";
     const article = await prisma.article.findFirst({
-      where: { OR: [{ id }, { slug: id }] },
+      where: {
+        OR: [{ id }, { slug: id }],
+        ...(!isAdmin ? { published: true } : {}),
+      },
     });
 
     if (!article) {
@@ -93,9 +103,17 @@ export async function POST(
       );
     }
 
+    const sanitizedContent = DOMPurify.sanitize(parsed.data.content).trim();
+    if (sanitizedContent.length < 2) {
+      return NextResponse.json(
+        { error: "Le commentaire doit contenir au moins 2 caractères" },
+        { status: 400 }
+      );
+    }
+
     const comment = await prisma.comment.create({
       data: {
-        content: parsed.data.content,
+        content: sanitizedContent,
         userId: session.user.id,
         articleId: article.id,
       },
@@ -110,15 +128,19 @@ export async function POST(
       },
     });
 
-    await safeCreateAuditLog({
-      actorId: session.user.id,
-      action: "COMMENT_CREATE",
-      entityType: "Comment",
-      entityId: comment.id,
-      metadata: {
-        articleId: article.id,
-      },
-    });
+    try {
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "COMMENT_CREATE",
+        entityType: "Comment",
+        entityId: comment.id,
+        metadata: {
+          articleId: article.id,
+        },
+      });
+    } catch (auditError) {
+      console.error("Failed to create audit log for comment:", sanitizeError(auditError));
+    }
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
