@@ -3,7 +3,7 @@ baseline_commit: 3686d44903c443f7ce4c7d3e74177640dcaab4ae
 ---
 # Story 9.3: Catalogue Public et Pages Détail avec Gate Premium
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

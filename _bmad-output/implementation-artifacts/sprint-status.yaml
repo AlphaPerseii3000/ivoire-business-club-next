@@ -61,7 +61,7 @@ development_status:
   epic-9: in-progress
   9-1-modele-article-migration-et-api-routes: done
   9-2-interface-admin-crud-articles: done
-  9-3-catalogue-public-et-pages-detail-avec-gate-premium: review
+  9-3-catalogue-public-et-pages-detail-avec-gate-premium: done
   9-4-seo-navigation-et-integration-site: done
   9-5-reactions-et-engagement-sur-les-articles: done
   9-6-images-et-miniatures-articles: done
