@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-18T08:40:00+0200
+last_updated: 2026-06-18T12:51:00+0200
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -73,7 +73,7 @@ development_status:
   10-2-data-room-securisee: done
   epic-11: in-progress
   11-1-email-accueil-post-inscription: done
-  11-2-formulaire-completion-profil: review
+  11-2-formulaire-completion-profil: done
   11-3-modele-paiement-mobile-money: backlog
   11-4-ui-selection-paiement-multi-provider: backlog
   11-5-validation-admin-paiement-mobile-money: backlog

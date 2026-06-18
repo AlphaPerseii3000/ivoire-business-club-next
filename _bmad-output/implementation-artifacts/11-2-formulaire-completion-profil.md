@@ -1,6 +1,35 @@
 # Story 11.2: Formulaire de complétion de profil post-inscription
 
-Status: review
+Status: done
+
+## Review Findings
+
+Résultat de la revue BMAD : **PASS**.
+
+### Vérifications critiques (toutes OK)
+
+1. **JSX guardrail** : aucun `&&` dans les expressions JSX des fichiers `.tsx` créés/modifiés.
+2. **Auth gate** : la page utilise `auth()` et redirige vers `/auth/signin` si non authentifié ; aucun appel à `getUserPremiumAccess`.
+3. **Audit log** : `safeCreateAuditLog` est appelée après `prisma.user.update` et avant le retour réseau ; action `ONBOARDING_COMPLETED`, `entityType="User"`, `entityId=user.id`.
+4. **Input validation** : le body est validé par `onboardingFormSchema.safeParse` avant toute mutation ; JSON invalide → 400 ; champs inconnus rejetés par Zod.
+5. **No passwordHash exposure** : le `select` de l'API exclut `passwordHash` ; test dédié présent.
+6. **Prisma migration** : migration additive (`ADD COLUMN`) sans `DROP` ni recréation de table ; schema.prisma et schema.dev.prisma alignés.
+7. **'use client'** : présent en tête de `complete-profile-form.tsx` ; la page est un Server Component.
+8. **Pre-fill logic** : `name → fullName`, `email`, `phone`, `country`, et les données JSON existantes de `onboardingForm` sont pré-remplies.
+9. **Test coverage** : 15 nouveaux tests passent (API, page, formulaire) ; tous les ACs couverts.
+10. **No binary DB files committed** : aucun `dev.db` ou `.sqlite3` dans le diff.
+11. **suppressHydrationWarning** : déjà présent sur `<body>` dans `layout.tsx` (non modifié par cette story).
+12. **Zod schema** : 8 champs conformes au contrat PO (`fullName`, `address`, `phone`, `email`, `duration`, `tier`, `activity`, `goals`, `needs`).
+
+### Notes mineures
+
+- Le champ email du formulaire client était déjà `disabled` ; ajout de `readOnly` pour plus de robustesse (éviter la saisie et l'inclusion dans la soumission RHF).
+- L'audit log est appelé en dehors d'une transaction Prisma. C'est acceptable car `safeCreateAuditLog` attrape ses propres erreurs ; il n'y a pas de rollback possible si l'audit échoue.
+- L'API retourne `onboardingCompletedAt` sous forme de chaîne ISO (Prisma DateTime → JSON). Cohérent avec l'AC.
+
+### Issues: 0 decision-needed, 0 patch, 0 defer, 0 dismissed.
+
+---
 
 ## Story
 

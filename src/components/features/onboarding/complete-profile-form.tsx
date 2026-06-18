@@ -152,6 +152,7 @@ export default function CompleteProfileForm({ defaultValues }: CompleteProfileFo
           type="email"
           value={defaultValues.email}
           disabled
+          readOnly
           className="min-h-[44px] bg-muted text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground">L&apos;email ne peut pas être modifié</p>
