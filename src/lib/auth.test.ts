@@ -7,6 +7,8 @@ const mockFindUnique = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn());
 const mockCompare = vi.hoisted(() => vi.fn());
 const mockAdapterCreateUser = vi.hoisted(() => vi.fn(async (user) => user));
+const mockSendWelcomeEmail = vi.hoisted(() => vi.fn(async () => {}));
+const mockSanitizeError = vi.hoisted(() => vi.fn(() => "Error"));
 
 type CredentialsProviderConfig = {
   id: string;
@@ -29,6 +31,8 @@ vi.mock("next-auth/providers/credentials", () => ({ default: mockCredentials }))
 vi.mock("@auth/prisma-adapter", () => ({ PrismaAdapter: vi.fn(() => ({ createUser: mockAdapterCreateUser })) }));
 vi.mock("bcryptjs", () => ({ default: { compare: mockCompare } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: mockFindUnique, update: mockUpdate } } }));
+vi.mock("@/lib/email", () => ({ sendWelcomeEmail: mockSendWelcomeEmail }));
+vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: mockSanitizeError }));
 
 async function loadAuthConfig() {
   vi.resetModules();
@@ -52,6 +56,8 @@ describe("auth.ts exports", () => {
     mockUpdate.mockReset();
     mockCompare.mockReset();
     mockAdapterCreateUser.mockClear();
+    mockSendWelcomeEmail.mockClear();
+    mockSanitizeError.mockClear();
   });
 
   it("exports handlers, auth, signIn, signOut", async () => {
@@ -165,6 +171,36 @@ describe("auth.ts exports", () => {
       where: { id: "admin-1" },
       data: { role: "ADMIN" },
     });
+  });
+
+  it("sends welcome email for newly created Google OAuth user", async () => {
+    const config = await loadAuthConfig();
+    mockFindUnique.mockResolvedValueOnce({ id: "member-2", role: "MEMBER", status: "ACTIVE", createdAt: new Date() });
+
+    const result = await config.callbacks.signIn({
+      user: { email: "new-google@example.com", name: "New Google User" },
+      account: { provider: "google" },
+    });
+
+    expect(result).toBe(true);
+    expect(mockSendWelcomeEmail).toHaveBeenCalledWith({
+      to: "new-google@example.com",
+      name: "New Google User",
+      tier: "AFFRANCHI",
+    });
+  });
+
+  it("does NOT send welcome email for existing Google OAuth user (createdAt > 60s)", async () => {
+    const config = await loadAuthConfig();
+    mockFindUnique.mockResolvedValueOnce({ id: "member-3", role: "MEMBER", status: "ACTIVE", createdAt: new Date(Date.now() - 120_000) });
+
+    const result = await config.callbacks.signIn({
+      user: { email: "existing-google@example.com", name: "Existing Google User" },
+      account: { provider: "google" },
+    });
+
+    expect(result).toBe(true);
+    expect(mockSendWelcomeEmail).not.toHaveBeenCalled();
   });
 
   it("normalizes null emailVerified before Auth.js creates a Prisma user", async () => {

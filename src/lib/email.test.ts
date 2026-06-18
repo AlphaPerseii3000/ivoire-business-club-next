@@ -160,7 +160,7 @@ describe("email helpers", () => {
         from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
         to: "newmember@example.com",
         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
-        text: expect.stringContaining("Vous avez choisi le tier Grands Frères"),
+        text: expect.stringContaining("Vous démarrez avec le tier Grands Frères (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."),
       })
     );
     expect(mockSendMail).toHaveBeenCalledWith(

@@ -229,7 +229,7 @@ export async function sendWelcomeEmail({
   const adhesionContractUrl = process.env.ADHESION_CONTRACT_URL;
 
   let paymentInstructions = "";
-  if (iban || bic || bankAddress) {
+  if (iban) {
     const lines: string[] = [];
     lines.push("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :");
     if (iban) lines.push(`IBAN : ${iban}`);
@@ -248,7 +248,7 @@ export async function sendWelcomeEmail({
 
   const label = tierLabel(tier);
 
-  const body = `${greeting(name)}\n\nVotre inscription sur Ivoire Business Club est confirmée. Vous avez choisi le tier ${label}.${completeProfileBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
+  const body = `${greeting(name)}\n\nVotre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier ${label} (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre.${completeProfileBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
 
   await sendEmail({
     to,

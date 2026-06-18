@@ -94,7 +94,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // Welcome email only for newly created Google OAuth accounts
-        const createdAt = existingUser?.createdAt ? new Date(existingUser.createdAt) : null;
+        const createdAt = existingUser?.createdAt ?? null;
         const isNewUser = createdAt ? (Date.now() - createdAt.getTime()) <= 60 * 1000 : false;
         if (isNewUser) {
           try {
