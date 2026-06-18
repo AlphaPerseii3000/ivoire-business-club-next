@@ -78,7 +78,7 @@ development_status:
   11-4-ui-selection-paiement-multi-provider: done
   11-5-validation-admin-paiement-mobile-money: done
   epic-12: in-progress
-  12-1-modele-event-crud-admin: ready-for-dev
+  12-1-modele-event-crud-admin: review
   12-2-page-calendrier-evenements-publique: backlog
   12-3-composant-prochain-evenement-landing-popup: backlog
   epic-13: backlog

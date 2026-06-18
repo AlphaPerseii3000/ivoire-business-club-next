@@ -3,7 +3,7 @@ baseline_commit: d470eac1b8e7f7d4f9a7e6c6f3a9d8b7c6f5e4a3
 ---
 # Story 12.1 : Modèle Event + CRUD admin
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -142,7 +142,7 @@ Status: ready-for-dev
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (DS subagent, timed out but work complete) + glm-5.2 (orchestrator finalization)
 
 ### Debug Log References
 
