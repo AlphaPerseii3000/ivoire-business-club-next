@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-18T12:51:00+0200
+last_updated: 2026-06-18T18:44:50+0200
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -76,7 +76,7 @@ development_status:
   11-2-formulaire-completion-profil: done
   11-3-modele-paiement-mobile-money: done
   11-4-ui-selection-paiement-multi-provider: done
-  11-5-validation-admin-paiement-mobile-money: backlog
+  11-5-validation-admin-paiement-mobile-money: ready-for-dev
   epic-12: backlog
   12-1-modele-event-crud-admin: backlog
   12-2-page-calendrier-evenements-publique: backlog
