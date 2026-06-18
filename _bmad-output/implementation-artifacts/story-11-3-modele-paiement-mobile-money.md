@@ -1,6 +1,6 @@
 # Story 11.3 : Modèle de paiement mobile money — Extension PaymentProvider
 
-Status: review
+Status: done
 
 ## Story
 
@@ -84,11 +84,33 @@ so that offrir aux membres des moyens de paiement adaptés à l'Afrique de l'Oue
     - `providerPhone` `01234567` rejeté (pas de +)
     - `providerPhone` manquant pour `WAVE` → erreur
 
-- [x] Task 8 : Vérifications finales
+|- [x] Task 8 : Vérifications finales
   - [x] 8.1 Lancer `npm run test` (Vitest) : tous les tests passent
   - [x] 8.2 Lancer `npm run build` : build Next.js passe sans erreur TypeScript liée au schéma Prisma
   - [x] 8.3 Lancer `npx prisma migrate dev` une deuxième fois : aucune nouvelle migration ne doit être générée (drift vérifié)
   - [x] 8.4 Vérifier que `git diff` ne contient pas de fichier `.db`, `.sqlite3`, `.env` ou de migration non voulue
+
+## Review Findings
+
+**Verdict : PASS** — Code review of Story 11-3 completed successfully.
+
+| # | Checklist Item | Résultat | Preuve |
+|---|----------------|---------|--------|
+| 1 | Sécurité migration Prisma (pitfall #42) | ✅ PASS | Migration SQL : `ALTER TABLE "subscriptions" ADD COLUMN "providerPhone" TEXT;` uniquement. Aucun `DROP TABLE`, `CREATE TABLE`, `RedefineTables`. |
+| 2 | Sécurité `@map()` Prisma (pitfall #40) | ✅ PASS | `providerPhone` n'a pas de `@map()`. |
+| 3 | Fichiers binaires / `.env` (pitfall #39) | ✅ PASS | Aucun fichier `.db`, `.sqlite3`, `.env` dans le diff. |
+| 4 | Couverture tests des gardes conditionnelles (pitfall #51) | ✅ PASS | Les deux branches testées : `providerPhone` requis pour `WAVE`/`ORANGE_MONEY` ; `providerPhone` refusé pour `BANK_TRANSFER`. |
+| 5 | Alignement des enums | ✅ PASS | `schema.prisma` et `schema.dev.prisma` identiques (`BANK_TRANSFER`, `WAVE`, `ORANGE_MONEY` + `providerPhone String?`). |
+| 6 | Logique route API | ✅ PASS | `WAVE`/`ORANGE_MONEY` → `TRIAL` ; `BANK_TRANSFER` reste `PENDING`. |
+| 7 | Regex validation / préfixes pays | ✅ PASS | `MOBILE_MONEY_PREFIXES` correspond à la liste UEMOA + Ghana + Guinée exigée ; regex international `^\+\d{7,15}$`. |
+| 8 | Aucun changement UI | ✅ PASS | Aucun fichier `.tsx` modifié. |
+| 9 | Aucune nouvelle dépendance | ✅ PASS | `package.json` inchangé. |
+| 10 | Build et tests passent | ✅ PASS | `npm run build` ✅ ; `npx vitest run` ✅ (719 tests). |
+
+### Observations mineures (non-bloquantes)
+
+- La regex de validation (`^\+\d{7,15}$`) est légèrement plus permissive que l'exemple du spec (`/^\+[1-9]\d{7,14}$/`), mais elle satisfait les AC (format international + pays supporté) et tous les tests passent. C'est acceptable pour cette story backend ; Story 11.4 pourra affiner l'UX si nécessaire.
+- Le Dev Agent Record mentionne que le build a nécessité une régénération du client Prisma avec le schéma PostgreSQL ; c'est un problème d'environnement préexistant et n'affecte pas cette story.
 
 ## Dev Notes
 
