@@ -54,9 +54,24 @@ const pendingSubscription = {
   id: "sub-1",
   userId: "member-1",
   tier: "GRAND_FRERE",
+  provider: "BANK_TRANSFER",
   providerRef: "IBC-member-1-GRAND_FRERE",
   status: "PENDING",
   user: { id: "member-1", name: "Jean Kouassi", email: "jean@example.com" },
+};
+
+const trialWaveSubscription = {
+  ...pendingSubscription,
+  status: "TRIAL",
+  provider: "WAVE",
+  providerPhone: "+225 01 23 45 67 89",
+};
+
+const trialOrangeMoneySubscription = {
+  ...pendingSubscription,
+  status: "TRIAL",
+  provider: "ORANGE_MONEY",
+  providerPhone: "+221 77 123 45 67",
 };
 
 const activeSubscription = {
@@ -130,6 +145,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       entityType: "Subscription",
       entityId: "sub-1",
       metadata: expect.objectContaining({
+        provider: "BANK_TRANSFER",
         previousStatus: "PENDING",
         nextStatus: "ACTIVE",
         tier: "GRAND_FRERE",
@@ -184,6 +200,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       entityType: "Subscription",
       entityId: "sub-1",
       metadata: expect.objectContaining({
+        provider: "BANK_TRANSFER",
         previousStatus: "PENDING",
         nextStatus: "CANCELLED",
         tier: "GRAND_FRERE",
@@ -195,10 +212,8 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
   it("suspends an ACTIVE subscription, blocks future premium access, and creates audit log", async () => {
     mockSubscriptionFindUnique.mockResolvedValueOnce(activeSubscription);
     mockSubscriptionUpdate.mockResolvedValueOnce({ ...activeSubscription, status: "CANCELLED" });
-
     const res = await PATCH(request({ action: "suspend", reason: "Non respect des règles" }), params);
     const json = await res.json();
-
     expect(res.status).toBe(200);
     expect(json.data.status).toBe("CANCELLED");
     expect(mockSubscriptionUpdate).toHaveBeenCalledWith({
@@ -214,10 +229,117 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       entityType: "Subscription",
       entityId: "sub-1",
       metadata: expect.objectContaining({
+        provider: "BANK_TRANSFER",
         previousStatus: "ACTIVE",
         nextStatus: "CANCELLED",
         tier: "GRAND_FRERE",
       }),
     });
   });
-});
+   it("validates a TRIAL WAVE subscription, marks payment succeeded, sends activation email, and creates audit log with provider", async () => {
+     mockSubscriptionFindUnique.mockResolvedValueOnce(trialWaveSubscription);
+
+     const res = await PATCH(request({ action: "validate" }), params);
+     const json = await res.json();
+
+     expect(res.status).toBe(200);
+     expect(json.data.status).toBe("ACTIVE");
+     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
+       where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
+       data: { status: "succeeded" },
+     });
+     expect(mockSendActivated).toHaveBeenCalledWith({
+       to: "jean@example.com",
+       name: "Jean Kouassi",
+       tier: "GRAND_FRERE",
+     });
+     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+       actorId: "admin-1",
+       action: "SUBSCRIPTION_VALIDATE",
+       entityType: "Subscription",
+       entityId: "sub-1",
+       metadata: expect.objectContaining({
+         provider: "WAVE",
+         previousStatus: "TRIAL",
+         nextStatus: "ACTIVE",
+         tier: "GRAND_FRERE",
+       }),
+     });
+   });
+
+   it("validates a TRIAL ORANGE_MONEY subscription and creates audit log with provider", async () => {
+     mockSubscriptionFindUnique.mockResolvedValueOnce(trialOrangeMoneySubscription);
+
+     const res = await PATCH(request({ action: "validate" }), params);
+     const json = await res.json();
+
+     expect(res.status).toBe(200);
+     expect(json.data.status).toBe("ACTIVE");
+     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+       actorId: "admin-1",
+       action: "SUBSCRIPTION_VALIDATE",
+       entityType: "Subscription",
+       entityId: "sub-1",
+       metadata: expect.objectContaining({
+         provider: "ORANGE_MONEY",
+         previousStatus: "TRIAL",
+         nextStatus: "ACTIVE",
+         tier: "GRAND_FRERE",
+       }),
+     });
+   });
+
+   it("rejects a TRIAL WAVE subscription, marks payment failed, sends refusal email, and creates audit log", async () => {
+     mockSubscriptionFindUnique.mockResolvedValueOnce(trialWaveSubscription);
+     mockSubscriptionUpdate.mockResolvedValueOnce({ ...trialWaveSubscription, status: "CANCELLED" });
+
+     const res = await PATCH(request({ action: "reject", reason: "Paiement non reçu" }), params);
+     const json = await res.json();
+
+     expect(res.status).toBe(200);
+     expect(json.data.status).toBe("CANCELLED");
+     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
+       where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
+       data: { status: "failed" },
+     });
+     expect(mockSendRejected).toHaveBeenCalledWith({
+       to: "jean@example.com",
+       name: "Jean Kouassi",
+       tier: "GRAND_FRERE",
+       reason: "Paiement non reçu",
+     });
+     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
+       actorId: "admin-1",
+       action: "SUBSCRIPTION_REJECT",
+       entityType: "Subscription",
+       entityId: "sub-1",
+       metadata: expect.objectContaining({
+         provider: "WAVE",
+         previousStatus: "TRIAL",
+         nextStatus: "CANCELLED",
+         tier: "GRAND_FRERE",
+         paymentStatus: "failed",
+       }),
+     });
+   });
+
+   it("rejects invalid transition from ACTIVE to validate", async () => {
+     mockSubscriptionFindUnique.mockResolvedValueOnce(activeSubscription);
+
+     const res = await PATCH(request({ action: "validate" }), params);
+     const json = await res.json();
+
+     expect(res.status).toBe(409);
+     expect(json.error).toContain("transition");
+     expect(mockTransaction).not.toHaveBeenCalled();
+   });
+
+   it("rejects invalid transition from TRIAL to suspend", async () => {
+     mockSubscriptionFindUnique.mockResolvedValueOnce(trialWaveSubscription);
+     const res = await PATCH(request({ action: "suspend" }), params);
+     const json = await res.json();
+     expect(res.status).toBe(409);
+     expect(json.error).toContain("transition");
+     expect(mockTransaction).not.toHaveBeenCalled();
+   });
+   });

@@ -33,7 +33,7 @@ function transitionError(action: string, status: string) {
     return `transition invalide : seul un abonnement actif peut être suspendu. Statut actuel : ${status}.`;
   }
 
-  return `transition invalide : seul un abonnement en attente peut être traité. Statut actuel : ${status}.`;
+  return `transition invalide : seul un abonnement en attente ou en validation mobile money peut être traité. Statut actuel : ${status}.`;
 }
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -69,7 +69,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const action = parsed.data.action;
-    if ((action === "validate" || action === "reject") && subscription.status !== "PENDING") {
+    if ((action === "validate" || action === "reject") && subscription.status !== "PENDING" && subscription.status !== "TRIAL") {
       return NextResponse.json({ error: transitionError(action, subscription.status), code: "INVALID_TRANSITION" }, { status: 409 });
     }
 
@@ -123,6 +123,7 @@ export async function PATCH(req: Request, { params }: Params) {
       entityType: "Subscription",
       entityId: id,
       metadata: {
+        provider: subscription.provider,
         previousStatus: subscription.status,
         nextStatus: updatedSubscription.status,
         tier: subscription.tier,

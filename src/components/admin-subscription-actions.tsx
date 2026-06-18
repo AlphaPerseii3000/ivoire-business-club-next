@@ -10,7 +10,7 @@ export function AdminSubscriptionActions({
   status,
 }: {
   subscriptionId: string;
-  status: "PENDING" | "ACTIVE" | string;
+  status: "PENDING" | "TRIAL" | "ACTIVE" | string;
 }) {
   const router = useRouter();
   const [loadingAction, setLoadingAction] = useState<"validate" | "reject" | "suspend" | null>(null);
@@ -43,7 +43,9 @@ export function AdminSubscriptionActions({
     }
   }
 
-  if (status === "PENDING") {
+  const isActionable = status === "PENDING" || status === "TRIAL";
+
+  if (isActionable) {
     return (
       <div className="flex flex-col gap-3" aria-label="Actions abonnement en attente">
         <div className="flex flex-wrap gap-2">

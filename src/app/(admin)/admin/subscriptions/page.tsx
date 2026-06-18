@@ -4,12 +4,15 @@ import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { AdminSubscriptionActions } from "@/components/admin-subscription-actions";
+import { PaymentProviderBadge, type PaymentProvider } from "@/components/payment-provider-badge";
 import { redirect } from "next/navigation";
 
 type AdminSubscription = {
   id: string;
   userId: string;
   tier: string;
+  provider: PaymentProvider;
+  providerPhone: string | null;
   providerRef: string | null;
   status: string;
   createdAt: Date;
@@ -43,10 +46,12 @@ function SubscriptionTable({
   subscriptions,
   payments,
   emptyLabel,
+  showProviderPhone,
 }: {
   subscriptions: AdminSubscription[];
   payments: PaymentSummary[];
   emptyLabel: string;
+  showProviderPhone: boolean;
 }) {
   if (subscriptions.length === 0) {
     return <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">{emptyLabel}</p>;
@@ -62,6 +67,7 @@ function SubscriptionTable({
             <th className="px-4 py-3 font-medium">Tier</th>
             <th className="px-4 py-3 font-medium">Montant</th>
             <th className="px-4 py-3 font-medium">Date de soumission</th>
+            <th className="px-4 py-3 font-medium">Moyen de paiement</th>
             <th className="px-4 py-3 font-medium">Référence virement</th>
             <th className="px-4 py-3 font-medium">Actions</th>
           </tr>
@@ -78,7 +84,16 @@ function SubscriptionTable({
                 <td className="px-4 py-4">{tier.label}</td>
                 <td className="px-4 py-4">{formatCurrency(amount)}</td>
                 <td className="px-4 py-4">{formatDate(subscription.createdAt)}</td>
-                <td className="px-4 py-4 font-mono text-xs">{subscription.providerRef || "Référence absente"}</td>
+                <td className="px-4 py-4">
+                  <PaymentProviderBadge
+                    provider={subscription.provider}
+                    providerPhone={showProviderPhone ? subscription.providerPhone : null}
+                    showPhone={showProviderPhone}
+                  />
+                </td>
+                <td className="px-4 py-4 font-mono text-xs">
+                  {subscription.providerRef || "Référence absente"}
+                </td>
                 <td className="px-4 py-4">
                   <AdminSubscriptionActions subscriptionId={subscription.id} status={subscription.status} />
                 </td>
@@ -98,7 +113,7 @@ export default async function AdminSubscriptionsPage() {
   const admin = await promoteConfiguredAdminUser(session.user.id);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
 
-  const [pendingSubscriptions, activeSubscriptions] = await Promise.all([
+  const [pendingSubscriptions, activeSubscriptions, trialSubscriptions] = await Promise.all([
     prisma.subscription.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
@@ -109,9 +124,16 @@ export default async function AdminSubscriptionsPage() {
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true, email: true } } },
     }),
+    prisma.subscription.findMany({
+      where: { status: "TRIAL" },
+      orderBy: { createdAt: "asc" },
+      include: { user: { select: { name: true, email: true } } },
+    }),
   ]);
 
-  const providerRefs = [...pendingSubscriptions, ...activeSubscriptions]
+  const actionableSubscriptions = [...pendingSubscriptions, ...trialSubscriptions];
+
+  const providerRefs = [...actionableSubscriptions, ...activeSubscriptions]
     .map((subscription) => subscription.providerRef)
     .filter((providerRef): providerRef is string => Boolean(providerRef));
 
@@ -129,20 +151,28 @@ export default async function AdminSubscriptionsPage() {
           <p className="text-sm font-medium text-primary">Administration</p>
           <h1 className="text-2xl font-bold">Validation des abonnements</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Contrôlez les virements bancaires reçus, activez les membres validés et suspendez les accès premium si nécessaire.
+            Contrôlez les virements bancaires et paiements mobile money reçus, activez les membres validés et suspendez les accès premium si nécessaire.
           </p>
         </div>
-        <a href="/admin/dashboard" className="min-h-11 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <a
+          href="/admin/dashboard"
+          className="min-h-11 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           ← Retour au tableau de bord
         </a>
       </div>
 
-      <section aria-label="Virements en attente" className="mt-8 space-y-4">
+      <section aria-label="Abonnements à valider" className="mt-8 space-y-4">
         <div>
-          <h2 className="text-xl font-semibold">Virements en attente</h2>
-          <p className="text-sm text-muted-foreground">Abonnements à valider après confirmation du virement bancaire.</p>
+          <h2 className="text-xl font-semibold">Abonnements à valider</h2>
+          <p className="text-sm text-muted-foreground">Abonnements à valider après confirmation du paiement.</p>
         </div>
-        <SubscriptionTable subscriptions={pendingSubscriptions} payments={payments} emptyLabel="Aucun virement en attente" />
+        <SubscriptionTable
+          subscriptions={actionableSubscriptions}
+          payments={payments}
+          emptyLabel="Aucun abonnement à valider"
+          showProviderPhone={true}
+        />
       </section>
 
       <section aria-label="Abonnements actifs" className="mt-10 space-y-4">
@@ -150,7 +180,12 @@ export default async function AdminSubscriptionsPage() {
           <h2 className="text-xl font-semibold">Abonnements actifs</h2>
           <p className="text-sm text-muted-foreground">Membres dont l’accès premium est actuellement ouvert.</p>
         </div>
-        <SubscriptionTable subscriptions={activeSubscriptions} payments={payments} emptyLabel="Aucun abonnement actif" />
+        <SubscriptionTable
+          subscriptions={activeSubscriptions}
+          payments={payments}
+          emptyLabel="Aucun abonnement actif"
+          showProviderPhone={false}
+        />
       </section>
     </div>
   );

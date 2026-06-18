@@ -73,4 +73,21 @@ describe("AdminSubscriptionActions", () => {
 
     await waitFor(() => expect(mockToastError).toHaveBeenCalledWith("Transition invalide"));
   });
+
+  it("validates a TRIAL subscription", async () => {
+    const user = userEvent.setup();
+    render(<AdminSubscriptionActions subscriptionId="sub-1" status="TRIAL" />);
+
+    await user.click(screen.getByRole("button", { name: /Valider/i }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/admin/subscriptions/sub-1", expect.objectContaining({ method: "PATCH" })));
+    expect(JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)).toEqual({ action: "validate" });
+    expect(mockToastSuccess).toHaveBeenCalledWith("Abonnement validé.");
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("renders nothing for non-actionable statuses", () => {
+    const { container } = render(<AdminSubscriptionActions subscriptionId="sub-1" status="CANCELLED" />);
+    expect(container.firstChild).toBeNull();
+  });
 });
