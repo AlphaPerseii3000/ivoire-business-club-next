@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { PaymentMethodSelector } from "./payment-method-selector";
+import { PaymentMethodSelector, formatPhoneForInput } from "./payment-method-selector";
 
 describe("PaymentMethodSelector", () => {
   it("displays three payment options with bank transfer selected by default", () => {
@@ -105,10 +105,19 @@ describe("PaymentMethodSelector", () => {
     await user.click(screen.getByRole("radio", { name: /Wave/i }));
     await user.type(screen.getByTestId("provider-phone-input"), "+225 abc 01.23-45 67");
 
-    expect(screen.getByTestId("provider-phone-input")).toHaveValue(cleanPhone("+225 abc 01.23-45 67"));
+    expect(screen.getByTestId("provider-phone-input")).toHaveValue(formatPhoneForInput("+225 abc 01.23-45 67"));
   });
 
-  function cleanPhone(value: string): string {
-    return value.replace(/[^\d+]/g, "").slice(0, 18);
-  }
+  it("blocks submission and shows a prefix error for unsupported country indicatif", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<PaymentMethodSelector onSubmit={onSubmit} />);
+
+    await user.click(screen.getByRole("radio", { name: /Wave/i }));
+    await user.type(screen.getByTestId("provider-phone-input"), "+33612345678");
+    await user.click(screen.getByTestId("payment-method-submit"));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText(/Indicatif non supporté/i)).toBeInTheDocument();
+  });
 });

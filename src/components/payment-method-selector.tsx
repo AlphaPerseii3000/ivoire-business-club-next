@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getProviderColorClasses, getSupportedCountriesSentence, type MobileMoneyProvider } from "@/lib/mobile-money-config";
+import { getProviderColorClasses, getSupportedCountriesSentence, isSupportedMobileMoneyPrefix, type MobileMoneyProvider } from "@/lib/mobile-money-config";
 
 export type PaymentProvider = "BANK_TRANSFER" | MobileMoneyProvider;
 
@@ -40,7 +40,7 @@ const PAYMENT_OPTIONS: { value: PaymentProvider; label: string; description: str
   },
 ];
 
-function formatPhoneForInput(phone: string): string {
+export function formatPhoneForInput(phone: string): string {
   return phone.replace(/[^\d+]/g, "").slice(0, 18);
 }
 
@@ -57,11 +57,14 @@ export function PaymentMethodSelector({
   const isMobileMoney = selectedProvider === "WAVE" || selectedProvider === "ORANGE_MONEY";
   const showPhoneField = isMobileMoney;
   const isPhoneRequired = isMobileMoney;
-  const canSubmit = !isMobileMoney || (phone.length >= 8 && phone.startsWith("+"));
+  const isPhoneLengthValid = phone.length >= 8 && phone.startsWith("+");
+  const isPhonePrefixSupported = !isMobileMoney || isSupportedMobileMoneyPrefix(phone);
+  const canSubmit = !isMobileMoney || (isPhoneLengthValid && isPhonePrefixSupported);
+  const showPrefixError = isMobileMoney && phone.length > 0 && isPhoneLengthValid && !isPhonePrefixSupported;
 
   const providerColors = useMemo(() => {
     if (selectedProvider === "WAVE" || selectedProvider === "ORANGE_MONEY") {
-      return getProviderColorClasses(selectedProvider);
+      return getProviderColorClasses(selectedProvider as MobileMoneyProvider);
     }
     return null;
   }, [selectedProvider]);
@@ -87,7 +90,7 @@ export function PaymentMethodSelector({
             const isSelected = selectedProvider === option.value;
             const Icon = option.icon;
             const isMobile = option.value === "WAVE" || option.value === "ORANGE_MONEY";
-            const colors = isMobile ? getProviderColorClasses(option.value) : null;
+            const colors = isMobile ? getProviderColorClasses(option.value as MobileMoneyProvider) : null;
 
             return (
               <div
@@ -153,6 +156,11 @@ export function PaymentMethodSelector({
                 <Info className="size-3.5" aria-hidden="true" />
                 Pays supportés : {getSupportedCountriesSentence()}
               </p>
+              {showPrefixError ? (
+                <p className="text-xs text-destructive">
+                  Indicatif non supporté. Utilise un numéro mobile money des pays listés ci-dessus.
+                </p>
+              ) : null}
             </div>
           </CardContent>
         </Card>
