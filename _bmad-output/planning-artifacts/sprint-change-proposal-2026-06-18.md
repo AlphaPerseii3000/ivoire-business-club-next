@@ -678,3 +678,20 @@ Le contrat mentionne :
 - Art. 5bis : Obligation du membre de "fournir des informations exactes" via le "formulaire d'adhésion IBC" — couvert par Epic 11 Story 11.2
 
 **Action :** Le contrat d'adhésion doit être intégrable dans l'email d'accueil (lien de téléchargement ou PDF en pièce jointe). À confirmer avec le PO pour la Story 11.1.
+
+**Formulaire de complétion = Contrat d'adhésion digitalisé :**  
+Le PO a confirmé que le formulaire de complétion de profil (Story 11.2) correspond au **contrat d'adhésion lui-même**, digitalisé en formulaire web. Les champs du formulaire sont donc :
+
+| Champ | Type | Source contrat |
+|-------|------|----------------|
+| Nom / Prénom ou Société | Texte | En-tête du contrat |
+| Adresse | Texte | En-tête du contrat |
+| Téléphone | Texte | En-tête du contrat |
+| Email | Texte (pré-rempli) | En-tête du contrat |
+| Durée d'adhésion | Select : Mensuelle / Semestrielle / Annuelle | Art. 2 |
+| Formule choisie | Select : Affranchis / Grands Frères / Boss | Art. 3 |
+| Activité | Texte / Textarea | Art. 5bis |
+| Objectifs | Textarea | Art. 5bis |
+| Besoins | Textarea | Art. 5bis |
+
+Le formulaire sur `/onboarding/complete-profile` reproduit ces champs en version web, pré-remplit les données existantes (nom, email, téléphone, pays depuis le profil User), et sauvegarde le tout dans `onboardingForm` (JSON). À la soumission, le membre a effectivement "signé" son adhésion numériquement.
