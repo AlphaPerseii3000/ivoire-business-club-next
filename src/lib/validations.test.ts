@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   profileUpdateSchema,
   reviewCreateSchema,
+  subscriptionCreateSchema,
   UEMOA_COUNTRIES,
 } from "./validations";
 
@@ -175,4 +176,95 @@ describe("UEMOA_COUNTRIES", () => {
   it("has 194 countries", () => {
     expect(UEMOA_COUNTRIES).toHaveLength(194);
   });
+});
+
+describe("subscriptionCreateSchema", () => {
+  it("accepts BANK_TRANSFER without providerPhone", () => {
+    const result = subscriptionCreateSchema.safeParse({
+      tier: "AFFRANCHI",
+      period: "MONTHLY",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.provider).toBe("BANK_TRANSFER");
+      expect(result.data.providerPhone).toBeNull();
+    }
+  });
+
+  it("rejects providerPhone for BANK_TRANSFER", () => {
+    const result = subscriptionCreateSchema.safeParse({
+      tier: "AFFRANCHI",
+      period: "MONTHLY",
+      provider: "BANK_TRANSFER",
+      providerPhone: "+225 01 23 45 67",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.providerPhone).toBeDefined();
+    }
+  });
+
+  it.each(["WAVE", "ORANGE_MONEY"] as const)(
+    "requires providerPhone for %s",
+    (provider) => {
+      const result = subscriptionCreateSchema.safeParse({
+        tier: "AFFRANCHI",
+        period: "MONTHLY",
+        provider,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.flatten().fieldErrors.providerPhone).toBeDefined();
+      }
+    }
+  );
+
+  it.each(["WAVE", "ORANGE_MONEY"] as const)(
+    "accepts valid +225 providerPhone for %s",
+    (provider) => {
+      const result = subscriptionCreateSchema.safeParse({
+        tier: "GRAND_FRERE",
+        period: "ANNUAL",
+        provider,
+        providerPhone: "+22501234567",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.provider).toBe(provider);
+        expect(result.data.providerPhone).toBe("+22501234567");
+      }
+    }
+  );
+
+  it.each(["WAVE", "ORANGE_MONEY"] as const)(
+    "rejects unsupported country +33 for %s",
+    (provider) => {
+      const result = subscriptionCreateSchema.safeParse({
+        tier: "AFFRANCHI",
+        period: "MONTHLY",
+        provider,
+        providerPhone: "+336****5678",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.flatten().fieldErrors.providerPhone).toBeDefined();
+      }
+    }
+  );
+
+  it.each(["WAVE", "ORANGE_MONEY"] as const)(
+    "rejects national number without plus for %s",
+    (provider) => {
+      const result = subscriptionCreateSchema.safeParse({
+        tier: "AFFRANCHI",
+        period: "MONTHLY",
+        provider,
+        providerPhone: "01234567",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.flatten().fieldErrors.providerPhone).toBeDefined();
+      }
+    }
+  );
 });

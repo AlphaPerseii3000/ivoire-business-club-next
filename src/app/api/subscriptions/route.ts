@@ -51,10 +51,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { tier, period } = parsed.data;
+    const { tier, period, provider, providerPhone } = parsed.data;
     const userId = session.user.id;
     const providerRef = `IBC-${userId}-${tier}`;
     const amount = getAmountForTier(tier);
+    const isMobileMoney = provider === "WAVE" || provider === "ORANGE_MONEY";
 
     const result = await prisma.$transaction(async (tx) => {
       const subscription = await tx.subscription.create({
@@ -62,9 +63,10 @@ export async function POST(req: Request) {
           userId,
           tier,
           period,
-          provider: "BANK_TRANSFER",
+          provider,
+          providerPhone: isMobileMoney ? providerPhone : null,
           providerRef,
-          status: "PENDING",
+          status: isMobileMoney ? "TRIAL" : "PENDING",
           startDate: new Date(),
         },
       });
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
           userId,
           amount,
           currency: "EUR",
-          provider: "BANK_TRANSFER",
+          provider,
           providerRef,
           status: "pending",
         },

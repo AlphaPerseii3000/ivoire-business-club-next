@@ -62,10 +62,76 @@ export type SigninInput = z.infer<typeof signinSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
 
-export const subscriptionCreateSchema = z.object({
-  tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"]),
-  period: z.enum(["MONTHLY", "ANNUAL"]),
-});
+const MOBILE_MONEY_PREFIXES = [
+  "+225", // Côte d'Ivoire
+  "+221", // Sénégal
+  "+226", // Burkina Faso
+  "+223", // Mali
+  "+229", // Bénin
+  "+228", // Togo
+  "+227", // Niger
+  "+245", // Guinée-Bissau
+  "+233", // Ghana
+  "+224", // Guinée
+  "+238", // Cap-Vert
+];
+
+const providerPhoneRegex = /^\+\d{7,15}$/;
+const providerPhoneError =
+  "Veuillez saisir un numéro mobile money international valide (ex. +225 01 23 45 67).";
+
+function isSupportedMobileMoneyPrefix(phone: string | undefined | null) {
+  if (!phone) return false;
+  return MOBILE_MONEY_PREFIXES.some((prefix) => phone.startsWith(prefix));
+}
+
+export const subscriptionCreateSchema = z
+  .object({
+    tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"]),
+    period: z.enum(["MONTHLY", "ANNUAL"]),
+    provider: z.enum(["BANK_TRANSFER", "WAVE", "ORANGE_MONEY"]).default("BANK_TRANSFER"),
+    providerPhone: z.string().optional().nullable(),
+  })
+  .transform((data) => ({
+    ...data,
+    providerPhone: data.providerPhone === "" || data.providerPhone === undefined ? null : data.providerPhone,
+  }))
+  .refine(
+    (data) => {
+      if (data.provider === "BANK_TRANSFER") {
+        return data.providerPhone === null;
+      }
+      return true;
+    },
+    {
+      message: "Le numéro de téléphone mobile money n'est pas requis pour le virement bancaire.",
+      path: ["providerPhone"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.provider !== "BANK_TRANSFER") {
+        return data.providerPhone !== null;
+      }
+      return true;
+    },
+    {
+      message: providerPhoneError,
+      path: ["providerPhone"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.provider !== "BANK_TRANSFER" && data.providerPhone !== null) {
+        return providerPhoneRegex.test(data.providerPhone) && isSupportedMobileMoneyPrefix(data.providerPhone);
+      }
+      return true;
+    },
+    {
+      message: providerPhoneError,
+      path: ["providerPhone"],
+    }
+  );
 
 export type SubscriptionCreateInput = z.infer<typeof subscriptionCreateSchema>;
 

@@ -8,7 +8,7 @@ const mockSubscriptionFindMany = vi.hoisted(() => vi.fn());
 const mockSubscriptionCreate = vi.hoisted(() => vi.fn());
 const mockPaymentCreate = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() =>
-  vi.fn((cb: (tx: unknown) => unknown) =>
+  vi.fn(async (cb: (tx: unknown) => unknown) =>
     cb({
       subscription: {
         create: mockSubscriptionCreate,
@@ -126,6 +126,7 @@ describe("POST /api/subscriptions", () => {
       tier: "GRAND_FRERE",
       period: "MONTHLY",
       provider: "BANK_TRANSFER",
+      providerPhone: null,
       providerRef: "IBC-user-123-GRAND_FRERE",
       status: "PENDING",
       startDate: new Date("2026-05-14"),
@@ -177,6 +178,7 @@ describe("POST /api/subscriptions", () => {
           tier: "GRAND_FRERE",
           period: "MONTHLY",
           provider: "BANK_TRANSFER",
+          providerPhone: null,
           providerRef: "IBC-user-123-GRAND_FRERE",
           status: "PENDING",
         }),
@@ -270,6 +272,112 @@ describe("POST /api/subscriptions", () => {
     expect(res.status).toBe(400);
     expect(json.error).toBe("Données invalides");
     expect(json.details).toBeDefined();
+  });
+
+  it.each([
+    ["WAVE", "+22501234567"],
+    ["ORANGE_MONEY", "+221771234567"],
+  ] as const)(
+    "creates TRIAL %s subscription and pending payment with providerPhone",
+    async (provider, providerPhone) => {
+      mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+      const typedProvider = provider as "WAVE" | "ORANGE_MONEY";
+      const mockSub = {
+        id: "sub-mobile",
+        userId: "user-123",
+        tier: "BOSS",
+        period: "ANNUAL",
+        provider: typedProvider,
+        providerPhone,
+        providerRef: `IBC-user-123-BOSS`,
+        status: "TRIAL",
+        startDate: new Date("2026-06-18"),
+        createdAt: new Date("2026-06-18"),
+        updatedAt: new Date("2026-06-18"),
+      };
+      const mockPayment = {
+        id: "pay-mobile",
+        userId: "user-123",
+        amount: 99,
+        currency: "EUR",
+        provider: typedProvider,
+        providerRef: "IBC-user-123-BOSS",
+        status: "pending",
+        createdAt: new Date("2026-06-18"),
+      };
+      mockSubscriptionCreate.mockResolvedValueOnce(mockSub);
+      mockPaymentCreate.mockResolvedValueOnce(mockPayment);
+      mockTransaction.mockImplementationOnce(async (cb: (tx: unknown) => unknown) =>
+        cb({
+          subscription: { create: mockSubscriptionCreate },
+          payment: { create: mockPaymentCreate },
+        })
+      );
+
+      const res = await POST(makeRequest({ tier: "BOSS", period: "ANNUAL", provider: typedProvider, providerPhone }));
+      const json = await res.json();
+
+      expect(res.status).toBe(201);
+      expect(json.data.subscription.status).toBe("TRIAL");
+      expect(json.data.subscription.provider).toBe(typedProvider);
+      expect(json.data.subscription.providerPhone).toBe(providerPhone);
+      expect(json.data.payment.provider).toBe(typedProvider);
+      expect(mockSubscriptionCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            provider: typedProvider,
+            providerPhone,
+            status: "TRIAL",
+          }),
+        })
+      );
+    }
+  );
+
+  it("returns 400 if providerPhone is missing for WAVE", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({ tier: "AFFRANCHI", period: "MONTHLY", provider: "WAVE" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.providerPhone).toBeDefined();
+  });
+
+  it("returns 400 if providerPhone is invalid country for ORANGE_MONEY", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      tier: "AFFRANCHI",
+      period: "MONTHLY",
+      provider: "ORANGE_MONEY",
+      providerPhone: "+336****5678",
+    });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.providerPhone).toBeDefined();
+  });
+
+  it("returns 400 if providerPhone is provided for BANK_TRANSFER", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      tier: "AFFRANCHI",
+      period: "MONTHLY",
+      provider: "BANK_TRANSFER",
+      providerPhone: "+225****4567",
+    });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.providerPhone).toBeDefined();
   });
 
   it("returns 400 for malformed JSON", async () => {

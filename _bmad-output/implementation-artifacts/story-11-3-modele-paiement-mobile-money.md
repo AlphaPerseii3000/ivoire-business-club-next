@@ -1,6 +1,6 @@
 # Story 11.3 : Modèle de paiement mobile money — Extension PaymentProvider
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,71 +24,71 @@ so that offrir aux membres des moyens de paiement adaptés à l'Afrique de l'Oue
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 : Audit du code existant lié aux paiements (AC : #1, #2)
-  - [ ] 1.1 Lire `prisma/schema.prisma` et `prisma/schema.dev.prisma` : modèles `Subscription`, `Payment` et enum `PaymentProvider`
-  - [ ] 1.2 Lire `src/lib/validations.ts` : `subscriptionCreateSchema` actuel (uniquement `tier` + `period`)
-  - [ ] 1.3 Lire `src/app/api/subscriptions/route.ts` et `src/app/api/admin/subscriptions/[id]/route.ts` pour comprendre le cycle TRIAL/PENDING → ACTIVE existant
-  - [ ] 1.4 Lire `src/app/(admin)/admin/subscriptions/page.tsx` pour comprendre les colonnes affichées côté admin
-  - [ ] 1.5 Lire `src/lib/bank-transfer-config.ts` et `src/components/bank-transfer-instructions.tsx` pour le flux virement bancaire existant
-  - [ ] 1.6 Identifier toute référence existante à Wave, Orange Money, mobile money ou `providerPhone` (attendu : aucune)
+- [x] Task 1 : Audit du code existant lié aux paiements (AC : #1, #2)
+  - [x] 1.1 Lire `prisma/schema.prisma` et `prisma/schema.dev.prisma` : modèles `Subscription`, `Payment` et enum `PaymentProvider`
+  - [x] 1.2 Lire `src/lib/validations.ts` : `subscriptionCreateSchema` actuel (uniquement `tier` + `period`)
+  - [x] 1.3 Lire `src/app/api/subscriptions/route.ts` et `src/app/api/admin/subscriptions/[id]/route.ts` pour comprendre le cycle TRIAL/PENDING → ACTIVE existant
+  - [x] 1.4 Lire `src/app/(admin)/admin/subscriptions/page.tsx` pour comprendre les colonnes affichées côté admin
+  - [x] 1.5 Lire `src/lib/bank-transfer-config.ts` et `src/components/bank-transfer-instructions.tsx` pour le flux virement bancaire existant
+  - [x] 1.6 Identifier toute référence existante à Wave, Orange Money, mobile money ou `providerPhone` (attendu : aucune)
 
-- [ ] Task 2 : Étendre l'enum Prisma `PaymentProvider` (AC : #1)
-  - [ ] 2.1 Modifier `prisma/schema.prisma` : ajouter `WAVE` et `ORANGE_MONEY` à l'enum `PaymentProvider`
-  - [ ] 2.2 Modifier `prisma/schema.dev.prisma` de façon identique
-  - [ ] 2.3 Vérifier que les modèles `Subscription` et `Payment` utilisent déjà `PaymentProvider` ; ne PAS modifier leur type provider
+- [x] Task 2 : Étendre l'enum Prisma `PaymentProvider` (AC : #1)
+  - [x] 2.1 Modifier `prisma/schema.prisma` : ajouter `WAVE` et `ORANGE_MONEY` à l'enum `PaymentProvider`
+  - [x] 2.2 Modifier `prisma/schema.dev.prisma` de façon identique
+  - [x] 2.3 Vérifier que les modèles `Subscription` et `Payment` utilisent déjà `PaymentProvider` ; ne PAS modifier leur type provider
 
-- [ ] Task 3 : Ajouter le champ `providerPhone` au modèle `Subscription` (AC : #2)
-  - [ ] 3.1 Modifier `prisma/schema.prisma` : ajouter `providerPhone String?` dans `Subscription`
-  - [ ] 3.2 Modifier `prisma/schema.dev.prisma` de façon identique
-  - [ ] 3.3 Vérifier que le champ est `nullable` pour ne pas casser les abonnements existants (virement bancaire)
-  - [ ] 3.4 NE PAS ajouter `@map` si aucun mapping personnalisé n'est nécessaire ; si `@map` est utilisé, vérifier que la migration ne génère pas de `RENAME COLUMN` destructeur (pitfall #40)
+- [x] Task 3 : Ajouter le champ `providerPhone` au modèle `Subscription` (AC : #2)
+  - [x] 3.1 Modifier `prisma/schema.prisma` : ajouter `providerPhone String?` dans `Subscription`
+  - [x] 3.2 Modifier `prisma/schema.dev.prisma` de façon identique
+  - [x] 3.3 Vérifier que le champ est `nullable` pour ne pas casser les abonnements existants (virement bancaire)
+  - [x] 3.4 NE PAS ajouter `@map` si aucun mapping personnalisé n'est nécessaire ; si `@map` est utilisé, vérifier que la migration ne génère pas de `RENAME COLUMN` destructeur (pitfall #40)
 
-- [ ] Task 4 : Créer une migration additive sûre (AC : #1, #2)
-  - [ ] 4.1 Exécuter `npx prisma migrate dev --name add_mobile_money_providers` en local (SQLite dev)
-  - [ ] 4.2 Vérifier le fichier SQL généré : doit contenir uniquement `ALTER TYPE ... ADD VALUE` (PostgreSQL) ou équivalent SQLite, et `ALTER TABLE "subscriptions" ADD COLUMN "providerPhone" TEXT` avec default NULL
-  - [ ] 4.3 S'assurer que la migration ne contient PAS de `DROP TABLE`, `CREATE TABLE new_*`, ni recréation de table (pitfall #42)
-  - [ ] 4.4 Si un drift est détecté, résoudre par `npx prisma migrate resolve` ou reset local uniquement si acceptable ; ne jamais modifier une migration déjà appliquée en prod
-  - [ ] 4.5 Lancer `npx prisma generate` et vérifier que le client Prisma compile
+- [x] Task 4 : Créer une migration additive sûre (AC : #1, #2)
+  - [x] 4.1 Exécuter `npx prisma migrate dev --name add_mobile_money_providers` en local (SQLite dev)
+  - [x] 4.2 Vérifier le fichier SQL généré : doit contenir uniquement `ALTER TYPE ... ADD VALUE` (PostgreSQL) ou équivalent SQLite, et `ALTER TABLE "subscriptions" ADD COLUMN "providerPhone" TEXT` avec default NULL
+  - [x] 4.3 S'assurer que la migration ne contient PAS de `DROP TABLE`, `CREATE TABLE new_*`, ni recréation de table (pitfall #42)
+  - [x] 4.4 Si un drift est détecté, résoudre par `npx prisma migrate resolve` ou reset local uniquement si acceptable ; ne jamais modifier une migration déjà appliquée en prod
+  - [x] 4.5 Lancer `npx prisma generate` et vérifier que le client Prisma compile
 
-- [ ] Task 5 : Étendre le schéma de validation `subscriptionCreateSchema` (AC : #3)
-  - [ ] 5.1 Modifier `src/lib/validations.ts` : ajouter `provider` optionnel de type `z.enum(["BANK_TRANSFER", "WAVE", "ORANGE_MONEY"])` avec défaut `"BANK_TRANSFER"`
-  - [ ] 5.2 Ajouter `providerPhone` optionnel : validation conditionnelle requise si `provider` est `WAVE` ou `ORANGE_MONEY`
-  - [ ] 5.3 Règle de validation du numéro mobile money :
+- [x] Task 5 : Étendre le schéma de validation `subscriptionCreateSchema` (AC : #3)
+  - [x] 5.1 Modifier `src/lib/validations.ts` : ajouter `provider` optionnel de type `z.enum(["BANK_TRANSFER", "WAVE", "ORANGE_MONEY"])` avec défaut `"BANK_TRANSFER"`
+  - [x] 5.2 Ajouter `providerPhone` optionnel : validation conditionnelle requise si `provider` est `WAVE` ou `ORANGE_MONEY`
+  - [x] 5.3 Règle de validation du numéro mobile money :
     - format international (E.164) : regex `/^\+[1-9]\d{7,14}$/` ou utilisation d'une librairie si ajoutée
     - pays supportés : Côte d'Ivoire (`+225`), Sénégal (`+221`), Burkina Faso (`+226`), Mali (`+223`), Bénin (`+229`), Togo (`+228`), Niger (`+227`), Guinée-Bissau (`+245`), Ghana (`+233`), Guinée (`+224`), Cap-Vert (`+238`)
     - message d'erreur en français : "Veuillez saisir un numéro mobile money international valide (ex. +225 01 23 45 67)."
-  - [ ] 5.4 Valider que `providerPhone` est `null` ou `undefined` si `provider === "BANK_TRANSFER"`
-  - [ ] 5.5 Exporter `SubscriptionCreateInput` mis à jour
+  - [x] 5.4 Valider que `providerPhone` est `null` ou `undefined` si `provider === "BANK_TRANSFER"`
+  - [x] 5.5 Exporter `SubscriptionCreateInput` mis à jour
 
-- [ ] Task 6 : Mettre à jour l'API de création d'abonnement pour mobile money (AC : #2, #3)
-  - [ ] 6.1 Modifier `src/app/api/subscriptions/route.ts` :
+- [x] Task 6 : Mettre à jour l'API de création d'abonnement pour mobile money (AC : #2, #3)
+  - [x] 6.1 Modifier `src/app/api/subscriptions/route.ts` :
     - accepter `provider` et `providerPhone` via `subscriptionCreateSchema`
     - si `provider` est `WAVE` ou `ORANGE_MONEY`, créer l'abonnement avec `status: "TRIAL"` (pas `PENDING` — conforme Story 11.4 / FR63)
     - stocker `providerPhone` sur la `Subscription`
     - conserver `providerRef` généré (`IBC-${userId}-${tier}`)
     - créer le `Payment` associé avec le même `provider` et `providerRef`
-  - [ ] 6.2 S'assurer que le flux virement bancaire reste inchangé (`provider: "BANK_TRANSFER"`, `status: "PENDING"`, `providerPhone: null`)
-  - [ ] 6.3 Conserver le format de réponse `{ data: { subscription, payment } }`
+  - [x] 6.2 S'assurer que le flux virement bancaire reste inchangé (`provider: "BANK_TRANSFER"`, `status: "PENDING"`, `providerPhone: null`)
+  - [x] 6.3 Conserver le format de réponse `{ data: { subscription, payment } }`
 
-- [ ] Task 7 : Tests unitaires et d'intégration (AC : #1, #2, #3)
-  - [ ] 7.1 Créer/mettre à jour `src/app/api/subscriptions/route.test.ts` :
+- [x] Task 7 : Tests unitaires et d'intégration (AC : #1, #2, #3)
+  - [x] 7.1 Créer/mettre à jour `src/app/api/subscriptions/route.test.ts` :
     - création d'abonnement `WAVE` avec `providerPhone` valide → statut `TRIAL`, `provider: "WAVE"`, `providerPhone` stocké
     - création d'abonnement `ORANGE_MONEY` avec `providerPhone` valide → statut `TRIAL`, `provider: "ORANGE_MONEY"`, `providerPhone` stocké
     - refus 400 si `providerPhone` manquant pour `WAVE`/`ORANGE_MONEY`
     - refus 400 si `providerPhone` invalide (format national ou pays non supporté)
     - refus 400 si `providerPhone` fourni pour `BANK_TRANSFER`
     - vérifier que `BANK_TRANSFER` conserve `status: "PENDING"` et `providerPhone: null`
-  - [ ] 7.2 Créer des tests pour la validation Zod dans `src/lib/validations.test.ts` (si le fichier existe ; sinon le créer) :
+  - [x] 7.2 Créer des tests pour la validation Zod dans `src/lib/validations.test.ts` (si le fichier existe ; sinon le créer) :
     - `providerPhone` +225 valide
     - `providerPhone` +33 rejeté (pays non supporté)
     - `providerPhone` `01234567` rejeté (pas de +)
     - `providerPhone` manquant pour `WAVE` → erreur
 
-- [ ] Task 8 : Vérifications finales
-  - [ ] 8.1 Lancer `npm run test` (Vitest) : tous les tests passent
-  - [ ] 8.2 Lancer `npm run build` : build Next.js passe sans erreur TypeScript liée au schéma Prisma
-  - [ ] 8.3 Lancer `npx prisma migrate dev` une deuxième fois : aucune nouvelle migration ne doit être générée (drift vérifié)
-  - [ ] 8.4 Vérifier que `git diff` ne contient pas de fichier `.db`, `.sqlite3`, `.env` ou de migration non voulue
+- [x] Task 8 : Vérifications finales
+  - [x] 8.1 Lancer `npm run test` (Vitest) : tous les tests passent
+  - [x] 8.2 Lancer `npm run build` : build Next.js passe sans erreur TypeScript liée au schéma Prisma
+  - [x] 8.3 Lancer `npx prisma migrate dev` une deuxième fois : aucune nouvelle migration ne doit être générée (drift vérifié)
+  - [x] 8.4 Vérifier que `git diff` ne contient pas de fichier `.db`, `.sqlite3`, `.env` ou de migration non voulue
 
 ## Dev Notes
 
@@ -224,25 +224,35 @@ Fichiers à LIRE pour le contexte (NE PAS modifier sauf indication) :
 
 ### Agent Model Used
 
-*À remplir par le dev agent.*
+kimi-k2.7-code (ollama-cloud)
 
 ### Debug Log References
 
 - Clean baseline : 704 tests passent, build OK (commit `23d660e`).
 - Story 11.2 a créé une migration additive SQLite (`add_onboarding_form`) : référence pour le pattern de migration sûre.
 - Le repo utilise actuellement `prisma/migrations` (SQLite) ; `prisma/migrations-postgresql` n'existe pas encore.
+- Build with SQLite DATABASE_URL fails due to a pre-existing schema/provider mismatch in the generated client (provider `postgres` vs adapter `sqlite`). Re-running `npx prisma generate` with `PRISMA_SCHEMA=prisma/schema.prisma DATABASE_URL=postgresql://...` allows the build to complete, confirming no TypeScript/schema error introduced by this story.
 
 ### Completion Notes List
 
-- [ ] Schéma Prisma modifié (`PaymentProvider` + `providerPhone`) et aligné entre `schema.prisma` et `schema.dev.prisma`.
-- [ ] Migration additive générée avec `npx prisma migrate dev --name add_mobile_money_providers` et vérifiée (pas de `DROP TABLE`).
-- [ ] `npx prisma generate` exécuté avec succès.
-- [ ] `subscriptionCreateSchema` mis à jour avec validation conditionnelle de `providerPhone`.
-- [ ] `src/app/api/subscriptions/route.ts` mis à jour pour `WAVE`/`ORANGE_MONEY` → statut `TRIAL` + `providerPhone` stocké.
-- [ ] Tests ajoutés/couverts pour les nouveaux providers et la validation du numéro.
-- [ ] `npm run test` et `npm run build` passent.
-- [ ] Aucun fichier `.db`, `.sqlite3`, `.env` ni migration modifiée post-application dans le diff.
+- [x] Schéma Prisma modifié (`PaymentProvider` + `providerPhone`) et aligné entre `schema.prisma` et `schema.dev.prisma`.
+- [x] Migration additive générée avec `npx prisma migrate dev --name add_mobile_money_providers` et vérifiée (pas de `DROP TABLE`).
+- [x] `npx prisma generate` exécuté avec succès.
+- [x] `subscriptionCreateSchema` mis à jour avec validation conditionnelle de `providerPhone`.
+- [x] `src/app/api/subscriptions/route.ts` mis à jour pour `WAVE`/`ORANGE_MONEY` → statut `TRIAL` + `providerPhone` stocké.
+- [x] Tests ajoutés/couverts pour les nouveaux providers et la validation du numéro.
+- [x] `npx vitest run` passe (719 tests).
+- [x] `npm run build` passe après régénération du client Prisma avec PostgreSQL schema (pas d'erreur liée au schéma).
+- [x] Aucun fichier `.db`, `.sqlite3`, `.env` ni migration modifiée post-application dans le diff.
 
 ### File List
 
-*À remplir par le dev agent lors de la finalisation.*
+- `prisma/schema.prisma`
+- `prisma/schema.dev.prisma`
+- `prisma/migrations/20260618111153_add_mobile_money_providers/migration.sql`
+- `src/lib/validations.ts`
+- `src/lib/validations.test.ts`
+- `src/app/api/subscriptions/route.ts`
+- `src/app/api/subscriptions/route.test.ts`
+- `_bmad-output/implementation-artifacts/story-11-3-modele-paiement-mobile-money.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

@@ -74,7 +74,7 @@ development_status:
   epic-11: in-progress
   11-1-email-accueil-post-inscription: done
   11-2-formulaire-completion-profil: done
-  11-3-modele-paiement-mobile-money: ready-for-dev
+  11-3-modele-paiement-mobile-money: review
   11-4-ui-selection-paiement-multi-provider: backlog
   11-5-validation-admin-paiement-mobile-money: backlog
   epic-12: backlog
