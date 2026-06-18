@@ -4,7 +4,7 @@ baseline_commit: 342896f5653ea6e8b70b3f0fd4c3d54920fcb5a0
 
 # Story 11.4 : UI sélection paiement — Page tier avec choix multi-provider
 
-Status: review
+Status: done
 
 ## Story
 

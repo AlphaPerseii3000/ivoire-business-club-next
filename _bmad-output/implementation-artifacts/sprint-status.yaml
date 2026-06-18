@@ -75,7 +75,7 @@ development_status:
   11-1-email-accueil-post-inscription: done
   11-2-formulaire-completion-profil: done
   11-3-modele-paiement-mobile-money: done
-  11-4-ui-selection-paiement-multi-provider: review
+  11-4-ui-selection-paiement-multi-provider: done
   11-5-validation-admin-paiement-mobile-money: backlog
   epic-12: backlog
   12-1-modele-event-crud-admin: backlog
