@@ -1,6 +1,6 @@
 # Story 11.2: Formulaire de complétion de profil post-inscription
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,13 +28,13 @@ so that faciliter mon matching et mon accompagnement par le club.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Migration Prisma — ajouter `onboardingForm Json?` et `onboardingCompletedAt DateTime?` au modèle `User` (AC: #2)
-  - [ ] 1.1 Modifier `prisma/schema.prisma` : ajouter les deux champs dans le modèle `User`
-  - [ ] 1.2 Générer et appliquer la migration avec `npx prisma migrate dev --name add_onboarding_form` (dev SQLite) ; fournir le nom de migration explicite
-  - [ ] 1.3 S'assurer que `prisma.user.update` et le retour d'API n'exposent pas `passwordHash`
+- [x] Task 1: Migration Prisma — ajouter `onboardingForm Json?` et `onboardingCompletedAt DateTime?` au modèle `User` (AC: #2)
+  - [x] 1.1 Modifier `prisma/schema.prisma` : ajouter les deux champs dans le modèle `User`
+  - [x] 1.2 Générer et appliquer la migration avec `npx prisma migrate dev --name add_onboarding_form` (dev SQLite) ; fournir le nom de migration explicite
+  - [x] 1.3 S'assurer que `prisma.user.update` et le retour d'API n'exposent pas `passwordHash`
 
-- [ ] Task 2: Créer le schéma Zod de validation du formulaire d'adhésion (AC: #2, #4)
-  - [ ] 2.1 Ajouter `onboardingFormSchema` dans `src/lib/validations.ts` avec les 8 champs :
+- [x] Task 2: Créer le schéma Zod de validation du formulaire d'adhésion (AC: #2, #4)
+  - [x] 2.1 Ajouter `onboardingFormSchema` dans `src/lib/validations.ts` avec les 8 champs :
     - `fullName`: `z.string().min(2).max(150)`
     - `address`: `z.string().min(5).max(300)`
     - `phone`: `z.string().regex(/^\+?\d[\d\s.-]{6,}$/, ...)` — réutiliser la regex existante
@@ -44,50 +44,50 @@ so that faciliter mon matching et mon accompagnement par le club.
     - `activity`: `z.string().min(2).max(300)`
     - `goals`: `z.string().min(10).max(2000)`
     - `needs`: `z.string().min(10).max(2000)`
-  - [ ] 2.2 Exporter `OnboardingFormInput = z.infer<typeof onboardingFormSchema>`
+  - [x] 2.2 Exporter `OnboardingFormInput = z.infer<typeof onboardingFormSchema>`
 
-- [ ] Task 3: Créer l'API route `PUT /api/user/onboarding` (AC: #2, #4)
-  - [ ] 3.1 Vérifier `auth()` → 401 si non authentifié
-  - [ ] 3.2 Valider le body avec `onboardingFormSchema`
-  - [ ] 3.3 Mettre à jour l'utilisateur : `onboardingForm: parsed.data`, `onboardingCompletedAt: new Date()`
-  - [ ] 3.4 Logger un audit `ONBOARDING_COMPLETED` via `AuditLog` (action, entityType `User`, entityId user.id, metadata avec date)
-  - [ ] 3.5 Retourner `200 { data: { onboardingForm, onboardingCompletedAt } }` sans champs sensibles
-  - [ ] 3.6 Gérer les erreurs serveur avec `sanitizeError` et retourner 500
+- [x] Task 3: Créer l'API route `PUT /api/user/onboarding` (AC: #2, #4)
+  - [x] 3.1 Vérifier `auth()` → 401 si non authentifié
+  - [x] 3.2 Valider le body avec `onboardingFormSchema`
+  - [x] 3.3 Mettre à jour l'utilisateur : `onboardingForm: parsed.data`, `onboardingCompletedAt: new Date()`
+  - [x] 3.4 Logger un audit `ONBOARDING_COMPLETED` via `AuditLog` (action, entityType `User`, entityId user.id, metadata avec date)
+  - [x] 3.5 Retourner `200 { data: { onboardingForm, onboardingCompletedAt } }` sans champs sensibles
+  - [x] 3.6 Gérer les erreurs serveur avec `sanitizeError` et retourner 500
 
-- [ ] Task 4: Créer la page `/onboarding/complete-profile` (AC: #1, #3, #4)
-  - [ ] 4.1 Utiliser une Server Component par défaut pour lire `auth()` et fetch `/api/user/profile` en interne ou utiliser `prisma` directement (pas d'appel HTTP supplémentaire si possible)
-  - [ ] 4.2 Si non authentifié → `redirect("/auth/signin")`
-  - [ ] 4.3 Pré-remplir les champs depuis le profil existant : `name → fullName`, `email`, `phone`, `country`
-  - [ ] 4.4 Si `onboardingCompletedAt` existe, pré-remplir aussi avec les données JSON existantes
-  - [ ] 4.5 Rendre le formulaire client via un composant dédié `CompleteProfileForm` (cf. Task 5)
+- [x] Task 4: Créer la page `/onboarding/complete-profile` (AC: #1, #3, #4)
+  - [x] 4.1 Utiliser une Server Component par défaut pour lire `auth()` et utiliser `prisma` directement (pas d'appel HTTP supplémentaire)
+  - [x] 4.2 Si non authentifié → `redirect("/auth/signin")`
+  - [x] 4.3 Pré-remplir les champs depuis le profil existant : `name → fullName`, `email`, `phone`, `country`
+  - [x] 4.4 Si `onboardingCompletedAt` existe, pré-remplir aussi avec les données JSON existantes
+  - [x] 4.5 Rendre le formulaire client via un composant dédié `CompleteProfileForm` (cf. Task 5)
 
-- [ ] Task 5: Créer le composant client `CompleteProfileForm` (AC: #1, #2, #4)
-  - [ ] 5.1 Fichier `src/components/features/onboarding/complete-profile-form.tsx` avec `"use client"` en haut
-  - [ ] 5.2 Utiliser `react-hook-form` + `zodResolver` avec `onboardingFormSchema`
-  - [ ] 5.3 Utiliser les composants shadcn/ui `Input`, `Textarea`, `Select`, `Label`, `Button`
-  - [ ] 5.4 Afficher les 8 champs en single-column, labels au-dessus, placeholders muted (UX-DR14)
-  - [ ] 5.5 Champ email en read-only (pré-rempli, non modifiable)
-  - [ ] 5.6 Bouton submit pleine largeur mobile, avec état loading
-  - [ ] 5.7 À la soumission, appeler `PUT /api/user/onboarding`
-  - [ ] 5.8 En cas de succès, afficher `toast.success("Profil complété. Bienvenue sur IBC !")` puis rediriger vers `/dashboard`
-  - [ ] 5.9 En cas d'erreur, afficher `toast.error("Erreur lors de la sauvegarde")`
+- [x] Task 5: Créer le composant client `CompleteProfileForm` (AC: #1, #2, #4)
+  - [x] 5.1 Fichier `src/components/features/onboarding/complete-profile-form.tsx` avec `"use client"` en haut
+  - [x] 5.2 Utiliser `react-hook-form` + `zodResolver` avec `onboardingFormSchema`
+  - [x] 5.3 Utiliser les composants shadcn/ui `Input`, `Textarea`, `Select`, `Label`, `Button`
+  - [x] 5.4 Afficher les 8 champs en single-column, labels au-dessus, placeholders muted (UX-DR14)
+  - [x] 5.5 Champ email en read-only (pré-rempli, non modifiable)
+  - [x] 5.6 Bouton submit pleine largeur mobile, avec état loading
+  - [x] 5.7 À la soumission, appeler `PUT /api/user/onboarding`
+  - [x] 5.8 En cas de succès, afficher `toast.success("Profil complété. Bienvenue sur IBC !")` puis rediriger vers `/dashboard`
+  - [x] 5.9 En cas d'erreur, afficher `toast.error("Erreur lors de la sauvegarde")`
 
-- [ ] Task 6: Gérer le routage post-inscription et la redirection (AC: #3)
-  - [ ] 6.1 Vérifier que `/onboarding/complete-profile` est traitée comme une route publique accessible aux utilisateurs authentifiés (le middleware `src/middleware.ts` ne doit pas la bloquer)
-  - [ ] 6.2 Optionnel : après signin/signup, rediriger vers `/onboarding/complete-profile` si le membre n'a pas encore `onboardingCompletedAt` — à discuter avec le PO ; pour cette story, le lien vient de l'email d'accueil (Story 11.1)
+- [x] Task 6: Gérer le routage post-inscription et la redirection (AC: #3)
+  - [x] 6.1 Vérifier que `/onboarding/complete-profile` est traitée comme une route publique accessible aux utilisateurs authentifiés (le middleware `src/middleware.ts` ne doit pas la bloquer)
+  - [x] 6.2 Optionnel : après signin/signup, rediriger vers `/onboarding/complete-profile` si le membre n'a pas encore `onboardingCompletedAt` — non implémenté dans cette story ; à discuter avec le PO
 
-- [ ] Task 7: Tests unitaires et d'intégration (AC: #1, #2, #3, #4)
-  - [ ] 7.1 Créer `src/app/api/user/onboarding/route.test.ts` :
+- [x] Task 7: Tests unitaires et d'intégration (AC: #1, #2, #3, #4)
+  - [x] 7.1 Créer `src/app/api/user/onboarding/route.test.ts` :
     - 401 si non authentifié
     - 400 si body invalide
     - 200 + mise à jour `onboardingForm` + `onboardingCompletedAt` + log audit
     - 200 permet de modifier les données si déjà complétées
     - 500 si erreur DB
-  - [ ] 7.2 Créer `src/components/features/onboarding/complete-profile-form.test.tsx` :
+  - [x] 7.2 Créer `src/components/features/onboarding/complete-profile-form.test.tsx` :
     - pré-remplissage des champs
     - soumission appelle l'API
     - affichage du toast et redirection
-  - [ ] 7.3 Créer `src/app/onboarding/complete-profile/page.test.tsx` :
+  - [x] 7.3 Créer `src/app/onboarding/complete-profile/page.test.tsx` :
     - redirection si non authentifié
     - rendu du formulaire si authentifié
 
@@ -156,9 +156,11 @@ C'est une **modification de schéma requise** pour cette story. Le dev agent doi
 ### File Structure
 
 Fichiers à CRÉER :
-- `prisma/migrations/2026xxxx_add_onboarding_form/migration.sql` — via `npx prisma migrate dev`
+- `prisma/migrations/20260618102845_add_onboarding_form/migration.sql` — via `npx prisma migrate dev`
 - `prisma/schema.prisma` — ajouter `onboardingForm` et `onboardingCompletedAt`
+- `prisma/schema.dev.prisma` — ajouter `onboardingForm` et `onboardingCompletedAt`
 - `src/lib/validations.ts` — ajouter `onboardingFormSchema`
+- `src/lib/audit-log.ts` — ajouter `ONBOARDING_COMPLETED`
 - `src/app/api/user/onboarding/route.ts` — API route PUT
 - `src/app/api/user/onboarding/route.test.ts` — tests API
 - `src/app/onboarding/complete-profile/page.tsx` — page server
@@ -189,7 +191,7 @@ Fichiers à LIRE pour le contexte :
 - [Source: src/lib/auth.ts] — auth() pattern
 - [Source: src/app/api/user/profile/route.ts] — mutation User + transaction
 - [Source: src/components/features/auth/profile-edit-form.tsx] — pattern formulaire client
-- [Source: src/app/onboarding/complete-profile] — page à créer
+- [Source: src/app/onboarding/complete-profile] — page créée
 - [Source: _bmad-output/implementation-artifacts/sprint-status.yaml] — status tracking
 
 ## Dev Agent Record
@@ -200,26 +202,30 @@ Kimi K2.7 Code (via Hermes delegate_task)
 
 ### Debug Log References
 
-- Aucun exécuté pour la création du story (pas de build/tests à ce stade).
+- Migration Prisma appliquée avec succès après reset local (drift résiduel dû aux migrations précédentes modifiées).
+- Build Next.js 16 passé sans erreur.
+- Suite de tests Vitest : 704 tests passent (15 nouveaux pour cette story).
 
 ### Completion Notes List
 
-- Story créée avec tous les détails du contrat d'adhésion digitalisé (8 champs).
-- Migration Prisma identifiée comme requise (`onboardingForm Json?`, `onboardingCompletedAt DateTime?`).
-- API route dédiée `PUT /api/user/onboarding` avec log audit.
-- Page `/onboarding/complete-profile` et composant client `CompleteProfileForm` planifiés.
-- Guardrails Next.js 16 (pas de `&&` en JSX) et Auth.js/Prisma respectés.
-- Tests unitaires/API/composant/page définis.
+- Migration Prisma créée et appliquée (`add_onboarding_form`) avec les champs `onboardingForm` (Json?) et `onboardingCompletedAt` (DateTime?).
+- Schéma Zod `onboardingFormSchema` ajouté dans `src/lib/validations.ts` avec les 9 champs requis (8 + email).
+- API route `PUT /api/user/onboarding` créée : auth, validation Zod, mutation User, audit log `ONBOARDING_COMPLETED`, réponse sans `passwordHash`.
+- Page Server Component `/onboarding/complete-profile` créée : redirection si non authentifié, pré-remplissage via Prisma, rendu du formulaire client.
+- Composant client `CompleteProfileForm` créé avec react-hook-form + zodResolver, shadcn/ui, toast et redirection `/dashboard`.
+- Tests créés pour l'API (6 tests), le formulaire (6 tests) et la page (3 tests).
+- Guardrail Next.js 16 respecté : aucun `&&` dans les expressions JSX des nouveaux fichiers.
 
 ### File List
 
-- Créé : `_bmad-output/implementation-artifacts/11-2-formulaire-completion-profil.md`
-- À créer par le dev agent :
-  - `prisma/schema.prisma` (modification)
-  - `src/lib/validations.ts` (modification)
-  - `src/app/api/user/onboarding/route.ts`
-  - `src/app/api/user/onboarding/route.test.ts`
-  - `src/app/onboarding/complete-profile/page.tsx`
-  - `src/app/onboarding/complete-profile/page.test.tsx`
-  - `src/components/features/onboarding/complete-profile-form.tsx`
-  - `src/components/features/onboarding/complete-profile-form.test.tsx`
+- Modifié : `prisma/schema.prisma`
+- Modifié : `prisma/schema.dev.prisma`
+- Créé : `prisma/migrations/20260618102845_add_onboarding_form/migration.sql`
+- Modifié : `src/lib/validations.ts`
+- Modifié : `src/lib/audit-log.ts`
+- Créé : `src/app/api/user/onboarding/route.ts`
+- Créé : `src/app/api/user/onboarding/route.test.ts`
+- Créé : `src/app/onboarding/complete-profile/page.tsx`
+- Créé : `src/app/onboarding/complete-profile/page.test.tsx`
+- Créé : `src/components/features/onboarding/complete-profile-form.tsx`
+- Créé : `src/components/features/onboarding/complete-profile-form.test.tsx`

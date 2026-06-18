@@ -398,6 +398,20 @@ export const articleUpdateSchema = articleCreateSchema.partial().extend({
 export type ArticleCreateInput = z.infer<typeof articleCreateSchema>;
 export type ArticleUpdateInput = z.infer<typeof articleUpdateSchema>;
 
+export const onboardingFormSchema = z.object({
+  fullName: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(150, "Le nom ne doit pas dépasser 150 caractères"),
+  address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères").max(300, "L'adresse ne doit pas dépasser 300 caractères"),
+  phone: z.string().regex(/^\+?\d[\d\s.-]{6,}$/, "Veuillez saisir un numéro de téléphone valide."),
+  email: z.string().email("Email invalide"),
+  duration: z.enum(["MONTHLY", "SEMESTERIAL", "ANNUAL"], { message: "Durée d'adhésion invalide" }),
+  tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], { message: "Formule choisie invalide" }),
+  activity: z.string().min(2, "L'activité doit contenir au moins 2 caractères").max(300, "L'activité ne doit pas dépasser 300 caractères"),
+  goals: z.string().min(10, "Les objectifs doivent contenir au moins 10 caractères").max(2000, "Les objectifs ne doivent pas dépasser 2000 caractères"),
+  needs: z.string().min(10, "Les besoins doivent contenir au moins 10 caractères").max(2000, "Les besoins ne doivent pas dépasser 2000 caractères"),
+});
+
+export type OnboardingFormInput = z.infer<typeof onboardingFormSchema>;
+
 export const commentCreateSchema = z.object({
   content: z
     .string()

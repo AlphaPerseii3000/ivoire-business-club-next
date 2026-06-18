@@ -86,6 +86,8 @@ model User {
   emailVerified Boolean   @default(false)
   platinumAwardedAt DateTime?
   platinumUpdatedAt DateTime?
+  onboardingForm      Json?
+  onboardingCompletedAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
