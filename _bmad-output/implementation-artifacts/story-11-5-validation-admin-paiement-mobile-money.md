@@ -1,6 +1,6 @@
 # Story 11.5 : Validation admin des paiements mobile money
 
-Status: review
+Status: done
 _baseline_commit: 7c597726e44df30b58bab1c7bb679fda60a6a269
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
