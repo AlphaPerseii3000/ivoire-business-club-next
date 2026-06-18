@@ -54,7 +54,7 @@ describe("GET /api/events/[id]", () => {
     expect(response.status).toBe(404);
   });
 
-  it("returns 404 for visitor when event is DRAFT", async () => {
+  it("does not expose DRAFT events to visitors", async () => {
     mockAuth.mockResolvedValue(null);
     mockEventFindFirst.mockResolvedValue(mockEvent);
 
@@ -207,6 +207,34 @@ describe("PUT /api/events/[id]", () => {
     });
 
     expect(response.status).toBe(404);
+  });
+
+  it("prevents republishing a cancelled event via PUT (idempotent lifecycle)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockEventFindFirst.mockResolvedValueOnce({
+      ...mockEvent,
+      status: "CANCELLED",
+    });
+
+    const response = await PUT(makeRequest("PUT", { status: "PUBLISHED" }), {
+      params: Promise.resolve({ id: "evt-cancelled" }),
+    });
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toMatch(/un événement annulé ne peut pas être modifié/i);
+  });
+
+  it("allows no-op DRAFT → DRAFT status update", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockEventFindFirst.mockResolvedValueOnce(mockEvent);
+    mockEventUpdate.mockResolvedValue(mockEvent);
+
+    const response = await PUT(makeRequest("PUT", { status: "DRAFT" }), {
+      params: Promise.resolve({ id: "evt-1" }),
+    });
+
+    expect(response.status).toBe(200);
   });
 });
 

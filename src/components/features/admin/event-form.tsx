@@ -170,6 +170,11 @@ export default function EventForm({ initialData }: EventFormProps) {
     }
   };
 
+  const canChangeStatus = (currentStatus: string) => {
+    // Only allow the forward transitions required by the story.
+    return currentStatus !== "CANCELLED";
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -271,14 +276,25 @@ export default function EventForm({ initialData }: EventFormProps) {
                   setStatusValue(val);
                 }
               }}
+              disabled={!canChangeStatus(statusValue)}
             >
               <SelectTrigger id="status" data-testid="event-status-trigger">
                 <SelectValue placeholder="Choisir un statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="DRAFT">{STATUS_LABELS.DRAFT}</SelectItem>
-                <SelectItem value="PUBLISHED">{STATUS_LABELS.PUBLISHED}</SelectItem>
-                <SelectItem value="CANCELLED">{STATUS_LABELS.CANCELLED}</SelectItem>
+                {statusValue === "DRAFT" ? (
+                  <>
+                    <SelectItem value="DRAFT">{STATUS_LABELS.DRAFT}</SelectItem>
+                    <SelectItem value="PUBLISHED">{STATUS_LABELS.PUBLISHED}</SelectItem>
+                  </>
+                ) : statusValue === "PUBLISHED" ? (
+                  <>
+                    <SelectItem value="PUBLISHED">{STATUS_LABELS.PUBLISHED}</SelectItem>
+                    <SelectItem value="CANCELLED">{STATUS_LABELS.CANCELLED}</SelectItem>
+                  </>
+                ) : (
+                  <SelectItem value="CANCELLED">{STATUS_LABELS.CANCELLED}</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <div className="flex items-center gap-1.5">
@@ -286,6 +302,11 @@ export default function EventForm({ initialData }: EventFormProps) {
               {renderStatusBadge(statusValue)}
             </div>
           </div>
+          {!canChangeStatus(statusValue) ? (
+            <p className="text-sm text-muted-foreground">
+              Un événement annulé ne peut pas être republié depuis l'interface.
+            </p>
+          ) : null}
           {errors.status ? (
             <p className="text-sm text-destructive">{errors.status.message}</p>
           ) : null}

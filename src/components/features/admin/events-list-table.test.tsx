@@ -100,15 +100,16 @@ describe("EventsListTable Component", () => {
 
   it("triggers cancel status change for published event", async () => {
     const user = userEvent.setup();
-    render(<EventsListTable events={mockEvents} />);
+    render(<EventsListTable events={mockEvents.map((e) => (e.status === "CANCELLED" ? { ...e, status: "PUBLISHED" as const } : e))} />
+    );
 
-    const statusBtn = screen.getByTestId("status-btn-evt-2");
+    const statusBtn = screen.getByTestId("status-btn-evt-3");
     expect(statusBtn).toHaveTextContent("Annuler");
     await user.click(statusBtn);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/events/evt-2",
+        "/api/events/evt-3",
         expect.objectContaining({
           method: "PUT",
           body: JSON.stringify({ status: "CANCELLED" }),
@@ -142,6 +143,11 @@ describe("EventsListTable Component", () => {
     });
     expect(mockToastSuccess).toHaveBeenCalledWith("Événement supprimé avec succès.");
     expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("does not show status change button for cancelled events", () => {
+    render(<EventsListTable events={mockEvents.filter((e) => e.status === "CANCELLED")} />);
+    expect(screen.queryByTestId("status-btn-evt-3")).not.toBeInTheDocument();
   });
 
   it("renders empty state when no events", () => {

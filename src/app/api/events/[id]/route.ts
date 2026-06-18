@@ -78,11 +78,53 @@ export async function PUT(
 
     const data: any = { ...parsed.data };
 
-    if (data.startDate) {
-      data.startDate = new Date(data.startDate);
+    // Enforce the documented DRAFT → PUBLISHED → CANCELLED lifecycle. Once
+    // CANCELLED, an event can no longer change status through this endpoint.
+    if (data.status) {
+      if (event.status === "CANCELLED") {
+        return NextResponse.json(
+          { error: "Transition de statut invalide : un événement annulé ne peut pas être modifié." },
+          { status: 400 }
+        );
+      }
+      const allowedTransitions: Record<"DRAFT" | "PUBLISHED" | "CANCELLED", Array<"DRAFT" | "PUBLISHED" | "CANCELLED">> = {
+        DRAFT: ["DRAFT", "PUBLISHED"],
+        PUBLISHED: ["PUBLISHED", "CANCELLED"],
+        CANCELLED: [],
+      };
+      const allowed = allowedTransitions[event.status as keyof typeof allowedTransitions] ?? [];
+      if (!allowed.includes(data.status)) {
+        return NextResponse.json(
+          { error: `Transition de statut invalide : ${event.status} → ${data.status} n'est pas autorisée.` },
+          { status: 400 }
+        );
+      }
     }
-    if (data.endDate) {
-      data.endDate = new Date(data.endDate);
+
+    // Normalize optional endDate: empty string is treated as null
+    if (data.endDate === "") {
+      data.endDate = null;
+    }
+
+    // Compute effective dates to enforce the invariant even on partial updates
+    const effectiveStart = data.startDate
+      ? new Date(data.startDate)
+      : event.startDate;
+    const effectiveEnd =
+      data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : event.endDate;
+
+    if (effectiveEnd && effectiveStart > effectiveEnd) {
+      return NextResponse.json(
+        { error: "La date de fin doit être postérieure ou égale à la date de début" },
+        { status: 400 }
+      );
+    }
+
+    if (data.startDate) {
+      data.startDate = effectiveStart;
+    }
+    if (data.endDate !== undefined) {
+      data.endDate = effectiveEnd;
     }
 
     if (parsed.data.title && parsed.data.title !== event.title) {

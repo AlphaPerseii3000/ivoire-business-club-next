@@ -55,16 +55,14 @@ export default function EventsListTable({ events }: EventsListTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteTitle, setDeleteTitle] = useState<string>("");
 
-  const getNextStatus = (currentStatus: string) => {
+  const getNextStatus = (currentStatus: string): "PUBLISHED" | "CANCELLED" | null => {
     switch (currentStatus) {
       case "DRAFT":
         return "PUBLISHED";
       case "PUBLISHED":
         return "CANCELLED";
-      case "CANCELLED":
-        return "DRAFT";
       default:
-        return "PUBLISHED";
+        return null;
     }
   };
 
@@ -74,17 +72,19 @@ export default function EventsListTable({ events }: EventsListTableProps) {
         return "Publier";
       case "PUBLISHED":
         return "Annuler";
-      case "CANCELLED":
-        return "Repasser en brouillon";
       default:
-        return "Changer statut";
+        return null;
     }
   };
 
   const handleStatusChange = (event: Event) => {
+    const newStatus = getNextStatus(event.status);
+    if (!newStatus) return;
+
+    const label: string = STATUS_LABELS[newStatus];
+
     startTransition(async () => {
       try {
-        const newStatus = getNextStatus(event.status);
         const res = await fetch(`/api/events/${event.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -97,7 +97,7 @@ export default function EventsListTable({ events }: EventsListTableProps) {
           return;
         }
 
-        toast.success(`Statut mis à jour : ${STATUS_LABELS[newStatus]}.`);
+        toast.success(`Statut mis à jour : ${label}.`);
         router.refresh();
       } catch {
         toast.error("Erreur réseau. Veuillez réessayer.");
@@ -187,16 +187,18 @@ export default function EventsListTable({ events }: EventsListTableProps) {
                   <TableCell>{renderStatusBadge(event.status)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={isPending}
-                        onClick={() => handleStatusChange(event)}
-                        data-testid={`status-btn-${event.id}`}
-                      >
-                        {getStatusActionLabel(event.status)}
-                      </Button>
+                      {getStatusActionLabel(event.status) ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isPending}
+                          onClick={() => handleStatusChange(event)}
+                          data-testid={`status-btn-${event.id}`}
+                        >
+                          {getStatusActionLabel(event.status)}
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         variant="outline"
