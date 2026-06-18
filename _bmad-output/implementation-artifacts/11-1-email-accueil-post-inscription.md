@@ -1,6 +1,6 @@
 # Story 11.1: Email d'accueil automatique post-inscription
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -144,8 +144,29 @@ Fichiers à LIRE pour le contexte :
 
 ### Agent Model Used
 
+Kimi K2.7 Code (via Hermes delegate_task)
+
 ### Debug Log References
+
+- Aucun problème de bundling — l'implémentation réutilise `sendEmail()` existant sans nouvelle dépendance.
 
 ### Completion Notes List
 
+- `sendWelcomeEmail({ to, name, tier })` ajouté dans `src/lib/email.ts` — plain-text, réutilise `greeting()`, `tierLabel()`, `dashboardLine()`.
+- Contenu : confirmation inscription, tier label, lien `/onboarding/complete-profile`, instructions virement (si `BANK_TRANSFER_IBAN` set), lien contrat (si `ADHESION_CONTRACT_URL` set), lien dashboard.
+- Sujet : "Bienvenue sur Ivoire Business Club — Vos prochaines étapes".
+- Déclenchement dans `src/app/api/auth/signup/route.ts` : second try/catch non-bloquant après l'email de vérification, indépendant.
+- Déclenchement dans `src/lib/auth.ts` : callback `signIn` Google, vérifie `createdAt` dans les 60 dernières secondes pour détecter nouvelle inscription.
+- `ADHESION_CONTRACT_URL` ajouté dans `.env.example` sur sa propre ligne.
+- Tests : 687 tests passent (104 fichiers), build Next.js 16.2.6/Turbopack réussit.
+- `src/lib/auth.test.ts` mis à jour pour inclure `createdAt` dans le select.
+
 ### File List
+
+- Modifié : `src/lib/email.ts` — ajout `sendWelcomeEmail`
+- Modifié : `src/app/api/auth/signup/route.ts` — déclenchement welcome email non-bloquant
+- Modifié : `src/lib/auth.ts` — déclenchement welcome email à la première inscription Google
+- Modifié : `src/lib/auth.test.ts` — select mis à jour avec `createdAt`
+- Modifié : `src/lib/email.test.ts` — tests `sendWelcomeEmail`
+- Modifié : `src/app/api/auth/signup/route.test.ts` — tests intégration welcome email
+- Modifié : `.env.example` — ajout `ADHESION_CONTRACT_URL`

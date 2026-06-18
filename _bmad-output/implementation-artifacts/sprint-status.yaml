@@ -72,7 +72,7 @@ development_status:
   10-1-verification-membres-pre-requis: done
   10-2-data-room-securisee: done
   epic-11: in-progress
-  11-1-email-accueil-post-inscription: ready-for-dev
+  11-1-email-accueil-post-inscription: done
   11-2-formulaire-completion-profil: backlog
   11-3-modele-paiement-mobile-money: backlog
   11-4-ui-selection-paiement-multi-provider: backlog
