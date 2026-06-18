@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 export default async function PricingPage() {
   const session = await auth();
   const isAuthenticated = !!session?.user?.id;
+  const userId = session?.user?.id;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -48,7 +49,7 @@ export default async function PricingPage() {
         </div>
 
         <div className="mt-12">
-          <PricingTierSelection isAuthenticated={isAuthenticated} />
+          <PricingTierSelection isAuthenticated={isAuthenticated} userId={userId} />
         </div>
       </main>
     </div>

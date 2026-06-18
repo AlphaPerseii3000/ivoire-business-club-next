@@ -4,9 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 import PricingPage from "./page";
 
 const mockAuth = vi.hoisted(() => vi.fn());
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
 }));
 
 describe("PricingPage", () => {

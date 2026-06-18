@@ -1,6 +1,10 @@
+---
+baseline_commit: 342896f5653ea6e8b70b3f0fd4c3d54920fcb5a0
+---
+
 # Story 11.4 : UI sélection paiement — Page tier avec choix multi-provider
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,54 +32,54 @@ so that payer avec le moyen le plus pratique pour moi.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 : Audit du code existant et delta-scoping (AC: #1, #2)
-  - [ ] 1.1 Lire `src/app/(public)/pricing/page.tsx` — page publique de sélection de tier
-  - [ ] 1.2 Lire `src/app/(public)/pricing/virement/page.tsx` — page d'instructions de virement existante
-  - [ ] 1.3 Lire `src/components/pricing-tier-selection.tsx` — composant de sélection de tier
-  - [ ] 1.4 Lire `src/components/bank-transfer-instructions.tsx` — instructions de virement existantes
-  - [ ] 1.5 Lire `src/lib/bank-transfer-config.ts` — configuration RIB KS Investment
-  - [ ] 1.6 Lire `src/app/api/subscriptions/route.ts` — API de création d'abonnement (vérifier support provider/providerPhone déjà ajouté par Story 11-3)
-  - [ ] 1.7 Lire `src/lib/validations.ts` — `subscriptionCreateSchema` (vérifier champs provider/providerPhone déjà ajoutés par Story 11-3)
-  - [ ] 1.8 Lire `prisma/schema.prisma` — confirmer `PaymentProvider` enum inclut WAVE et ORANGE_MONEY, `Subscription.providerPhone` existe
+- [x] Task 1 : Audit du code existant et delta-scoping (AC: #1, #2)
+  - [x] 1.1 Lire `src/app/(public)/pricing/page.tsx` — page publique de sélection de tier
+  - [x] 1.2 Lire `src/app/(public)/pricing/virement/page.tsx` — page d'instructions de virement existante
+  - [x] 1.3 Lire `src/components/pricing-tier-selection.tsx` — composant de sélection de tier
+  - [x] 1.4 Lire `src/components/bank-transfer-instructions.tsx` — instructions de virement existantes
+  - [x] 1.5 Lire `src/lib/bank-transfer-config.ts` — configuration RIB KS Investment
+  - [x] 1.6 Lire `src/app/api/subscriptions/route.ts` — API de création d'abonnement (vérifier support provider/providerPhone déjà ajouté par Story 11-3)
+  - [x] 1.7 Lire `src/lib/validations.ts` — `subscriptionCreateSchema` (vérifier champs provider/providerPhone déjà ajoutés par Story 11-3)
+  - [x] 1.8 Lire `prisma/schema.prisma` — confirmer `PaymentProvider` enum inclut WAVE et ORANGE_MONEY, `Subscription.providerPhone` existe
 
-- [ ] Task 2 : Créer le composant sélecteur de moyen de paiement (AC: #1)
-  - [ ] 2.1 Créer `src/components/payment-method-selector.tsx` — composant client avec 3 options : Virement bancaire (défaut), Wave, Orange Money
-  - [ ] 2.2 Utiliser des icônes/badges distinctifs par provider (Wave = bleu, Orange Money = orange)
-  - [ ] 2.3 Afficher le sélecteur après sélection du tier dans le flux de souscription
-  - [ ] 2.4 Virement bancaire est sélectionné par défaut
+- [x] Task 2 : Créer le composant sélecteur de moyen de paiement (AC: #1)
+  - [x] 2.1 Créer `src/components/payment-method-selector.tsx` — composant client avec 3 options : Virement bancaire (défaut), Wave, Orange Money
+  - [x] 2.2 Utiliser des icônes/badges distinctifs par provider (Wave = bleu, Orange Money = orange)
+  - [x] 2.3 Afficher le sélecteur après sélection du tier dans le flux de souscription
+  - [x] 2.4 Virement bancaire est sélectionné par défaut
 
-- [ ] Task 3 : Champ numéro de téléphone mobile money conditionnel (AC: #3, #4)
-  - [ ] 3.1 Ajouter un champ `providerPhone` qui s'affiche uniquement quand Wave ou Orange Money est sélectionné
-  - [ ] 3.2 Validation : format numéro de téléphone international (ex: +225XXXXXXXXXX, +221XXXXXXXXXX)
-  - [ ] 3.3 Le champ est requis uniquement si provider ≠ BANK_TRANSFER
-  - [ ] 3.4 Message d'aide indiquant les pays supportés (Côte d'Ivoire, Sénégal, etc.)
+- [x] Task 3 : Champ numéro de téléphone mobile money conditionnel (AC: #3, #4)
+  - [x] 3.1 Ajouter un champ `providerPhone` qui s'affiche uniquement quand Wave ou Orange Money est sélectionné
+  - [x] 3.2 Validation : format numéro de téléphone international (ex: +225XXXXXXXXXX, +221XXXXXXXXXX)
+  - [x] 3.3 Le champ est requis uniquement si provider ≠ BANK_TRANSFER
+  - [x] 3.4 Message d'aide indiquant les pays supportés (Côte d'Ivoire, Sénégal, etc.)
 
-- [ ] Task 4 : Instructions Wave (AC: #3)
-  - [ ] 4.1 Créer `src/components/wave-instructions.tsx` — instructions de paiement Wave
-  - [ ] 4.2 Afficher : numéro à appeler, montant de l'abonnement, référence de l'abonnement
-  - [ ] 4.3 Créer `src/lib/mobile-money-config.ts` — configuration des numéros Wave/Orange Money (numéro marchand, codes USSD)
+- [x] Task 4 : Instructions Wave (AC: #3)
+  - [x] 4.1 Créer `src/components/wave-instructions.tsx` — instructions de paiement Wave
+  - [x] 4.2 Afficher : numéro à appeler, montant de l'abonnement, référence de l'abonnement
+  - [x] 4.3 Créer `src/lib/mobile-money-config.ts` — configuration des numéros Wave/Orange Money (numéro marchand, codes USSD)
 
-- [ ] Task 5 : Instructions Orange Money (AC: #4)
-  - [ ] 5.1 Créer `src/components/orange-money-instructions.tsx` — instructions de paiement Orange Money
-  - [ ] 5.2 Afficher : code USSD ou numéro à appeler, montant, référence
-  - [ ] 5.3 Réutiliser la configuration de `src/lib/mobile-money-config.ts`
+- [x] Task 5 : Instructions Orange Money (AC: #4)
+  - [x] 5.1 Créer `src/components/orange-money-instructions.tsx` — instructions de paiement Orange Money
+  - [x] 5.2 Afficher : code USSD ou numéro à appeler, montant, référence
+  - [x] 5.3 Réutiliser la configuration de `src/lib/mobile-money-config.ts`
 
-- [ ] Task 6 : Intégration dans le flux de souscription (AC: #1, #2, #3, #4)
-  - [ ] 6.1 Modifier `src/app/(public)/pricing/page.tsx` ou `src/components/pricing-tier-selection.tsx` pour intégrer le `PaymentMethodSelector` après sélection du tier
-  - [ ] 6.2 Si Virement bancaire → rediriger vers `/pricing/virement` (comportement existant inchangé, AC #2)
-  - [ ] 6.3 Si Wave ou Orange Money → appeler `POST /api/subscriptions` avec `provider` et `providerPhone`, puis afficher les instructions correspondantes
-  - [ ] 6.4 L'API crée l'abonnement en statut TRIAL avec le bon provider (déjà implémenté par Story 11-3)
+- [x] Task 6 : Intégration dans le flux de souscription (AC: #1, #2, #3, #4)
+  - [x] 6.1 Modifier `src/app/(public)/pricing/page.tsx` ou `src/components/pricing-tier-selection.tsx` pour intégrer le `PaymentMethodSelector` après sélection du tier
+  - [x] 6.2 Si Virement bancaire → rediriger vers `/pricing/virement` (comportement existant inchangé, AC #2)
+  - [x] 6.3 Si Wave ou Orange Money → appeler `POST /api/subscriptions` avec `provider` et `providerPhone`, puis afficher les instructions correspondantes
+  - [x] 6.4 L'API crée l'abonnement en statut TRIAL avec le bon provider (déjà implémenté par Story 11-3)
 
-- [ ] Task 7 : Tests unitaires (AC: #1, #2, #3, #4)
-  - [ ] 7.1 Test : `PaymentMethodSelector` affiche 3 options par défaut
-  - [ ] 7.2 Test : Virement bancaire sélectionné par défaut
-  - [ ] 7.3 Test : champ téléphone apparaît quand Wave sélectionné
-  - [ ] 7.4 Test : champ téléphone apparaît quand Orange Money sélectionné
-  - [ ] 7.5 Test : champ téléphone masqué quand Virement sélectionné
-  - [ ] 7.6 Test : validation format numéro de téléphone (valides et invalides)
-  - [ ] 7.7 Test : soumission Wave crée abonnement avec provider=WAVE et providerPhone
-  - [ ] 7.8 Test : soumission Orange Money crée abonnement avec provider=ORANGE_MONEY et providerPhone
-  - [ ] 7.9 Test : soumission Virement garde le comportement existant (pas de providerPhone)
+- [x] Task 7 : Tests unitaires (AC: #1, #2, #3, #4)
+  - [x] 7.1 Test : `PaymentMethodSelector` affiche 3 options par défaut
+  - [x] 7.2 Test : Virement bancaire sélectionné par défaut
+  - [x] 7.3 Test : champ téléphone apparaît quand Wave sélectionné
+  - [x] 7.4 Test : champ téléphone apparaît quand Orange Money sélectionné
+  - [x] 7.5 Test : champ téléphone masqué quand Virement sélectionné
+  - [x] 7.6 Test : validation format numéro de téléphone (valides et invalides)
+  - [x] 7.7 Test : soumission Wave crée abonnement avec provider=WAVE et providerPhone
+  - [x] 7.8 Test : soumission Orange Money crée abonnement avec provider=ORANGE_MONEY et providerPhone
+  - [x] 7.9 Test : soumission Virement garde le comportement existant (pas de providerPhone)
 
 ## Dev Notes
 
@@ -129,10 +133,36 @@ Créer `src/lib/mobile-money-config.ts` avec :
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code
 
 ### Debug Log References
 
+- Vitest run: 110 test files, 742 tests passed, 0 failed.
+- Next.js build: successful (13.1s compile, 42 pages generated).
+- All new components have co-located `.test.tsx` coverage.
+
 ### Completion Notes List
 
+- Implemented `PaymentMethodSelector` custom radio selector (Virement/Wave/Orange Money) with accessible roles and ternary JSX guards.
+- Added conditional `providerPhone` input for mobile money providers using `formatPhoneForInput` helper.
+- Created `WaveInstructions` and `OrangeMoneyInstructions` components and shared `mobile-money-config.ts`.
+- Integrated selector into `PricingTierSelection` : bank transfer redirects to `/pricing/virement`, Wave/Orange Money call `POST /api/subscriptions` and show instructions.
+- `pricing/page.tsx` now passes `userId` from session to `PricingTierSelection` for reference generation.
+- Updated existing `pricing/page.test.tsx` to mock `useRouter` so `PricingTierSelection` renders server-side.
+- Added 23 new tests across 4 test files.
+
 ### File List
+
+- Created: `src/lib/mobile-money-config.ts`
+- Created: `src/components/payment-method-selector.tsx`
+- Created: `src/components/wave-instructions.tsx`
+- Created: `src/components/orange-money-instructions.tsx`
+- Created: `src/components/payment-method-selector.test.tsx`
+- Created: `src/components/wave-instructions.test.tsx`
+- Created: `src/components/orange-money-instructions.test.tsx`
+- Created: `src/components/pricing-tier-selection.test.tsx`
+- Modified: `src/components/pricing-tier-selection.tsx`
+- Modified: `src/app/(public)/pricing/page.tsx`
+- Modified: `src/app/(public)/pricing/page.test.tsx`
+- Modified: `_bmad-output/implementation-artifacts/story-11-4-ui-selection-paiement-multi-provider.md`
+- Modified: `_bmad-output/implementation-artifacts/sprint-status.yaml`
