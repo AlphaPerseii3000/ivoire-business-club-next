@@ -209,6 +209,54 @@ export async function sendOpportunityRejectedEmail({
   });
 }
 
+export async function sendWelcomeEmail({
+  to,
+  name,
+  tier,
+}: {
+  to: string;
+  name?: string | null;
+  tier: string;
+}) {
+  const appUrl = process.env.APP_URL || "";
+  const completeProfileLink = appUrl
+    ? `${appUrl}/onboarding/complete-profile`
+    : "";
+
+  const iban = process.env.BANK_TRANSFER_IBAN;
+  const bic = process.env.BANK_TRANSFER_BIC;
+  const bankAddress = process.env.BANK_TRANSFER_BANK_ADDRESS;
+  const adhesionContractUrl = process.env.ADHESION_CONTRACT_URL;
+
+  let paymentInstructions = "";
+  if (iban || bic || bankAddress) {
+    const lines: string[] = [];
+    lines.push("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :");
+    if (iban) lines.push(`IBAN : ${iban}`);
+    if (bic) lines.push(`BIC : ${bic}`);
+    if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
+    paymentInstructions = "\n\n" + lines.join("\n");
+  }
+
+  const contractLine = adhesionContractUrl
+    ? `\n\nContrat d'adhésion : ${adhesionContractUrl}`
+    : "";
+
+  const completeProfileBlock = completeProfileLink
+    ? `\n\nComplétez votre profil : ${completeProfileLink}`
+    : "";
+
+  const label = tierLabel(tier);
+
+  const body = `${greeting(name)}\n\nVotre inscription sur Ivoire Business Club est confirmée. Vous avez choisi le tier ${label}.${completeProfileBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
+
+  await sendEmail({
+    to,
+    subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+    text: body,
+  });
+}
+
 const GUIDE_FILE_NAME = "Investir en Côte d'Ivoire 2026.pdf";
 
 function guideLink() {

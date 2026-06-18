@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { isConfiguredAdminEmail, roleForEmail } from "@/lib/admin-authorization";
+import { sendWelcomeEmail } from "@/lib/email";
+import { sanitizeError } from "@/lib/sanitize-log";
 
 // Wrap PrismaAdapter to handle non-null fields that Auth.js may send as null.
 // Google OAuth does not provide emailVerified, so the adapter passes null,
@@ -84,11 +86,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "google" && user.email) {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { id: true, role: true, status: true },
+          select: { id: true, role: true, status: true, createdAt: true },
         });
         if (existingUser?.status === "SUSPENDED") return false;
         if (existingUser && isConfiguredAdminEmail(user.email) && existingUser.role !== "ADMIN") {
           await prisma.user.update({ where: { id: existingUser.id }, data: { role: "ADMIN" } });
+        }
+
+        // Welcome email only for newly created Google OAuth accounts
+        const createdAt = existingUser?.createdAt ? new Date(existingUser.createdAt) : null;
+        const isNewUser = createdAt ? (Date.now() - createdAt.getTime()) <= 60 * 1000 : false;
+        if (isNewUser) {
+          try {
+            await sendWelcomeEmail({
+              to: user.email,
+              name: user.name,
+              // Google users start without a subscription tier; default to AFFRANCHI copy.
+              tier: "AFFRANCHI",
+            });
+          } catch (welcomeEmailError) {
+            console.error("Failed to send welcome email to Google user:", sanitizeError(welcomeEmailError));
+          }
         }
       }
       return true;

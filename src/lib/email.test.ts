@@ -137,4 +137,73 @@ describe("email helpers", () => {
       })
     );
   });
+
+  it("sends welcome email with tier label, profile link and payment instructions", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    process.env.BANK_TRANSFER_IBAN = "FR76 3000 3069 9000 1016 1063 363";
+    process.env.BANK_TRANSFER_BIC = "SOGEFRPPXXX";
+    process.env.BANK_TRANSFER_BANK_ADDRESS = "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France";
+    process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
+
+    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendWelcomeEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      tier: "GRAND_FRERE",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        to: "newmember@example.com",
+        subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+        text: expect.stringContaining("Vous avez choisi le tier Grands Frères"),
+      })
+    );
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("https://ivoirebusinessclub.test/onboarding/complete-profile"),
+      })
+    );
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire"),
+      })
+    );
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("IBAN : FR76 3000 3069 9000 1016 1063 363"),
+      })
+    );
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("Contrat d'adhésion : https://ivoirebusinessclub.test/contrat-adhesion.pdf"),
+      })
+    );
+  });
+
+  it("omits contract line and payment instructions when env vars are not set", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    delete process.env.BANK_TRANSFER_IBAN;
+    delete process.env.BANK_TRANSFER_BIC;
+    delete process.env.BANK_TRANSFER_BANK_ADDRESS;
+    delete process.env.ADHESION_CONTRACT_URL;
+
+    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendWelcomeEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      tier: "AFFRANCHI",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).not.toContain("Pour finaliser votre adhésion");
+    expect(text).not.toContain("Contrat d'adhésion");
+  });
 });

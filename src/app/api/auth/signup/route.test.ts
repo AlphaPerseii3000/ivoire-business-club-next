@@ -35,6 +35,7 @@ vi.mock("@/lib/rate-limit", () => ({
 
 vi.mock("@/lib/email", () => ({
   sendEmailVerificationEmail: vi.fn(async () => {}),
+  sendWelcomeEmail: vi.fn(async () => {}),
 }));
 
 vi.mock("@/lib/sanitize-log", () => ({
@@ -80,6 +81,13 @@ describe("POST /api/auth/signup", () => {
       data: { name: "Jean Dupont", email: "test@example.com", passwordHash: "hashed-password", role: "MEMBER" },
     });
     expect(mockSubscriptionCreate).not.toHaveBeenCalled();
+
+    const { sendWelcomeEmail } = await import("@/lib/email");
+    expect(sendWelcomeEmail).toHaveBeenCalledWith({
+      to: "test@example.com",
+      name: "Jean Dupont",
+      tier: "AFFRANCHI",
+    });
   });
 
   it("creates the configured bootstrap admin with ADMIN role", async () => {
@@ -147,5 +155,29 @@ describe("POST /api/auth/signup", () => {
 
     expect(res.status).toBe(500);
     expect(json.error).toBe("Erreur interne");
+  });
+
+  it("returns 201 when sendWelcomeEmail throws", async () => {
+    mockUserFindUnique.mockResolvedValue(null);
+    mockUserCreate.mockResolvedValue({
+      id: "user-123",
+      email: "test@example.com",
+      name: "Jean Dupont",
+    });
+
+    const { sendWelcomeEmail } = await import("@/lib/email");
+    (sendWelcomeEmail as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("SMTP down"));
+
+    const req = makeRequest({ name: "Jean Dupont", email: "test@example.com", password: "securePass123!" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json).toEqual({ id: "user-123", email: "test@example.com", name: "Jean Dupont" });
+    expect(sendWelcomeEmail).toHaveBeenCalledWith({
+      to: "test@example.com",
+      name: "Jean Dupont",
+      tier: "AFFRANCHI",
+    });
   });
 });

@@ -140,7 +140,7 @@ describe("auth.ts exports", () => {
     expect(result).toBe(false);
     expect(mockFindUnique).toHaveBeenCalledWith({
       where: { email: "member@example.com" },
-      select: { id: true, role: true, status: true },
+      select: { id: true, role: true, status: true, createdAt: true },
     });
   });
 

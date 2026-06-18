@@ -6,7 +6,7 @@ import { signupSchema } from "@/lib/validations";
 import { signupRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { roleForEmail } from "@/lib/admin-authorization";
-import { sendEmailVerificationEmail } from "@/lib/email";
+import { sendEmailVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -67,6 +67,18 @@ export async function POST(req: Request) {
       });
     } catch (verifyEmailError) {
       console.error("Failed to send initial email verification:", sanitizeError(verifyEmailError));
+    }
+
+    // Send welcome email (non-blocking for registration success)
+    try {
+      await sendWelcomeEmail({
+        to: user.email,
+        name: user.name,
+        // Newly created users don't have a subscription tier yet; default to AFFRANCHI copy.
+        tier: "AFFRANCHI",
+      });
+    } catch (welcomeEmailError) {
+      console.error("Failed to send welcome email:", sanitizeError(welcomeEmailError));
     }
 
     return NextResponse.json(
