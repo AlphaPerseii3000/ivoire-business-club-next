@@ -109,6 +109,7 @@ model User {
   reviewsReceived    Review[] @relation("ReviewsReceived")
   auditLogs          AuditLog[] @relation("AuditLogActor")
   articles           Article[]
+  events             Event[]
   reactions          ArticleReaction[]
   comments           Comment[]
   documentAccessRequests DocumentAccessRequest[] @relation("DocumentAccessRequester")
@@ -392,6 +393,12 @@ enum DocumentAccessRequestStatus {
   DENIED
 }
 
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
 enum ArticleVisibility {
   PUBLIC
   AFFRANCHI
@@ -468,4 +475,24 @@ model LeadMagnet {
   guideSentAt DateTime?
 
   @@map("lead_magnets")
+}
+
+model Event {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String
+  startDate   DateTime
+  endDate     DateTime?
+  location    String
+  imageUrl    String?
+  status      EventStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([startDate])
+  @@index([status, startDate])
+  @@map("events")
 }

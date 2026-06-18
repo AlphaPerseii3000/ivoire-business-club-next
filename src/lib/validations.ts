@@ -497,3 +497,53 @@ export const leadMagnetSchema = z.object({
 });
 
 export type LeadMagnetInput = z.infer<typeof leadMagnetSchema>;
+
+export const eventImageUrlSchema = z
+  .string()
+  .trim()
+  .refine(
+    (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
+    { message: "L'URL de l'image doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+  )
+  .transform((val) => (val === "" ? null : val))
+  .optional()
+  .nullable();
+
+const baseEventSchema = z.object({
+  title: z.string().trim().min(3, "Le titre doit contenir au moins 3 caractères").max(200, "Le titre ne doit pas dépasser 200 caractères"),
+  description: z.string().trim().min(10, "La description doit contenir au moins 10 caractères").max(5000, "La description ne doit pas dépasser 5000 caractères"),
+  startDate: z.string().datetime("Date de début invalide"),
+  endDate: z
+    .string()
+    .datetime("Date de fin invalide")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  location: z.string().trim().min(1, "Le lieu est requis").max(200, "Le lieu ne doit pas dépasser 200 caractères"),
+  imageUrl: eventImageUrlSchema,
+});
+
+export const eventCreateSchema = baseEventSchema.refine(
+  (data) => {
+    if (!data.endDate) return true;
+    const start = new Date(data.startDate).getTime();
+    const end = new Date(data.endDate).getTime();
+    return end >= start;
+  },
+  { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
+);
+
+export const eventUpdateSchema = baseEventSchema.partial().extend({
+  status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"], { message: "Statut d'événement invalide" }).optional(),
+}).refine(
+  (data) => {
+    if (!data.endDate || !data.startDate) return true;
+    const start = new Date(data.startDate).getTime();
+    const end = new Date(data.endDate).getTime();
+    return end >= start;
+  },
+  { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
+);
+
+export type EventCreateInput = z.infer<typeof eventCreateSchema>;
+export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;

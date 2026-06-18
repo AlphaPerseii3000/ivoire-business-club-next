@@ -74,6 +74,51 @@ export async function main() {
   await prisma.article.deleteMany({});
   console.log("Cleared existing articles.");
 
+  // 4. Clear existing events to ensure idempotency
+  await prisma.event.deleteMany({});
+  console.log("Cleared existing events.");
+
+  const eventsData = [
+    {
+      title: "Soirée Networking IBC - Juillet 2026",
+      slug: "soiree-networking-ibc-juillet-2026",
+      description: "Une soirée exclusive de networking pour les membres et partenaires d'Ivoire Business Club.",
+      startDate: new Date("2026-07-15T18:30:00Z"),
+      endDate: new Date("2026-07-15T22:00:00Z"),
+      location: "Abidjan, Cocody",
+      imageUrl: null,
+      status: "PUBLISHED" as const,
+      authorId: admin.id,
+    },
+    {
+      title: "Masterclass Investissement UEMOA",
+      slug: "masterclass-investissement-uemoa",
+      description: "Masterclass sur les opportunités d'investissement dans la zone UEMOA.",
+      startDate: new Date("2026-05-20T09:00:00Z"),
+      endDate: new Date("2026-05-20T12:00:00Z"),
+      location: "Abidjan, Plateau",
+      imageUrl: null,
+      status: "PUBLISHED" as const,
+      authorId: admin.id,
+    },
+    {
+      title: "Forum Partenariats 2026",
+      slug: "forum-partenariats-2026",
+      description: "Forum annuel des partenariats stratégiques.",
+      startDate: new Date("2026-09-10T08:00:00Z"),
+      endDate: new Date("2026-09-12T18:00:00Z"),
+      location: "Grand-Bassam",
+      imageUrl: null,
+      status: "CANCELLED" as const,
+      authorId: admin.id,
+    },
+  ];
+
+  for (const data of eventsData) {
+    const event = await prisma.event.create({ data });
+    console.log(`Created event: ${event.title} (${event.status})`);
+  }
+
   const articlesData = [
     {
       title: "Guide de l'Investisseur Débutant",
@@ -126,7 +171,7 @@ export async function main() {
     console.log(`Created article: ${article.title} (${article.visibility})`);
   }
 
-  // 4. Create comments
+  // 5. Create comments
   await prisma.comment.deleteMany({});
   console.log("Cleared existing comments.");
 
@@ -166,6 +211,7 @@ export async function main() {
   }
   console.log("Comments seeded.");
 
+  // 6. Seed finished
   console.log("Seed finished successfully!");
 }
 

@@ -42,6 +42,10 @@ vi.mock("@/lib/prisma", () => ({
       deleteMany: vi.fn(),
       create: vi.fn(),
     },
+    event: {
+      deleteMany: vi.fn(),
+      create: vi.fn().mockResolvedValue({ id: "evt-1", title: "Test Event", status: "DRAFT" }),
+    },
     $disconnect: vi.fn(),
   },
 }));
