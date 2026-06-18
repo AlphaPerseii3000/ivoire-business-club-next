@@ -3,7 +3,7 @@ baseline_commit: d470eac1b8e7f7d4f9a7e6c6f3a9d8b7c6f5e4a3
 ---
 # Story 12.1 : Modèle Event + CRUD admin
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
