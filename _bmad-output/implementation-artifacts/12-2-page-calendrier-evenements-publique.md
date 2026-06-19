@@ -4,7 +4,7 @@ baseline_commit: f46bb86
 
 # Story 12.2 : Page calendrier d'événements publique
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
