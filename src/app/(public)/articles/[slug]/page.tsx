@@ -252,6 +252,9 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
               Articles
             </Link>
+            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+              Événements
+            </Link>
             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
             </Link>

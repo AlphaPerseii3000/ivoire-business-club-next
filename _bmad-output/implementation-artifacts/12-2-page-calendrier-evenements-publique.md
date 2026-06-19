@@ -33,39 +33,39 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Page liste publique `/events` (AC: 1, 3)**
-  - [ ] Créer `src/app/(public)/events/page.tsx` en Server Component.
-  - [ ] Requêter Prisma directement pour les événements `PUBLISHED` avec `startDate >= now()`, triés par `startDate asc`.
-  - [ ] Réutiliser le header/nav et le `Footer` du pattern `src/app/(public)/articles/page.tsx`.
-  - [ ] Créer et utiliser `src/components/features/events/EventCard.tsx` affichant titre, date formatée en français, lieu et image (avec fallback si absent).
-  - [ ] Afficher la grille d'événements si `events.length > 0`, sinon `<EmptyState title="Aucun événement à venir" description="Revenez bientôt !" />`.
-  - [ ] Ajouter un titre de page et une description en français.
+- [x] **Page liste publique `/events` (AC: 1, 3)**
+  - [x] Créer `src/app/(public)/events/page.tsx` en Server Component.
+  - [x] Requêter Prisma directement pour les événements `PUBLISHED` avec `startDate >= now()`, triés par `startDate asc`.
+  - [x] Réutiliser le header/nav et le `Footer` du pattern `src/app/(public)/articles/page.tsx`.
+  - [x] Créer et utiliser `src/components/features/events/EventCard.tsx` affichant titre, date formatée en français, lieu et image (avec fallback si absent).
+  - [x] Afficher la grille d'événements si `events.length > 0`, sinon `<EmptyState title="Aucun événement à venir" description="Revenez bientôt !" />`.
+  - [x] Ajouter un titre de page et une description en français.
 
-- [ ] **Page détail `/events/[slug]` (AC: 2)**
-  - [ ] Créer `src/app/(public)/events/[slug]/page.tsx` en Server Component.
-  - [ ] Implémenter `generateMetadata({ params })` avec titre et description SEO de l'événement.
-  - [ ] Requêter Prisma par `slug` avec `status in [PUBLISHED, CANCELLED]` ; appeler `notFound()` si absent.
-  - [ ] Afficher : bannière image (fallback), titre, dates (début et fin optionnelle), lieu, description complète.
-  - [ ] Ajouter un lien "Retour aux événements" vers `/events`.
-  - [ ] Réutiliser le header/nav et le `Footer` du pattern articles.
+- [x] **Page détail `/events/[slug]` (AC: 2)**
+  - [x] Créer `src/app/(public)/events/[slug]/page.tsx` en Server Component.
+  - [x] Implémenter `generateMetadata({ params })` avec titre et description SEO de l'événement.
+  - [x] Requêter Prisma par `slug` avec `status in [PUBLISHED, CANCELLED]` ; appeler `notFound()` si absent.
+  - [x] Afficher : bannière image (fallback), titre, dates (début et fin optionnelle), lieu, description complète.
+  - [x] Ajouter un lien "Retour aux événements" vers `/events`.
+  - [x] Réutiliser le header/nav et le `Footer` du pattern articles.
 
-- [ ] **Composant `EventCard` (AC: 1)**
-  - [ ] Créer `src/components/features/events/EventCard.tsx`.
-  - [ ] Props : `{ event: { id, slug, title, startDate, endDate?, location, imageUrl? } }`.
-  - [ ] Wrapper l'entièreté de la carte dans un `Link` vers `/events/${slug}` (pas de nested anchors — voir guardrail anti-pattern).
-  - [ ] Afficher l'image via `next/image` (unoptimized) avec fallback en gradient.
-  - [ ] Formater la date avec `toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })`.
-  - [ ] Utiliser les composants shadcn `Card`, `CardHeader`, `CardTitle`, `CardContent`.
+- [x] **Composant `EventCard` (AC: 1)**
+  - [x] Créer `src/components/features/events/EventCard.tsx`.
+  - [x] Props : `{ event: { id, slug, title, startDate, endDate?, location, imageUrl? } }`.
+  - [x] Wrapper l'entièreté de la carte dans un `Link` vers `/events/${slug}` (pas de nested anchors — voir guardrail anti-pattern).
+  - [x] Afficher l'image via `next/image` (unoptimized) avec fallback en gradient.
+  - [x] Formater la date avec `toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })`.
+  - [x] Utiliser les composants shadcn `Card`, `CardHeader`, `CardTitle`, `CardContent`.
 
-- [ ] **Navigation publique (AC: 1, 2)**
-  - [ ] Ajouter un lien "Événements" dans le header des pages publiques (`/events`, `/events/[slug]`), à côté des liens existants (Accueil, Articles, Tarifs).
-  - [ ] Reporter le même lien dans le header de la landing page `src/app/(public)/page.tsx`.
+- [x] **Navigation publique (AC: 1, 2)**
+  - [x] Ajouter un lien "Événements" dans le header des pages publiques (`/events`, `/events/[slug]`), à côté des liens existants (Accueil, Articles, Tarifs).
+  - [x] Reporter le même lien dans le header de la landing page `src/app/(public)/page.tsx`.
 
-- [ ] **Tests (AC: 1, 2, 3)**
-  - [ ] Créer `src/app/(public)/events/page.test.tsx` : vérifie l'affichage des cartes triées, le format de date, le lien vers le détail, et l'`EmptyState` quand la liste est vide.
-  - [ ] Créer `src/app/(public)/events/[slug]/page.test.tsx` : vérifie `generateMetadata` et le rendu des détails, ainsi que `notFound` si l'événement est en brouillon ou inexistant.
-  - [ ] Créer `src/components/features/events/EventCard.test.tsx` : vérifie le rendu sans image et le non-nested-anchor.
-  - [ ] Lancer `npx vitest run` et vérifier la non-régression.
+- [x] **Tests (AC: 1, 2, 3)**
+  - [x] Créer `src/app/(public)/events/page.test.tsx` : vérifie l'affichage des cartes triées, le format de date, le lien vers le détail, et l'`EmptyState` quand la liste est vide.
+  - [x] Créer `src/app/(public)/events/[slug]/page.test.tsx` : vérifie `generateMetadata` et le rendu des détails, ainsi que `notFound` si l'événement est en brouillon ou inexistant.
+  - [x] Créer `src/components/features/events/EventCard.test.tsx` : vérifie le rendu sans image et le non-nested-anchor.
+  - [x] Lancer `npx vitest run` et vérifier la non-régression.
 
 ## Dev Notes
 
@@ -127,14 +127,36 @@ Contrairement à l'API `/api/events` existante qui retourne `PUBLISHED` + `CANCE
 - Guardrail JSX : `_bmad-output/planning-artifacts/architecture.md` section "JSX Boolean Guardrail"
 - Guardrail nested anchors : `_bmad-output/planning-artifacts/architecture.md` section "Card Component Anti-Pattern: Nested Anchors"
 
+Status: review
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implémenté la page liste publique `/events` (Server Component) requêtant Prisma pour les événements `PUBLISHED` à venir triés par `startDate asc`, avec header/nav/Footer réutilisés du pattern articles.
+- Implémenté la page détail `/events/[slug]` avec `generateMetadata`, requête par `slug` sur `PUBLISHED|CANCELLED`, `notFound()` si absent, et affichage complet (titre, dates, lieu, description, image fallback).
+- Créé le composant `EventCard` avec un seul `Link` racine (pas de nested anchors), image `next/image` unoptimized et fallback gradient, date formatée en français.
+- Ajouté le lien "Événements" dans les headers de `src/app/(public)/articles/page.tsx`, `src/app/(public)/articles/[slug]/page.tsx` et `src/app/(public)/page.tsx`.
+- Créé les tests pour la page liste, la page détail et `EventCard` ; toutes les suites passent (801 tests, non-régression confirmée).
+- Build Next.js 16 passé avec succès (`/events` et `/events/[slug]` apparaissent en routes dynamiques).
+- Aucun `&&` dans les expressions JSX des fichiers créés/modifiés pour cette story.
+
 ### File List
+
+- src/app/(public)/events/page.tsx (NEW)
+- src/app/(public)/events/[slug]/page.tsx (NEW)
+- src/app/(public)/events/page.test.tsx (NEW)
+- src/app/(public)/events/[slug]/page.test.tsx (NEW)
+- src/components/features/events/EventCard.tsx (NEW)
+- src/components/features/events/EventCard.test.tsx (NEW)
+- src/app/(public)/articles/page.tsx (UPDATE)
+- src/app/(public)/articles/[slug]/page.tsx (UPDATE)
+- src/app/(public)/page.tsx (UPDATE)
+- _bmad-output/implementation-artifacts/12-2-page-calendrier-evenements-publique.md (UPDATE)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (UPDATE)

@@ -128,6 +128,9 @@ export default async function HomePage() {
             <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
               Articles
             </Link>
+            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+              Événements
+            </Link>
             <a
               href="/auth/signin"
               className="text-slate-300 hover:text-white transition-colors"
