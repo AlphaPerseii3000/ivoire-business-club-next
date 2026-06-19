@@ -79,7 +79,7 @@ development_status:
   11-5-validation-admin-paiement-mobile-money: done
   epic-12: in-progress
   12-1-modele-event-crud-admin: done
-  12-2-page-calendrier-evenements-publique: review
+  12-2-page-calendrier-evenements-publique: done
   12-3-composant-prochain-evenement-landing-popup: backlog
   epic-13: backlog
   13-1-modele-expert-crud-admin: backlog

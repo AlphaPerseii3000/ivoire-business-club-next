@@ -4,7 +4,7 @@ baseline_commit: f46bb86
 
 # Story 12.2 : Page calendrier d'événements publique
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -127,7 +127,7 @@ Contrairement à l'API `/api/events` existante qui retourne `PUBLISHED` + `CANCE
 - Guardrail JSX : `_bmad-output/planning-artifacts/architecture.md` section "JSX Boolean Guardrail"
 - Guardrail nested anchors : `_bmad-output/planning-artifacts/architecture.md` section "Card Component Anti-Pattern: Nested Anchors"
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 
