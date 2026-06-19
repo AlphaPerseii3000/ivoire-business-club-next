@@ -1,19 +1,19 @@
 'use client';
 
-import { StaggeredMenu } from '@/components/ui/staggered-menu';
+import { StaggeredMenu } from '@/components/StaggeredMenu';
 
 const LANDING_MENU_ITEMS = [
-  { label: 'Mission', link: '#mission' },
-  { label: 'Tarifs', link: '#pricing' },
-  { label: 'Articles', link: '/articles' },
-  { label: 'Événements', link: '/events' },
-  { label: 'Connexion', link: '/auth/signin' },
-  { label: 'Rejoins le club', link: '/auth/signup' },
+  { label: 'Mission', ariaLabel: 'Notre mission', link: '#mission' },
+  { label: 'Tarifs', ariaLabel: 'Voir les tarifs', link: '#pricing' },
+  { label: 'Articles', ariaLabel: 'Lire les articles', link: '/articles' },
+  { label: 'Événements', ariaLabel: 'Voir les événements', link: '/events' },
+  { label: 'Connexion', ariaLabel: 'Se connecter', link: '/auth/signin' },
+  { label: 'Rejoins le club', ariaLabel: "S'inscrire", link: '/auth/signup' },
 ];
 
 export default function LandingMobileNav() {
   return (
-    <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16">
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#090D16]/95 backdrop-blur-sm border-b border-white/10">
       <StaggeredMenu
         position="right"
         colors={['#D4A847', '#090D16']}

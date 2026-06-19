@@ -1,9 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
-import { StaggeredMenu, type StaggeredMenuItem } from "@/components/ui/staggered-menu";
+import { StaggeredMenu, type StaggeredMenuItem } from '@/components/StaggeredMenu';
+import { signOut } from 'next-auth/react';
 
 interface NavItem {
   href: string;
@@ -18,40 +16,35 @@ interface AdminMobileNavProps {
 export default function AdminMobileNav({ navItems }: AdminMobileNavProps) {
   const items: StaggeredMenuItem[] = [
     ...navItems.map((item) => ({
-      label: `${item.icon} ${item.label}`,
+      label: item.label,
+      ariaLabel: item.label,
       link: item.href,
     })),
-    { label: "🔙 Retour au site", link: "/dashboard" },
+    { label: 'Retour au site', ariaLabel: 'Retour au site', link: '/dashboard' },
     {
-      label: "🚪 Déconnexion",
+      label: 'Déconnexion',
+      ariaLabel: 'Se déconnecter',
       onClick: () => {
-        signOut({ redirectTo: "/" });
+        signOut({ redirectTo: '/' });
       },
     },
   ];
 
   return (
-    <header className="md:hidden flex h-16 items-center justify-between border-b bg-[#090D16] px-4 sticky top-0 z-50">
-      <Link href="/admin/dashboard" className="text-lg font-bold text-[#D4A847]">
-        IBC Admin
-      </Link>
-
-      <div className="relative h-full w-24">
-        <StaggeredMenu
-          position="right"
-          colors={["#D4A847", "#090D16"]}
-          items={items}
-          displaySocials={false}
-          displayItemNumbering={true}
-          accentColor="#D4A847"
-          menuButtonColor="#ffffff"
-          openMenuButtonColor="#ffffff"
-          logoUrl="/logo-ibc.webp"
-          isFixed={false}
-          closeOnClickAway={true}
-          className="absolute inset-0"
-        />
-      </div>
-    </header>
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#090D16]/95 backdrop-blur-sm border-b border-white/10">
+      <StaggeredMenu
+        position="right"
+        colors={['#D4A847', '#090D16']}
+        items={items}
+        displaySocials={false}
+        displayItemNumbering={true}
+        accentColor="#D4A847"
+        menuButtonColor="#ffffff"
+        openMenuButtonColor="#ffffff"
+        logoUrl="/logo-ibc.webp"
+        isFixed={false}
+        closeOnClickAway={true}
+      />
+    </div>
   );
 }

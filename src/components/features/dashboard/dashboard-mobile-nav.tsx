@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { StaggeredMenu, type StaggeredMenuItem } from "@/components/ui/staggered-menu";
-import { signOut } from "next-auth/react";
+import { StaggeredMenu, type StaggeredMenuItem } from '@/components/StaggeredMenu';
+import { signOut } from 'next-auth/react';
 
 interface DashboardMobileNavProps {
   items: { href: string; label: string; icon?: string }[];
@@ -10,22 +10,24 @@ interface DashboardMobileNavProps {
 export default function DashboardMobileNav({ items }: DashboardMobileNavProps) {
   const menuItems: StaggeredMenuItem[] = [
     ...items.map((item) => ({
-      label: `${item.icon ? `${item.icon} ` : ""}${item.label}`,
+      label: item.label,
+      ariaLabel: item.label,
       link: item.href,
     })),
     {
-      label: "🚪 Déconnexion",
+      label: 'Déconnexion',
+      ariaLabel: 'Se déconnecter',
       onClick: () => {
-        signOut({ redirectTo: "/" });
+        signOut({ redirectTo: '/' });
       },
     },
   ];
 
   return (
-    <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16">
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#090D16]/95 backdrop-blur-sm border-b border-white/10">
       <StaggeredMenu
         position="right"
-        colors={["#D4A847", "#090D16"]}
+        colors={['#D4A847', '#090D16']}
         items={menuItems}
         displaySocials={false}
         displayItemNumbering={true}
