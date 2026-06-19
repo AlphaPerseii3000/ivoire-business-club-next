@@ -147,18 +147,19 @@
   overflow-y: auto;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0;
-}
-
-.staggered-menu-wrapper[data-open] .staggered-menu-panel {
-  pointer-events: auto;
+  transform: translateX(100%);
 }
 
 [data-position='left'] .staggered-menu-panel {
+  transform: translateX(-100%);
   right: auto;
   left: 0;
   border-left: none;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staggered-menu-wrapper[data-open] .staggered-menu-panel {
+  pointer-events: auto;
 }
 
 .sm-prelayers {
