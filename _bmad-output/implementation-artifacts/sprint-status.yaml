@@ -80,7 +80,7 @@ development_status:
   epic-12: in-progress
   12-1-modele-event-crud-admin: done
   12-2-page-calendrier-evenements-publique: done
-  12-3-composant-prochain-evenement-landing-popup: backlog
+  12-3-composant-prochain-evenement-landing-popup: ready-for-dev
   epic-13: backlog
   13-1-modele-expert-crud-admin: backlog
   13-2-page-publique-liste-experts: backlog
