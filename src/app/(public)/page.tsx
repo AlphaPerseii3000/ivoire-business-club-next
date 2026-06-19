@@ -16,6 +16,7 @@ import { LatestArticles } from '@/components/landing/latest-articles';
 import { NextEventCard } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
 import { getNextPublishedEvent } from '@/lib/event-utils';
+import LandingMobileNav from '@/components/landing/mobile-nav';
 
 // Dynamic rendering avoids requiring database access during build.
 export const dynamic = 'force-dynamic';
@@ -128,8 +129,9 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
+      <LandingMobileNav />
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+      <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link
             href="/"

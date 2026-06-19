@@ -67,7 +67,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminMobileNav navItems={ADMIN_NAV} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto pt-16 md:pt-0">{children}</main>
     </div>
   );
 }

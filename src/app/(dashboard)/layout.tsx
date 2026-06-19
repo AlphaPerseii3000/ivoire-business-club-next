@@ -1,6 +1,7 @@
 import SignOutButton from "@/components/auth/sign-out-button";
 import { requireActiveAuthenticatedUser } from "@/lib/account-status";
 import Link from "next/link";
+import DashboardMobileNav from "@/components/features/dashboard/dashboard-mobile-nav";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊" },
@@ -25,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen">
+      <DashboardMobileNav items={mobileItems} />
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r bg-card">
         <div className="flex h-16 items-center px-4 border-b">
@@ -56,22 +58,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
 
-      {/* Mobile top nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card/90 backdrop-blur-md flex justify-around h-16 items-center" aria-label="Navigation mobile">
-        {mobileItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-1 flex-col items-center justify-center h-full text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
-          >
-            <span className="text-xl mb-1" aria-hidden="true">{item.icon}</span>
-            <span className="text-[10px] font-medium leading-none">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-
       {/* Main content */}
-      <main className="flex-1 overflow-auto pb-16 md:pb-0">
+      <main className="flex-1 overflow-auto pt-16 md:pt-0">
         {children}
       </main>
     </div>
