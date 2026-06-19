@@ -155,12 +155,12 @@ export default async function HomePage() {
             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
               Événements
             </Link>
-            <a
+            <Link
               href="/auth/signin"
               className="text-slate-300 hover:text-white transition-colors"
             >
               Connexion
-            </a>
+            </Link>
           </nav>
         </div>
       </header>

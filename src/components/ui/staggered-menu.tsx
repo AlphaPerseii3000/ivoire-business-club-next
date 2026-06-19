@@ -56,6 +56,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const openRef = useRef(false);
   const panelRef = useRef<HTMLElement | null>(null);
   const preLayersRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +78,11 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   const itemEntranceTweenRef = useRef<gsap.core.Tween | null>(null);
 
   React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isClient) return;
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mq.matches);
     const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
@@ -92,10 +98,10 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
         mq.removeListener(onChange);
       }
     };
-  }, []);
+  }, [isClient]);
 
   useLayoutEffect(() => {
-    if (prefersReducedMotion) return;
+    if (!isClient || prefersReducedMotion) return;
     const ctx = gsap.context(() => {
       const panel = panelRef.current;
       const preContainer = preLayersRef.current;
@@ -326,7 +332,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   );
 
   React.useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (!isClient || prefersReducedMotion) return;
     if (toggleBtnRef.current) {
       if (changeMenuColorOnOpen) {
         const targetColor = openRef.current ? openMenuButtonColor : menuButtonColor;
@@ -401,7 +407,20 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   }, [playClose, animateIcon, animateColor, animateText, onMenuClose]);
 
   React.useEffect(() => {
-    if (!closeOnClickAway || !open) return;
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        closeMenu();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, closeMenu]);
+
+  React.useEffect(() => {
+    if (!isClient || !closeOnClickAway || !open) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
