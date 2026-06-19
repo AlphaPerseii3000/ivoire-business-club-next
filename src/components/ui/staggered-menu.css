@@ -146,8 +146,12 @@
   padding: 5rem 2rem 2rem 2rem;
   overflow-y: auto;
   z-index: 9999;
-  pointer-events: auto;
+  pointer-events: none;
   opacity: 0;
+}
+
+.staggered-menu-wrapper[data-open] .staggered-menu-panel {
+  pointer-events: auto;
 }
 
 [data-position='left'] .staggered-menu-panel {
@@ -166,6 +170,10 @@
   pointer-events: none;
   z-index: 9998;
   opacity: 0;
+}
+
+.staggered-menu-wrapper[data-open] .sm-prelayers {
+  pointer-events: auto;
 }
 
 [data-position='left'] .sm-prelayers {
