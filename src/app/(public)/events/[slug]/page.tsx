@@ -5,7 +5,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Footer } from "@/components/landing/footer";
 import { sanitizeError } from "@/lib/sanitize-log";
@@ -17,19 +16,12 @@ interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-interface CustomSessionUser {
-  id?: string;
-  role?: string;
-}
-
 // Caches and deduplicates the database query per request
 const getEventBySlug = cache(async (slug: string) => {
   return prisma.event.findFirst({
     where: {
       slug,
-      status: {
-        in: [EventStatus.PUBLISHED, EventStatus.CANCELLED],
-      },
+      status: EventStatus.PUBLISHED,
     },
   });
 });
@@ -89,10 +81,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     notFound();
   }
 
-  const session = await auth();
-  const isLoggedIn = !!session?.user;
-  const user = session?.user as CustomSessionUser | undefined;
-
   const startDateFormatted = event.startDate.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
@@ -110,6 +98,61 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   const hasImage = event.imageUrl ? event.imageUrl !== "" : false;
   const isCancelled = event.status === EventStatus.CANCELLED;
+
+  if (isCancelled) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
+        <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+            <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+              <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
+              <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
+                Ivoire Business Club
+              </span>
+            </Link>
+            <nav className="flex gap-6 text-sm items-center">
+              <Link href="/" className="text-slate-300 hover:text-white transition-colors">
+                Accueil
+              </Link>
+              <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
+                Articles
+              </Link>
+              <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+                Événements
+              </Link>
+              <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
+                Tarifs
+              </Link>
+              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
+                Connexion
+              </Link>
+            </nav>
+          </div>
+        </header>
+
+        <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
+          <Link href="/events" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group">
+            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+            Retour aux événements
+          </Link>
+
+          <div className="space-y-4 mb-8">
+            <span className="inline-flex items-center rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-400/20">
+              Annulé
+            </span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl leading-tight">
+              {event.title}
+            </h1>
+            <p className="text-slate-400">
+              Cet événement a été annulé. Revenez bientôt pour découvrir les prochaines rencontres.
+            </p>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
@@ -135,15 +178,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
             </Link>
-            {isLoggedIn ? (
-              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
-                Tableau de bord
-              </Link>
-            ) : (
-              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
-                Connexion
-              </Link>
-            )}
+            <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
+              Connexion
+            </Link>
           </nav>
         </div>
       </header>
@@ -158,12 +195,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         {/* Event Metadata */}
         <div className="space-y-4 mb-8">
-          {isCancelled ? (
-            <span className="inline-flex items-center rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-400/20">
-              Annulé
-            </span>
-          ) : null}
-
           <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl leading-tight">
             {event.title}
           </h1>

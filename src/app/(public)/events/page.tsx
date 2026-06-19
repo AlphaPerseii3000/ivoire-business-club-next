@@ -2,7 +2,6 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { EventCard } from "@/components/features/events/EventCard";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,16 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-interface CustomSessionUser {
-  id?: string;
-  role?: string;
-}
-
 export default async function EventsPage() {
-  const session = await auth();
-  const user = session?.user as CustomSessionUser | undefined;
-  const isLoggedIn = !!session?.user;
-
   const now = new Date();
   let events: {
     id: string;
@@ -95,15 +85,9 @@ export default async function EventsPage() {
             <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
               Tarifs
             </Link>
-            {isLoggedIn ? (
-              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
-                Tableau de bord
-              </Link>
-            ) : (
-              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
-                Connexion
-              </Link>
-            )}
+            <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
+              Connexion
+            </Link>
           </nav>
         </div>
       </header>

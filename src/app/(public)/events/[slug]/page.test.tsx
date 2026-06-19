@@ -2,11 +2,6 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import EventDetailPage, { generateMetadata } from "./page";
-import { EventStatus } from "@/generated/prisma/client";
-
-// Mock Auth
-const mockAuth = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 
 // Mock Prisma
 const mockFindFirst = vi.hoisted(() => vi.fn());
@@ -35,7 +30,7 @@ const mockEvent = {
   endDate: new Date("2026-07-15T14:00:00Z"),
   location: "Abidjan, Cocody",
   imageUrl: "https://example.com/event.jpg",
-  status: EventStatus.PUBLISHED,
+  status: "PUBLISHED",
 };
 
 describe("Event Detail Page", () => {
@@ -43,7 +38,7 @@ describe("Event Detail Page", () => {
     vi.resetAllMocks();
   });
 
-  it("calls notFound when event is not found or is a draft", async () => {
+  it("calls notFound when event is not found", async () => {
     mockFindFirst.mockResolvedValue(null);
 
     await expect(
@@ -53,8 +48,17 @@ describe("Event Detail Page", () => {
     expect(mockNotFound).toHaveBeenCalled();
   });
 
+  it("does not publicly render a draft event", async () => {
+    mockFindFirst.mockResolvedValue(null);
+
+    await expect(
+      EventDetailPage({ params: Promise.resolve({ slug: "lancement-reseau-ibc" }) })
+    ).rejects.toThrow("NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalled();
+  });
+
   it("renders full event details", async () => {
-    mockAuth.mockResolvedValue(null);
     mockFindFirst.mockResolvedValue(mockEvent);
 
     const page = await EventDetailPage({
@@ -67,13 +71,15 @@ describe("Event Detail Page", () => {
     expect(screen.getByText("15 juillet 2026")).toBeInTheDocument();
     expect(screen.getByText("Jusqu'au 15 juillet 2026")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
+
+    const image = screen.getByRole("img", { name: "Lancement Réseau IBC" });
+    expect(image).toBeInTheDocument();
   });
 
   it("renders cancelled badge for cancelled events", async () => {
-    mockAuth.mockResolvedValue(null);
     mockFindFirst.mockResolvedValue({
       ...mockEvent,
-      status: EventStatus.CANCELLED,
+      status: "CANCELLED",
     });
 
     const page = await EventDetailPage({
@@ -85,7 +91,6 @@ describe("Event Detail Page", () => {
   });
 
   it("renders back link to events list", async () => {
-    mockAuth.mockResolvedValue(null);
     mockFindFirst.mockResolvedValue(mockEvent);
 
     const page = await EventDetailPage({
@@ -108,5 +113,15 @@ describe("Event Detail Page", () => {
       absolute: "Lancement Réseau IBC — Ivoire Business Club",
     });
     expect(metadata.description).toBe("Une soirée de networking pour les membres et investisseurs du réseau IBC.".slice(0, 160));
+  });
+
+  it("returns empty metadata when event is not found", async () => {
+    mockFindFirst.mockResolvedValue(null);
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "non-existent" }),
+    });
+
+    expect(metadata).toEqual({});
   });
 });
