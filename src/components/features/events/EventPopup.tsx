@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import {
@@ -23,15 +23,22 @@ export interface EventPopupProps {
 }
 
 export function EventPopup({ event, enabled }: EventPopupProps) {
-  const [hasClosedBefore, setHasClosedBefore] = useState(() => {
-    try {
-      return localStorage.getItem(POPUP_CLOSED_KEY) !== null;
-    } catch {
-      return false;
-    }
-  });
+  const [mounted, setMounted] = useState(false);
+  const [hasClosedBefore, setHasClosedBefore] = useState(false);
 
-  const open = enabled && event !== null && !hasClosedBefore;
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(POPUP_CLOSED_KEY) !== null) {
+        setHasClosedBefore(true);
+      }
+    } catch {
+      // localStorage indisponible — ignorer
+    }
+    setMounted(true);
+  }, []);
+
+  const hasEvent = event !== null;
+  const shouldOpen = mounted ? (enabled ? (hasEvent ? !hasClosedBefore : false) : false) : false;
 
   const handleClose = () => {
     setHasClosedBefore(true);
@@ -42,9 +49,7 @@ export function EventPopup({ event, enabled }: EventPopupProps) {
     }
   };
 
-  const canShow = event !== null;
-
-  if (!canShow) {
+  if (!hasEvent) {
     return null;
   }
 
@@ -55,7 +60,7 @@ export function EventPopup({ event, enabled }: EventPopupProps) {
   });
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen: boolean) => {
+    <Dialog open={shouldOpen} onOpenChange={(nextOpen: boolean) => {
       if (!nextOpen) {
         handleClose();
       }

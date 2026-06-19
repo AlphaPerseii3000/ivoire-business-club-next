@@ -2,7 +2,6 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export interface NextEventCardEvent {
   id: string;
@@ -74,15 +73,12 @@ export function NextEventCard({ event }: NextEventCardProps) {
               </div>
 
               <div className="mt-6 flex items-center">
-                <Button
-                  variant="default"
-                  className="bg-[#D4A847] text-black hover:bg-[#D4A847]/90 pointer-events-none"
+                <span
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#D4A847] px-5 py-2.5 text-sm font-semibold text-black transition-colors group-hover:bg-[#D4A847]/90"
                 >
-                  <span className="inline-flex items-center gap-2">
-                    En savoir plus
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </span>
-                </Button>
+                  En savoir plus
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </span>
               </div>
             </div>
           </div>
