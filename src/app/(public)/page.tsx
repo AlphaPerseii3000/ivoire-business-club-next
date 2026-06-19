@@ -13,6 +13,9 @@ import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
 import { LatestArticles } from '@/components/landing/latest-articles';
+import { NextEventCard } from '@/components/features/events/NextEventCard';
+import { EventPopup } from '@/components/features/events/EventPopup';
+import { getNextPublishedEvent } from '@/lib/event-utils';
 
 // Dynamic rendering avoids requiring database access during build.
 export const dynamic = 'force-dynamic';
@@ -56,6 +59,16 @@ export default async function HomePage() {
     imageUrl: string | null;
     publishedAt: Date | null;
   }[] = [];
+  let nextEvent: {
+    id: string;
+    slug: string;
+    title: string;
+    startDate: Date;
+    endDate: Date | null;
+    location: string;
+    imageUrl: string | null;
+  } | null = null;
+
   try {
     const opportunities = await prisma.opportunity.findMany({
       where: { verificationStatus: 'VERIFIED' },
@@ -103,6 +116,15 @@ export default async function HomePage() {
   } catch (err) {
     console.error('Error fetching articles for landing page:', err);
   }
+
+  try {
+    nextEvent = await getNextPublishedEvent();
+  } catch (err) {
+    console.error('Error fetching next event for landing page:', err);
+  }
+
+  const showEventPopup = process.env.NEXT_PUBLIC_SHOW_EVENT_POPUP === 'true';
+  const hasNextEvent = nextEvent !== null;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
@@ -153,11 +175,14 @@ export default async function HomePage() {
         />
 
         <SuccessWall />
+        {hasNextEvent ? <NextEventCard event={nextEvent} /> : null}
         <OpportunityTeasers opportunities={teasers} />
         <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
         <Pricing />
         <LeadMagnet />
       </main>
+
+      {hasNextEvent ? <EventPopup event={nextEvent} enabled={showEventPopup} /> : null}
 
       <Footer />
 
