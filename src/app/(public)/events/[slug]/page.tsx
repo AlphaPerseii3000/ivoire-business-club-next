@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Footer } from "@/components/landing/footer";
+import LandingMobileNav from "@/components/landing/mobile-nav";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { EventStatus } from "@/generated/prisma/client";
 
@@ -102,7 +103,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   if (isCancelled) {
     return (
       <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
-        <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+        <LandingMobileNav />
+        <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
             <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
               <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
@@ -156,8 +158,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
+      {/* Mobile Navigation */}
+      <LandingMobileNav />
+
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+      <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />

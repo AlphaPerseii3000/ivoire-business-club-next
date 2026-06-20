@@ -16,6 +16,7 @@ import { ShareButtons } from "@/components/features/articles/ShareButtons";
 import { ArticleCommentsSection } from "@/components/features/articles/ArticleCommentsSection";
 import { DealCard } from "@/components/features/deals/deal-card";
 import { Footer } from "@/components/landing/footer";
+import LandingMobileNav from "@/components/landing/mobile-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import { cn } from "@/lib/utils";
@@ -239,8 +240,11 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      {/* Mobile Navigation */}
+      <LandingMobileNav />
+
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
+      <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />

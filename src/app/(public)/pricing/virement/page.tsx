@@ -7,6 +7,7 @@ import { getBankTransferDetails } from "@/lib/bank-transfer-config";
 import { auth } from "@/lib/auth";
 import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { getTierConfig, type MembershipTier } from "@/lib/tier-config";
+import LandingMobileNav from "@/components/landing/mobile-nav";
 
 const allowedTiers: MembershipTier[] = ["AFFRANCHI", "GRAND_FRERE", "BOSS"];
 
@@ -39,7 +40,9 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
   const tierConfig = getTierConfig(tier);
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-10">
+    <div className="min-h-screen">
+      <LandingMobileNav />
+      <main className="mx-auto max-w-4xl px-4 py-10">
       <div className="mb-8 space-y-4">
         <Link href="/pricing" className={buttonVariants({ variant: "ghost", className: "min-h-11 px-0" })}>
           ← Retour aux offres
@@ -65,6 +68,7 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
         xofDetails={details.xof}
         eurDetails={details.eur}
       />
-    </main>
+      </main>
+    </div>
   );
 }
