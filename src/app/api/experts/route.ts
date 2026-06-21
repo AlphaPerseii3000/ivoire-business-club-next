@@ -6,6 +6,8 @@ import { generateUniqueSlug } from "@/lib/expert-utils";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 
+import { promoteConfiguredAdminUser } from "@/lib/admin-access";
+
 export async function GET() {
   try {
     const experts = await prisma.expert.findMany({
@@ -27,7 +29,12 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    }
+
+    const adminUser = await promoteConfiguredAdminUser(session.user.id);
+    if (!adminUser || adminUser.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 

@@ -3,15 +3,18 @@ import { GET, PUT, DELETE } from "./route";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockExpertFindFirst = vi.hoisted(() => vi.fn());
+const mockExpertFindMany = vi.hoisted(() => vi.fn());
 const mockExpertUpdate = vi.hoisted(() => vi.fn());
 const mockExpertDelete = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockPromoteConfiguredAdminUser = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     expert: {
       findFirst: mockExpertFindFirst,
+      findMany: mockExpertFindMany,
       update: mockExpertUpdate,
       delete: mockExpertDelete,
     },
@@ -20,6 +23,17 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
+vi.mock("@/lib/admin-access", () => ({
+  promoteConfiguredAdminUser: mockPromoteConfiguredAdminUser,
+}));
+
+mockPromoteConfiguredAdminUser.mockImplementation(async (userId: string) => {
+  const session = await mockAuth();
+  if (session?.user?.id === userId) {
+    return { id: userId, role: session.user.role };
+  }
+  return null;
+});
 
 function makeRequest(method: string, body?: unknown) {
   return new Request("http://localhost/api/experts/test-id", {
@@ -104,9 +118,8 @@ describe("PUT /api/experts/[id]", () => {
 
   it("updates fields and regenerates slug when name changes", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockExpertFindFirst
-      .mockResolvedValueOnce(mockExpert)
-      .mockResolvedValueOnce(null);
+    mockExpertFindFirst.mockResolvedValueOnce(mockExpert);
+    mockExpertFindMany.mockResolvedValueOnce([]);
 
     mockExpertUpdate.mockResolvedValue({
       ...mockExpert,

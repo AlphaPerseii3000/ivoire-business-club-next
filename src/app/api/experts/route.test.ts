@@ -6,6 +6,7 @@ const mockExpertFindMany = vi.hoisted(() => vi.fn());
 const mockExpertCreate = vi.hoisted(() => vi.fn());
 const mockExpertFindFirst = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockPromoteConfiguredAdminUser = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
@@ -20,6 +21,17 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
+vi.mock("@/lib/admin-access", () => ({
+  promoteConfiguredAdminUser: mockPromoteConfiguredAdminUser,
+}));
+
+mockPromoteConfiguredAdminUser.mockImplementation(async (userId: string) => {
+  const session = await mockAuth();
+  if (session?.user?.id === userId) {
+    return { id: userId, role: session.user.role };
+  }
+  return null;
+});
 
 function makePostRequest(body: unknown) {
   return new Request("http://localhost/api/experts", {
@@ -151,9 +163,7 @@ describe("POST /api/experts", () => {
 
   it("handles slug collision by appending counter", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockExpertFindFirst
-      .mockResolvedValueOnce({ id: "existing-id" })
-      .mockResolvedValueOnce(null);
+    mockExpertFindMany.mockResolvedValueOnce([{ slug: "collision-expert" }]);
 
     mockExpertCreate.mockResolvedValue({
       id: "exp-4",

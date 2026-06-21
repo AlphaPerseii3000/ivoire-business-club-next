@@ -53,16 +53,15 @@ export default function ExpertForm({ initialData }: ExpertFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tierValue, setTierValue] = useState(initialData?.requiredTier ?? "AFFRANCHI");
-  const [isPublishedValue, setIsPublishedValue] = useState(initialData?.isPublished ?? false);
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(expertCreateSchema) as any,
+    resolver: zodResolver(expertCreateSchema),
     defaultValues: {
       name: initialData?.name ?? "",
       title: initialData?.title ?? "",
@@ -72,16 +71,17 @@ export default function ExpertForm({ initialData }: ExpertFormProps) {
       email: initialData?.email ?? "",
       whatsapp: initialData?.whatsapp ?? "",
       specialties: initialData?.specialties ?? "",
-      requiredTier: (initialData?.requiredTier as any) ?? "AFFRANCHI",
+      requiredTier: (initialData?.requiredTier as FormValues["requiredTier"]) ?? "AFFRANCHI",
       isPublished: initialData?.isPublished ?? false,
     },
   });
 
+  const tierValue = watch("requiredTier") ?? "AFFRANCHI";
+  const isPublishedValue = watch("isPublished") ?? false;
+
   useEffect(() => {
     if (initialData) {
-      setTierValue(initialData.requiredTier);
-      setValue("requiredTier", initialData.requiredTier as any, { shouldValidate: true });
-      setIsPublishedValue(initialData.isPublished);
+      setValue("requiredTier", initialData.requiredTier as FormValues["requiredTier"], { shouldValidate: true });
       setValue("isPublished", initialData.isPublished, { shouldValidate: true });
     }
   }, [initialData, setValue]);
@@ -267,8 +267,7 @@ export default function ExpertForm({ initialData }: ExpertFormProps) {
             value={tierValue}
             onValueChange={(val) => {
               if (val) {
-                setValue("requiredTier", val as any, { shouldValidate: true });
-                setTierValue(val);
+                setValue("requiredTier", val as FormValues["requiredTier"], { shouldValidate: true });
               }
             }}
           >
@@ -294,7 +293,6 @@ export default function ExpertForm({ initialData }: ExpertFormProps) {
               onValueChange={(val) => {
                 const boolVal = val === "true";
                 setValue("isPublished", boolVal, { shouldValidate: true });
-                setIsPublishedValue(boolVal);
               }}
             >
               <SelectTrigger id="isPublished" data-testid="expert-published-trigger">

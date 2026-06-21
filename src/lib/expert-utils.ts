@@ -7,22 +7,22 @@ export async function generateUniqueSlug(name: string, currentId?: string): Prom
     throw new Error("Le nom ne permet pas de générer un slug valide.");
   }
 
+  const existingExperts = await prisma.expert.findMany({
+    where: {
+      slug: { startsWith: baseSlug },
+      ...(currentId ? { id: { not: currentId } } : {}),
+    },
+    select: { slug: true },
+  });
+
+  const existingSlugs = new Set(existingExperts.map((e) => e.slug));
   let slug = baseSlug;
   let counter = 1;
 
-  while (true) {
-    const existing = await prisma.expert.findFirst({
-      where: {
-        slug,
-        ...(currentId ? { id: { not: currentId } } : {}),
-      },
-    });
-
-    if (!existing) {
-      return slug;
-    }
-
+  while (existingSlugs.has(slug)) {
     slug = `${baseSlug}-${counter}`;
     counter += 1;
   }
+
+  return slug;
 }

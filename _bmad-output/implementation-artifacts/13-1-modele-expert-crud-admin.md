@@ -3,7 +3,7 @@ baseline_commit: 4bf6a0519d470d6c9f89b1040d185569a9c97a3b
 ---
 # Story 13.1 : Modèle Expert + CRUD admin
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -95,6 +95,20 @@ Status: review
     - Les transitions d'états de publication et leur audit.
   - [ ] Créer `src/components/features/admin/expert-form.test.tsx` et `src/components/features/admin/experts-list-table.test.tsx` pour valider l'UI et les soumissions.
   - [ ] Exécuter `npx vitest run` pour s'assurer que tous les tests passent sans régression.
+
+### Review Findings
+
+- [x] [Review][Patch] Invalid --webpack flag in build command [scripts/prepare-deploy.ps1:26]
+- [x] [Review][Patch] Missing PostgreSQL migration file for Expert model [prisma/migrations-postgresql/]
+- [x] [Review][Patch] Modification of pre-existing event model migration [prisma/migrations-postgresql/20260618200819_add_event_model/migration.sql:195-231]
+- [x] [Review][Patch] Character encoding corruption (Mojibake) in layout and forms [src/app/(admin)/layout.tsx:16, src/components/features/admin/expert-form.tsx]
+- [x] [Review][Patch] API routes bypass promoteConfiguredAdminUser helper [src/app/api/experts/route.ts:30, src/app/api/experts/[id]/route.ts:16,46,145]
+- [x] [Review][Patch] Inefficient findFirst query inside slug generation loop [src/lib/expert-utils.ts:58]
+- [x] [Review][Patch] Redundant empty-string normalization in PUT API route [src/app/api/experts/[id]/route.ts:86-90]
+- [x] [Review][Patch] Duplicate states for tier and published values with useEffect synchronization [src/components/features/admin/expert-form.tsx:55]
+- [x] [Review][Patch] Raw <img> tag used instead of Next.js <Image> [src/components/features/admin/experts-list-table.tsx:47]
+- [x] [Review][Patch] TypeScript as any cast on Zod form resolver [src/components/features/admin/expert-form.tsx:60]
+- [x] [Review][Patch] Unrelated expert mock config in articles test suite [src/app/api/articles/route.test.ts:4]
 
 ## Dev Notes
 

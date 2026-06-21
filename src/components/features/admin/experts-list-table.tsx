@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import Image from "next/image";
 
 import {
   Table,
@@ -154,10 +155,12 @@ export default function ExpertsListTable({ experts }: ExpertsListTableProps) {
                 <TableRow key={expert.id} data-testid={`expert-row-${expert.id}`}>
                   <TableCell>
                     {expert.photoUrl ? (
-                      <img
+                      <Image
                         src={expert.photoUrl}
                         alt={expert.name}
-                        className="w-10 h-10 rounded-full object-cover border"
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover border"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border text-muted-foreground text-xs font-semibold">
