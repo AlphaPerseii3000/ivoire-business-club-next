@@ -23,7 +23,7 @@ npx prisma generate
 Write-Host "  OK Prisma Client regenere avec provider=postgresql."
 
 Write-Step "Build Next.js standalone avec Prisma Client PostgreSQL..."
-npx next build
+npx next build --webpack
 Write-Host "  OK Build Next.js standalone reussi."
 
 Assert-Path ".next/standalone/server.js"

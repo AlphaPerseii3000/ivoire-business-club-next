@@ -547,3 +547,56 @@ export const eventUpdateSchema = baseEventSchema.partial().extend({
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;
+
+export const expertCreateSchema = z.object({
+  name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères"),
+  title: z.string().trim().min(2, "Le titre doit contenir au moins 2 caractères"),
+  bio: z.string().trim().min(10, "La biographie doit contenir au moins 10 caractères"),
+  photoUrl: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
+      { message: "L'URL de la photo doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+    )
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  phone: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  email: z
+    .string()
+    .trim()
+    .refine((val) => val === "" || z.string().email().safeParse(val).success, {
+      message: "Email invalide",
+    })
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  whatsapp: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  specialties: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  requiredTier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], {
+    message: "Tier de visibilité invalide",
+  }).default("AFFRANCHI"),
+  isPublished: z.boolean().optional().default(false),
+});
+
+export const expertUpdateSchema = expertCreateSchema.partial();
+
+export type ExpertCreateInput = z.infer<typeof expertCreateSchema>;
+export type ExpertUpdateInput = z.infer<typeof expertUpdateSchema>;
+

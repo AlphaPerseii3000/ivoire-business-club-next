@@ -119,6 +119,58 @@ export async function main() {
     console.log(`Created event: ${event.title} (${event.status})`);
   }
 
+  // Clear existing experts to ensure idempotency
+  await prisma.expert.deleteMany({});
+  console.log("Cleared existing experts.");
+
+  const expertsData = [
+    {
+      name: "Jean Koffi",
+      slug: "jean-koffi",
+      title: "Expert en Fiscalité UEMOA",
+      bio: "Ancien inspecteur des impôts, Jean conseille les entreprises sur l'optimisation fiscale et douanière.",
+      photoUrl: null,
+      phone: "+225 01 02 03 04 05",
+      email: "jean.koffi@example.com",
+      whatsapp: "+225 01 02 03 04 05",
+      specialties: "fiscalité, douane, optimisation",
+      requiredTier: Tier.AFFRANCHI,
+      isPublished: true,
+    },
+    {
+      name: "Mariam Diallo",
+      slug: "mariam-diallo",
+      title: "Avocate d'Affaires",
+      bio: "Spécialisée en droit des sociétés et levée de fonds en Afrique de l'Ouest.",
+      photoUrl: null,
+      phone: "+225 07 08 09 10 11",
+      email: "mariam.diallo@example.com",
+      whatsapp: "+225 07 08 09 10 11",
+      specialties: "droit, levée de fonds, contrats",
+      requiredTier: Tier.GRAND_FRERE,
+      isPublished: true,
+    },
+    {
+      name: "Serge N'Goran",
+      slug: "serge-n-goran",
+      title: "Mentor Business & Scale",
+      bio: "Serial entrepreneur ayant accompagné plus de 50 startups vers la rentabilité.",
+      photoUrl: null,
+      phone: null,
+      email: "serge.ngoran@example.com",
+      whatsapp: null,
+      specialties: "growth, mentorat, scale",
+      requiredTier: Tier.BOSS,
+      isPublished: false,
+    },
+  ];
+
+  for (const data of expertsData) {
+    const expert = await prisma.expert.create({ data });
+    console.log(`Created expert: ${expert.name} (${expert.requiredTier}, published: ${expert.isPublished})`);
+  }
+
+
   const articlesData = [
     {
       title: "Guide de l'Investisseur Débutant",

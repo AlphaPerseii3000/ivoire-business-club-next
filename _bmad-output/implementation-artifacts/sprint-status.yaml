@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-19T00:00:00+0200
+last_updated: 2026-06-21T17:54:30+0200
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -81,8 +81,8 @@ development_status:
   12-1-modele-event-crud-admin: done
   12-2-page-calendrier-evenements-publique: done
   12-3-composant-prochain-evenement-landing-popup: done
-  epic-13: backlog
-  13-1-modele-expert-crud-admin: backlog
+  epic-13: in-progress
+  13-1-modele-expert-crud-admin: review
   13-2-page-publique-liste-experts: backlog
   13-3-modele-company-crud-admin: backlog
   13-4-page-publique-liste-entreprises: backlog
