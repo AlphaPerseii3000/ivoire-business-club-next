@@ -26,11 +26,11 @@ interface CustomSessionUser {
 
 export default async function ExpertsPage({ searchParams }: ExpertsPageProps) {
   const resolvedSearchParams = await searchParams;
-  const activeSpecialty = typeof resolvedSearchParams.specialty === "string"
+  const activeSpecialty = (typeof resolvedSearchParams.specialty === "string"
     ? resolvedSearchParams.specialty
-    : Array.isArray(resolvedSearchParams.specialty)
+    : Array.isArray(resolvedSearchParams.specialty) && resolvedSearchParams.specialty[0]
     ? resolvedSearchParams.specialty[0]
-    : "Tous";
+    : "Tous") || "Tous";
 
   // 1. Get current session and roles
   const session = await auth();

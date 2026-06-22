@@ -49,7 +49,7 @@ export async function PUT(
     const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
     const adminUser = await promoteConfiguredAdminUser(session.user.id);
     if (!adminUser || adminUser.role !== "ADMIN") {
@@ -97,16 +97,10 @@ export async function PUT(
         data,
       });
 
-      await safeCreateAuditLog({
-        actorId: session.user.id,
-        action: "COMPANY_UPDATE",
-        entityType: "COMPANY",
-        entityId: updatedCompany.id,
-        metadata: {
-          name: updatedCompany.name,
-          isPublished: updatedCompany.isPublished,
-        },
-      });
+      const onlyPublishChanged = 
+        Object.keys(data).length === 1 && 
+        data.isPublished !== undefined && 
+        company.isPublished !== updatedCompany.isPublished;
 
       if (company.isPublished !== updatedCompany.isPublished) {
         await safeCreateAuditLog({
@@ -118,6 +112,19 @@ export async function PUT(
             name: updatedCompany.name,
             previousStatus: company.isPublished,
             newStatus: updatedCompany.isPublished,
+          },
+        });
+      }
+
+      if (!onlyPublishChanged) {
+        await safeCreateAuditLog({
+          actorId: session.user.id,
+          action: "COMPANY_UPDATE",
+          entityType: "COMPANY",
+          entityId: updatedCompany.id,
+          metadata: {
+            name: updatedCompany.name,
+            isPublished: updatedCompany.isPublished,
           },
         });
       }
@@ -146,7 +153,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
     const adminUser = await promoteConfiguredAdminUser(session.user.id);
     if (!adminUser || adminUser.role !== "ADMIN") {

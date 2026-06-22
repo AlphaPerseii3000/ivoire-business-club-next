@@ -638,8 +638,8 @@ export const companyCreateSchema = z.object({
     .string()
     .trim()
     .refine(
-      (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
-      { message: "L'URL du site web doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+      (val) => val === "" || z.string().url().safeParse(val).success,
+      { message: "L'URL du site web doit être une URL absolue valide (ex: https://...)" }
     )
     .transform((val) => (val === "" ? null : val))
     .optional()

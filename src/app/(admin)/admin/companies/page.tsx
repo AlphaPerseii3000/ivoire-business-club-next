@@ -21,6 +21,8 @@ export default async function AdminCompaniesPage() {
 
   const serializedCompanies = companies.map((c) => ({
     ...c,
+    createdAt: c.createdAt.toISOString(),
+    updatedAt: c.updatedAt.toISOString(),
   }));
 
   return (

@@ -25,6 +25,7 @@ export default async function EditCompanyPage({ params }: EditCompanyPageProps) 
 
   if (!company) {
     notFound();
+    return null;
   }
 
   const serializedCompany = {

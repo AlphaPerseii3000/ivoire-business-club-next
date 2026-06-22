@@ -63,3 +63,9 @@
 - Boilerplate Navigation Header Duplication [src/app/(public)/...:1] — duplicate layout header and links across multiple public pages (pre-existing smell).
 - Hardcoded Navigation Active States [src/app/(public)/...:1] — hardcoded active tab highlights in duplicated headers (pre-existing smell).
 - Denormalized Database Design Smell [prisma/schema.prisma:1] — specialties stored as comma-separated strings rather than a dedicated relational table or array type (pre-existing database architecture smell).
+
+## Deferred from: code review of 13-3-modele-company-crud-admin.md (2026-06-22)
+
+- Absence of list pagination [src/app/api/companies/route.ts:12] — Neither the public GET API nor the admin list page implements pagination or limits (pre-existing).
+- Boilerplate layout duplication [src/app/(public)/:1] — Duplication of navigation and footers inside public page components instead of centering in Next.js layouts (pre-existing).
+

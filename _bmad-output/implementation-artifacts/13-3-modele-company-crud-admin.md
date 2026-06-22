@@ -3,7 +3,7 @@ baseline_commit: 79cd68ac9d0b2c6497ebcfb161d6cf375ec53e75
 ---
 # Story 13.3: Modèle Company + CRUD admin
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -95,6 +95,20 @@ Status: review
     - Les transitions d'états de publication et leur audit.
   - [x] Créer `src/components/features/admin/company-form.test.tsx` et `src/components/features/admin/companies-list-table.test.tsx` pour valider l'UI et les soumissions.
   - [x] Exécuter `npx vitest run` pour s'assurer que tous les tests passent sans régression.
+
+### Review Findings
+
+- [x] [Review][Patch] Next.js RSC boundary serialization crash on /admin/companies list page [src/app/(admin)/admin/companies/page.tsx:22]
+- [x] [Review][Patch] Next.js <Image> component hostname crash vulnerability for external logo URLs in admin list [src/components/features/admin/companies-list-table.tsx:146]
+- [x] [Review][Patch] Destructive database seeding pattern in prisma/seed.ts [prisma/seed.ts:482]
+- [x] [Review][Patch] Redundant audit log records on publication status updates [src/app/api/companies/[id]/route.ts:100]
+- [x] [Review][Patch] Zod schema website validation copy-paste flaw [src/lib/validations.ts:640]
+- [x] [Review][Patch] Inaccurate REST error status codes (403 vs 401) [src/app/api/companies/route.ts:32]
+- [x] [Review][Patch] Edit Page crash if company is not found [src/app/(admin)/admin/companies/[id]/edit/page.tsx:26]
+- [x] [Review][Patch] Metadata and JSON-LD empty photoUrl checks for experts [src/app/(public)/experts/[slug]/page.tsx:58]
+- [x] [Review][Patch] resolvedSearchParams.specialty empty array crash on experts list page [src/app/(public)/experts/page.tsx:29]
+- [x] [Review][Defer] Absence of list pagination [src/app/api/companies/route.ts:12] — deferred, pre-existing
+- [x] [Review][Defer] Boilerplate layout duplication [src/app/(public)/:1] — deferred, pre-existing
 
 ## Dev Notes
 

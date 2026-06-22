@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: ExpertDetailPageProps): Promi
 
     const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
     const pageUrl = `${siteUrl}/experts/${slug}`;
-    const imageUrl = expert.photoUrl
+    const imageUrl = expert.photoUrl && expert.photoUrl !== ""
       ? (expert.photoUrl.startsWith("http") ? expert.photoUrl : `${siteUrl}${expert.photoUrl}`)
       : `${siteUrl}/logo-ibc.webp`;
     const description = expert.title || "Expert — Ivoire Business Club";
@@ -154,7 +154,7 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
       "@type": "Person",
       "name": expert.name,
       "jobTitle": expert.title,
-      "image": expert.photoUrl
+      "image": expert.photoUrl && expert.photoUrl !== ""
         ? (expert.photoUrl.startsWith("http") ? expert.photoUrl : `${siteUrl}${expert.photoUrl}`)
         : `${siteUrl}/logo-ibc.webp`,
       "description": expert.title || "Expert — Ivoire Business Club",

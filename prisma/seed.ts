@@ -170,10 +170,6 @@ export async function main() {
     console.log(`Created expert: ${expert.name} (${expert.requiredTier}, published: ${expert.isPublished})`);
   }
 
-  // Clear existing companies to ensure idempotency
-  await prisma.company.deleteMany({});
-  console.log("Cleared existing companies.");
-
   const companiesData = [
     {
       name: "KS Construction",
@@ -220,8 +216,12 @@ export async function main() {
   ];
 
   for (const data of companiesData) {
-    const company = await prisma.company.create({ data });
-    console.log(`Created company: ${company.name} (published: ${company.isPublished})`);
+    const company = await prisma.company.upsert({
+      where: { slug: data.slug },
+      update: data,
+      create: data,
+    });
+    console.log(`Created/Updated company: ${company.name} (published: ${company.isPublished})`);
   }
 
 

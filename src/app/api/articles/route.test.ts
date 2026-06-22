@@ -53,6 +53,7 @@ vi.mock("@/lib/prisma", () => ({
     company: {
       deleteMany: vi.fn(),
       create: vi.fn().mockResolvedValue({ id: "comp-1", name: "Test Company", isPublished: true }),
+      upsert: vi.fn().mockResolvedValue({ id: "comp-1", name: "Test Company", isPublished: true }),
     },
     $disconnect: vi.fn(),
   },

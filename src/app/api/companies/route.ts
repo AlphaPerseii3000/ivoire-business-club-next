@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const adminUser = await promoteConfiguredAdminUser(session.user.id);
