@@ -170,6 +170,60 @@ export async function main() {
     console.log(`Created expert: ${expert.name} (${expert.requiredTier}, published: ${expert.isPublished})`);
   }
 
+  // Clear existing companies to ensure idempotency
+  await prisma.company.deleteMany({});
+  console.log("Cleared existing companies.");
+
+  const companiesData = [
+    {
+      name: "KS Construction",
+      slug: "ks-construction",
+      description: "Entreprise générale de bâtiment spécialisée dans les chantiers de grande envergure en Côte d'Ivoire.",
+      logoUrl: null,
+      contactName: "Koffi Sekou",
+      contactPhone: "+225 01 02 03 04 05",
+      contactEmail: "koffi.sekou@ksconstruction.ci",
+      website: "https://www.ksconstruction.ci",
+      location: "Abidjan, Cocody",
+      certifications: "ISO 9001, Agrément Qualibat",
+      sectors: "btp, construction, genie civil",
+      isPublished: true,
+    },
+    {
+      name: "Ivoire Digital Agency",
+      slug: "ivoire-digital-agency",
+      description: "Agence conseil en transformation digitale, développement web/mobile et marketing de performance.",
+      logoUrl: null,
+      contactName: "Awa Koné",
+      contactPhone: "+225 07 08 09 10 11",
+      contactEmail: "contact@ivoiredigital.ci",
+      website: "https://www.ivoiredigital.ci",
+      location: "Abidjan, Plateau",
+      certifications: "Partenaire AWS, Certifié Google Partner",
+      sectors: "tech, digital, marketing",
+      isPublished: true,
+    },
+    {
+      name: "UEMOA Conseil",
+      slug: "uemoa-conseil",
+      description: "Cabinet de conseil en stratégie d'affaires, fusions-acquisitions et expansion dans la zone UEMOA.",
+      logoUrl: null,
+      contactName: "Moussa Traoré",
+      contactPhone: "+225 05 06 07 08 09",
+      contactEmail: "m.traore@uemoaconseil.com",
+      website: "https://www.uemoaconseil.com",
+      location: "Abidjan, Marcory",
+      certifications: "Agrément COSUMAF",
+      sectors: "conseil, finance, strategie",
+      isPublished: false,
+    },
+  ];
+
+  for (const data of companiesData) {
+    const company = await prisma.company.create({ data });
+    console.log(`Created company: ${company.name} (published: ${company.isPublished})`);
+  }
+
 
   const articlesData = [
     {

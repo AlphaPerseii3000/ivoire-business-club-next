@@ -517,3 +517,24 @@ model Expert {
   @@map("experts")
 }
 
+model Company {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String   @db.Text
+  logoUrl        String?
+  contactName    String?
+  contactPhone   String?
+  contactEmail   String?
+  website        String?
+  location       String?
+  certifications String?
+  sectors        String?
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isPublished])
+  @@map("companies")
+}
+

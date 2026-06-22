@@ -21,6 +21,9 @@ export default async function PricingPage() {
             <Link href="/articles" className="inline-flex min-h-11 items-center rounded-md px-2 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
               Articles
             </Link>
+            <Link href="/experts" className="inline-flex min-h-11 items-center rounded-md px-2 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+              Experts
+            </Link>
             {isAuthenticated ? (
               <Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-md px-2 font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
                 Tableau de bord

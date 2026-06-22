@@ -58,5 +58,8 @@
 - Cast de type non sécurisé `as any` sur la référence de la Textarea [src/components/features/admin/article-form.tsx:836]
 - Absence de pagination pour la liste des articles admin [src/app/(admin)/admin/articles/page.tsx]
 
+## Deferred from: code review of 13-2-page-publique-liste-experts.md (2026-06-22)
 
-
+- Boilerplate Navigation Header Duplication [src/app/(public)/...:1] — duplicate layout header and links across multiple public pages (pre-existing smell).
+- Hardcoded Navigation Active States [src/app/(public)/...:1] — hardcoded active tab highlights in duplicated headers (pre-existing smell).
+- Denormalized Database Design Smell [prisma/schema.prisma:1] — specialties stored as comma-separated strings rather than a dedicated relational table or array type (pre-existing database architecture smell).

@@ -600,3 +600,74 @@ export const expertUpdateSchema = expertCreateSchema.partial();
 export type ExpertCreateInput = z.infer<typeof expertCreateSchema>;
 export type ExpertUpdateInput = z.infer<typeof expertUpdateSchema>;
 
+export const companyCreateSchema = z.object({
+  name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères"),
+  description: z.string().trim().min(10, "La description doit contenir au moins 10 caractères"),
+  logoUrl: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
+      { message: "L'URL du logo doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+    )
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  contactName: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  contactPhone: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  contactEmail: z
+    .string()
+    .trim()
+    .refine((val) => val === "" || z.string().email().safeParse(val).success, {
+      message: "Email de contact invalide",
+    })
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  website: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
+      { message: "L'URL du site web doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+    )
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  location: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  certifications: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  sectors: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .optional()
+    .nullable(),
+  isPublished: z.boolean().optional().default(false),
+});
+
+export const companyUpdateSchema = companyCreateSchema.partial();
+
+export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
+export type CompanyUpdateInput = z.infer<typeof companyUpdateSchema>;
+
+

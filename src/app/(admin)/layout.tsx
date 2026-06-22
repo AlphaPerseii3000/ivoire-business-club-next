@@ -14,6 +14,7 @@ const ADMIN_NAV = [
   { href: "/admin/articles", label: "Articles", icon: "✍️" },
   { href: "/admin/events", label: "Événements", icon: "📅" },
   { href: "/admin/experts", label: "Experts", icon: "🎓" },
+  { href: "/admin/companies", label: "Entreprises", icon: "🏢" },
   { href: "/admin/audit", label: "Audit", icon: "📋" },
 ];
 
