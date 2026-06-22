@@ -134,6 +134,7 @@ export function Hero() {
               tag="span"
             />
             <br className="sm:hidden" />
+            <span className="hidden sm:inline" aria-hidden="true">{' '}</span>
             <SplitText
               text="en Afrique"
               className="inline-block"

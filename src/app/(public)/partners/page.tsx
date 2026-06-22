@@ -144,7 +144,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
       </header>
 
       {/* Contenu principal */}
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-12 md:py-16">
+      <main className="flex-1 mx-auto max-w-7xl w-full px-4 pt-24 py-12 md:py-16">
         <div className="max-w-3xl mb-12">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
             Partenaires Agréés

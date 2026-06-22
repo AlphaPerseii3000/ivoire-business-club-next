@@ -3,8 +3,8 @@
 import { StaggeredMenu } from '@/components/StaggeredMenu';
 
 const LANDING_MENU_ITEMS = [
-  { label: 'Mission', ariaLabel: 'Notre mission', link: '#mission' },
-  { label: 'Tarifs', ariaLabel: 'Voir les tarifs', link: '#pricing' },
+  { label: 'Mission', ariaLabel: 'Notre mission', link: '/#mission' },
+  { label: 'Tarifs', ariaLabel: 'Voir les tarifs', link: '/#pricing' },
   { label: 'Articles', ariaLabel: 'Lire les articles', link: '/articles' },
   { label: 'Experts', ariaLabel: 'Voir les experts', link: '/experts' },
   { label: 'Partenaires', ariaLabel: 'Voir les partenaires', link: '/partners' },
