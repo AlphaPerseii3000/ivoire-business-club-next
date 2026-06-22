@@ -69,3 +69,8 @@
 - Absence of list pagination [src/app/api/companies/route.ts:12] — Neither the public GET API nor the admin list page implements pagination or limits (pre-existing).
 - Boilerplate layout duplication [src/app/(public)/:1] — Duplication of navigation and footers inside public page components instead of centering in Next.js layouts (pre-existing).
 
+## Deferred from: code review of 13-4-page-publique-liste-entreprises.md (2026-06-22)
+
+- Lien d'ancre brisé pour "Tarifs" dans la navigation mobile sur les pages secondaires [src/components/landing/mobile-nav.tsx:7] — Le lien "Tarifs" utilise `#pricing`. Sur les pages `/partners` ou `/partners/[slug]`, cliquer dessus cherche l'ancre sur la page courante au lieu de rediriger vers la page d'accueil (`/#pricing`) (pré-existant).
+
+

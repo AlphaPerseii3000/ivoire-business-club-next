@@ -4,7 +4,7 @@ baseline_commit: 0f07b0dcb8dc54bbb37b0a2cc4b96be9ab5e31ad
 
 # Story 13.4: Page publique liste des entreprises agréées
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -151,3 +151,22 @@ Gemini 3.5 Flash (Medium)
 
 ### Change Log
 - **2026-06-22**: Initialized implementation of Story 13.4: public directory of companies, markdown detail page, menu integration, and tests. Everything validated 100% green.
+
+### Review Findings
+
+- [x] [Review][Patch] Vulnerabilité XSS potentielle lors de l'échec de parsing Markdown [src/app/(public)/partners/[slug]/page.tsx:325-328]
+- [x] [Review][Patch] Protocoles absents dans les liens de sites externes de l'entreprise [src/app/(public)/partners/[slug]/page.tsx:505]
+- [x] [Review][Patch] Problème de concaténation de l'URL du logo sans slash initial [src/app/(public)/partners/[slug]/page.tsx:230-232]
+- [x] [Review][Patch] Commentaires en anglais dans les fichiers de code [multiple files]
+- [x] [Review][Patch] Métadonnées SEO contenant de la syntaxe Markdown brute [src/app/(public)/partners/[slug]/page.tsx:233-239]
+- [x] [Review][Patch] Formatage destructif des acronymes de secteurs (ex: BTP -> Btp) [src/app/(public)/partners/page.tsx]
+- [x] [Review][Patch] Rembourrage (padding) redondant et bogué sur les images avec fill [multiple files]
+- [x] [Review][Patch] Requête de base de données inefficace (sur-récupération de colonnes) [src/app/(public)/partners/page.tsx]
+- [x] [Review][Patch] Attribut sizes inutile sur des images marquées unoptimized [src/components/features/partners/CompanyCard.tsx]
+- [x] [Review][Patch] Contraste insuffisant sous le thème clair (Accessibilité WCAG) [src/app/(public)/partners/[slug]/page.tsx]
+- [x] [Review][Patch] Déclaration redondante de siteUrl [src/app/(public)/partners/[slug]/page.tsx]
+- [x] [Review][Patch] Navigation clavier redondante et inaccessible sur les cartes d'entreprise [src/components/features/partners/CompanyCard.tsx]
+- [x] [Review][Patch] Appel obsolète à marked.setOptions à portée globale [src/app/(public)/partners/[slug]/page.tsx]
+- [x] [Review][Patch] Contournement du typage TypeScript avec any[] [src/app/(public)/partners/page.tsx]
+- [x] [Review][Defer] Lien d'ancre brisé pour "Tarifs" dans la navigation mobile sur les pages secondaires [src/components/landing/mobile-nav.tsx:7] — deferred, pre-existing
+

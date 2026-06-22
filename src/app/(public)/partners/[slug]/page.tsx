@@ -15,9 +15,30 @@ import { sanitizeError } from "@/lib/sanitize-log";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
 
-marked.setOptions({ breaks: true, gfm: true });
-
 export const dynamic = "force-dynamic";
+
+const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
+
+const cleanMarkdown = (markdown: string) => {
+  if (!markdown) return "";
+  return markdown
+    .replace(/[#*`_~]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const getAbsoluteLogoUrl = (logoUrl: string | null | undefined, siteUrl: string) => {
+  if (!logoUrl || logoUrl === "") return `${siteUrl}/logo-ibc.webp`;
+  if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) return logoUrl;
+  const path = logoUrl.startsWith("/") ? logoUrl : `/${logoUrl}`;
+  return `${siteUrl}${path}`;
+};
+
+const formatExternalUrl = (url: string | null | undefined) => {
+  if (!url) return "";
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+};
 
 interface CompanyDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -39,25 +60,24 @@ export async function generateMetadata({ params }: CompanyDetailPageProps): Prom
     const session = await auth();
     const isAdmin = session?.user?.role === "ADMIN";
 
-    // If company is draft and user is not admin, do not leak metadata
+    // Si l'entreprise est un brouillon et que l'utilisateur n'est pas administrateur, ne pas divulguer les métadonnées
     if (!company.isPublished && !isAdmin) {
       return {
         title: "Entreprise non trouvée — Ivoire Business Club",
       };
     }
 
-    const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
     const pageUrl = `${siteUrl}/partners/${slug}`;
-    const imageUrl = company.logoUrl && company.logoUrl !== ""
-      ? (company.logoUrl.startsWith("http") ? company.logoUrl : `${siteUrl}${company.logoUrl}`)
-      : `${siteUrl}/logo-ibc.webp`;
-    const description = company.description || "Partenaire — Ivoire Business Club";
+    const imageUrl = getAbsoluteLogoUrl(company.logoUrl, siteUrl);
+    const rawDescription = company.description || "Partenaire — Ivoire Business Club";
+    const description = cleanMarkdown(rawDescription);
 
     return {
       title: {
         absolute: `${company.name} — Partenaire IBC`,
       },
       description: description.substring(0, 160),
+
       openGraph: {
         title: `${company.name} — Partenaire IBC`,
         description: description.substring(0, 160),
@@ -85,7 +105,7 @@ export async function generateMetadata({ params }: CompanyDetailPageProps): Prom
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   const { slug } = await params;
 
-  // Fetch the company details
+  // Récupérer les détails de l'entreprise
   let company;
   try {
     company = await getCompanyBySlug(slug);
@@ -99,7 +119,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
     return null;
   }
 
-  // Auth check for draft companies (Admin bypass)
+  // Vérification d'authentification pour les entreprises en brouillon (contournement administrateur)
   const session = await auth();
   const isLoggedIn = !!session?.user;
   const isAdmin = session?.user?.role === "ADMIN";
@@ -110,7 +130,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
     return null;
   }
 
-  // Split and trim sectors
+  // Diviser et nettoyer les secteurs
   const sectorsList = company.sectors
     ? company.sectors
         .split(",")
@@ -118,7 +138,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         .filter((s) => s.length > 0)
     : [];
 
-  // Split and trim certifications
+  // Diviser et nettoyer les certifications
   const certificationsList = company.certifications
     ? company.certifications
         .split(",")
@@ -126,7 +146,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         .filter((c) => c.length > 0)
     : [];
 
-  // Generate initials for fallback
+  // Générer les initiales pour le repli
   const initials = company.name
     ? company.name
         .trim()
@@ -137,27 +157,24 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         .toUpperCase()
     : "";
 
-  // Parse markdown description
+  // Analyser la description en Markdown
   const htmlDescription = (() => {
     if (!company.description) return "";
     try {
-      const rawHtml = marked.parse(company.description) as string;
+      const rawHtml = marked.parse(company.description, { breaks: true, gfm: true }) as string;
       return DOMPurify.sanitize(rawHtml);
     } catch (error) {
       console.error("Failed to parse company description:", error);
-      return company.description;
+      return DOMPurify.sanitize(company.description);
     }
   })();
 
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": company.name,
-    "description": company.description,
-    "image": company.logoUrl && company.logoUrl !== ""
-      ? (company.logoUrl.startsWith("http") ? company.logoUrl : `${siteUrl}${company.logoUrl}`)
-      : `${siteUrl}/logo-ibc.webp`,
+    "description": cleanMarkdown(company.description),
+    "image": getAbsoluteLogoUrl(company.logoUrl, siteUrl),
     "address": {
       "@type": "PostalAddress",
       "addressLocality": company.location || "Abidjan",
@@ -165,7 +182,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
     },
     "telephone": company.contactPhone || undefined,
     "email": company.contactEmail || undefined,
-    "url": company.website || undefined,
+    "url": formatExternalUrl(company.website) || undefined,
   };
 
   return (
@@ -174,8 +191,9 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      {/* Mobile Navigation */}
+      {/* Navigation mobile */}
       <LandingMobileNav />
+
 
       {/* Navigation Header */}
       <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
@@ -218,9 +236,9 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         </div>
       </header>
 
-      {/* Main Layout */}
+      {/* Mise en page principale */}
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
-        {/* Back Link */}
+        {/* Lien de retour */}
         <Link
           href="/partners"
           className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group"
@@ -229,9 +247,9 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
           Retour aux partenaires
         </Link>
 
-        {/* Profile Card Layout */}
+        {/* Mise en page de la carte de profil */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Sidebar Info */}
+          {/* Informations de la barre latérale */}
           <div className="md:col-span-1 space-y-6">
             {company.logoUrl && company.logoUrl !== "" ? (
               <div className="relative aspect-[16/9] md:aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0e1628] flex items-center justify-center p-4">
@@ -241,7 +259,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
                   fill
                   priority
                   unoptimized
-                  className="object-contain p-4"
+                  className="object-contain"
                   sizes="(max-width: 768px) 100vw, 300px"
                 />
               </div>
@@ -261,7 +279,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
               <div>
                 <h1 className="text-2xl font-bold text-white leading-tight">{company.name}</h1>
                 {company.location ? (
-                  <p className="text-sm font-medium text-teal-600 dark:text-teal-400 mt-1">{company.location}</p>
+                  <p className="text-sm font-medium text-teal-400 mt-1">{company.location}</p>
                 ) : null}
               </div>
 
@@ -280,7 +298,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             </div>
           </div>
 
-          {/* Main Info */}
+          {/* Informations principales */}
           <div className="md:col-span-2 space-y-8">
             <div className="space-y-8 bg-[#0e1628]/40 border border-white/5 p-6 md:p-8 rounded-2xl">
               <div>
@@ -323,7 +341,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
 
                     {company.website ? (
                       <Link
-                        href={company.website}
+                        href={formatExternalUrl(company.website)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
@@ -364,6 +382,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
                   </div>
                 </div>
               ) : null}
+
             </div>
           </div>
         </div>

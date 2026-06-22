@@ -18,7 +18,7 @@ export interface CompanyCardProps {
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
-  // Split and trim sectors
+  // Diviser et nettoyer les secteurs
   const sectorsList = company.sectors
     ? company.sectors
         .split(",")
@@ -26,7 +26,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
         .filter((s) => s.length > 0)
     : [];
 
-  // Generate initials for fallback
+  // Générer les initiales pour le repli
   const initials = company.name
     ? company.name
         .trim()
@@ -38,7 +38,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
     : "";
 
   return (
-    <Card className="group h-full flex flex-col justify-between overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
+    <Card className="relative group h-full flex flex-col justify-between overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
       <div>
         {company.logoUrl && company.logoUrl !== "" ? (
           <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-border/10 bg-white/5 flex items-center justify-center p-4">
@@ -47,8 +47,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
               alt={company.name}
               fill
               unoptimized
-              className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
             />
           </div>
         ) : (
@@ -65,7 +64,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
 
         <CardHeader className="gap-1 p-5">
           <CardTitle className="text-xl font-bold tracking-tight text-foreground line-clamp-1">
-            <Link href={`/partners/${company.slug}`} className="hover:text-teal-500 transition-colors">
+            <Link href={`/partners/${company.slug}`} className="hover:text-teal-500 transition-colors after:absolute after:inset-0 after:z-10">
               {company.name}
             </Link>
           </CardTitle>
@@ -91,13 +90,12 @@ export function CompanyCard({ company }: CompanyCardProps) {
       </div>
 
       <CardFooter className="flex items-center justify-end p-5 pt-4 border-t border-border/20 bg-muted/20">
-        <Link
-          href={`/partners/${company.slug}`}
-          className={cn(buttonVariants({ size: "sm" }), "cursor-pointer group")}
+        <div
+          className={cn(buttonVariants({ size: "sm" }), "group select-none")}
         >
           Voir les détails
           <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        </div>
       </CardFooter>
     </Card>
   );

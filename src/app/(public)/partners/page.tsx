@@ -16,6 +16,15 @@ export const metadata = {
   description: "Découvrez les entreprises agréées par l'Ivoire Business Club. Des partenaires de confiance dans le BTP, les services, la communication et plus encore.",
 };
 
+interface CompanyData {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  logoUrl: string | null;
+  sectors: string | null;
+}
+
 interface PartnersPageProps {
   searchParams: Promise<{ sector?: string }>;
 }
@@ -28,16 +37,24 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
     ? resolvedSearchParams.sector[0]
     : "Tous") || "Tous";
 
-  // Get current session
+  // Récupérer la session actuelle
   const session = await auth();
   const isLoggedIn = !!session?.user;
 
-  // Fetch all published companies from Database
-  let companies: any[] = [];
+  // Récupérer toutes les entreprises publiées de la base de données (uniquement les champs nécessaires)
+  let companies: CompanyData[] = [];
   try {
     companies = await prisma.company.findMany({
       where: {
         isPublished: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        logoUrl: true,
+        sectors: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -48,7 +65,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
     throw error;
   }
 
-  // Extract unique sectors for filtering
+  // Extraire les secteurs uniques pour le filtrage
   const allSectorsRaw = companies.flatMap((c) =>
     c.sectors
       ? c.sectors
@@ -59,10 +76,16 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
   );
 
   const uniqueSectors = Array.from(
-    new Set(allSectorsRaw.map((s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()))
+    new Set(allSectorsRaw.map((s: string) => {
+      const trimmed = s.trim();
+      if (trimmed.toUpperCase() === trimmed) {
+        return trimmed; // préserve les acronymes comme BTP, IT, etc.
+      }
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }))
   ).sort() as string[];
 
-  // Filter companies based on selected sector
+  // Filtrer les entreprises en fonction du secteur sélectionné
   const filteredCompanies =
     activeSector !== "Tous"
       ? companies.filter((c) => {
@@ -76,10 +99,10 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
-      {/* Mobile Navigation */}
+      {/* Navigation mobile */}
       <LandingMobileNav />
 
-      {/* Navigation Header */}
+      {/* En-tête de navigation */}
       <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
           <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
@@ -115,12 +138,12 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
               <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
                 Connexion
               </Link>
-            )}
+            ) }
           </nav>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Contenu principal */}
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-12 md:py-16">
         <div className="max-w-3xl mb-12">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
@@ -131,7 +154,8 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
           </p>
         </div>
 
-        {/* Sectors Filters (Scrollable Chips) */}
+
+        {/* Filtres de secteurs (chips horizontaux défilants) */}
         <div className="mb-10 border-b border-white/10 pb-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none" aria-label="Filtrer par secteur">
             <Link
@@ -163,7 +187,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
           </div>
         </div>
 
-        {/* Companies Grid */}
+        {/* Grille des entreprises */}
         {filteredCompanies.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="companies-grid">
             {filteredCompanies.map((company) => (

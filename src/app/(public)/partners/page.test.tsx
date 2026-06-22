@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import PartnersPage from "./page";
 
-// Setup mocks
+// Configuration des simulations (mocks)
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockFindMany = vi.hoisted(() => vi.fn());
 
@@ -64,10 +64,10 @@ describe("PartnersPage", () => {
 
     render(await PartnersPage({ searchParams: Promise.resolve({}) }));
 
-    // Check heading
+    // Vérifier le titre de la page
     expect(screen.getByRole("heading", { name: "Partenaires Agréés" })).toBeInTheDocument();
 
-    // Check both companies are rendered
+    // Vérifier que les deux entreprises sont affichées
     expect(screen.getByText("Alpha BTP")).toBeInTheDocument();
     expect(screen.getByText("Beta Services")).toBeInTheDocument();
     expect(screen.getByText("Une entreprise leader du BTP en Côte d'Ivoire.")).toBeInTheDocument();

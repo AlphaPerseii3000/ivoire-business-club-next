@@ -1,0 +1,976 @@
+diff --git a/src/app/(public)/articles/page.tsx b/src/app/(public)/articles/page.tsx
+index 7fcabf1..06807c3 100644
+--- a/src/app/(public)/articles/page.tsx
++++ b/src/app/(public)/articles/page.tsx
+@@ -117,6 +117,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps)
+             <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
+               Experts
+             </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
++              Partenaires
++            </Link>
+             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+               Événements
+             </Link>
+diff --git a/src/app/(public)/events/page.tsx b/src/app/(public)/events/page.tsx
+index 8062fd7..3a30753 100644
+--- a/src/app/(public)/events/page.tsx
++++ b/src/app/(public)/events/page.tsx
+@@ -86,6 +86,9 @@ export default async function EventsPage() {
+             <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
+               Experts
+             </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
++              Partenaires
++            </Link>
+             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+               Événements
+             </Link>
+diff --git a/src/app/(public)/experts/[slug]/page.tsx b/src/app/(public)/experts/[slug]/page.tsx
+index 5ce35ad..c454441 100644
+--- a/src/app/(public)/experts/[slug]/page.tsx
++++ b/src/app/(public)/experts/[slug]/page.tsx
+@@ -190,6 +190,9 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
+             <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
+               Experts
+             </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
++              Partenaires
++            </Link>
+             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+               Événements
+             </Link>
+diff --git a/src/app/(public)/experts/page.tsx b/src/app/(public)/experts/page.tsx
+index 55316f7..7c5d7b0 100644
+--- a/src/app/(public)/experts/page.tsx
++++ b/src/app/(public)/experts/page.tsx
+@@ -109,6 +109,9 @@ export default async function ExpertsPage({ searchParams }: ExpertsPageProps) {
+             <Link href="/experts" className="text-white hover:text-white transition-colors font-medium">
+               Experts
+             </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
++              Partenaires
++            </Link>
+             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+               Événements
+             </Link>
+diff --git a/src/app/(public)/page.tsx b/src/app/(public)/page.tsx
+index 07d4878..71afe6b 100644
+--- a/src/app/(public)/page.tsx
++++ b/src/app/(public)/page.tsx
+@@ -155,6 +155,9 @@ export default async function HomePage() {
+             <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
+               Experts
+             </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
++              Partenaires
++            </Link>
+             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
+               Événements
+             </Link>
+diff --git a/src/app/(public)/partners/[slug]/page.test.tsx b/src/app/(public)/partners/[slug]/page.test.tsx
+new file mode 100644
+index 0000000..2afc2f9
+--- /dev/null
++++ b/src/app/(public)/partners/[slug]/page.test.tsx
+@@ -0,0 +1,97 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it, vi, beforeEach } from "vitest";
++import CompanyDetailPage from "./page";
++
++const mockAuth = vi.hoisted(() => vi.fn());
++const mockFindUnique = vi.hoisted(() => vi.fn());
++const mockNotFound = vi.hoisted(() => vi.fn());
++
++vi.mock("@/lib/auth", () => ({
++  auth: mockAuth,
++}));
++
++vi.mock("@/lib/prisma", () => ({
++  prisma: {
++    company: {
++      findUnique: mockFindUnique,
++    },
++  },
++}));
++
++vi.mock("next/navigation", () => ({
++  notFound: mockNotFound,
++}));
++
++const mockCompany = {
++  id: "comp-1",
++  name: "Alpha BTP",
++  slug: "alpha-btp",
++  description: "Description de l'entreprise Alpha BTP.",
++  logoUrl: "/logo1.png",
++  contactName: "Jean Dupont",
++  contactPhone: "+22501020304",
++  contactEmail: "contact@alphabtp.com",
++  website: "https://alphabtp.com",
++  location: "Abidjan, Zone 4",
++  certifications: "ISO 9001, IBC Agréé",
++  sectors: "BTP, Infrastructure",
++  isPublished: true,
++  createdAt: new Date(),
++  updatedAt: new Date(),
++};
++
++describe("CompanyDetailPage", () => {
++  beforeEach(() => {
++    vi.clearAllMocks();
++  });
++
++  it("calls notFound when company is not found", async () => {
++    mockFindUnique.mockResolvedValue(null);
++    mockAuth.mockResolvedValue(null);
++
++    await CompanyDetailPage({ params: Promise.resolve({ slug: "unknown" }) });
++
++    expect(mockNotFound).toHaveBeenCalled();
++  });
++
++  it("calls notFound when company is not published and user is not admin", async () => {
++    mockFindUnique.mockResolvedValue({
++      ...mockCompany,
++      isPublished: false,
++    });
++    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
++
++    await CompanyDetailPage({ params: Promise.resolve({ slug: "alpha-btp" }) });
++
++    expect(mockNotFound).toHaveBeenCalled();
++  });
++
++  it("does not call notFound for draft companies if user is admin", async () => {
++    mockFindUnique.mockResolvedValue({
++      ...mockCompany,
++      isPublished: false,
++    });
++    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
++
++    render(await CompanyDetailPage({ params: Promise.resolve({ slug: "alpha-btp" }) }));
++
++    expect(mockNotFound).not.toHaveBeenCalled();
++    expect(screen.getByText("Alpha BTP")).toBeInTheDocument();
++  });
++
++  it("renders full company details (description, certifications, contacts)", async () => {
++    mockFindUnique.mockResolvedValue(mockCompany);
++    mockAuth.mockResolvedValue(null);
++
++    render(await CompanyDetailPage({ params: Promise.resolve({ slug: "alpha-btp" }) }));
++
++    expect(screen.getByText("Alpha BTP")).toBeInTheDocument();
++    expect(screen.getByText("Description de l'entreprise Alpha BTP.")).toBeInTheDocument();
++    expect(screen.getByText("ISO 9001")).toBeInTheDocument();
++    expect(screen.getByText("IBC Agréé")).toBeInTheDocument();
++    expect(screen.getByText("Contact : Jean Dupont")).toBeInTheDocument();
++    expect(screen.getByText("Visiter le Site Web")).toBeInTheDocument();
++    expect(screen.getByText("Envoyer un Email")).toBeInTheDocument();
++    expect(screen.getByText("Appeler au Téléphone")).toBeInTheDocument();
++  });
++});
+diff --git a/src/app/(public)/partners/[slug]/page.tsx b/src/app/(public)/partners/[slug]/page.tsx
+new file mode 100644
+index 0000000..2d3164c
+--- /dev/null
++++ b/src/app/(public)/partners/[slug]/page.tsx
+@@ -0,0 +1,375 @@
++import * as React from "react";
++import { cache } from "react";
++import Link from "next/link";
++import Image from "next/image";
++import { notFound } from "next/navigation";
++import type { Metadata } from "next";
++import { ArrowLeft, Mail, Phone, Globe, Building2, ShieldCheck, User } from "lucide-react";
++import { auth } from "@/lib/auth";
++import { prisma } from "@/lib/prisma";
++import { Footer } from "@/components/landing/footer";
++import LandingMobileNav from "@/components/landing/mobile-nav";
++import { buttonVariants } from "@/components/ui/button";
++import { cn } from "@/lib/utils";
++import { sanitizeError } from "@/lib/sanitize-log";
++import { marked } from "marked";
++import DOMPurify from "isomorphic-dompurify";
++
++marked.setOptions({ breaks: true, gfm: true });
++
++export const dynamic = "force-dynamic";
++
++interface CompanyDetailPageProps {
++  params: Promise<{ slug: string }>;
++}
++
++const getCompanyBySlug = cache(async (slug: string) => {
++  return prisma.company.findUnique({
++    where: { slug },
++  });
++});
++
++export async function generateMetadata({ params }: CompanyDetailPageProps): Promise<Metadata> {
++  const { slug } = await params;
++  try {
++    const company = await getCompanyBySlug(slug);
++
++    if (!company) return {};
++
++    const session = await auth();
++    const isAdmin = session?.user?.role === "ADMIN";
++
++    // If company is draft and user is not admin, do not leak metadata
++    if (!company.isPublished && !isAdmin) {
++      return {
++        title: "Entreprise non trouvée — Ivoire Business Club",
++      };
++    }
++
++    const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
++    const pageUrl = `${siteUrl}/partners/${slug}`;
++    const imageUrl = company.logoUrl && company.logoUrl !== ""
++      ? (company.logoUrl.startsWith("http") ? company.logoUrl : `${siteUrl}${company.logoUrl}`)
++      : `${siteUrl}/logo-ibc.webp`;
++    const description = company.description || "Partenaire — Ivoire Business Club";
++
++    return {
++      title: {
++        absolute: `${company.name} — Partenaire IBC`,
++      },
++      description: description.substring(0, 160),
++      openGraph: {
++        title: `${company.name} — Partenaire IBC`,
++        description: description.substring(0, 160),
++        type: "website",
++        url: pageUrl,
++        images: [
++          {
++            url: imageUrl,
++            width: 800,
++            height: 800,
++            alt: company.name,
++          },
++        ],
++        locale: "fr_FR",
++      },
++    };
++  } catch (e) {
++    console.error("Failed to generate metadata:", sanitizeError(e));
++    return {
++      title: "Partenaire — Ivoire Business Club",
++    };
++  }
++}
++
++export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
++  const { slug } = await params;
++
++  // Fetch the company details
++  let company;
++  try {
++    company = await getCompanyBySlug(slug);
++  } catch (error) {
++    console.error("Failed to fetch company details:", sanitizeError(error));
++    throw error;
++  }
++
++  if (!company) {
++    notFound();
++    return null;
++  }
++
++  // Auth check for draft companies (Admin bypass)
++  const session = await auth();
++  const isLoggedIn = !!session?.user;
++  const isAdmin = session?.user?.role === "ADMIN";
++
++  const isAccessibleDraft = company.isPublished || isAdmin;
++  if (!isAccessibleDraft) {
++    notFound();
++    return null;
++  }
++
++  // Split and trim sectors
++  const sectorsList = company.sectors
++    ? company.sectors
++        .split(",")
++        .map((s) => s.trim())
++        .filter((s) => s.length > 0)
++    : [];
++
++  // Split and trim certifications
++  const certificationsList = company.certifications
++    ? company.certifications
++        .split(",")
++        .map((c) => c.trim())
++        .filter((c) => c.length > 0)
++    : [];
++
++  // Generate initials for fallback
++  const initials = company.name
++    ? company.name
++        .trim()
++        .split(/\s+/)
++        .map((n) => n[0])
++        .slice(0, 2)
++        .join("")
++        .toUpperCase()
++    : "";
++
++  // Parse markdown description
++  const htmlDescription = (() => {
++    if (!company.description) return "";
++    try {
++      const rawHtml = marked.parse(company.description) as string;
++      return DOMPurify.sanitize(rawHtml);
++    } catch (error) {
++      console.error("Failed to parse company description:", error);
++      return company.description;
++    }
++  })();
++
++  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
++  const jsonLd = {
++    "@context": "https://schema.org",
++    "@type": "LocalBusiness",
++    "name": company.name,
++    "description": company.description,
++    "image": company.logoUrl && company.logoUrl !== ""
++      ? (company.logoUrl.startsWith("http") ? company.logoUrl : `${siteUrl}${company.logoUrl}`)
++      : `${siteUrl}/logo-ibc.webp`,
++    "address": {
++      "@type": "PostalAddress",
++      "addressLocality": company.location || "Abidjan",
++      "addressCountry": "CI",
++    },
++    "telephone": company.contactPhone || undefined,
++    "email": company.contactEmail || undefined,
++    "url": company.website || undefined,
++  };
++
++  return (
++    <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++      <script
++        type="application/ld+json"
++        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
++      />
++      {/* Mobile Navigation */}
++      <LandingMobileNav />
++
++      {/* Navigation Header */}
++      <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
++        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
++          <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
++            <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
++            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
++              Ivoire Business Club
++            </span>
++          </Link>
++          <nav className="flex gap-6 text-sm items-center">
++            <Link href="/" className="text-slate-300 hover:text-white transition-colors">
++              Accueil
++            </Link>
++            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
++              Articles
++            </Link>
++            <Link href="/experts" className="text-slate-300 hover:text-white transition-colors font-medium">
++              Experts
++            </Link>
++            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors font-medium">
++              Partenaires
++            </Link>
++            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
++              Événements
++            </Link>
++            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
++              Tarifs
++            </Link>
++            {isLoggedIn ? (
++              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
++                Tableau de bord
++              </Link>
++            ) : (
++              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
++                Connexion
++              </Link>
++            )}
++          </nav>
++        </div>
++      </header>
++
++      {/* Main Layout */}
++      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
++        {/* Back Link */}
++        <Link
++          href="/partners"
++          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group"
++        >
++          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
++          Retour aux partenaires
++        </Link>
++
++        {/* Profile Card Layout */}
++        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
++          {/* Sidebar Info */}
++          <div className="md:col-span-1 space-y-6">
++            {company.logoUrl && company.logoUrl !== "" ? (
++              <div className="relative aspect-[16/9] md:aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0e1628] flex items-center justify-center p-4">
++                <Image
++                  src={company.logoUrl}
++                  alt={company.name}
++                  fill
++                  priority
++                  unoptimized
++                  className="object-contain p-4"
++                  sizes="(max-width: 768px) 100vw, 300px"
++                />
++              </div>
++            ) : (
++              <div className="relative aspect-[16/9] md:aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex flex-col items-center justify-center">
++                <div className="flex items-center justify-center size-24 rounded-full bg-[#D4A847]/10 text-[#D4A847] border border-[#D4A847]/20">
++                  {initials ? (
++                    <span className="text-3xl font-bold tracking-wider">{initials}</span>
++                  ) : (
++                    <Building2 className="size-12" />
++                  )}
++                </div>
++              </div>
++            )}
++
++            <div className="space-y-4">
++              <div>
++                <h1 className="text-2xl font-bold text-white leading-tight">{company.name}</h1>
++                {company.location ? (
++                  <p className="text-sm font-medium text-teal-600 dark:text-teal-400 mt-1">{company.location}</p>
++                ) : null}
++              </div>
++
++              {sectorsList.length > 0 ? (
++                <div className="flex flex-wrap gap-1.5 pt-2">
++                  {sectorsList.map((sector, index) => (
++                    <span
++                      key={index}
++                      className="px-2.5 py-0.5 text-xs font-medium bg-white/5 text-slate-300 rounded"
++                    >
++                      {sector}
++                    </span>
++                  ))}
++                </div>
++              ) : null}
++            </div>
++          </div>
++
++          {/* Main Info */}
++          <div className="md:col-span-2 space-y-8">
++            <div className="space-y-8 bg-[#0e1628]/40 border border-white/5 p-6 md:p-8 rounded-2xl">
++              <div>
++                <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Description</h2>
++                {htmlDescription ? (
++                  <div
++                    data-testid="company-description"
++                    className="prose prose-stone dark:prose-invert max-w-none text-slate-300 text-sm leading-relaxed"
++                    dangerouslySetInnerHTML={{ __html: htmlDescription }}
++                  />
++                ) : (
++                  <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{company.description}</p>
++                )}
++              </div>
++
++              {certificationsList.length > 0 ? (
++                <div>
++                  <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Certifications & Agréments</h2>
++                  <div className="flex flex-col gap-2 pt-1">
++                    {certificationsList.map((cert, index) => (
++                      <div key={index} className="flex items-center gap-2 text-sm text-slate-300">
++                        <ShieldCheck className="size-4 text-teal-500 flex-shrink-0" />
++                        <span>{cert}</span>
++                      </div>
++                    ))}
++                  </div>
++                </div>
++              ) : null}
++
++              {(company.contactName || company.contactPhone || company.contactEmail || company.website) ? (
++                <div className="space-y-4">
++                  <h2 className="text-lg font-bold text-white border-b border-white/10 pb-2">Contact & Liens</h2>
++                  <div className="flex flex-col gap-3 max-w-md pt-2">
++                    {company.contactName ? (
++                      <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300">
++                        <User className="size-4 text-[#D4A847]" />
++                        <span className="text-sm font-medium">Contact : {company.contactName}</span>
++                      </div>
++                    ) : null}
++
++                    {company.website ? (
++                      <Link
++                        href={company.website}
++                        target="_blank"
++                        rel="noopener noreferrer"
++                        className={cn(
++                          buttonVariants({ variant: "outline" }),
++                          "w-full min-h-11 font-semibold border-white/10 text-slate-300 hover:text-white gap-2"
++                        )}
++                      >
++                        <Globe className="size-4" />
++                        Visiter le Site Web
++                      </Link>
++                    ) : null}
++
++                    {company.contactEmail ? (
++                      <Link
++                        href={`mailto:${company.contactEmail}`}
++                        className={cn(
++                          buttonVariants({ variant: "outline" }),
++                          "w-full min-h-11 font-semibold border-white/10 text-slate-300 hover:text-white gap-2"
++                        )}
++                      >
++                        <Mail className="size-4" />
++                        Envoyer un Email
++                      </Link>
++                    ) : null}
++
++                    {company.contactPhone ? (
++                      <Link
++                        href={`tel:${company.contactPhone}`}
++                        className={cn(
++                          buttonVariants({ variant: "outline" }),
++                          "w-full min-h-11 font-semibold border-white/10 text-slate-300 hover:text-white gap-2"
++                        )}
++                      >
++                        <Phone className="size-4" />
++                        Appeler au Téléphone
++                      </Link>
++                    ) : null}
++                  </div>
++                </div>
++              ) : null}
++            </div>
++          </div>
++        </div>
++      </main>
++
++      <Footer />
++    </div>
++  );
++}
+diff --git a/src/app/(public)/partners/page.test.tsx b/src/app/(public)/partners/page.test.tsx
+new file mode 100644
+index 0000000..495af2a
+--- /dev/null
++++ b/src/app/(public)/partners/page.test.tsx
+@@ -0,0 +1,97 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it, vi, beforeEach } from "vitest";
++import PartnersPage from "./page";
++
++// Setup mocks
++const mockAuth = vi.hoisted(() => vi.fn());
++const mockFindMany = vi.hoisted(() => vi.fn());
++
++vi.mock("@/lib/auth", () => ({
++  auth: mockAuth,
++}));
++
++vi.mock("@/lib/prisma", () => ({
++  prisma: {
++    company: {
++      findMany: mockFindMany,
++    },
++  },
++}));
++
++const mockCompaniesList = [
++  {
++    id: "comp-1",
++    name: "Alpha BTP",
++    slug: "alpha-btp",
++    description: "Une entreprise leader du BTP en Côte d'Ivoire.",
++    logoUrl: "/logo1.png",
++    contactName: "Jean Dupont",
++    contactPhone: "+22501020304",
++    contactEmail: "contact@alphabtp.com",
++    website: "https://alphabtp.com",
++    location: "Abidjan, Zone 4",
++    certifications: "ISO 9001, IBC Agréé",
++    sectors: "BTP, Infrastructure",
++    isPublished: true,
++    createdAt: new Date("2026-06-01"),
++  },
++  {
++    id: "comp-2",
++    name: "Beta Services",
++    slug: "beta-services",
++    description: "Solutions informatiques et services cloud.",
++    logoUrl: null,
++    contactName: "Marie Curie",
++    contactPhone: "+22505060708",
++    contactEmail: "info@betaservices.com",
++    website: null,
++    location: "Abidjan, Cocody",
++    certifications: "Microsoft Partner",
++    sectors: "Services, Tech",
++    isPublished: true,
++    createdAt: new Date("2026-06-02"),
++  },
++];
++
++describe("PartnersPage", () => {
++  beforeEach(() => {
++    vi.clearAllMocks();
++  });
++
++  it("renders a list of published companies", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindMany.mockResolvedValue(mockCompaniesList);
++
++    render(await PartnersPage({ searchParams: Promise.resolve({}) }));
++
++    // Check heading
++    expect(screen.getByRole("heading", { name: "Partenaires Agréés" })).toBeInTheDocument();
++
++    // Check both companies are rendered
++    expect(screen.getByText("Alpha BTP")).toBeInTheDocument();
++    expect(screen.getByText("Beta Services")).toBeInTheDocument();
++    expect(screen.getByText("Une entreprise leader du BTP en Côte d'Ivoire.")).toBeInTheDocument();
++    expect(screen.getByText("Solutions informatiques et services cloud.")).toBeInTheDocument();
++  });
++
++  it("filters the list based on sector searchParam", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindMany.mockResolvedValue(mockCompaniesList);
++
++    render(await PartnersPage({ searchParams: Promise.resolve({ sector: "BTP" }) }));
++
++    expect(screen.getByText("Alpha BTP")).toBeInTheDocument();
++    expect(screen.queryByText("Beta Services")).not.toBeInTheDocument();
++  });
++
++  it("renders EmptyState when no companies match the filter", async () => {
++    mockAuth.mockResolvedValue(null);
++    mockFindMany.mockResolvedValue(mockCompaniesList);
++
++    render(await PartnersPage({ searchParams: Promise.resolve({ sector: "Finance" }) }));
++
++    expect(screen.getByText("Aucune entreprise trouvée")).toBeInTheDocument();
++    expect(screen.queryByText("Alpha BTP")).not.toBeInTheDocument();
++    expect(screen.queryByText("Beta Services")).not.toBeInTheDocument();
++  });
++});
+diff --git a/src/app/(public)/partners/page.tsx b/src/app/(public)/partners/page.tsx
+new file mode 100644
+index 0000000..b8b23c6
+--- /dev/null
++++ b/src/app/(public)/partners/page.tsx
+@@ -0,0 +1,191 @@
++import * as React from "react";
++import Link from "next/link";
++import Image from "next/image";
++import { auth } from "@/lib/auth";
++import { prisma } from "@/lib/prisma";
++import { CompanyCard } from "@/components/features/partners/CompanyCard";
++import { EmptyState } from "@/components/shared/empty-state";
++import { Footer } from "@/components/landing/footer";
++import LandingMobileNav from "@/components/landing/mobile-nav";
++import { sanitizeError } from "@/lib/sanitize-log";
++
++export const dynamic = "force-dynamic";
++
++export const metadata = {
++  title: "Partenaires Agréés | Ivoire Business Club",
++  description: "Découvrez les entreprises agréées par l'Ivoire Business Club. Des partenaires de confiance dans le BTP, les services, la communication et plus encore.",
++};
++
++interface PartnersPageProps {
++  searchParams: Promise<{ sector?: string }>;
++}
++
++export default async function PartnersPage({ searchParams }: PartnersPageProps) {
++  const resolvedSearchParams = await searchParams;
++  const activeSector = (typeof resolvedSearchParams.sector === "string"
++    ? resolvedSearchParams.sector
++    : Array.isArray(resolvedSearchParams.sector) && resolvedSearchParams.sector[0]
++    ? resolvedSearchParams.sector[0]
++    : "Tous") || "Tous";
++
++  // Get current session
++  const session = await auth();
++  const isLoggedIn = !!session?.user;
++
++  // Fetch all published companies from Database
++  let companies: any[] = [];
++  try {
++    companies = await prisma.company.findMany({
++      where: {
++        isPublished: true,
++      },
++      orderBy: {
++        createdAt: "desc",
++      },
++    });
++  } catch (error) {
++    console.error("Failed to fetch companies:", sanitizeError(error));
++    throw error;
++  }
++
++  // Extract unique sectors for filtering
++  const allSectorsRaw = companies.flatMap((c) =>
++    c.sectors
++      ? c.sectors
++          .split(",")
++          .map((s: string) => s.trim())
++          .filter((s: string) => s.length > 0)
++      : []
++  );
++
++  const uniqueSectors = Array.from(
++    new Set(allSectorsRaw.map((s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()))
++  ).sort() as string[];
++
++  // Filter companies based on selected sector
++  const filteredCompanies =
++    activeSector !== "Tous"
++      ? companies.filter((c) => {
++          if (!c.sectors) return false;
++          const list = c.sectors
++            .split(",")
++            .map((s) => s.trim().toLowerCase());
++          return list.includes(activeSector.toLowerCase().trim());
++        })
++      : companies;
++
++  return (
++    <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
++      {/* Mobile Navigation */}
++      <LandingMobileNav />
++
++      {/* Navigation Header */}
++      <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
++        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
++          <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
++            <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
++            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
++              Ivoire Business Club
++            </span>
++          </Link>
++          <nav className="flex gap-6 text-sm items-center">
++            <Link href="/" className="text-slate-300 hover:text-white transition-colors">
++              Accueil
++            </Link>
++            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
++              Articles
++            </Link>
++            <Link href="/experts" className="text-slate-300 hover:text-white transition-colors font-medium">
++              Experts
++            </Link>
++            <Link href="/partners" className="text-white hover:text-white transition-colors font-medium">
++              Partenaires
++            </Link>
++            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
++              Événements
++            </Link>
++            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
++              Tarifs
++            </Link>
++            {isLoggedIn ? (
++              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
++                Tableau de bord
++              </Link>
++            ) : (
++              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
++                Connexion
++              </Link>
++            )}
++          </nav>
++        </div>
++      </header>
++
++      {/* Main Content */}
++      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-12 md:py-16">
++        <div className="max-w-3xl mb-12">
++          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
++            Partenaires Agréés
++          </h1>
++          <p className="mt-4 text-base text-slate-400 leading-relaxed">
++            Consultez la liste des entreprises agréées de l&apos;Ivoire Business Club. Des partenaires de confiance sélectionnés pour vous accompagner dans vos projets.
++          </p>
++        </div>
++
++        {/* Sectors Filters (Scrollable Chips) */}
++        <div className="mb-10 border-b border-white/10 pb-6">
++          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none" aria-label="Filtrer par secteur">
++            <Link
++              href="/partners"
++              className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all duration-200 ${
++                activeSector === "Tous"
++                  ? "bg-[#D4A847] text-black shadow-md shadow-[#D4A847]/10"
++                  : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
++              }`}
++            >
++              Tous
++            </Link>
++            {uniqueSectors.map((sector) => {
++              const isActive = activeSector.toLowerCase() === sector.toLowerCase();
++              return (
++                <Link
++                  key={sector}
++                  href={`/partners?sector=${encodeURIComponent(sector)}`}
++                  className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all duration-200 ${
++                    isActive
++                      ? "bg-[#D4A847] text-black shadow-md shadow-[#D4A847]/10"
++                      : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
++                  }`}
++                >
++                  {sector}
++                </Link>
++              );
++            })}
++          </div>
++        </div>
++
++        {/* Companies Grid */}
++        {filteredCompanies.length > 0 ? (
++          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="companies-grid">
++            {filteredCompanies.map((company) => (
++              <CompanyCard key={company.id} company={company} />
++            ))}
++          </div>
++        ) : (
++          <div className="max-w-md mx-auto py-12">
++            <EmptyState
++              title="Aucune entreprise trouvée"
++              description="Il n'y a pas de partenaires agréés disponibles pour le secteur sélectionné."
++              action={
++                <Link href="/partners" className="text-sm text-[#D4A847] hover:underline">
++                  Voir toutes les entreprises
++                </Link>
++              }
++            />
++          </div>
++        )}
++      </main>
++
++      <Footer />
++    </div>
++  );
++}
+diff --git a/src/components/features/partners/CompanyCard.tsx b/src/components/features/partners/CompanyCard.tsx
+new file mode 100644
+index 0000000..6ef869a
+--- /dev/null
++++ b/src/components/features/partners/CompanyCard.tsx
+@@ -0,0 +1,104 @@
++import * as React from "react";
++import Link from "next/link";
++import Image from "next/image";
++import { ArrowRight, Building2 } from "lucide-react";
++import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
++import { buttonVariants } from "@/components/ui/button";
++import { cn } from "@/lib/utils";
++
++export interface CompanyCardProps {
++  company: {
++    id: string;
++    name: string;
++    slug: string;
++    description: string;
++    logoUrl?: string | null;
++    sectors?: string | null;
++  };
++}
++
++export function CompanyCard({ company }: CompanyCardProps) {
++  // Split and trim sectors
++  const sectorsList = company.sectors
++    ? company.sectors
++        .split(",")
++        .map((s) => s.trim())
++        .filter((s) => s.length > 0)
++    : [];
++
++  // Generate initials for fallback
++  const initials = company.name
++    ? company.name
++        .trim()
++        .split(/\s+/)
++        .map((n) => n[0])
++        .slice(0, 2)
++        .join("")
++        .toUpperCase()
++    : "";
++
++  return (
++    <Card className="group h-full flex flex-col justify-between overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
++      <div>
++        {company.logoUrl && company.logoUrl !== "" ? (
++          <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-border/10 bg-white/5 flex items-center justify-center p-4">
++            <Image
++              src={company.logoUrl}
++              alt={company.name}
++              fill
++              unoptimized
++              className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
++              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
++            />
++          </div>
++        ) : (
++          <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-border/10 bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex flex-col items-center justify-center">
++            <div className="flex items-center justify-center size-16 rounded-full bg-[#D4A847]/10 text-[#D4A847] border border-[#D4A847]/20">
++              {initials ? (
++                <span className="text-xl font-bold tracking-wider">{initials}</span>
++              ) : (
++                <Building2 className="size-8" />
++              )}
++            </div>
++          </div>
++        )}
++
++        <CardHeader className="gap-1 p-5">
++          <CardTitle className="text-xl font-bold tracking-tight text-foreground line-clamp-1">
++            <Link href={`/partners/${company.slug}`} className="hover:text-teal-500 transition-colors">
++              {company.name}
++            </Link>
++          </CardTitle>
++          <p className="text-sm text-slate-400 mt-2 line-clamp-2 leading-relaxed">
++            {company.description}
++          </p>
++        </CardHeader>
++
++        <CardContent className="px-5 pb-5 pt-0">
++          {sectorsList.length > 0 ? (
++            <div className="flex flex-wrap gap-1.5 mt-1">
++              {sectorsList.map((sector, index) => (
++                <span
++                  key={index}
++                  className="px-2 py-0.5 text-[11px] font-medium bg-white/5 text-slate-300 rounded"
++                >
++                  {sector}
++                </span>
++              ))}
++            </div>
++          ) : null}
++        </CardContent>
++      </div>
++
++      <CardFooter className="flex items-center justify-end p-5 pt-4 border-t border-border/20 bg-muted/20">
++        <Link
++          href={`/partners/${company.slug}`}
++          className={cn(buttonVariants({ size: "sm" }), "cursor-pointer group")}
++        >
++          Voir les détails
++          <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
++        </Link>
++      </CardFooter>
++    </Card>
++  );
++}
+diff --git a/src/components/landing/mobile-nav.tsx b/src/components/landing/mobile-nav.tsx
+index e2f220e..33f7d21 100644
+--- a/src/components/landing/mobile-nav.tsx
++++ b/src/components/landing/mobile-nav.tsx
+@@ -7,6 +7,7 @@ const LANDING_MENU_ITEMS = [
+   { label: 'Tarifs', ariaLabel: 'Voir les tarifs', link: '#pricing' },
+   { label: 'Articles', ariaLabel: 'Lire les articles', link: '/articles' },
+   { label: 'Experts', ariaLabel: 'Voir les experts', link: '/experts' },
++  { label: 'Partenaires', ariaLabel: 'Voir les partenaires', link: '/partners' },
+   { label: 'Événements', ariaLabel: 'Voir les événements', link: '/events' },
+   { label: 'Connexion', ariaLabel: 'Se connecter', link: '/auth/signin' },
+   { label: 'Rejoins le club', ariaLabel: "S'inscrire", link: '/auth/signup' },
