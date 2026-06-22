@@ -7,6 +7,7 @@ const LANDING_MENU_ITEMS = [
   { label: 'Tarifs', ariaLabel: 'Voir les tarifs', link: '#pricing' },
   { label: 'Articles', ariaLabel: 'Lire les articles', link: '/articles' },
   { label: 'Experts', ariaLabel: 'Voir les experts', link: '/experts' },
+  { label: 'Partenaires', ariaLabel: 'Voir les partenaires', link: '/partners' },
   { label: 'Événements', ariaLabel: 'Voir les événements', link: '/events' },
   { label: 'Connexion', ariaLabel: 'Se connecter', link: '/auth/signin' },
   { label: 'Rejoins le club', ariaLabel: "S'inscrire", link: '/auth/signup' },

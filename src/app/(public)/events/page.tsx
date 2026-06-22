@@ -86,6 +86,9 @@ export default async function EventsPage() {
             <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
               Experts
             </Link>
+            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
+              Partenaires
+            </Link>
             <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
               Événements
             </Link>
