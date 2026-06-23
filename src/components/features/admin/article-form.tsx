@@ -3,7 +3,7 @@
 import { useForm, type FieldValues, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { articleCreateSchema, type ArticleCreateInput, ArticleVisibility } from "@/lib/validations";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, Loader2, Trash2, Upload, Bold, Italic, Heading, List } from "lucide-react";
+import { Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,9 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { marked } from "marked";
-import DOMPurify from "isomorphic-dompurify";
+import RichTextEditor from "./rich-text-editor";
 
 const articleFormSchema = articleCreateSchema.extend({
   published: z.boolean().optional(),
@@ -74,66 +72,6 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const inlineInputRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
-
-  const [activeEditorTab, setActiveEditorTab] = useState<string>("write");
-
-  const insertMarkdown = (syntax: "bold" | "italic" | "heading" | "list") => {
-    const textarea = contentRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const selectedText = text.substring(start, end);
-
-    let prefix = "";
-    let suffix = "";
-    let placeholder = "";
-
-    switch (syntax) {
-      case "bold":
-        prefix = "**";
-        suffix = "**";
-        placeholder = "texte";
-        break;
-      case "italic":
-        prefix = "*";
-        suffix = "*";
-        placeholder = "texte";
-        break;
-      case "heading": {
-        const needsNewlineBefore = start > 0 && text[start - 1] !== "\n";
-        prefix = needsNewlineBefore ? "\n# " : "# ";
-        placeholder = "Titre";
-        break;
-      }
-      case "list": {
-        const needsNewlineBeforeList = start > 0 && text[start - 1] !== "\n";
-        prefix = needsNewlineBeforeList ? "\n- " : "- ";
-        placeholder = "Élément";
-        break;
-      }
-    }
-
-    const innerText = selectedText || placeholder;
-    const replacement = prefix + innerText + suffix;
-
-    const before = text.substring(0, start);
-    const after = text.substring(end, text.length);
-    const newValue = before + replacement + after;
-
-    setValue("content", newValue, { shouldValidate: true });
-
-    const newSelectionStart = start + prefix.length;
-    const newSelectionEnd = newSelectionStart + innerText.length;
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = newSelectionStart;
-      textarea.selectionEnd = newSelectionEnd;
-    }, 0);
-  };
 
   const {
     register,
@@ -154,6 +92,47 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
       opportunityId: initialData?.opportunityId ?? "",
     },
   });
+
+  const onContentChange = useCallback(
+    (markdown: string) => {
+      setValue("content", markdown, { shouldValidate: true });
+    },
+    [setValue]
+  );
+
+  const handleInlineUploadForEditor = useCallback(
+    async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/api/admin/articles/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          let errMsg = "Erreur de téléversement";
+          try {
+            const errData = await res.json();
+            errMsg = errData.error || errMsg;
+          } catch {}
+          throw new Error(errMsg);
+        }
+
+        const { data } = await res.json();
+        const cleanFileName = file.name
+          .replace(/[\[\]\(\)\*\#\?]/g, "")
+          .trim() || "image";
+        toast.success("Image en ligne téléversée avec succès.");
+        return { url: data.url, alt: cleanFileName };
+      } catch (err: any) {
+        toast.error(err.message || "Erreur lors du téléversement de l'image en ligne.");
+        return null;
+      }
+    },
+    []
+  );
 
   const watchVisibility = watch("visibility");
   const watchCategory = watch("category");
@@ -250,54 +229,13 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
     if (!file) return;
 
     setIsUploadingInline(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/admin/articles/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        let errMsg = "Erreur de téléversement";
-        try {
-          const errData = await res.json();
-          errMsg = errData.error || errMsg;
-        } catch {}
-        throw new Error(errMsg);
-      }
-
-      const { data } = await res.json();
-      // Sanitize file name for Markdown alt text (remove brackets and parentheses)
-      const cleanFileName = file.name
-        .replace(/[\[\]\(\)\*\#\?]/g, "")
-        .trim() || "image";
-      const markdownTag = `\n![${cleanFileName}](${data.url})\n`;
-
-      const textarea = contentRef.current;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        const before = text.substring(0, start);
-        const after = text.substring(end, text.length);
-
-        setValue("content", before + markdownTag + after, { shouldValidate: true });
-
-        setTimeout(() => {
-          textarea.focus();
-          textarea.selectionStart = textarea.selectionEnd = start + markdownTag.length;
-        }, 0);
-      } else {
-        // Fallback
+      const result = await handleInlineUploadForEditor(file);
+      if (result) {
+        const markdownTag = `\n![${result.alt}](${result.url})\n`;
         const currentContent = watch("content") || "";
         setValue("content", currentContent + markdownTag, { shouldValidate: true });
       }
-
-      toast.success("Image en ligne téléversée avec succès.");
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors du téléversement de l'image en ligne.");
     } finally {
       setIsUploadingInline(false);
       if (inlineInputRef.current) inlineInputRef.current.value = "";
@@ -538,9 +476,9 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="content">Contenu (Markdown)</Label>
-          
-          {/* Inline Image Uploader Button */}
+          <Label htmlFor="content">Contenu</Label>
+
+          {/* Inline Image Uploader Button kept outside editor toolbar for backward layout */}
           <div>
             <Button
               type="button"
@@ -557,8 +495,8 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
               )}
               {isUploadingInline ? "Téléversement..." : "Insérer une image en ligne"}
             </Button>
-            <input 
-              type="file" 
+            <input
+              type="file"
               ref={inlineInputRef}
               onChange={handleInlineUpload}
               accept="image/*"
@@ -566,95 +504,13 @@ export default function ArticleForm({ initialData, opportunities = [] }: Article
             />
           </div>
         </div>
-        
-        <Tabs value={activeEditorTab} onValueChange={setActiveEditorTab} className="w-full">
-          <div className="flex items-center justify-between border-b pb-2 mb-2">
-            <TabsList className="h-8 p-0.5 bg-muted rounded-md">
-              <TabsTrigger value="write" className="px-3 py-1 text-xs">Écrire</TabsTrigger>
-              <TabsTrigger value="preview" className="px-3 py-1 text-xs" data-testid="markdown-preview-trigger">Prévisualiser</TabsTrigger>
-            </TabsList>
-            
-            {activeEditorTab === "write" ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => insertMarkdown("heading")}
-                  title="Titre"
-                  data-testid="markdown-heading-btn"
-                >
-                  <Heading className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => insertMarkdown("bold")}
-                  title="Gras"
-                  data-testid="markdown-bold-btn"
-                >
-                  <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => insertMarkdown("italic")}
-                  title="Italique"
-                  data-testid="markdown-italic-btn"
-                >
-                  <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => insertMarkdown("list")}
-                  title="Liste à puces"
-                  data-testid="markdown-list-btn"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : null}
-          </div>
-          
-          <TabsContent value="write" className="outline-none mt-0">
-            <Textarea
-              id="content"
-              data-testid="article-content-input"
-              placeholder="Rédigez votre article en Markdown ici..."
-              className="min-h-80 font-mono text-sm leading-relaxed"
-              {...(() => {
-                const { ref, ...rest } = register("content");
-                return {
-                  ...rest,
-                  ref: (e: HTMLTextAreaElement | null) => {
-                    ref(e);
-                    (contentRef as any).current = e;
-                  }
-                };
-              })()}
-            />
-          </TabsContent>
-          
-          <TabsContent value="preview" className="outline-none mt-0">
-            <div 
-              className="min-h-80 p-4 border rounded-md bg-muted/20 prose dark:prose-invert max-w-none overflow-y-auto"
-              data-testid="markdown-preview"
-              dangerouslySetInnerHTML={{
-                __html: activeEditorTab === "preview"
-                  ? DOMPurify.sanitize(marked.parse(watch("content") || "", { breaks: true }) as string)
-                  : ""
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+
+        <RichTextEditor
+          value={watch("content")}
+          onChange={onContentChange}
+          data-testid="article-content-input"
+          onInlineImageUpload={handleInlineUploadForEditor}
+        />
         {errors.content ? (
           <p className="text-sm text-destructive">{errors.content.message}</p>
         ) : null}

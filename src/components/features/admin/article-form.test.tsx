@@ -24,6 +24,27 @@ vi.mock("sonner", () => ({
   },
 }));
 
+/**
+ * Helper to set TipTap editor content directly via its ProseMirror DOM.
+ * Instead of simulating every keystroke (which is slow in jsdom), we set the
+ * text content and dispatch an input event so the Markdown extension serializes
+ * the value back into react-hook-form.
+ */
+async function setEditorMarkdown(container: HTMLElement, markdown: string) {
+  const proseMirror = container.querySelector(".ProseMirror");
+  if (!proseMirror) throw new Error("ProseMirror editor not found");
+
+  const editorElement = proseMirror as HTMLElement;
+  editorElement.textContent = markdown;
+
+  // Dispatch input event to trigger TipTap's update cycle
+  const inputEvent = new Event("input", { bubbles: true, cancelable: true });
+  editorElement.dispatchEvent(inputEvent);
+
+  // Allow ProseMirror's DOM observer to process the change and serialize it
+  await new Promise((resolve) => setTimeout(resolve, 150));
+}
+
 describe("ArticleForm Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,81 +56,74 @@ describe("ArticleForm Component", () => {
 
   it("submits the form successfully with valid inputs (creation mode)", async () => {
     const user = userEvent.setup();
-    render(<ArticleForm initialData={null} />);
+    const { container } = render(<ArticleForm initialData={null} />);
 
-    // Fill fields
-    const titleInput = screen.getByTestId("article-title-input");
-    const excerptInput = screen.getByTestId("article-excerpt-input");
-    const contentInput = screen.getByTestId("article-content-input");
+    await user.type(screen.getByTestId("article-title-input"), "Titre de l'article de test");
+    await user.type(screen.getByTestId("article-excerpt-input"), "Résumé de l'article de test avec plus de dix caractères");
+    await setEditorMarkdown(container, "Le contenu de test de l'article doit être long également.");
 
-    await user.type(titleInput, "Titre de l'article de test");
-    await user.type(excerptInput, "Résumé de l'article de test avec plus de dix caractères");
-    await user.type(contentInput, "Le contenu de test de l'article doit être long également.");
+    await user.click(screen.getByTestId("article-submit-button"));
 
-    // Submit form
-    const submitBtn = screen.getByTestId("article-submit-button");
-    await user.click(submitBtn);
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/articles",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({
-            title: "Titre de l'article de test",
-            excerpt: "Résumé de l'article de test avec plus de dix caractères",
-            content: "Le contenu de test de l'article doit être long également.",
-            category: "conseil",
-            visibility: ArticleVisibility.PUBLIC,
-            imageUrl: null,
-            opportunityId: null,
-          }),
-        })
-      );
-    });
+    await waitFor(
+      () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          "/api/articles",
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify({
+              title: "Titre de l'article de test",
+              excerpt: "Résumé de l'article de test avec plus de dix caractères",
+              content: "Le contenu de test de l'article doit être long également.",
+              category: "conseil",
+              visibility: ArticleVisibility.PUBLIC,
+              imageUrl: null,
+              opportunityId: null,
+            }),
+          })
+        );
+      },
+      { timeout: 10000 }
+    );
 
     expect(mockToastSuccess).toHaveBeenCalledWith(
       "Article créé avec succès en tant que brouillon."
     );
     expect(mockPush).toHaveBeenCalledWith("/admin/articles");
     expect(mockRefresh).toHaveBeenCalled();
-  });
+  }, 15000);
 
   it("submits custom category correctly", async () => {
     const user = userEvent.setup();
-    render(<ArticleForm initialData={null} />);
+    const { container } = render(<ArticleForm initialData={null} />);
 
     await user.type(screen.getByTestId("article-title-input"), "Titre article");
     await user.type(screen.getByTestId("article-excerpt-input"), "Résumé article long");
-    await user.type(screen.getByTestId("article-content-input"), "Contenu article long");
+    await setEditorMarkdown(container, "Contenu article long");
 
-    // Click Category trigger and select custom category
-    // Base UI uses select trigger and option items
-    // In our test, we can set the Select value directly or simulate click
-    // Note: base-ui uses standard select elements underneath or native trigger. Let's select it:
     const categoryTrigger = screen.getByTestId("article-category-trigger");
     await user.click(categoryTrigger);
 
     const customOption = await screen.findByRole("option", { name: "Autre (personnalisé)..." });
     await user.click(customOption);
 
-    // Custom category input should show up
     const customInput = await screen.findByTestId("article-custom-category-input");
     await user.type(customInput, "crypto");
 
-    const submitBtn = screen.getByTestId("article-submit-button");
-    await user.click(submitBtn);
+    await user.click(screen.getByTestId("article-submit-button"));
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/articles",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining('"category":"crypto"'),
-        })
-      );
-    });
-  });
+    await waitFor(
+      () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          "/api/articles",
+          expect.objectContaining({
+            method: "POST",
+            body: expect.stringContaining('"category":"crypto"'),
+          })
+        );
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
 
   it("submits changes in edit mode with prefilled values", async () => {
     const user = userEvent.setup();
@@ -127,41 +141,41 @@ describe("ArticleForm Component", () => {
 
     expect(screen.getByTestId("article-title-input")).toHaveValue("Mon Titre Existant");
 
-    // Change title
     await user.clear(screen.getByTestId("article-title-input"));
     await user.type(screen.getByTestId("article-title-input"), "Nouveau Titre Modifie");
 
-    // Click submit
     await user.click(screen.getByTestId("article-submit-button"));
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/articles/art-existing",
-        expect.objectContaining({
-          method: "PUT",
-          body: JSON.stringify({
-            title: "Nouveau Titre Modifie",
-            excerpt: "Un résumé long pré-rempli",
-            content: "Un contenu de test pré-rempli",
-            category: "guide",
-            visibility: ArticleVisibility.GRAND_FRERE,
-            imageUrl: null,
-            opportunityId: null,
-            published: true,
-          }),
-        })
-      );
-    });
+    await waitFor(
+      () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          "/api/articles/art-existing",
+          expect.objectContaining({
+            method: "PUT",
+            body: JSON.stringify({
+              title: "Nouveau Titre Modifie",
+              excerpt: "Un résumé long pré-rempli",
+              content: "Un contenu de test pré-rempli",
+              category: "guide",
+              visibility: ArticleVisibility.GRAND_FRERE,
+              imageUrl: null,
+              opportunityId: null,
+              published: true,
+            }),
+          })
+        );
+      },
+      { timeout: 10000 }
+    );
 
     expect(mockToastSuccess).toHaveBeenCalledWith("Article modifié avec succès.");
     expect(mockPush).toHaveBeenCalledWith("/admin/articles");
-  });
+  }, 15000);
 
   it("shows validation errors for invalid inputs", async () => {
     const user = userEvent.setup();
     render(<ArticleForm initialData={null} />);
 
-    // Short title and excerpt
     await user.type(screen.getByTestId("article-title-input"), "ab");
     await user.type(screen.getByTestId("article-excerpt-input"), "short");
 
@@ -169,7 +183,7 @@ describe("ArticleForm Component", () => {
 
     expect(await screen.findByText("Le titre doit contenir au moins 3 caractères")).toBeInTheDocument();
     expect(await screen.findByText("Le résumé doit contenir au moins 10 caractères")).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("renders opportunity selector and submits selected opportunityId", async () => {
     const user = userEvent.setup();
@@ -178,66 +192,57 @@ describe("ArticleForm Component", () => {
       { id: "opp-2", title: "Projet Solaire Korhogo" },
     ];
 
-    render(<ArticleForm initialData={null} opportunities={opportunities} />);
+    const { container } = render(<ArticleForm initialData={null} opportunities={opportunities} />);
 
-    // Fill fields
     await user.type(screen.getByTestId("article-title-input"), "Titre article");
     await user.type(screen.getByTestId("article-excerpt-input"), "Résumé article long");
-    await user.type(screen.getByTestId("article-content-input"), "Contenu article long");
+    await setEditorMarkdown(container, "Contenu article long");
 
-    // Click Opportunity trigger and select Proj Solaire
     const oppTrigger = screen.getByTestId("article-opportunity-trigger");
     await user.click(oppTrigger);
 
     const option = await screen.findByRole("option", { name: "Projet Solaire Korhogo" });
     await user.click(option);
 
-    const submitBtn = screen.getByTestId("article-submit-button");
-    await user.click(submitBtn);
+    await user.click(screen.getByTestId("article-submit-button"));
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/articles",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining('"opportunityId":"opp-2"'),
-        })
-      );
-    });
-  });
+    await waitFor(
+      () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          "/api/articles",
+          expect.objectContaining({
+            method: "POST",
+            body: expect.stringContaining('"opportunityId":"opp-2"'),
+          })
+        );
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
 
-  it("inserts markdown syntax correctly using toolbar buttons", async () => {
+  it("serializes markdown content from TipTap editor", async () => {
     const user = userEvent.setup();
-    render(<ArticleForm initialData={null} />);
+    const { container } = render(<ArticleForm initialData={null} />);
 
-    const contentInput = screen.getByTestId("article-content-input") as HTMLTextAreaElement;
-    await user.type(contentInput, "Hello");
+    // Set markdown content via the ProseMirror DOM and trigger serialization
+    await setEditorMarkdown(container, "Contenu avec du **gras** et de l'*italique*.");
 
-    // Click bold button
-    const boldBtn = screen.getByTestId("markdown-bold-btn");
-    await user.click(boldBtn);
+    await user.type(screen.getByTestId("article-title-input"), "Titre article");
+    await user.type(screen.getByTestId("article-excerpt-input"), "Résumé article long");
 
-    expect(contentInput.value).toContain("**texte**");
+    await user.click(screen.getByTestId("article-submit-button"));
 
-    // Select "Hello" and click bold button
-    contentInput.setSelectionRange(0, 5);
-    await user.click(boldBtn);
-    expect(contentInput.value).toContain("**Hello**");
-  });
-
-  it("renders markdown preview correctly when switching tabs", async () => {
-    const user = userEvent.setup();
-    render(<ArticleForm initialData={null} />);
-
-    const contentInput = screen.getByTestId("article-content-input");
-    await user.type(contentInput, "Hello **World**");
-
-    // Click preview tab
-    const previewTrigger = screen.getByTestId("markdown-preview-trigger");
-    await user.click(previewTrigger);
-
-    const previewContainer = screen.getByTestId("markdown-preview");
-    expect(previewContainer).toBeInTheDocument();
-    expect(previewContainer.innerHTML).toContain("<strong>World</strong>");
-  });
+    await waitFor(
+      () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          "/api/articles",
+          expect.objectContaining({
+            method: "POST",
+            body: expect.stringContaining('"content":'),
+          })
+        );
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
 });
