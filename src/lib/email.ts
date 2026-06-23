@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getTierBadgeConfig } from "@/lib/tier-config";
+import { MOBILE_MONEY_CONFIG } from "./mobile-money-config";
 
 type SubscriptionEmailBase = {
   to: string;
@@ -213,10 +214,16 @@ export async function sendWelcomeEmail({
   to,
   name,
   tier,
+  paymentProvider = "BANK_TRANSFER",
+  providerPhone,
+  userId,
 }: {
   to: string;
   name?: string | null;
   tier: string;
+  paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY";
+  providerPhone?: string | null;
+  userId?: string;
 }) {
   const appUrl = process.env.APP_URL || "";
   const completeProfileLink = appUrl
@@ -229,12 +236,30 @@ export async function sendWelcomeEmail({
   const adhesionContractUrl = process.env.ADHESION_CONTRACT_URL;
 
   let paymentInstructions = "";
-  if (iban) {
+  if (paymentProvider === "BANK_TRANSFER") {
+    if (iban) {
+      const lines: string[] = [];
+      lines.push("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :");
+      if (iban) lines.push(`IBAN : ${iban}`);
+      if (bic) lines.push(`BIC : ${bic}`);
+      if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
+      paymentInstructions = "\n\n" + lines.join("\n");
+    }
+  } else if (paymentProvider === "WAVE" || paymentProvider === "ORANGE_MONEY") {
+    const config = MOBILE_MONEY_CONFIG[paymentProvider];
     const lines: string[] = [];
-    lines.push("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :");
-    if (iban) lines.push(`IBAN : ${iban}`);
-    if (bic) lines.push(`BIC : ${bic}`);
-    if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
+    lines.push(`Pour finaliser votre adhésion, merci d'effectuer un paiement ${config.label} :`);
+    lines.push(`Numéro marchand ${config.label} : ${config.merchantNumber}`);
+    if (providerPhone) {
+      lines.push(`Depuis votre numéro ${config.label} : ${providerPhone}`);
+    }
+    if (userId) {
+      lines.push(`Référence du transfert : IBC-${userId}-${tier}`);
+    }
+    lines.push("Instructions :");
+    for (const step of config.instructionLines) {
+      lines.push(`- ${step}`);
+    }
     paymentInstructions = "\n\n" + lines.join("\n");
   }
 

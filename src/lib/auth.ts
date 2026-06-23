@@ -103,6 +103,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: user.name,
               // Google users start without a subscription tier; default to AFFRANCHI copy.
               tier: "AFFRANCHI",
+              userId: existingUser?.id || user.id || undefined,
             });
           } catch (welcomeEmailError) {
             console.error("Failed to send welcome email to Google user:", sanitizeError(welcomeEmailError));

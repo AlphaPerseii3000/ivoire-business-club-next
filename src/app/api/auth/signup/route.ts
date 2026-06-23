@@ -76,6 +76,7 @@ export async function POST(req: Request) {
         name: user.name,
         // Newly created users don't have a subscription tier yet; default to AFFRANCHI copy.
         tier: "AFFRANCHI",
+        userId: user.id,
       });
     } catch (welcomeEmailError) {
       console.error("Failed to send welcome email:", sanitizeError(welcomeEmailError));

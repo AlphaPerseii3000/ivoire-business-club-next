@@ -185,6 +185,73 @@ describe("email helpers", () => {
     );
   });
 
+  it("sends welcome email with Wave instructions when paymentProvider is WAVE", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    process.env.NEXT_PUBLIC_WAVE_MERCHANT_NUMBER = "+2250708100650";
+    process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
+
+    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendWelcomeEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      tier: "GRAND_FRERE",
+      paymentProvider: "WAVE",
+      providerPhone: "+2250102030405",
+      userId: "user123",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        to: "newmember@example.com",
+        subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+        text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Wave :"),
+      })
+    );
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain("Numéro marchand Wave : +2250708100650");
+    expect(text).toContain("Depuis votre numéro Wave : +2250102030405");
+    expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
+    expect(text).toContain("- Ouvre ton application Wave.");
+  });
+
+  it("sends welcome email with Orange Money instructions when paymentProvider is ORANGE_MONEY", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    process.env.NEXT_PUBLIC_ORANGE_MONEY_MERCHANT_NUMBER = "+2250708100650";
+    process.env.NEXT_PUBLIC_ORANGE_MONEY_USSD_CODE = "#144#";
+    process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
+
+    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendWelcomeEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      tier: "GRAND_FRERE",
+      paymentProvider: "ORANGE_MONEY",
+      providerPhone: "+2250102030405",
+      userId: "user123",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        to: "newmember@example.com",
+        subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+        text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Orange Money :"),
+      })
+    );
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain("Numéro marchand Orange Money : +2250708100650");
+    expect(text).toContain("Depuis votre numéro Orange Money : +2250102030405");
+    expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
+    expect(text).toContain("- Compose le code USSD #144# ou ouvre ton application Orange Money.");
+  });
+
   it("omits contract line and payment instructions when env vars are not set", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
     delete process.env.BANK_TRANSFER_IBAN;

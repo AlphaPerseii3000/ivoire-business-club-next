@@ -187,6 +187,7 @@ describe("auth.ts exports", () => {
       to: "new-google@example.com",
       name: "New Google User",
       tier: "AFFRANCHI",
+      userId: "member-2",
     });
   });
 

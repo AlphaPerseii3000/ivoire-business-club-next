@@ -87,6 +87,7 @@ describe("POST /api/auth/signup", () => {
       to: "test@example.com",
       name: "Jean Dupont",
       tier: "AFFRANCHI",
+      userId: "user-123",
     });
   });
 
@@ -178,6 +179,7 @@ describe("POST /api/auth/signup", () => {
       to: "test@example.com",
       name: "Jean Dupont",
       tier: "AFFRANCHI",
+      userId: "user-123",
     });
   });
 });
