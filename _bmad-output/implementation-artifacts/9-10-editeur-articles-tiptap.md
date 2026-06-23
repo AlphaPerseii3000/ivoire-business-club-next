@@ -4,7 +4,7 @@ baseline_commit: HEAD
 
 # Story 9.10: Éditeur d'Articles TipTap (WYSIWYG Markdown)
 
-Status: review
+Status: done
 
 ## Story
 
