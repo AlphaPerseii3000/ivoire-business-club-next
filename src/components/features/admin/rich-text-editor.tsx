@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Markdown } from "@tiptap/markdown";
@@ -90,7 +90,7 @@ export default function RichTextEditor({
   }, []);
 
   const handleUpdate = useCallback(
-    ({ editor }: { editor: NonNullable<ReturnType<typeof useEditor> & { getMarkdown: () => string }> }) => {
+    ({ editor }: { editor: Editor }) => {
       onChange(editor.getMarkdown());
     },
     [onChange]
