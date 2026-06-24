@@ -218,7 +218,7 @@ Le site IBC génère actuellement 75 clics/3 mois avec seulement 2 URLs indexée
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (via delegate_task DS subagent)
 
 ### Debug Log References
 
