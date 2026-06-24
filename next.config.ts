@@ -75,16 +75,6 @@ const nextConfig: NextConfig = {
     config.resolve.symlinks = false;
     return config;
   },
-  async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "ivoire-business-club.com" }],
-        destination: "https://www.ivoire-business-club.com/:path*",
-        permanent: true,
-      },
-    ];
-  },
   async headers() {
     return [
       {
