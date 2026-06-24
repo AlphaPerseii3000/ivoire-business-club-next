@@ -1,10 +1,11 @@
 ---
 baseline_commit: 0f07b0dcb8dc54bbb37b0a2cc4b96be9ab5e31ad
+Status: done
 ---
 
 # Story 14.2 : Pages de Contenu SEO Quick Wins
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -313,5 +314,6 @@ kimi-k2.7-code
 - 2026-06-24 : Création des pages SEO `/business-abidjan` et `/actualites` (Story 14-2).
 - 2026-06-24 : Maillage interne homepage et optimisation des métas des sous-pages publiques.
 - 2026-06-24 : Ajout de tests et validation build + vitest OK.
+- 2026-06-24 : CR patches appliqués — titres/descriptions optimisés, ternaires JSX, marge word count.
 
-Status: review
+Status: done
