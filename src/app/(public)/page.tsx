@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic';
 
 const homeTitle = 'Ivoire Business Club | Club business à Abidjan \u0026 en Europe';
 const homeDescription =
-  'Rejoins le club business IBC à Abidjan : opportunités\u2019investissement, networking et deals exclusifs pour entrepreneurs en Côte d\u2019Ivoire.';
+  'Rejoins le club business IBC à Abidjan : opportunités d\u2019investissement, networking et deals exclusifs pour entrepreneurs en Côte d\u2019Ivoire.';
 
 export const metadata: Metadata = {
   title: homeTitle,

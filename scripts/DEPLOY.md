@@ -594,7 +594,7 @@ R2_SECRET_ACCESS_KEY=COLLER_ICI_LA_SECRET_KEY_R2
 R2_BUCKET_NAME=ibc-production
 R2_PUBLIC_URL=https://COLLER_ICI_LE_DOMAINE_PUBLIC_R2
 RESEND_API_KEY=COLLER_ICI_LA_CLE_API_RESEND
-RESEND_FROM_EMAIL=Ivoire Business Club <contact@www.ivoire-business-club.com>
+RESEND_FROM_EMAIL=Ivoire Business Club <contact@ivoire-business-club.com>
 BANK_TRANSFER_IBAN=COLLER_ICI_IBAN_PRODUCTION
 BANK_TRANSFER_BIC=COLLER_ICI_BIC_PRODUCTION
 BANK_TRANSFER_BANK_ADDRESS=COLLER_ICI_ADRESSE_BANQUE_PRODUCTION
@@ -624,7 +624,7 @@ Les champs `COLLER_ICI_...` doivent être remplacés par les secrets de producti
 | `R2_BUCKET_NAME` | Selon fonctionnalités fichiers | `ibc-production` | Bucket R2 cible |
 | `R2_PUBLIC_URL` | Selon fonctionnalités fichiers | domaine public R2 | URL publique des fichiers |
 | `RESEND_API_KEY` | Selon emails | clé API Resend | Envoi d'emails transactionnels |
-| `RESEND_FROM_EMAIL` | Selon emails | `Ivoire Business Club <contact@www.ivoire-business-club.com>` | Expéditeur email |
+| `RESEND_FROM_EMAIL` | Selon emails | `Ivoire Business Club <contact@ivoire-business-club.com>` | Expéditeur email |
 | `BANK_TRANSFER_IBAN` | Selon paiement virement | IBAN réel | Coordonnées virement |
 | `BANK_TRANSFER_BIC` | Selon paiement virement | BIC réel | Coordonnées virement |
 | `BANK_TRANSFER_BANK_ADDRESS` | Selon paiement virement | adresse banque réelle | Coordonnées banque |

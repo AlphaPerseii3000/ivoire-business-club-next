@@ -146,6 +146,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   if (!article) {
     notFound();
+    return null;
   }
 
   // 2. Auth & permissions checks

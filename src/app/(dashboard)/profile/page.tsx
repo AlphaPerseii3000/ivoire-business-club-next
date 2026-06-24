@@ -13,7 +13,7 @@ import { buildWhatsAppSupportLink } from "@/lib/whatsapp";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import SignOutButton from "@/components/auth/sign-out-button";
 
-const SUPPORT_EMAIL = "support@www.ivoire-business-club.com";
+const SUPPORT_EMAIL = "support@ivoire-business-club.com";
 const SUPPORT_THRESHOLD_HOURS = 24;
 const ACTIVATION_NOTICE_DAYS = 7;
 
