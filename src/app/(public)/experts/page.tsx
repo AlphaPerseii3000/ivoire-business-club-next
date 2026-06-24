@@ -15,12 +15,16 @@ import type { Tier } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
+const title = "Experts Agréés & Consultants | Ivoire Business Club";
+const description =
+  "Trouvez les experts agréés par l'Ivoire Business Club : conseil, finance, immobilier et accompagnement pour vos projets en Côte d'Ivoire et en Europe.";
+
 export const metadata: Metadata = {
-  title: "Experts & Consultants | Ivoire Business Club",
-  description: "Trouvez les experts agréés par l'Ivoire Business Club : conseil, finance, immobilier et accompagnement pour vos projets en Côte d'Ivoire.",
+  title,
+  description,
   openGraph: {
-    title: "Experts & Consultants | Ivoire Business Club",
-    description: "Trouvez les experts agréés par l'Ivoire Business Club : conseil, finance, immobilier et accompagnement pour vos projets en Côte d'Ivoire.",
+    title,
+    description,
     type: "website",
     locale: "fr_FR",
   },

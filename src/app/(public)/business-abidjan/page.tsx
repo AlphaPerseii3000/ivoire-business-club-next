@@ -8,7 +8,7 @@ export const revalidate = 3600;
 
 const title = "Business à Abidjan | Ivoire Business Club";
 const description =
-  "Découvrez les opportunités business à Abidjan avec l'Ivoire Business Club : investissement, networking, partenariats et conseils pour entreprendre en Côte d'Ivoire.";
+  "Découvrez les opportunités business à Abidjan avec l'Ivoire Business Club : investissement, networking et conseils pour entreprendre en Côte d'Ivoire.";
 
 export const metadata: Metadata = {
   title,
@@ -78,6 +78,8 @@ export default function BusinessAbidjanPage() {
             la ville attire chaque année des investisseurs, startupeurs et membres de la diaspora ivoirienne résidant en Europe.
             Le business à Abidjan se distingue par un écosystème diversifié, un accès direct aux décideurs économiques
             et un cadre de vie propice aux échanges professionnels.
+            Pour ceux qui cherchent un partenaire local, un deal à financer ou des conseils pour s&apos;implanter,
+            la métropole abidjanaise offre un accès privilégié aux décideurs économiques et aux acteurs du développement régional.
           </p>
 
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">Opportunités business à Abidjan</h2>

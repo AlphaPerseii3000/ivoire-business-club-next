@@ -6,12 +6,16 @@ import { Footer } from "@/components/landing/footer";
 
 export const dynamic = "force-dynamic";
 
+const title = "Opportunités d'Investissement | Ivoire Business Club";
+const description =
+  "Consultez les opportunités d'affaires vérifiées par l'Ivoire Business Club : investissement, partenariat et deals en Côte d'Ivoire. Accès réservé aux membres.";
+
 export const metadata: Metadata = {
-  title: "Opportunités Business | Ivoire Business Club",
-  description: "Consultez les opportunités d'affaires vérifiées par l'Ivoire Business Club : investissement, partenariat et deals en Côte d'Ivoire. Accès réservé aux membres.",
+  title,
+  description,
   openGraph: {
-    title: "Opportunités Business | Ivoire Business Club",
-    description: "Consultez les opportunités d'affaires vérifiées par l'Ivoire Business Club : investissement, partenariat et deals en Côte d'Ivoire. Accès réservé aux membres.",
+    title,
+    description,
     type: "website",
     locale: "fr_FR",
   },

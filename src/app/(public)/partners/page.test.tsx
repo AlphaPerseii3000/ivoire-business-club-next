@@ -65,7 +65,7 @@ describe("PartnersPage", () => {
     render(await PartnersPage({ searchParams: Promise.resolve({}) }));
 
     // Vérifier le titre de la page
-    expect(screen.getByRole("heading", { name: "Partenaires Agréés" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Partenaires Agréés & Entreprises" })).toBeInTheDocument();
 
     // Vérifier que les deux entreprises sont affichées
     expect(screen.getByText("Alpha BTP")).toBeInTheDocument();

@@ -56,8 +56,9 @@ describe("Actualités Page", () => {
   });
 
   it("has correct SEO metadata", () => {
-    expect(metadata.title).toBe("Actualités | Ivoire Business Club");
+    expect(metadata.title).toBe("Actualités, Articles & Événements | Ivoire Business Club");
     expect(metadata.description).toContain("Ivoire Business Club");
+    expect(metadata.description?.length).toBeGreaterThanOrEqual(140);
     expect(metadata.description?.length).toBeLessThanOrEqual(160);
   });
 

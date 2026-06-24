@@ -11,12 +11,16 @@ import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
+const title = "Événements, Conférences & Networking | Ivoire Business Club";
+const description =
+  "Participez aux rencontres, conférences et sessions networking de l'Ivoire Business Club en Côte d'Ivoire et en Europe. Découvrez le calendrier.";
+
 export const metadata: Metadata = {
-  title: "Événements & Networking | Ivoire Business Club",
-  description: "Participez aux rencontres, conférences et sessions networking de l'Ivoire Business Club en Côte d'Ivoire et en Europe. Découvrez le calendrier et réservez votre place.",
+  title,
+  description,
   openGraph: {
-    title: "Événements & Networking | Ivoire Business Club",
-    description: "Participez aux rencontres, conférences et sessions networking de l'Ivoire Business Club en Côte d'Ivoire et en Europe. Découvrez le calendrier et réservez votre place.",
+    title,
+    description,
     type: "website",
     locale: "fr_FR",
   },
@@ -106,7 +110,7 @@ export default async function EventsPage() {
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 pt-24 py-12 md:py-16">
         <div className="max-w-3xl mb-12">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
-            Événements & Networking
+            Événements, Conférences & Networking
           </h1>
           <p className="mt-4 text-base text-slate-400 leading-relaxed">
             Rejoignez-nous lors de nos prochaines rencontres, conférences et sessions de networking en Côte d'Ivoire.

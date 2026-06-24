@@ -12,12 +12,16 @@ import LandingMobileNav from "@/components/landing/mobile-nav";
 import { ArticleVisibility, Prisma, Article, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
 
+const title = "Articles, Guides & Conseils | Ivoire Business Club";
+const description =
+  "Découvrez articles, guides et témoignages exclusifs de l'Ivoire Business Club pour investir, entreprendre et réussir vos projets en Côte d'Ivoire.";
+
 export const metadata: Metadata = {
-  title: "Articles & Conseils | Ivoire Business Club",
-  description: "Découvrez articles, guides et témoignages exclusifs de l'Ivoire Business Club pour investir et entreprendre en Côte d'Ivoire.",
+  title,
+  description,
   openGraph: {
-    title: "Articles & Conseils | Ivoire Business Club",
-    description: "Découvrez articles, guides et témoignages exclusifs de l'Ivoire Business Club pour investir et entreprendre en Côte d'Ivoire.",
+    title,
+    description,
     type: "website",
     locale: "fr_FR",
   },
@@ -155,7 +159,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 pt-24 py-12 md:py-16">
         <div className="max-w-3xl mb-12">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
-            Articles & Conseils
+            Articles, Guides & Conseils
           </h1>
           <p className="mt-4 text-base text-slate-400 leading-relaxed">
             Parcourez nos analyses, guides d&apos;investissement et témoignages exclusifs pour réussir votre implantation ou vos investissements en Côte d&apos;Ivoire.

@@ -12,9 +12,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export const revalidate = 3600;
 
-const title = "Actualités | Ivoire Business Club";
+const title = "Actualités, Articles & Événements | Ivoire Business Club";
 const description =
-  "Retrouvez les dernières actualités de l'Ivoire Business Club : articles, analyses et événements business pour investir et entreprendre en Côte d'Ivoire.";
+  "Retrouvez les actualités de l'Ivoire Business Club : articles, analyses et événements business pour investir et entreprendre en Côte d'Ivoire.";
 
 export const metadata: Metadata = {
   title,
@@ -144,12 +144,13 @@ export default async function ActualitesPage() {
                 />
               ))}
             </div>
-          ) : (
+          ) : null}
+          {!hasArticles ? (
             <EmptyState
               title="Aucun article disponible"
               description="Revenez bientôt pour découvrir nos nouvelles publications."
             />
-          )}
+          ) : null}
         </section>
 
         <section className="mb-16">
@@ -160,12 +161,13 @@ export default async function ActualitesPage() {
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
-          ) : (
+          ) : null}
+          {!hasEvents ? (
             <EmptyState
               title="Aucun événement à venir"
               description="Consultez notre calendrier pour ne rien manquer."
             />
-          )}
+          ) : null}
         </section>
       </main>
 

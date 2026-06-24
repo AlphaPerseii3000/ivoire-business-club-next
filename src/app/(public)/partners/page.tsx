@@ -12,12 +12,16 @@ import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
+const title = "Partenaires Agréés & Entreprises | Ivoire Business Club";
+const description =
+  "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.";
+
 export const metadata: Metadata = {
-  title: "Partenaires Agréés Ivoire Business Club",
-  description: "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.",
+  title,
+  description,
   openGraph: {
-    title: "Partenaires Agréés Ivoire Business Club",
-    description: "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.",
+    title,
+    description,
     type: "website",
     locale: "fr_FR",
   },
@@ -154,7 +158,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 pt-24 py-12 md:py-16">
         <div className="max-w-3xl mb-12">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#D4A847] bg-clip-text text-transparent sm:text-5xl">
-            Partenaires Agréés
+            Partenaires Agréés & Entreprises
           </h1>
           <p className="mt-4 text-base text-slate-400 leading-relaxed">
             Consultez la liste des entreprises agréées de l&apos;Ivoire Business Club. Des partenaires de confiance sélectionnés pour vous accompagner dans vos projets.
