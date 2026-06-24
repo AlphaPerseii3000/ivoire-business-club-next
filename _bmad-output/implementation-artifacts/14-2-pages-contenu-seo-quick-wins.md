@@ -4,7 +4,7 @@ baseline_commit: 0f07b0dcb8dc54bbb37b0a2cc4b96be9ab5e31ad
 
 # Story 14.2 : Pages de Contenu SEO Quick Wins
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -109,46 +109,46 @@ Le site IBC génère 75 clics/3 mois et seul la homepage est indexée. Google Se
 
 ## Tasks / Subtasks
 
-- [ ] **AC1 — Créer `src/app/(public)/business-abidjan/page.tsx`**
-  - [ ] Server component avec `export const revalidate = 3600`.
-  - [ ] Metadata title + description optimisés (description contient "business abidjan" et "opportunités").
-  - [ ] `<h1>Business à Abidjan</h1>`.
-  - [ ] Rédiger contenu statique français de 300+ mots avec au moins 2 sous-titres `<h2>`.
-  - [ ] Reproduire le header desktop, `LandingMobileNav`, `Footer`.
-  - [ ] Pas de `&&` dans JSX ; utiliser des ternaires `condition ? <X /> : null`.
+- [x] **AC1 — Créer `src/app/(public)/business-abidjan/page.tsx`**
+  - [x] Server component avec `export const revalidate = 3600`.
+  - [x] Metadata title + description optimisés (description contient "business abidjan" et "opportunités").
+  - [x] `<h1>Business à Abidjan</h1>`.
+  - [x] Rédiger contenu statique français de 300+ mots avec au moins 2 sous-titres `<h2>`.
+  - [x] Reproduire le header desktop, `LandingMobileNav`, `Footer`.
+  - [x] Pas de `&&` dans JSX ; utiliser des ternaires `condition ? <X /> : null`.
 
-- [ ] **AC2 — Créer `src/app/(public)/actualites/page.tsx`**
-  - [ ] Server component avec `export const revalidate = 3600`.
-  - [ ] Metadata title `"Actualités | Ivoire Business Club"` + description 140-160 chars.
-  - [ ] `<h1>Actualités</h1>`.
-  - [ ] Fetch 6 derniers articles PUBLIC publiés via `prisma.article.findMany`.
-  - [ ] Fetch 3 prochains événements PUBLISHED via `prisma.event.findMany`.
-  - [ ] Gestion d'erreur avec `sanitizeError` et fallback vide.
-  - [ ] Affichage des articles et événements en cartes avec liens canoniques.
-  - [ ] Reproduire le header desktop, `LandingMobileNav`, `Footer`.
-  - [ ] Pas de `&&` dans JSX.
+- [x] **AC2 — Créer `src/app/(public)/actualites/page.tsx`**
+  - [x] Server component avec `export const revalidate = 3600`.
+  - [x] Metadata title `"Actualités | Ivoire Business Club"` + description 140-160 chars.
+  - [x] `<h1>Actualités</h1>`.
+  - [x] Fetch 6 derniers articles PUBLIC publiés via `prisma.article.findMany`.
+  - [x] Fetch 3 prochains événements PUBLISHED via `prisma.event.findMany`.
+  - [x] Gestion d'erreur avec `sanitizeError` et fallback vide.
+  - [x] Affichage des articles et événements en cartes avec liens canoniques.
+  - [x] Reproduire le header desktop, `LandingMobileNav`, `Footer`.
+  - [x] Pas de `&&` dans JSX.
 
-- [ ] **AC3 — Maillage interne homepage**
-  - [ ] Modifier `src/app/(public)/page.tsx` pour ajouter des liens vers `/business-abidjan` et `/actualites`.
-  - [ ] Option privilégiée : ajouter une section dans `main` avant le footer avec ancres descriptives.
-  - [ ] Ancres exemples : "Business à Abidjan — opportunités et networking", "Actualités Ivoire Business Club".
-  - [ ] Alternative : ajouter les liens dans `Footer` via un nouveau groupe de liens SEO.
+- [x] **AC3 — Maillage interne homepage**
+  - [x] Modifier `src/app/(public)/page.tsx` pour ajouter des liens vers `/business-abidjan` et `/actualites`.
+  - [x] Option privilégiée : ajouter une section dans `main` avant le footer avec ancres descriptives.
+  - [x] Ancres exemples : "Business à Abidjan — opportunités et networking", "Actualités Ivoire Business Club".
+  - [x] Alternative : ajouter les liens dans `Footer` via un nouveau groupe de liens SEO.
 
-- [ ] **AC4 — Optimiser les métas des sous-pages publiques**
-  - [ ] `src/app/(public)/articles/page.tsx` : title 50-60 chars mentionnant IBC.
-  - [ ] `src/app/(public)/events/page.tsx` : title 50-60 chars, description 140-160 chars.
-  - [ ] `src/app/(public)/experts/page.tsx` : ajouter `export const metadata`.
-  - [ ] `src/app/(public)/partners/page.tsx` : ajuster title/description.
-  - [ ] `src/app/(public)/opportunities/page.tsx` : ajouter `export const metadata`.
+- [x] **AC4 — Optimiser les métas des sous-pages publiques**
+  - [x] `src/app/(public)/articles/page.tsx` : title 50-60 chars mentionnant IBC.
+  - [x] `src/app/(public)/events/page.tsx` : title 50-60 chars, description 140-160 chars.
+  - [x] `src/app/(public)/experts/page.tsx` : ajouter `export const metadata`.
+  - [x] `src/app/(public)/partners/page.tsx` : ajuster title/description.
+  - [x] `src/app/(public)/opportunities/page.tsx` : ajouter `export const metadata`.
 
-- [ ] **Mise à jour sitemap**
-  - [ ] Ajouter `/business-abidjan` et `/actualites` dans `staticRoutes` de `src/app/sitemap.ts`.
+- [x] **Mise à jour sitemap**
+  - [x] Ajouter `/business-abidjan` et `/actualites` dans `staticRoutes` de `src/app/sitemap.ts`.
 
-- [ ] **Validation transversale**
-  - [ ] Exécuter `npm run build` sans erreur.
-  - [ ] Vérifier que `/business-abidjan` et `/actualites` sont accessibles.
-  - [ ] Vérifier que les balises canonical sont présentes sur les nouvelles pages (héritées de `metadataBase` + `alternates.canonical` du layout).
-  - [ ] Vérifier la longueur des titles/descriptions avec un outil SEO ou comptage manuel.
+- [x] **Validation transversale**
+  - [x] Exécuter `npm run build` sans erreur.
+  - [x] Vérifier que `/business-abidjan` et `/actualites` sont accessibles.
+  - [x] Vérifier que les balises canonical sont présentes sur les nouvelles pages (héritées de `metadataBase` + `alternates.canonical` du layout).
+  - [x] Vérifier la longueur des titles/descriptions avec un outil SEO ou comptage manuel.
 
 ## Dev Notes
 
@@ -272,20 +272,46 @@ const upcomingEvents = await prisma.event.findMany({
 
 ### Agent Model Used
 
-(non défini)
+kimi-k2.7-code
 
 ### Debug Log References
 
+- Adaptation du type `nextEvent` dans `src/app/(public)/page.tsx` pour correspondre à `NextEventCardEvent` (champ optionnel `endDate`).
+
 ### Completion Notes List
+
+- Créé `src/app/(public)/business-abidjan/page.tsx` : server component, `revalidate = 3600`, title/description optimisés, contenu 300+ mots, 3 h2, header/footer/mobilenav.
+- Créé `src/app/(public)/actualites/page.tsx` : server component, `revalidate = 3600`, fetch 6 articles publics + 3 événements à venir, fallback vide + `sanitizeError`, cartes avec liens canoniques.
+- Mis à jour `src/app/sitemap.ts` : ajout de `/business-abidjan` et `/actualites` en `staticRoutes` avec `priority: 0.8`.
+- Maillage interne homepage : section "Découvrir IBC" dans `src/app/(public)/page.tsx` avec liens descriptifs vers `/business-abidjan` et `/actualites`.
+- Optimisé les métas de `/articles`, `/events`, `/experts`, `/partners`, `/opportunities` (titles 50-60 chars, descriptions 140-160 chars, branding IBC).
+- Tests unitaires ajoutés pour `business-abidjan` et `actualites`.
+- Tests existants mis à jour (`events/page.test.tsx`, `page.test.tsx` homepage).
+- `npm run build` OK (sortie standalone, nouvelles pages en static 1h).
+- `npx vitest run` OK (896 passés, 0 échec).
 
 ### File List
 
 - `src/app/sitemap.ts` (UPDATE)
 - `src/app/(public)/page.tsx` (UPDATE)
+- `src/app/(public)/page.test.tsx` (UPDATE)
 - `src/app/(public)/articles/page.tsx` (UPDATE)
 - `src/app/(public)/events/page.tsx` (UPDATE)
+- `src/app/(public)/events/page.test.tsx` (UPDATE)
 - `src/app/(public)/experts/page.tsx` (UPDATE)
 - `src/app/(public)/partners/page.tsx` (UPDATE)
 - `src/app/(public)/opportunities/page.tsx` (UPDATE)
 - `src/app/(public)/business-abidjan/page.tsx` (CREATE)
+- `src/app/(public)/business-abidjan/page.test.tsx` (CREATE)
 - `src/app/(public)/actualites/page.tsx` (CREATE)
+- `src/app/(public)/actualites/page.test.tsx` (CREATE)
+- `_bmad-output/implementation-artifacts/14-2-pages-contenu-seo-quick-wins.md` (UPDATE)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE)
+
+### Change Log
+
+- 2026-06-24 : Création des pages SEO `/business-abidjan` et `/actualites` (Story 14-2).
+- 2026-06-24 : Maillage interne homepage et optimisation des métas des sous-pages publiques.
+- 2026-06-24 : Ajout de tests et validation build + vitest OK.
+
+Status: review

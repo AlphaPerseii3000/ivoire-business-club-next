@@ -75,6 +75,9 @@ describe('HomePage SEO & Rendering', () => {
     expect(screen.getByTestId('scroll-video-player')).toBeInTheDocument();
     expect(screen.getByText('Bâtir son futur en Afrique')).toBeInTheDocument();
     expect(screen.getByText('Comment ça marche ?')).toBeInTheDocument();
+    expect(screen.getByTestId('seo-internal-links')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Business à Abidjan — opportunités et networking/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Actualités Ivoire Business Club/i })).toBeInTheDocument();
     
     const headings = screen.getAllByRole('heading', { level: 2 });
     const successWallHeading = headings.find(h => h.textContent === 'Le Mur des Succès');

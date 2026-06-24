@@ -59,7 +59,7 @@ describe("Events Catalogue Page", () => {
     const page = await EventsPage();
     render(page);
 
-    expect(screen.getByText("Calendrier des événements")).toBeInTheDocument();
+    expect(screen.getByText("Événements & Networking")).toBeInTheDocument();
     expect(screen.getByTestId("events-grid")).toBeInTheDocument();
 
     expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();

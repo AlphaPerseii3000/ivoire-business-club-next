@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
@@ -13,6 +14,17 @@ import { sanitizeError } from "@/lib/sanitize-log";
 import type { Tier } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Experts & Consultants | Ivoire Business Club",
+  description: "Trouvez les experts agréés par l'Ivoire Business Club : conseil, finance, immobilier et accompagnement pour vos projets en Côte d'Ivoire.",
+  openGraph: {
+    title: "Experts & Consultants | Ivoire Business Club",
+    description: "Trouvez les experts agréés par l'Ivoire Business Club : conseil, finance, immobilier et accompagnement pour vos projets en Côte d'Ivoire.",
+    type: "website",
+    locale: "fr_FR",
+  },
+};
 
 interface ExpertsPageProps {
   searchParams: Promise<{ specialty?: string }>;

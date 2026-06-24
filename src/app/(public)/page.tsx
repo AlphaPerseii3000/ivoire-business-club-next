@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
 import { LatestArticles } from '@/components/landing/latest-articles';
-import { NextEventCard } from '@/components/features/events/NextEventCard';
+import { NextEventCard, type NextEventCardEvent } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
 import { getNextPublishedEvent } from '@/lib/event-utils';
 import LandingMobileNav from '@/components/landing/mobile-nav';
@@ -62,15 +62,7 @@ export default async function HomePage() {
     imageUrl: string | null;
     publishedAt: Date | null;
   }[] = [];
-  let nextEvent: {
-    id: string;
-    slug: string;
-    title: string;
-    startDate: Date;
-    endDate: Date | null;
-    location: string;
-    imageUrl: string | null;
-  } | null = null;
+  let nextEvent: NextEventCardEvent | null = null;
 
   try {
     const opportunities = await prisma.opportunity.findMany({
@@ -121,7 +113,18 @@ export default async function HomePage() {
   }
 
   try {
-    nextEvent = await getNextPublishedEvent();
+    const fetchedEvent = await getNextPublishedEvent();
+    if (fetchedEvent) {
+      nextEvent = {
+        id: fetchedEvent.id,
+        slug: fetchedEvent.slug,
+        title: fetchedEvent.title,
+        startDate: fetchedEvent.startDate,
+        endDate: fetchedEvent.endDate,
+        location: fetchedEvent.location,
+        imageUrl: fetchedEvent.imageUrl,
+      };
+    }
   } catch (err) {
     console.error('Error fetching next event for landing page:', err);
   }
@@ -190,6 +193,44 @@ export default async function HomePage() {
         <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
         <Pricing />
         <LeadMagnet />
+
+        {/* Internal SEO links section */}
+        <section className="border-t border-white/10 bg-[#090D16] py-16 md:py-20" data-testid="seo-internal-links">
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="max-w-3xl mb-10">
+              <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Découvrir IBC
+              </h2>
+              <p className="mt-4 text-base text-slate-400 leading-relaxed">
+                Explorez nos ressources pour investir et entreprendre en Côte d&apos;Ivoire.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Link
+                href="/business-abidjan"
+                className="group block rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-[#D4A847]/30 hover:bg-white/[0.07]"
+              >
+                <h3 className="text-lg font-semibold text-white group-hover:text-[#D4A847] transition-colors">
+                  Business à Abidjan — opportunités et networking
+                </h3>
+                <p className="mt-2 text-sm text-slate-400">
+                  Opportunités business à Abidjan, conseils pour investir et networking avec l&apos;Ivoire Business Club.
+                </p>
+              </Link>
+              <Link
+                href="/actualites"
+                className="group block rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-[#D4A847]/30 hover:bg-white/[0.07]"
+              >
+                <h3 className="text-lg font-semibold text-white group-hover:text-[#D4A847] transition-colors">
+                  Actualités Ivoire Business Club
+                </h3>
+                <p className="mt-2 text-sm text-slate-400">
+                  Articles et événements récents de l&apos;Ivoire Business Club pour rester informé et développer votre business.
+                </p>
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       {hasNextEvent ? <EventPopup event={nextEvent} enabled={showEventPopup} /> : null}

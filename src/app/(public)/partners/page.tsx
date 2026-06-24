@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CompanyCard } from "@/components/features/partners/CompanyCard";
@@ -11,9 +12,15 @@ import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Partenaires Agréés | Ivoire Business Club",
-  description: "Découvrez les entreprises agréées par l'Ivoire Business Club. Des partenaires de confiance dans le BTP, les services, la communication et plus encore.",
+export const metadata: Metadata = {
+  title: "Partenaires Agréés Ivoire Business Club",
+  description: "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.",
+  openGraph: {
+    title: "Partenaires Agréés Ivoire Business Club",
+    description: "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.",
+    type: "website",
+    locale: "fr_FR",
+  },
 };
 
 interface CompanyData {

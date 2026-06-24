@@ -28,6 +28,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     makeStaticRoute('/experts', 0.8),
     makeStaticRoute('/partners', 0.8),
     makeStaticRoute('/opportunities', 0.8),
+    makeStaticRoute('/business-abidjan', 0.8),
+    makeStaticRoute('/actualites', 0.8),
     makeStaticRoute('/pricing', 0.8, 'monthly'),
   ];
 
