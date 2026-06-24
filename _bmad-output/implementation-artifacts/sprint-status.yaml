@@ -87,3 +87,6 @@ development_status:
   13-2-page-publique-liste-experts: done
   13-3-modele-company-crud-admin: done
   13-4-page-publique-liste-entreprises: done
+  epic-14: in-progress
+  14-1-infrastructure-seo-technique: backlog
+  14-2-pages-contenu-seo-quick-wins: backlog
