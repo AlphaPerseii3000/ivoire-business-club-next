@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: 2026-06-22T21:28:00+0200
+last_updated: '2026-06-24T21:58:00+0200'
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -88,5 +88,5 @@ development_status:
   13-3-modele-company-crud-admin: done
   13-4-page-publique-liste-entreprises: done
   epic-14: in-progress
-  14-1-infrastructure-seo-technique: ready-for-dev
+  14-1-infrastructure-seo-technique: review
   14-2-pages-contenu-seo-quick-wins: backlog

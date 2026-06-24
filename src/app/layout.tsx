@@ -9,12 +9,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.ivoire-business-club.com'),
   title: {
     default: "Ivoire Business Club — Bâtir son futur en Afrique",
     template: "%s | Ivoire Business Club",
   },
   description: "Accède aux meilleures opportunités business en Côte d'Ivoire et en Europe. Networking, investissements, partenariats.",
   keywords: ["business", "Côte d'Ivoire", "Afrique", "investissement", "networking", "entrepreneuriat", "IBC"],
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: "Ivoire Business Club — Bâtir son futur en Afrique",
     description: "Accède aux meilleures opportunités business en Côte d'Ivoire et en Europe.",

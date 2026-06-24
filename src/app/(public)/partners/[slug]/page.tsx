@@ -17,7 +17,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 export const dynamic = "force-dynamic";
 
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
+const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
 
 const cleanMarkdown = (markdown: string) => {
   if (!markdown) return "";

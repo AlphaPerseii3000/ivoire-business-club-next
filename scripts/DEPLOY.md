@@ -15,7 +15,7 @@ npm ci
 npm run deploy:prod
 ```
 
-Par défaut, le script déploie vers `deploy@ivoire-business-club.com` et crée une release UTC du type `YYYYMMDDHHMMSS`.
+Par défaut, le script déploie vers `deploy@www.ivoire-business-club.com` et crée une release UTC du type `YYYYMMDDHHMMSS`.
 
 Options utiles:
 
@@ -24,12 +24,12 @@ Options utiles:
 npm run deploy:prod -- -SkipPrepare
 
 # Cibler explicitement un autre hôte ou utilisateur SSH
-npm run deploy:prod -- -HostName ivoire-business-club.com -User deploy
+npm run deploy:prod -- -HostName www.ivoire-business-club.com -User deploy
 ```
 
 Préconditions:
 
-- La clé SSH locale doit permettre `ssh deploy@ivoire-business-club.com`.
+- La clé SSH locale doit permettre `ssh deploy@www.ivoire-business-club.com`.
 - La release active précédente doit contenir `/var/www/ibc/current/.env`; le script le recopie dans la nouvelle release.
 - Si aucun `.env` de production n'existe encore, le créer manuellement sur le serveur avant `npx prisma migrate deploy` et le reload PM2.
 
@@ -37,8 +37,8 @@ Le script échoue volontairement si `deploy-dist/` contient un `.env`, une base 
 
 Architecture cible:
 
-- Domaine canonique: `https://ivoire-business-club.com`
-- Redirection: `www.ivoire-business-club.com` → `ivoire-business-club.com`
+- Domaine canonique: `https://www.ivoire-business-club.com`
+- Redirection: `ivoire-business-club.com` → `www.ivoire-business-club.com`
 - Application Node/Next.js: `127.0.0.1:3000`, exposée uniquement via Nginx
 - Process manager: PM2 en mode `cluster`, application `ibc-app`, `instances=max`
 - Base de données: PostgreSQL 16 local au VPS
@@ -53,9 +53,9 @@ Architecture cible:
 
 ## 0. Prérequis et provisionnement Hetzner
 
-### 0.1 Créer le projet Hetzner Cloud
+Dans Hetzner Cloud:
 
-1. Aller sur <https://console.hetzner.cloud/>.
+1. Aller sur `https://console.hetzner.cloud/`.
 2. Créer un projet nommé par exemple `IBC Production`.
 3. Dans ce projet, créer un serveur:
    - Location: `Nuremberg, DE` (`nbg1`)
@@ -77,7 +77,7 @@ Dans les commandes ci-dessous, initialiser localement les variables avec les val
 ```bash
 export IBC_IPV4="ADRESSE_IPV4_HETZNER"
 export IBC_IPV6="ADRESSE_IPV6_HETZNER"
-export IBC_HOST="ivoire-business-club.com"
+export IBC_HOST="www.ivoire-business-club.com"
 ```
 
 `ADRESSE_IPV4_HETZNER` et `ADRESSE_IPV6_HETZNER` doivent être remplacées par les adresses réelles affichées par Hetzner. Ne pas inventer ces valeurs.
@@ -88,7 +88,7 @@ Sur la machine locale de déploiement, vérifier ou créer une clé SSH dédiée
 
 ```bash
 ls -la ~/.ssh
-ssh-keygen -t ed25519 -C "deploy@ivoire-business-club.com" -f ~/.ssh/ibc_hetzner_ed25519
+ssh-keygen -t ed25519 -C "deploy@www.ivoire-business-club.com" -f ~/.ssh/ibc_hetzner_ed25519
 cat ~/.ssh/ibc_hetzner_ed25519.pub
 ```
 
@@ -219,7 +219,9 @@ ping -c 3 $IBC_IPV4
 
 ## 1. Configuration DNS Infomaniak → Hetzner
 
-Cette section est critique: le domaine `ivoire-business-club.com` est acheté chez Infomaniak, mais le trafic web doit pointer vers le VPS Hetzner. Les DNS doivent donc être modifiés dans le manager Infomaniak, pas chez Hetzner, sauf si les nameservers du domaine ont été explicitement délégués ailleurs.
+Cette section est critique: le domaine `ivoire-business-club.com` est acheté chez Infomaniak, mais le trafic web est servi par un VPS Hetzner via Nginx. Les DNS doivent donc être modifiés dans le manager Infomaniak, pas chez Hetzner, sauf si les nameservers du domaine ont été explicitement délégués ailleurs.
+
+> Note canonicalisation (Story 14.1): le domaine canonique est désormais `www.ivoire-business-club.com`. Les enregistrements DNS doivent couvrir à la fois le domaine racine (`@`) et le sous-domaine `www`, tous deux pointant vers le VPS Hetzner. La redirection 301 non-www → www est configurée dans `next.config.ts` et doit être dupliquée au niveau Nginx sur le VPS.
 
 ### 1.1 Préparer les adresses Hetzner
 
@@ -575,15 +577,15 @@ Copier le résultat dans `NEXTAUTH_SECRET`.
 Adapter les secrets et identifiants réels. Les valeurs non secrètes liées au domaine et au runtime doivent rester telles quelles:
 
 ```dotenv
-NEXTAUTH_URL=https://ivoire-business-club.com
+NEXTAUTH_URL=https://www.ivoire-business-club.com
 NEXTAUTH_SECRET=COLLER_ICI_UN_SECRET_GENERE_PAR_OPENSSL_RAND_BASE64_48
 GOOGLE_CLIENT_ID=COLLER_ICI_LE_CLIENT_ID_GOOGLE_OAUTH
 GOOGLE_CLIENT_SECRET=COLLER_ICI_LE_CLIENT_SECRET_GOOGLE_OAUTH
-DATABASE_URL=postgresql://ibc_user:MOT_DE_PASSE_POSTGRES_IBC@127.0.0.1:5432/ibc_prod?schema=public
+DATABASE_URL=postgresql://ibc_user:***@127.0.0.1:5432/ibc_prod?schema=public
 NODE_ENV=production
 PORT=3000
 HOSTNAME=0.0.0.0
-APP_URL=https://ivoire-business-club.com
+APP_URL=https://www.ivoire-business-club.com
 UPSTASH_REDIS_REST_URL=https://COLLER_ICI_ID_UPSTASH.upstash.io
 UPSTASH_REDIS_REST_TOKEN=COLLER_ICI_LE_TOKEN_UPSTASH
 R2_ACCOUNT_ID=COLLER_ICI_LE_COMPTE_CLOUDFLARE_R2
@@ -592,7 +594,7 @@ R2_SECRET_ACCESS_KEY=COLLER_ICI_LA_SECRET_KEY_R2
 R2_BUCKET_NAME=ibc-production
 R2_PUBLIC_URL=https://COLLER_ICI_LE_DOMAINE_PUBLIC_R2
 RESEND_API_KEY=COLLER_ICI_LA_CLE_API_RESEND
-RESEND_FROM_EMAIL=Ivoire Business Club <contact@ivoire-business-club.com>
+RESEND_FROM_EMAIL=Ivoire Business Club <contact@www.ivoire-business-club.com>
 BANK_TRANSFER_IBAN=COLLER_ICI_IBAN_PRODUCTION
 BANK_TRANSFER_BIC=COLLER_ICI_BIC_PRODUCTION
 BANK_TRANSFER_BANK_ADDRESS=COLLER_ICI_ADRESSE_BANQUE_PRODUCTION
@@ -605,15 +607,15 @@ Les champs `COLLER_ICI_...` doivent être remplacés par les secrets de producti
 
 | Variable | Obligatoire | Exemple / valeur attendue | Rôle |
 |---|---:|---|---|
-| `NEXTAUTH_URL` | Oui | `https://ivoire-business-club.com` | URL publique utilisée par Auth.js pour callbacks et cookies |
+| `NEXTAUTH_URL` | Oui | `https://www.ivoire-business-club.com` | URL publique utilisée par Auth.js pour callbacks et cookies |
 | `NEXTAUTH_SECRET` | Oui | sortie de `openssl rand -base64 48` | Secret de signature/chiffrement Auth.js |
 | `GOOGLE_CLIENT_ID` | Oui si login Google | valeur Google Cloud OAuth | Client ID OAuth Google |
 | `GOOGLE_CLIENT_SECRET` | Oui si login Google | valeur Google Cloud OAuth | Secret OAuth Google |
-| `DATABASE_URL` | Oui | `postgresql://ibc_user:...@127.0.0.1:5432/ibc_prod?schema=public` | Connexion PostgreSQL Prisma |
+| `DATABASE_URL` | Oui | `postgresql://ibc_user:***@127.0.0.1:5432/ibc_prod?schema=public` | Connexion PostgreSQL Prisma |
 | `NODE_ENV` | Oui | `production` | Runtime production |
 | `PORT` | Oui | `3000` | Port local Node/Next.js |
 | `HOSTNAME` | Oui | `0.0.0.0` | Interface d'écoute du serveur standalone |
-| `APP_URL` | Oui | `https://ivoire-business-club.com` | URL canonique applicative; doit matcher le domaine public |
+| `APP_URL` | Oui | `https://www.ivoire-business-club.com` | URL canonique applicative; doit matcher le domaine public |
 | `UPSTASH_REDIS_REST_URL` | Selon fonctionnalités | URL REST Upstash | Cache, rate limit ou sessions selon implémentation |
 | `UPSTASH_REDIS_REST_TOKEN` | Selon fonctionnalités | token Upstash | Authentification API Upstash |
 | `R2_ACCOUNT_ID` | Selon fonctionnalités fichiers | ID compte Cloudflare | Stockage objet R2 |
@@ -622,7 +624,7 @@ Les champs `COLLER_ICI_...` doivent être remplacés par les secrets de producti
 | `R2_BUCKET_NAME` | Selon fonctionnalités fichiers | `ibc-production` | Bucket R2 cible |
 | `R2_PUBLIC_URL` | Selon fonctionnalités fichiers | domaine public R2 | URL publique des fichiers |
 | `RESEND_API_KEY` | Selon emails | clé API Resend | Envoi d'emails transactionnels |
-| `RESEND_FROM_EMAIL` | Selon emails | `Ivoire Business Club <contact@ivoire-business-club.com>` | Expéditeur email |
+| `RESEND_FROM_EMAIL` | Selon emails | `Ivoire Business Club <contact@www.ivoire-business-club.com>` | Expéditeur email |
 | `BANK_TRANSFER_IBAN` | Selon paiement virement | IBAN réel | Coordonnées virement |
 | `BANK_TRANSFER_BIC` | Selon paiement virement | BIC réel | Coordonnées virement |
 | `BANK_TRANSFER_BANK_ADDRESS` | Selon paiement virement | adresse banque réelle | Coordonnées banque |
@@ -630,8 +632,8 @@ Les champs `COLLER_ICI_...` doivent être remplacés par les secrets de producti
 
 Points critiques:
 
-- `DATABASE_URL` doit commencer par `postgresql://` ou `postgres://`. Le fichier `prisma.config.ts` sélectionne automatiquement le schema PostgreSQL et `prisma/migrations-postgresql/` lorsque l'URL est PostgreSQL.
-- `APP_URL` et `NEXTAUTH_URL` doivent être exactement `https://ivoire-business-club.com` en production.
+- `DATABASE_URL` doit commencer par `postgresql://` ou `postgres://` et pointer vers une base PostgreSQL locale ou managée.
+- `APP_URL` et `NEXTAUTH_URL` doivent être exactement `https://www.ivoire-business-club.com` en production.
 - Le port exposé par PM2 est `3000`; il ne doit pas être ouvert publiquement dans UFW ni Hetzner Firewall.
 - Après toute modification de `.env`, recharger PM2 avec `--update-env`.
 
@@ -766,10 +768,10 @@ Sur le VPS:
 sudo nano /etc/nginx/sites-available/ibc-app
 ```
 
-Coller la configuration complète suivante:
+Coller la configuration complète suivante. Le domaine canonique est `www.ivoire-business-club.com`; le trafic non-www est redirigé 301 vers www. Cette règle serve de filet de sécurité en complément du `redirects()` de Next.js.
 
 ```nginx
-# IBC production - ivoire-business-club.com
+# IBC production - www.ivoire-business-club.com (canonique)
 # Next.js standalone sur 127.0.0.1:3000 via PM2 cluster.
 
 upstream ibc_nextjs {
@@ -780,15 +782,15 @@ upstream ibc_nextjs {
 server {
     listen 80;
     listen [::]:80;
-    server_name www.ivoire-business-club.com;
+    server_name ivoire-business-club.com;
 
-    return 301 http://ivoire-business-club.com$request_uri;
+    return 301 http://www.ivoire-business-club.com$request_uri;
 }
 
 server {
     listen 80;
     listen [::]:80;
-    server_name ivoire-business-club.com;
+    server_name www.ivoire-business-club.com;
 
     root /var/www/ibc/current/public;
 
@@ -870,7 +872,7 @@ server {
 }
 ```
 
-Cette configuration HTTP suffit avant Certbot. Certbot ajoutera automatiquement les blocs TLS et les directives de certificats. Après émission du certificat, vérifier que la redirection `www` → non-`www` reste active aussi en HTTPS; sinon, ajuster les blocs HTTPS générés pour conserver le domaine canonique `ivoire-business-club.com`.
+Cette configuration HTTP suffit avant Certbot. Certbot ajoutera automatiquement les blocs TLS et les directives de certificats. Après émission du certificat, vérifier que la redirection non-www → www reste active aussi en HTTPS; sinon, ajuster les blocs HTTPS générés pour conserver le domaine canonique `www.ivoire-business-club.com`.
 
 ### 8.2 Activer le site
 
@@ -889,6 +891,11 @@ Avec le DNS déjà pointé vers Hetzner:
 curl -I http://ivoire-business-club.com/
 curl -I http://www.ivoire-business-club.com/
 ```
+
+Résultat attendu:
+
+- `http://ivoire-business-club.com/` retourne `301` vers `http://www.ivoire-business-club.com/`.
+- `http://www.ivoire-business-club.com/` retourne `200` ou `302` depuis Next.js.
 
 Si le DNS n'est pas encore propagé, tester depuis une machine locale en forçant la résolution:
 
@@ -911,10 +918,10 @@ Préconditions:
 Sur le VPS:
 
 ```bash
-sudo certbot --nginx -d ivoire-business-club.com -d www.ivoire-business-club.com
+sudo certbot --nginx -d www.ivoire-business-club.com -d ivoire-business-club.com
 ```
 
-Choisir l'option de redirection HTTP → HTTPS si Certbot la propose. L'email d'administration doit être une adresse réellement surveillée.
+Choisir l'option de redirection HTTP → HTTPS si Certbot la propose. L'email d'administration doit être une adresse réellement surveillée. Après émission, vérifier que Certbot a bien conservé le bloc `server_name ivoire-business-club.com` redirigeant 301 vers `www.ivoire-business-club.com` dans les blocs HTTPS.
 
 ### 9.2 Vérifier la configuration TLS
 
@@ -927,8 +934,8 @@ curl -I https://www.ivoire-business-club.com/
 
 Résultat attendu:
 
-- `https://ivoire-business-club.com/` retourne `200`, `301` ou `302` selon la route, sans erreur TLS.
-- `https://www.ivoire-business-club.com/` redirige vers `https://ivoire-business-club.com/`.
+- `https://www.ivoire-business-club.com/` retourne `200`, `301` ou `302` selon la route, sans erreur TLS.
+- `https://ivoire-business-club.com/` redirige vers `https://www.ivoire-business-club.com/`.
 - Les headers applicatifs de sécurité sont présents lorsque la réponse vient de Next.js.
 
 ### 9.3 Vérifier le renouvellement automatique
@@ -963,7 +970,7 @@ curl -I http://ivoire-business-club.com/
 curl -I http://www.ivoire-business-club.com/
 curl -I https://ivoire-business-club.com/
 curl -I https://www.ivoire-business-club.com/
-curl -I https://ivoire-business-club.com/_next/static/
+curl -I https://www.ivoire-business-club.com/_next/static/
 ```
 
 Pour vérifier un asset réel Next.js:
@@ -972,7 +979,7 @@ Pour vérifier un asset réel Next.js:
 cd /var/www/ibc/current
 ASSET=$(find .next/static -type f \( -name '*.js' -o -name '*.css' \) | head -n 1 | sed 's#^\.next/static#/_next/static#')
 echo "$ASSET"
-curl -I "https://ivoire-business-club.com$ASSET"
+curl -I "https://www.ivoire-business-club.com$ASSET"
 ```
 
 Le header attendu pour les assets `/_next/static/` contient:
@@ -985,12 +992,12 @@ Cache-Control: public, max-age=31536000, immutable
 
 Tester manuellement dans un navigateur:
 
-1. Page d'accueil: `https://ivoire-business-club.com/`
-2. Redirection `www`: `https://www.ivoire-business-club.com/` doit finir sur le domaine racine.
+1. Page d'accueil: `https://www.ivoire-business-club.com/`
+2. Redirection non-www: `https://ivoire-business-club.com/` doit finir sur le domaine www.
 3. Login Auth.js:
    - vérifier le bouton de connexion;
    - effectuer une connexion Google si configurée;
-   - vérifier que le callback OAuth revient sur `https://ivoire-business-club.com`.
+   - vérifier que le callback OAuth revient sur `https://www.ivoire-business-club.com`.
 4. Pages publiques clés du site.
 5. Espace membre / dashboard premium avec un compte actif.
 6. Pages admin avec un compte autorisé.
@@ -1046,10 +1053,10 @@ sudo systemctl reload nginx
 pm2 status ibc-app
 ```
 
-### 11.3 Vérifier après rollback
+Vérifier après rollback:
 
 ```bash
-curl -I https://ivoire-business-club.com/
+curl -I https://www.ivoire-business-club.com/
 pm2 logs ibc-app --lines 200
 sudo tail -n 200 /var/log/nginx/error.log
 ```
@@ -1196,7 +1203,8 @@ readlink -f /var/www/ibc/current
 À exécuter après chaque déploiement et au moins une fois par semaine:
 
 ```bash
-curl -fsS https://ivoire-business-club.com/ >/dev/null && echo "IBC HTTPS OK"
+curl -fsS https://www.ivoire-business-club.com/ >/dev/null && echo "IBC HTTPS OK"
+curl -fsSI https://ivoire-business-club.com/ 2>&1 | grep -E '^location: https://www\.ivoire-business-club\.com' && echo "IBC www redirect OK"
 pm2 status ibc-app
 sudo certbot certificates
 sudo certbot renew --dry-run

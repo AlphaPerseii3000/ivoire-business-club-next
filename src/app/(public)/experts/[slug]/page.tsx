@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ExpertDetailPageProps): Promi
       };
     }
 
-    const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
+    const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
     const pageUrl = `${siteUrl}/experts/${slug}`;
     const imageUrl = expert.photoUrl && expert.photoUrl !== ""
       ? (expert.photoUrl.startsWith("http") ? expert.photoUrl : `${siteUrl}${expert.photoUrl}`)
@@ -146,7 +146,7 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
         .toUpperCase()
     : "";
 
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",

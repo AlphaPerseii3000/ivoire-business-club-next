@@ -99,7 +99,7 @@ export async function generateMetadata({ params }: ArticleDetailPageProps): Prom
 
     if (!article) return {};
 
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com";
     const pageUrl = `${siteUrl}/articles/${slug}`;
     const imageUrl = `${siteUrl}/logo-ibc.webp`;
 
@@ -195,7 +195,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
   }
 
   // 4. Build article URL for sharing (AC 9)
-  const articleUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "")}/articles/${slug}`;
+  const articleUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "")}/articles/${slug}`;
 
   const rawDate = article.publishedAt ?? article.createdAt;
   const formattedDate = rawDate
@@ -208,7 +208,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   const badgeConfig = getTierBadgeConfig(article.visibility);
 
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com").replace(/\/$/, "");
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",

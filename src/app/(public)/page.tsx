@@ -18,18 +18,20 @@ import { EventPopup } from '@/components/features/events/EventPopup';
 import { getNextPublishedEvent } from '@/lib/event-utils';
 import LandingMobileNav from '@/components/landing/mobile-nav';
 
-// Dynamic rendering avoids requiring database access during build.
+// Le rendu dynamique évite d'accéder à la base de données lors du build statique.
 export const dynamic = 'force-dynamic';
 
+const homeTitle = 'Ivoire Business Club | Club business à Abidjan \u0026 en Europe';
+const homeDescription =
+  'Rejoins le club business IBC à Abidjan : opportunités\u2019investissement, networking et deals exclusifs pour entrepreneurs en Côte d\u2019Ivoire.';
+
 export const metadata: Metadata = {
-  title: 'Ivoire Business Club — Bâtir son futur en Afrique',
-  description:
-    'Découvrez la mission de l\'IBC, accédez à des deals d\'élite en Côte d\'Ivoire, et comparez nos offres de membre.',
+  title: homeTitle,
+  description: homeDescription,
   openGraph: {
-    title: 'Ivoire Business Club — Bâtir son futur en Afrique',
-    description:
-      'Découvrez la mission de l\'IBC, accédez à des deals d\'élite en Côte d\'Ivoire, et comparez nos offres de membre.',
-    url: 'https://ivoirebusinessclub.com',
+    title: homeTitle,
+    description: homeDescription,
+    url: 'https://www.ivoire-business-club.com',
     siteName: 'Ivoire Business Club',
     images: [
       {

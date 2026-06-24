@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 
     if (!event) return {};
 
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ivoirebusinessclub.com";
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com";
     const pageUrl = `${siteUrl}/events/${slug}`;
     const imageUrl = event.imageUrl || `${siteUrl}/logo-ibc.webp`;
 
