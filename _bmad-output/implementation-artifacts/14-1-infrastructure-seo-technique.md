@@ -4,7 +4,7 @@ baseline_commit: 0f07b0dcb8dc54bbb37b0a2cc4b96be9ab5e31ad
 
 # Story 14.1 : Infrastructure SEO Technique
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
