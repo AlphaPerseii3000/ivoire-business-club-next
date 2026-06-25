@@ -4,7 +4,7 @@ import { MetadataRoute } from 'next';
 
 export const revalidate = 3600;
 
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.ivoire-business-club.com').replace(/\/$/, '');
+const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://ivoire-business-club.com').replace(/\/$/, '');
 const staticDate = new Date('2026-06-14T00:00:00Z');
 
 type SitemapEntry = MetadataRoute.Sitemap[number];

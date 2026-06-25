@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/*', '/dashboard/*', '/api/*', '/auth/*', '/onboarding/*'],
     },
-    sitemap: 'https://www.ivoire-business-club.com/sitemap.xml',
+    sitemap: 'https://ivoire-business-club.com/sitemap.xml',
   };
 }
