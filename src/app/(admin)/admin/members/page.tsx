@@ -1,9 +1,11 @@
 import { AdminMemberActions } from "@/components/features/admin/admin-member-actions";
+import { Badge } from "@/components/ui/badge";
 import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { isEligibleForVerification, getMissingVerificationPrerequisites } from "@/lib/verification";
+import { isEligibleForVerification } from "@/lib/verification";
+import Link from "next/link";
 
 const tierLabels: Record<string, string> = {
   AFFRANCHI: "Affranchi",
@@ -47,7 +49,11 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export default async function AdminMembersPage() {
+export default async function AdminMembersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ incomplete?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
   const currentAdminId = session.user.id;
@@ -55,7 +61,15 @@ export default async function AdminMembersPage() {
   const admin = await promoteConfiguredAdminUser(currentAdminId);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
 
+  const { incomplete } = (await searchParams) ?? {};
+  const showIncompleteOnly = incomplete === "1";
+
+  const whereClause = showIncompleteOnly
+    ? { OR: [{ emailVerified: false }, { onboardingCompletedAt: null }] }
+    : {};
+
   const members = await prisma.user.findMany({
+    where: whereClause,
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -66,6 +80,7 @@ export default async function AdminMembersPage() {
       status: true,
       verificationStatus: true,
       emailVerified: true,
+      onboardingCompletedAt: true,
       bio: true,
       location: true,
       country: true,
@@ -92,8 +107,31 @@ export default async function AdminMembersPage() {
         </a>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {showIncompleteOnly ? (
+          <>
+            <Badge variant="destructive" className="rounded-full px-3 py-1 text-xs">
+              Incomplets uniquement
+            </Badge>
+            <Link
+              href="/admin/members"
+              className="min-h-11 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              Voir tous
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/admin/members?incomplete=1"
+            className="min-h-11 inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Afficher les incomplèts
+          </Link>
+        )}
+      </div>
+
       {hasMembers ? (
-        <div className="mt-8 overflow-x-auto rounded-lg border">
+        <div className="mt-6 overflow-x-auto rounded-lg border">
           <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-muted/50">
               <tr className="border-b">
@@ -103,6 +141,7 @@ export default async function AdminMembersPage() {
                 <th className="px-4 py-3 text-left font-medium">Abonnement</th>
                 <th className="px-4 py-3 text-left font-medium">Statut compte</th>
                 <th className="px-4 py-3 text-left font-medium">Vérification</th>
+                <th className="px-4 py-3 text-left font-medium">Onboarding</th>
                 <th className="px-4 py-3 text-left font-medium">Inscription</th>
                 <th className="px-4 py-3 text-left font-medium">Actions</th>
               </tr>
@@ -125,6 +164,10 @@ export default async function AdminMembersPage() {
                 const emailOk = !eligibility.missingPrerequisites.includes("EMAIL_UNVERIFIED");
                 const profileOk = !eligibility.missingPrerequisites.includes("BIO_MISSING") && !eligibility.missingPrerequisites.includes("LOCATION_MISSING") && !eligibility.missingPrerequisites.includes("COUNTRY_MISSING");
                 const statusOk = !eligibility.missingPrerequisites.includes("ACCOUNT_SUSPENDED");
+                const emailVerifiedOk = member.emailVerified === true;
+                const profileCompleted = member.onboardingCompletedAt !== null;
+                const showEmailBadge = true;
+                const showProfileBadge = true;
 
                 return (
                   <tr key={member.id} className="border-b hover:bg-muted/40">
@@ -138,7 +181,9 @@ export default async function AdminMembersPage() {
                             <span>{initials(member.name)}</span>
                           )}
                         </div>
-                        <span className="font-medium">{member.name}</span>
+                        <Link href={`/admin/members/${member.id}`} className="font-medium hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                          {member.name}
+                        </Link>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{member.email}</td>
@@ -170,6 +215,26 @@ export default async function AdminMembersPage() {
                             {statusOk ? "✓ Actif" : "✗ Actif"}
                           </span>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {showEmailBadge ? (
+                          <Badge
+                            variant={emailVerifiedOk ? "default" : "destructive"}
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${emailVerifiedOk ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-orange-100 text-orange-800 hover:bg-orange-100"}`}
+                          >
+                            {emailVerifiedOk ? "Email ✓" : "Email ✗"}
+                          </Badge>
+                        ) : null}
+                        {showProfileBadge ? (
+                          <Badge
+                            variant={profileCompleted ? "default" : "destructive"}
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${profileCompleted ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" : "bg-orange-100 text-orange-800 hover:bg-orange-100"}`}
+                          >
+                            {profileCompleted ? "Profil ✓" : "Profil ✗"}
+                          </Badge>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{dateLabel}</td>

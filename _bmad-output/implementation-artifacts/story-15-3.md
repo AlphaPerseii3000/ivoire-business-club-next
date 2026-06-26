@@ -2,7 +2,7 @@
 Story: "15.3"
 StoryKey: "15-3-indicateur-admin-onboarding"
 Title: "Indicateur admin de complétion onboarding"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 15 — Onboarding Enforcement & Relances Automatiques"
 FRs: ["FR-ONB6"]
@@ -15,7 +15,7 @@ last_updated: '2026-06-26T22:30:00+0200'
 
 # Story 15.3 : Indicateur admin de complétion onboarding
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: /admin/members page exists with member table, account status, verification status, and inline AdminMemberActions. Story 15-2 implemented cron reminders and sendReminderEmail in src/lib/email.ts. This story adds explicit onboarding badges (email + profile), an incomplete filter, and a manual reminder action. -->
 
@@ -46,66 +46,66 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **AC1 — Ajouter les badges onboarding sur la liste `/admin/members`**
-  - [ ] Modifier `src/app/(admin)/admin/members/page.tsx`.
-  - [ ] Sélectionner `onboardingCompletedAt` dans la requête Prisma (en plus des champs existants).
-  - [ ] Calculer deux indicateurs simples : `emailVerified` et `onboardingCompletedAt !== null`.
-  - [ ] Afficher 2 badges par membre : "Email ✓" / "Email ✗" et "Profil ✓" / "Profil ✗".
-  - [ ] Les badges ✗ doivent utiliser un style rouge ambre (par exemple `bg-destructive/10 text-destructive` ou `bg-orange-100 text-orange-800`).
-  - [ ] Les badges ✓ doivent utiliser un style vert (par exemple `bg-emerald-100 text-emerald-800`).
-  - [ ] Utiliser des ternaires dans le JSX, jamais `&&`.
-  - [ ] Mettre à jour le test `src/app/(admin)/admin/members/page.test.tsx` pour couvrir les 4 combinaisons de badges.
+- [x] **AC1 — Ajouter les badges onboarding sur la liste `/admin/members`**
+  - [x] Modifier `src/app/(admin)/admin/members/page.tsx`.
+  - [x] Sélectionner `onboardingCompletedAt` dans la requête Prisma (en plus des champs existants).
+  - [x] Calculer deux indicateurs simples : `emailVerified` et `onboardingCompletedAt !== null`.
+  - [x] Afficher 2 badges par membre : "Email ✓" / "Email ✗" et "Profil ✓" / "Profil ✗".
+  - [x] Les badges ✗ doivent utiliser un style rouge ambre (par exemple `bg-destructive/10 text-destructive` ou `bg-orange-100 text-orange-800`).
+  - [x] Les badges ✓ doivent utiliser un style vert (par exemple `bg-emerald-100 text-emerald-800`).
+  - [x] Utiliser des ternaires dans le JSX, jamais `&&`.
+  - [x] Mettre à jour le test `src/app/(admin)/admin/members/page.test.tsx` pour couvrir les 4 combinaisons de badges.
 
-- [ ] **AC2 — Ajouter le filtre "Onboarding incomplet"**
-  - [ ] Ajouter un toggle/bouton filtre en haut du tableau dans `src/app/(admin)/admin/members/page.tsx`.
-  - [ ] Le composant étant un Server Component, implémenter le filtre via `searchParams` (query string `?incomplete=1`).
-  - [ ] Quand `incomplete=1` est actif, la requête Prisma doit inclure `where: { OR: [{ emailVerified: false }, { onboardingCompletedAt: null }] }`.
-  - [ ] Afficher un indicateur visuel quand le filtre est actif (badge "Incomplets" ou texte souligné).
-  - [ ] Permettre de réinitialiser le filtre (lien/bouton "Voir tous").
-  - [ ] Ajouter des tests pour le filtre : liste complète sans filtre, liste filtrée avec `incomplete=1`.
+- [x] **AC2 — Ajouter le filtre "Onboarding incomplet"**
+  - [x] Ajouter un toggle/bouton filtre en haut du tableau dans `src/app/(admin)/admin/members/page.tsx`.
+  - [x] Le composant étant un Server Component, implémenter le filtre via `searchParams` (query string `?incomplete=1`).
+  - [x] Quand `incomplete=1` est actif, la requête Prisma doit inclure `where: { OR: [{ emailVerified: false }, { onboardingCompletedAt: null }] }`.
+  - [x] Afficher un indicateur visuel quand le filtre est actif (badge "Incomplets" ou texte souligné).
+  - [x] Permettre de réinitialiser le filtre (lien/bouton "Voir tous").
+  - [x] Ajouter des tests pour le filtre : liste complète sans filtre, liste filtrée avec `incomplete=1`.
 
-- [ ] **AC3 — Créer la page détail d'un membre admin**
-  - [ ] Créer `src/app/(admin)/admin/members/[id]/page.tsx`.
-  - [ ] Vérifier l'authentification admin (même pattern que `/admin/members/page.tsx` : `auth()` + `prisma.user.findUnique` + `role === "ADMIN"`).
-  - [ ] Charger le membre avec : `id`, `name`, `email`, `emailVerified`, `onboardingCompletedAt`, `bio`, `location`, `country`, `status`, `verificationStatus`, `createdAt`.
-  - [ ] Afficher les badges Email et Profil, les infos de contact, et la date d'inscription.
-  - [ ] Ajouter un bouton "Relancer par email" visible uniquement si le membre est incomplet (`emailVerified === false` OU `onboardingCompletedAt === null`).
-  - [ ] Le bouton doit être un Client Component ou utiliser un formulaire POST vers la nouvelle route API.
+- [x] **AC3 — Créer la page détail d'un membre admin**
+  - [x] Créer `src/app/(admin)/admin/members/[id]/page.tsx`.
+  - [x] Vérifier l'authentification admin (même pattern que `/admin/members/page.tsx` : `auth()` + `prisma.user.findUnique` + `role === "ADMIN"`).
+  - [x] Charger le membre avec : `id`, `name`, `email`, `emailVerified`, `onboardingCompletedAt`, `bio`, `location`, `country`, `status`, `verificationStatus`, `createdAt`.
+  - [x] Afficher les badges Email et Profil, les infos de contact, et la date d'inscription.
+  - [x] Ajouter un bouton "Relancer par email" visible uniquement si le membre est incomplet (`emailVerified === false` OU `onboardingCompletedAt === null`).
+  - [x] Le bouton doit être un Client Component ou utiliser un formulaire POST vers la nouvelle route API.
 
-- [ ] **AC3 — Créer l'API de relance manuelle**
-  - [ ] Créer `src/app/api/admin/users/[id]/reminder/route.ts`.
-  - [ ] Authentifier l'admin (401 si non connecté, 403 si pas ADMIN ou compte suspendu).
-  - [ ] Récupérer l'utilisateur cible et vérifier qu'il a un `email` utilisable (400 `EMAIL_MISSING` sinon).
-  - [ ] Déterminer le type de relance :
+- [x] **AC3 — Créer l'API de relance manuelle**
+  - [x] Créer `src/app/api/admin/users/[id]/reminder/route.ts`.
+  - [x] Authentifier l'admin (401 si non connecté, 403 si pas ADMIN ou compte suspendu).
+  - [x] Récupérer l'utilisateur cible et vérifier qu'il a un `email` utilisable (400 `EMAIL_MISSING` sinon).
+  - [x] Déterminer le type de relance :
     - Si `emailVerified === false` → envoyer l'email de vérification (`sendVerificationEmailToUser` ou logique équivalente avec token SHA-256, 24h).
     - Sinon si `onboardingCompletedAt === null` → envoyer `sendReminderEmail({ to, name, type: "PROFILE_COMPLETION" })`.
     - Si les deux sont complets → retourner 400 `ALREADY_COMPLETE`.
-  - [ ] Créer un audit log `USER_REMINDER_SEND` avant l'envoi (pattern `safeCreateAuditLog`), avec metadata incluant `reminderType`.
-  - [ ] Retourner `200 OK { data: { sent: true, type } }`.
-  - [ ] En cas d'échec d'envoi, logger avec `sanitizeError` et retourner `500 EMAIL_FAILED`.
+  - [x] Créer un audit log `USER_REMINDER_SEND` avant l'envoi (pattern `safeCreateAuditLog`), avec metadata incluant `reminderType`.
+  - [x] Retourner `200 OK { data: { sent: true, type } }`.
+  - [x] En cas d'échec d'envoi, logger avec `sanitizeError` et retourner `500 EMAIL_FAILED`.
 
-- [ ] **AC3 — Relier le bouton à l'API**
-  - [ ] Depuis la page détail, appeler `POST /api/admin/users/{id}/reminder` au clic.
-  - [ ] Afficher un message de succès/erreur.
-  - [ ] Rafraîchir la page (`router.refresh()`) après succès.
+- [x] **AC3 — Relier le bouton à l'API**
+  - [x] Depuis la page détail, appeler `POST /api/admin/users/{id}/reminder` au clic.
+  - [x] Afficher un message de succès/erreur.
+  - [x] Rafraîchir la page (`router.refresh()`) après succès.
 
-- [ ] **Tests et validation de non-régression**
-  - [ ] Tests `src/app/(admin)/admin/members/page.test.tsx` :
-    - [ ] Badges ✓ / ✗ selon `emailVerified` et `onboardingCompletedAt`.
-    - [ ] Filtre `incomplete=1` n'affiche que les membres incomplets.
-  - [ ] Tests `src/app/(admin)/admin/members/[id]/page.test.tsx` :
-    - [ ] Redirection si non admin.
-    - [ ] Affichage des badges et du bouton relance pour un membre incomplet.
-    - [ ] Bouton masqué pour un membre complet.
-  - [ ] Tests `src/app/api/admin/users/[id]/reminder/route.test.ts` :
-    - [ ] 401/403 pour non authentifié / non admin.
-    - [ ] Envoi vérification si `emailVerified=false`.
-    - [ ] Envoi profil si `emailVerified=true` et `onboardingCompletedAt=null`.
-    - [ ] 400 si utilisateur complet.
-    - [ ] 400 si email manquant.
-    - [ ] Audit log créé.
-  - [ ] `npm run build` passe sans erreur.
-  - [ ] `npx vitest run` passe sans erreur.
+- [x] **Tests et validation de non-régression**
+  - [x] Tests `src/app/(admin)/admin/members/page.test.tsx` :
+    - [x] Badges ✓ / ✗ selon `emailVerified` et `onboardingCompletedAt`.
+    - [x] Filtre `incomplete=1` n'affiche que les membres incomplets.
+  - [x] Tests `src/app/(admin)/admin/members/[id]/page.test.tsx` :
+    - [x] Redirection si non admin.
+    - [x] Affichage des badges et du bouton relance pour un membre incomplet.
+    - [x] Bouton masqué pour un membre complet.
+  - [x] Tests `src/app/api/admin/users/[id]/reminder/route.test.ts` :
+    - [x] 401/403 pour non authentifié / non admin.
+    - [x] Envoi vérification si `emailVerified=false`.
+    - [x] Envoi profil si `emailVerified=true` et `onboardingCompletedAt=null`.
+    - [x] 400 si utilisateur complet.
+    - [x] 400 si email manquant.
+    - [x] Audit log créé.
+  - [x] `npm run build` passe sans erreur.
+  - [x] `npx vitest run` passe sans erreur.
 
 ## Dev Notes
 
@@ -232,10 +232,28 @@ kimi-k2.7-code (via Hermes delegate_task)
 - Les emails de relance réutilisent `sendVerificationEmailToUser` (vérification) et `sendReminderEmail` (profil) de `src/lib/email.ts`.
 - L'audit log `USER_REMINDER_SEND` doit être ajouté dans `src/lib/audit-log.ts`.
 
+### Dev Agent Record — Implémentation
+
+- Implémenté le 2026-06-26 par kimik2.7-code.
+- Badges onboarding ajoutés via composant `Badge` shadcn/ui ; ✗ en orange-100/orange-800, ✓ en emerald-100/emerald-800 ; ternaires uniquement, pas de `&&`.
+- Filtre Server Component via `searchParams.incomplete=1` et clause Prisma `OR: [{ emailVerified: false }, { onboardingCompletedAt: null }]`.
+- Page détail admin avec auth + suspended guard ; lien retour ; badges ; bouton "Relancer par email" conditionnel via Client Component `AdminMemberReminderButton`.
+- Route API de relance manuelle : auth 401/403, 400 EMAIL_MISSING / ALREADY_COMPLETE, audit `USER_REMINDER_SEND` avant envoi, envoi vérification (token SHA-256 24h via `sendVerificationEmailToUser`) ou profil (`sendReminderEmail`), 500 EMAIL_FAILED en cas d'échec.
+- Tests co-localisés passent ; `npm run build` et `npx vitest run` passent.
+- Statut mis à jour : sprint-status.yaml `15-3-indicateur-admin-onboarding: review`.
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/story-15-3.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (status mis à jour)
+- `src/lib/audit-log.ts` (ajout `USER_REMINDER_SEND`)
+- `src/app/(admin)/admin/members/page.tsx` (badges onboarding + filtre incomplet + lien détail)
+- `src/app/(admin)/admin/members/page.test.tsx` (tests badges + filtre)
+- `src/app/(admin)/admin/members/[id]/page.tsx` (nouvelle page détail)
+- `src/app/(admin)/admin/members/[id]/page.test.tsx` (tests page détail)
+- `src/components/features/admin/admin-member-reminder-button.tsx` (bouton client relance)
+- `src/app/api/admin/users/[id]/reminder/route.ts` (API relance manuelle)
+- `src/app/api/admin/users/[id]/reminder/route.test.ts` (tests API)
 
 ### Implementation Plan
 
