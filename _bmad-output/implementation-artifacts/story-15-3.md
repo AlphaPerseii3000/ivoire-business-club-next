@@ -2,7 +2,7 @@
 Story: "15.3"
 StoryKey: "15-3-indicateur-admin-onboarding"
 Title: "Indicateur admin de complétion onboarding"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 15 — Onboarding Enforcement & Relances Automatiques"
 FRs: ["FR-ONB6"]
@@ -15,7 +15,7 @@ last_updated: '2026-06-26T22:30:00+0200'
 
 # Story 15.3 : Indicateur admin de complétion onboarding
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: /admin/members page exists with member table, account status, verification status, and inline AdminMemberActions. Story 15-2 implemented cron reminders and sendReminderEmail in src/lib/email.ts. This story adds explicit onboarding badges (email + profile), an incomplete filter, and a manual reminder action. -->
 
@@ -258,3 +258,11 @@ kimi-k2.7-code (via Hermes delegate_task)
 ### Implementation Plan
 
 Story implémentée en delta sur le code existant : ajout de badges onboarding et d'un filtre sur `/admin/members`, création d'une page détail membre, et d'une route API de relance manuelle avec audit log. Aucune migration Prisma nécessaire (champs `emailVerified` et `onboardingCompletedAt` existants).
+
+### Review Findings
+
+- [ ] [Review][Patch] **Dead boolean guards in badge rendering** [`src/app/(admin)/admin/members/page.tsx:169-170`] — `showEmailBadge` and `showProfileBadge` are always `true`; remove them or make them meaningful.
+- [ ] [Review][Patch] **Server-side reminder API does not block target SUSPENDED members** [`src/app/api/admin/users/[id]/reminder/route.ts:44-90`] — the detail page disables the button for suspended targets, but the API only checks the admin's status; direct POST to a suspended member's reminder is allowed. Add a guard returning 400 or 403 for `user.status === "SUSPENDED"`.
+- [ ] [Review][Patch] **Missing test for profile-reminder email failure path** [`src/app/api/admin/users/[id]/reminder/route.test.ts`] — only verification-email failure is tested; add a test where `sendReminderEmail` rejects and assert 500 EMAIL_FAILED.
+- [ ] [Review][Patch] **Missing test for sendVerificationEmailToUser non-error false result** [`src/app/api/admin/users/[id]/reminder/route.test.ts`] — `sendVerificationEmailToUser` can return `{ sent: false, reason: "rate-limited" }` without throwing; assert API returns 500 EMAIL_FAILED with the reason.
+- [ ] [Review][Patch] **Audit log metadata never updated to `emailSent: true`** [`src/app/api/admin/users/[id]/reminder/route.ts:63-73,103`] — `metadata.emailSent` is initialized to `false` and never set to `true` after a successful send, reducing audit accuracy.
