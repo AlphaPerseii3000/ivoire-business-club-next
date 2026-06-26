@@ -2,7 +2,7 @@
 Story: "15.2"
 StoryKey: "15-2-relances-automatiques-cron"
 Title: "Relances automatiques par email (cron)"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 15 — Onboarding Enforcement & Relances Automatiques"
 FRs: ["FR-ONB4", "FR-ONB5"]
@@ -10,11 +10,12 @@ NFRs: ["NFR-S5", "NFR-S7", "NFR-A1", "NFR-P2"]
 UXDRs: ["UX-DR13", "UX-DR19", "UX-DR20"]
 Created: "2026-06-26"
 baseline_commit: "d66dbcf"
+last_updated: '2026-06-26T21:56:00+0200'
 ---
 
 # Story 15.2 : Relances automatiques par email (cron)
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: email verification flow, complete-profile page, welcome email, JWT claims, and soft-gate already implemented by story 15-1. This story adds only the automated reminder cron and its deployment docs. -->
 
@@ -83,34 +84,34 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **AC1 — Créer la route cron protégée**
-  - [ ] Créer `src/app/api/cron/remind-incomplete-users/route.ts` avec handler `POST`.
-  - [ ] Lire le header `Authorization` ; retourner `401 Unauthorized` s'il manque ou ne correspond pas à `process.env.CRON_SECRET`.
-  - [ ] Normaliser la comparaison avec `Bearer <secret>` (trim, sensitive exact match).
-  - [ ] Retourner `200 OK { data: { processed: number, sent: number } }` en cas de succès.
+- [x] **AC1 — Créer la route cron protégée**
+  - [x] Créer `src/app/api/cron/remind-incomplete-users/route.ts` avec handler `POST`.
+  - [x] Lire le header `Authorization` ; retourner `401 Unauthorized` s'il manque ou ne correspond pas à `process.env.CRON_SECRET`.
+  - [x] Normaliser la comparaison avec `Bearer <secret>` (trim, sensitive exact match).
+  - [x] Retourner `200 OK { data: { processed: number, sent: number } }` en cas de succès.
 
-- [ ] **AC2 — Implémenter le séquenceur de relance**
-  - [ ] Créer `src/lib/reminders.server.ts` pour isoler la logique métier et faciliter les tests.
-  - [ ] Requêter `prisma.user.findMany` avec `select` minimal : `id`, `email`, `name`, `emailVerified`, `onboardingCompletedAt`, `createdAt`, `lastReminderSentAt`, `reminderCount`.
-  - [ ] Filtrer les utilisateurs dont `emailVerified === false` OU `onboardingCompletedAt === null` ET `createdAt` >= J-7 (limite pour ne pas spammer les comptes anciens).
-  - [ ] Calculer `ageDays = floor((now - createdAt) / 24h)` ; appliquer une fenêtre de ±12h (43200000 ms) autour de chaque jal J+1 / J+3 / J+7.
-  - [ ] Déterminer le reminder type applicable :
+- [x] **AC2 — Implémenter le séquenceur de relance**
+  - [x] Créer `src/lib/reminders.server.ts` pour isoler la logique métier et faciliter les tests.
+  - [x] Requêter `prisma.user.findMany` avec `select` minimal : `id`, `email`, `name`, `emailVerified`, `onboardingCompletedAt`, `createdAt`, `lastReminderSentAt`, `reminderCount`.
+  - [x] Filtrer les utilisateurs dont `emailVerified === false` OU `onboardingCompletedAt === null` ET `createdAt` >= J-7 (limite pour ne pas spammer les comptes anciens).
+  - [x] Calculer `ageDays = floor((now - createdAt) / 24h)` ; appliquer une fenêtre de ±12h (43200000 ms) autour de chaque jal J+1 / J+3 / J+7.
+  - [x] Déterminer le reminder type applicable :
     - `EMAIL_VERIFICATION` si `ageDays ~ 1` ET `emailVerified === false`.
     - `PROFILE_COMPLETION` si `ageDays ~ 3` ET `onboardingCompletedAt === null`.
     - `FINAL_REMINDER` si `ageDays ~ 7` ET (`emailVerified === false` OU `onboardingCompletedAt === null`).
-  - [ ] S'assurer qu'un utilisateur ne reçoit qu'un seul email par exécution cron (un seul type applicable par jour).
+  - [x] S'assurer qu'un utilisateur ne reçoit qu'un seul email par exécution cron (un seul type applicable par jour).
 
-- [ ] **AC3/AC4 — Persister le suivi des relances et garantir l'idempotence**
-  - [ ] Modifier `prisma/schema.prisma` : ajouter sur `User` :
+- [x] **AC3/AC4 — Persister le suivi des relances et garantir l'idempotence**
+  - [x] Modifier `prisma/schema.prisma` : ajouter sur `User` :
     - `lastReminderSentAt DateTime?`
     - `reminderCount Int @default(0)`
-  - [ ] Exécuter `npx prisma migrate dev --name add_user_reminder_fields`.
-  - [ ] À chaque envoi, incrémenter `reminderCount` et mettre à jour `lastReminderSentAt`.
-  - [ ] Vérifier l'idempotence : si `lastReminderSentAt` est aujourd'hui (même date UTC), ne pas renvoyer (ou utiliser un log distinct si besoin future story 15.3).
-  - [ ] Alternative technique note : le SCP mentionne une table `ReminderLog` ou un champ JSON. **L'approche retenue** est les champs sur `User` (plus simple, pas de nouvelle table).
+  - [x] Exécuter `npx prisma migrate dev --name add_user_reminder_fields`.
+  - [x] À chaque envoi, incrémenter `reminderCount` et mettre à jour `lastReminderSentAt`.
+  - [x] Vérifier l'idempotence : si `lastReminderSentAt` est aujourd'hui (même date UTC), ne pas renvoyer (ou utiliser un log distinct si besoin future story 15.3).
+  - [x] Alternative technique note : le SCP mentionne une table `ReminderLog` ou un champ JSON. **L'approche retenue** est les champs sur `User` (plus simple, pas de nouvelle table).
 
-- [ ] **AC5 — Créer les templates email de relance**
-  - [ ] Ajouter dans `src/lib/email.ts` :
+- [x] **AC5 — Créer les templates email de relance**
+  - [x] Ajouter dans `src/lib/email.ts` :
     - `sendReminderEmail({ to, name, type, links })` avec `type: "EMAIL_VERIFICATION" | "PROFILE_COMPLETION" | "FINAL_REMINDER"`.
     - Brancher sur `sendEmail()` existant.
     - Sujets en français :
@@ -122,43 +123,43 @@ Status: ready-for-dev
     - Lien profil : `${APP_URL}/onboarding/complete-profile`.
     - Final reminder : inclure les 2 liens.
 
-- [ ] **AC5 — Rendre les emails "responsive/branding" (plain-text baseline)**
-  - [ ] Utiliser le système `sendEmail()` actuel (texte brut) ; ajouter un template HTML optionnel via la même méthode nodemailer `html` si `nodemailer` le supporte déjà.
-  - [ ] Minimum requis : texte en français, CTA clair, mention légale, liens directs. HTML responsive est un plus si simple à ajouter (1 template basique IBC teal/white).
+- [x] **AC5 — Rendre les emails "responsive/branding" (plain-text baseline)**
+  - [x] Utiliser le système `sendEmail()` actuel (texte brut) ; ajouter un template HTML optionnel via la même méthode nodemailer `html` si `nodemailer` le supporte déjà.
+  - [x] Minimum requis : texte en français, CTA clair, mention légale, liens directs. HTML responsive est un plus si simple à ajouter (1 template basique IBC teal/white).
 
-- [ ] **AC6 — Documenter le déploiement**
-  - [ ] Ajouter `CRON_SECRET=` dans `.env.example` (section Auth ou dédié Cron).
-  - [ ] Créer `docs/cron-setup.md` avec :
-    - Objectif de la route.
-    - Variables d'environnement (`CRON_SECRET`, `APP_URL`).
-    - Commandes VPS Hetzner exactes (création dossier, secret, permissions, crontab, log file).
-    - Exemple de ligne crontab et fuseau horaire.
-    - Commande de test manuel avec `curl`.
-    - Section troubleshooting (vérifier les logs, le secret, l'heure serveur).
+- [x] **AC6 — Documenter le déploiement**
+  - [x] Ajouter `CRON_SECRET=` dans `.env.example` (section Auth ou dédié Cron).
+  - [x] Créer `docs/cron-setup.md` avec :
+    - [x] Objectif de la route.
+    - [x] Variables d'environnement (`CRON_SECRET`, `APP_URL`).
+    - [x] Commandes VPS Hetzner exactes (création dossier, secret, permissions, crontab, log file).
+    - [x] Exemple de ligne crontab et fuseau horaire.
+    - [x] Commande de test manuel avec `curl`.
+    - [x] Section troubleshooting (vérifier les logs, le secret, l'heure serveur).
 
-- [ ] **AC7 — Fournir les instructions de déploiement crontab VPS Hetzner**
-  - [ ] Le fichier `docs/cron-setup.md` doit contenir la procédure exacte reprise dans AC7 (echo secret, chmod 600, crontab -e, touch log, heure 09:00).
-  - [ ] **AC7 est un livrable docs uniquement** : le DS ne configure pas le VPS, mais fournit la procédure qu'un admin ou DevOps exécutera.
+- [x] **AC7 — Fournir les instructions de déploiement crontab VPS Hetzner**
+  - [x] Le fichier `docs/cron-setup.md` doit contenir la procédure exacte reprise dans AC7 (echo secret, chmod 600, crontab -e, touch log, heure 09:00).
+  - [x] **AC7 est un livrable docs uniquement** : le DS ne configure pas le VPS, mais fournit la procédure qu'un admin ou DevOps exécutera.
 
-- [ ] **Tests et validation de non-régression**
-  - [ ] Tests unitaires `src/lib/reminders.server.test.ts` :
-    - 401 si secret absent/incorrect.
-    - J+1 envoie EMAIL_VERIFICATION si `emailVerified=false`.
-    - J+3 envoie PROFILE_COMPLETION si `onboardingCompletedAt=null`.
-    - J+7 envoie FINAL_REMINDER si l'un des deux est incomplet.
-    - Email vérifié + profil incomplet → seulement J+3 / J+7.
-    - Double exécution le même jour n'envoie pas 2 emails (idempotence via `lastReminderSentAt`).
-    - Utilisateur complet (`emailVerified=true` et `onboardingCompletedAt` set) → ignoré.
-    - Utilisateur inscrit depuis > 7 jours → ignoré.
-  - [ ] Tests route handler `src/app/api/cron/remind-incomplete-users/route.test.ts` :
-    - 401 sans header / secret invalide.
-    - 200 avec secret valide.
-    - Retour `processed` / `sent` cohérent.
-  - [ ] Tests email `src/lib/email.test.ts` (ou fichier dédié) :
-    - Sujets et mentions légaux présents.
-    - Liens corrects selon le type.
-  - [ ] `npm run build` passe sans erreur.
-  - [ ] `npx prisma migrate dev` et `npx prisma generate` OK.
+- [x] **Tests et validation de non-régression**
+  - [x] Tests unitaires `src/lib/reminders.server.test.ts` :
+    - [x] 401 si secret absent/incorrect.
+    - [x] J+1 envoie EMAIL_VERIFICATION si `emailVerified=false`.
+    - [x] J+3 envoie PROFILE_COMPLETION si `onboardingCompletedAt=null`.
+    - [x] J+7 envoie FINAL_REMINDER si l'un des deux est incomplet.
+    - [x] Email vérifié + profil incomplet → seulement J+3 / J+7.
+    - [x] Double exécution le même jour n'envoie pas 2 emails (idempotence via `lastReminderSentAt`).
+    - [x] Utilisateur complet (`emailVerified=true` et `onboardingCompletedAt` set) → ignoré.
+    - [x] Utilisateur inscrit depuis > 7 jours → ignoré.
+  - [x] Tests route handler `src/app/api/cron/remind-incomplete-users/route.test.ts` :
+    - [x] 401 sans header / secret invalide.
+    - [x] 200 avec secret valide.
+    - [x] Retour `processed` / `sent` cohérent.
+  - [x] Tests email `src/lib/email.test.ts` (ou fichier dédié) :
+    - [x] Sujets et mentions légaux présents.
+    - [x] Liens corrects selon le type.
+  - [x] `npm run build` passe sans erreur.
+  - [x] `npx prisma migrate dev` et `npx prisma generate` OK.
 
 ## Dev Notes
 
@@ -285,3 +286,10 @@ kimi-k2.7-code (via Hermes delegate_task)
 ### Implementation Plan
 
 Story implémentée en delta sur le code existant : ajout d'une route cron protégée, logique de relance séquencée J+1/J+3/J+7, champs Prisma pour le suivi/idempotence, templates email dans `src/lib/email.ts`, et documentation de déploiement VPS Hetzner.
+
+- Route cron `src/app/api/cron/remind-incomplete-users/route.ts` créée avec auth `CRON_SECRET`, sans session utilisateur.
+- Logique métier séquencée isolée dans `src/lib/reminders.server.ts` : fenêtre ±12h, J+1/J+3/J+7, idempotence via `lastReminderSentAt`, compteur `reminderCount`, batch résilient.
+- Migration Prisma `add_user_reminder_fields` appliquée sur `schema.prisma` et `schema.dev.prisma` (champs `lastReminderSentAt`, `reminderCount`).
+- Templates `sendReminderEmail` ajoutés dans `src/lib/email.ts` (3 types, texte français, CTA, mention légale).
+- Tests unitaires et route handler co-localisés, tous passent.
+- `docs/cron-setup.md` et `.env.example` mis à jour avec la procédure VPS Hetzner et la variable `CRON_SECRET`.

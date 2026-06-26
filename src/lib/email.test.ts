@@ -273,4 +273,72 @@ describe("email helpers", () => {
     expect(text).not.toContain("Pour finaliser votre adhésion");
     expect(text).not.toContain("Contrat d'adhésion");
   });
+
+  it("sends reminder EMAIL_VERIFICATION with correct French copy and link", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    const { sendReminderEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendReminderEmail({
+      to: "newmember@example.com",
+      name: "Jean",
+      type: "EMAIL_VERIFICATION",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "newmember@example.com",
+        subject: "Vérifiez votre adresse email — Ivoire Business Club",
+        text: expect.stringContaining(
+          "https://ivoirebusinessclub.test/auth/verify-email?resend=1"
+        ),
+      })
+    );
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain(
+      "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
+    );
+  });
+
+  it("sends reminder PROFILE_COMPLETION with correct link and legal mention", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    const { sendReminderEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendReminderEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      type: "PROFILE_COMPLETION",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+    expect(text).toContain("complétez votre profil");
+    expect(text).toContain(
+      "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
+    );
+  });
+
+  it("sends reminder FINAL_REMINDER with both links and legal mention", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    const { sendReminderEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendReminderEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      type: "FINAL_REMINDER",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
+    expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+    expect(text).toContain("finalisé");
+    expect(text).toContain(
+      "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
+    );
+  });
 });

@@ -282,6 +282,59 @@ export async function sendWelcomeEmail({
   });
 }
 
+export type ReminderType =
+  | "EMAIL_VERIFICATION"
+  | "PROFILE_COMPLETION"
+  | "FINAL_REMINDER";
+
+export async function sendReminderEmail({
+  to,
+  name,
+  type,
+}: {
+  to: string;
+  name?: string | null;
+  type: ReminderType;
+}) {
+  const appUrl = process.env.APP_URL || "";
+  const verifyLink = `${appUrl}/auth/verify-email?resend=1`;
+  const profileLink = `${appUrl}/onboarding/complete-profile`;
+  const legalMention =
+    "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club.";
+  const brandSignature = "\n\nL'équipe Ivoire Business Club";
+
+  if (type === "EMAIL_VERIFICATION") {
+    const body = `${greeting(name)}\n\nMerci de vous être inscrit sur Ivoire Business Club. Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur le lien ci-dessous :\n\n${verifyLink}\n\nSi le lien ne fonctionne pas, vous pouvez aussi retourner sur la page de vérification et demander un nouvel email.\n\n${legalMention}${brandSignature}`;
+
+    await sendEmail({
+      to,
+      subject: "Vérifiez votre adresse email — Ivoire Business Club",
+      text: body,
+    });
+    return;
+  }
+
+  if (type === "PROFILE_COMPLETION") {
+    const body = `${greeting(name)}\n\nVotre inscription avance bien. Pour accéder à l'ensemble des opportunités du club, complétez votre profil en cliquant sur le lien ci-dessous :\n\n${profileLink}\n\nUn profil complet vous permet de matcher avec les deals, les membres et les experts IBC.\n\n${legalMention}${brandSignature}`;
+
+    await sendEmail({
+      to,
+      subject: "Complétez votre profil IBC",
+      text: body,
+    });
+    return;
+  }
+
+  // FINAL_REMINDER
+  const body = `${greeting(name)}\n\nVotre compte Ivoire Business Club n'est pas encore finalisé. Voici les dernières étapes à compléter :\n\n1. Vérifier votre adresse email : ${verifyLink}\n2. Complétez votre profil : ${profileLink}\n\nAprès cette date, votre accès au club pourra être restreint.\n\n${legalMention}${brandSignature}`;
+
+  await sendEmail({
+    to,
+    subject: "Dernier rappel — votre compte IBC n'est pas finalisé",
+    text: body,
+  });
+}
+
 const GUIDE_FILE_NAME = "Investir en Côte d'Ivoire 2026.pdf";
 
 function guideLink() {
