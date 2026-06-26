@@ -16,6 +16,9 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
         token.tier = (user as unknown as Record<string, unknown>).tier ?? "AFFRANCHI";
         token.role = roleForEmail(user.email) === "ADMIN" ? "ADMIN" : (user as unknown as Record<string, unknown>).role ?? "MEMBER";
+        const extendedUser = user as unknown as Record<string, unknown>;
+        token.emailVerified = typeof extendedUser.emailVerified === "boolean" ? extendedUser.emailVerified : false;
+        token.onboardingCompleted = !!extendedUser.onboardingCompleted;
       } else if (isConfiguredAdminEmail(token.email)) {
         token.role = "ADMIN";
       }
@@ -26,6 +29,8 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         (session.user as unknown as Record<string, unknown>).tier = token.tier;
         (session.user as unknown as Record<string, unknown>).role = isConfiguredAdminEmail(session.user.email) ? "ADMIN" : token.role;
+        (session.user as unknown as Record<string, unknown>).emailVerified = typeof token.emailVerified === "boolean" ? token.emailVerified : false;
+        (session.user as unknown as Record<string, unknown>).onboardingCompleted = !!token.onboardingCompleted;
       }
       return session;
     },

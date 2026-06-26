@@ -18,7 +18,7 @@ type CredentialsProviderConfig = {
 type TestAuthConfig = {
   providers: Array<{ id: string } | CredentialsProviderConfig>;
   callbacks: {
-    signIn: (args: { user: { email?: string }; account: { provider: string } }) => Promise<boolean>;
+    signIn: (args: { user: { email?: string; id?: string }; account: { provider: string } }) => Promise<boolean>;
   };
   adapter: {
     createUser: (user: Record<string, unknown>) => Promise<Record<string, unknown>>;
@@ -31,7 +31,8 @@ vi.mock("next-auth/providers/credentials", () => ({ default: mockCredentials }))
 vi.mock("@auth/prisma-adapter", () => ({ PrismaAdapter: vi.fn(() => ({ createUser: mockAdapterCreateUser })) }));
 vi.mock("bcryptjs", () => ({ default: { compare: mockCompare } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: mockFindUnique, update: mockUpdate } } }));
-vi.mock("@/lib/email", () => ({ sendWelcomeEmail: mockSendWelcomeEmail }));
+vi.mock("@/lib/email", () => ({ sendWelcomeEmail: mockSendWelcomeEmail, sendEmailVerificationEmail: vi.fn() }));
+vi.mock("@/lib/verification-email.server", () => ({ sendVerificationEmailToUser: vi.fn(async () => ({ sent: true, reason: "sent" })) }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: mockSanitizeError }));
 
 async function loadAuthConfig() {
@@ -146,7 +147,7 @@ describe("auth.ts exports", () => {
     expect(result).toBe(false);
     expect(mockFindUnique).toHaveBeenCalledWith({
       where: { email: "member@example.com" },
-      select: { id: true, role: true, status: true, createdAt: true },
+      select: { id: true, role: true, status: true, createdAt: true, emailVerified: true },
     });
   });
 

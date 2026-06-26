@@ -76,6 +76,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           tier: user.tier,
           role,
           status: user.status,
+          emailVerified: user.emailVerified,
+          onboardingCompleted: user.onboardingCompletedAt !== null,
         };
       },
     }),
@@ -86,11 +88,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "google" && user.email) {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { id: true, role: true, status: true, createdAt: true },
+          select: { id: true, role: true, status: true, createdAt: true, emailVerified: true },
         });
         if (existingUser?.status === "SUSPENDED") return false;
         if (existingUser && isConfiguredAdminEmail(user.email) && existingUser.role !== "ADMIN") {
           await prisma.user.update({ where: { id: existingUser.id }, data: { role: "ADMIN" } });
+        }
+
+        if (!existingUser?.emailVerified) {
+          try {
+            const { sendVerificationEmailToUser } = await import("@/lib/verification-email.server");
+            const targetUserId = existingUser?.id ?? (user.id as string | undefined);
+            if (targetUserId) {
+              await sendVerificationEmailToUser(targetUserId);
+            }
+          } catch (verificationError) {
+            console.error("Failed to auto-resend verification email to Google user:", sanitizeError(verificationError));
+          }
         }
 
         // Welcome email only for newly created Google OAuth accounts
@@ -110,19 +124,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
       }
+
+      if (account?.provider === "credentials" && user.id) {
+        try {
+          const { sendVerificationEmailToUser } = await import("@/lib/verification-email.server");
+          await sendVerificationEmailToUser(user.id as string);
+          return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
+        } catch (verificationError) {
+          console.error("Failed to auto-resend verification email on credentials sign-in:", sanitizeError(verificationError));
+        }
+      }
+
       return true;
     },
     async jwt(args) {
       const token = (authConfig.callbacks?.jwt ? await authConfig.callbacks.jwt(args) : args.token) ?? args.token;
       if (args.user) {
-        token.status = (args.user as unknown as Record<string, unknown>).status ?? "ACTIVE";
+        const user = args.user as unknown as Record<string, unknown>;
+        token.status = user.status ?? "ACTIVE";
+        token.emailVerified = typeof user.emailVerified === "boolean" ? user.emailVerified : false;
+        token.onboardingCompleted = !!user.onboardingCompleted;
       }
       return token;
     },
     async session(args) {
       const session = (authConfig.callbacks?.session ? await authConfig.callbacks.session(args) : args.session) ?? args.session;
       if (session.user) {
-        (session.user as unknown as Record<string, unknown>).status = args.token.status ?? "ACTIVE";
+        const sessionUser = session.user as unknown as Record<string, unknown>;
+        sessionUser.status = args.token.status ?? "ACTIVE";
+        sessionUser.emailVerified = typeof args.token.emailVerified === "boolean" ? args.token.emailVerified : false;
+        sessionUser.onboardingCompleted = !!args.token.onboardingCompleted;
       }
       return session;
     },

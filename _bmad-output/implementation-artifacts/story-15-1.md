@@ -2,18 +2,19 @@
 Story: "15.1"
 StoryKey: "15-1-widget-progression-soft-gate"
 Title: "Widget de progression + soft-gate sur features premium"
-Status: "ready-for-dev"
+Status: "review"
 Priority: "P1"
 Epic: "Epic 15 — Onboarding Enforcement & Relances Automatiques"
 FRs: ["FR-ONB1", "FR-ONB2", "FR-ONB3"]
 NFRs: ["NFR-S5", "NFR-S7", "NFR-A1", "NFR-A3", "NFR-P2"]
 UXDRs: ["UX-DR13", "UX-DR19", "UX-DR20", "UX-DR21", "UX-DR23", "UX-DR24", "UX-DR25", "UX-DR26"]
 Created: "2026-06-26"
+baseline_commit: "dd85fa8afbec93ae0227ce1d7d048ca8919f2b0d"
 ---
 
 # Story 15.1 : Widget de progression + soft-gate sur features premium
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: email verification, verification page, resend button, complete-profile page/form/API, and welcome email already exist. Only build the missing enforcement layer: JWT claims, middleware soft-gate, dashboard widget, and auto-resend at sign-in. -->
 
@@ -62,69 +63,69 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **AC5 — Étendre les claims JWT pour l'onboarding**
-  - [ ] Modifier `src/lib/auth.config.ts` : ajouter `emailVerified` et `onboardingCompleted` dans le callback `jwt` quand `user` est présent, et les propager dans `session`.
-  - [ ] Modifier `src/lib/auth.ts` : enrichir le token avec les champs Prisma `emailVerified` et `onboardingCompletedAt` dans le callback `jwt` (runtime Node.js) ; dériver `onboardingCompleted = !!onboardingCompletedAt`.
-  - [ ] S'assurer que le callback `session` expose `emailVerified` et `onboardingCompleted` dans `session.user`.
-  - [ ] Vérifier que le middleware Edge lit les claims via `auth().user` sans appel Prisma.
+- [x] **AC5 — Étendre les claims JWT pour l'onboarding**
+  - [x] Modifier `src/lib/auth.config.ts` : ajouter `emailVerified` et `onboardingCompleted` dans le callback `jwt` quand `user` est présent, et les propager dans `session`.
+  - [x] Modifier `src/lib/auth.ts` : enrichir le token avec les champs Prisma `emailVerified` et `onboardingCompletedAt` dans le callback `jwt` (runtime Node.js) ; dériver `onboardingCompleted = !!onboardingCompletedAt`.
+  - [x] S'assurer que le callback `session` expose `emailVerified` et `onboardingCompleted` dans `session.user`.
+  - [x] Vérifier que le middleware Edge lit les claims via `auth().user` sans appel Prisma.
 
-- [ ] **AC1 — Créer le composant `OnboardingProgressWidget`**
-  - [ ] Créer `src/components/features/onboarding/onboarding-progress-widget.tsx`.
-  - [ ] Props : `emailVerified: boolean`, `onboardingCompleted: boolean`, `priority?: boolean`.
-  - [ ] Calculer le pourcentage : 0 % si rien, 50 % si un seul des deux, 100 % si les deux.
-  - [ ] Afficher les 2 étapes avec icônes ✓/✗ colorées, le pourcentage, et les CTAs.
-  - [ ] CTA "Vérifier maintenant" → lien `/auth/verify-email` (ou déclenche `ResendVerificationButton` server action côté dashboard).
-  - [ ] CTA "Compléter mon profil" → lien `/onboarding/complete-profile`.
-  - [ ] Mode prioritaire : bordure rouge (`border-destructive` ou `border-red-500`) + animation subtile (pulse ou ring) activé quand `priority={true}`.
-  - [ ] Disparaît quand les 2 étapes sont complètes (ne pas rendre le composant du tout).
-  - [ ] Utiliser des ternaires pour tous les rendus conditionnels JSX, jamais `&&`.
+- [x] **AC1 — Créer le composant `OnboardingProgressWidget`**
+  - [x] Créer `src/components/features/onboarding/onboarding-progress-widget.tsx`.
+  - [x] Props : `emailVerified: boolean`, `onboardingCompleted: boolean`, `priority?: boolean`.
+  - [x] Calculer le pourcentage : 0 % si rien, 50 % si un seul des deux, 100 % si les deux.
+  - [x] Afficher les 2 étapes avec icônes ✓/✗ colorées, le pourcentage, et les CTAs.
+  - [x] CTA "Vérifier maintenant" → lien `/auth/verify-email` (ou déclenche `ResendVerificationButton` server action côté dashboard).
+  - [x] CTA "Compléter mon profil" → lien `/onboarding/complete-profile`.
+  - [x] Mode prioritaire : bordure rouge (`border-destructive` ou `border-red-500`) + animation subtile (pulse ou ring) activé quand `priority={true}`.
+  - [x] Disparaît quand les 2 étapes sont complètes (ne pas rendre le composant du tout).
+  - [x] Utiliser des ternaires pour tous les rendus conditionnels JSX, jamais `&&`.
 
-- [ ] **AC1 — Remplacer la banner ambre sur `/dashboard`**
-  - [ ] Modifier `src/app/(dashboard)/dashboard/page.tsx`.
-  - [ ] Supprimer le bloc amber L54-74 (la banner statique + `ResendVerificationButton` inline).
-  - [ ] Importer `OnboardingProgressWidget` et l'insérer en haut de page.
-  - [ ] Passer les flags `emailVerified` et `onboardingCompleted` (dérivés de l'objet `user` Prisma).
-  - [ ] Activer `priority={true}` quand `searchParams.incomplete === "1"`.
-  - [ ] Préserver les autres sections (nom, abonnement, tuiles d'accès rapide).
+- [x] **AC1 — Remplacer la banner ambre sur `/dashboard`**
+  - [x] Modifier `src/app/(dashboard)/dashboard/page.tsx`.
+  - [x] Supprimer le bloc amber L54-74 (la banner statique + `ResendVerificationButton` inline).
+  - [x] Importer `OnboardingProgressWidget` et l'insérer en haut de page.
+  - [x] Passer les flags `emailVerified` et `onboardingCompleted` (dérivés de l'objet `user` Prisma).
+  - [x] Activer `priority={true}` quand `searchParams.incomplete === "1"`.
+  - [x] Préserver les autres sections (nom, abonnement, tuiles d'accès rapide).
 
-- [ ] **AC2/AC4 — Implémenter le soft-gate dans `src/middleware.ts`**
-  - [ ] Lire `auth.user.emailVerified` et `auth.user.onboardingCompleted` dans le middleware Edge.
-  - [ ] Lister les routes premium bloquées : `/dashboard/opportunities`, `/members`, `/dashboard/matching`, `/articles`.
-  - [ ] Si l'utilisateur est connecté ET (`!emailVerified || !onboardingCompleted`) ET la route est premium → `Response.redirect(new URL("/dashboard?incomplete=1", nextUrl))`.
-  - [ ] Conserver les routes autorisées : `/dashboard`, `/profile`, `/settings`, `/pricing`, `/onboarding/complete-profile`, `/auth/verify-email` et toutes les routes publiques/auth existantes.
-  - [ ] Ne pas appliquer le soft-gate aux routes `/admin/*` (déjà gérées), `/api/*`, ou aux assets statiques.
-  - [ ] S'assurer que la logique admin existante (L41-47 de `auth.config.ts`) reste intacte.
+- [x] **AC2/AC4 — Implémenter le soft-gate dans `src/middleware.ts`**
+  - [x] Lire `auth.user.emailVerified` et `auth.user.onboardingCompleted` dans le middleware Edge.
+  - [x] Lister les routes premium bloquées : `/dashboard/opportunities`, `/members`, `/dashboard/matching`, `/articles`.
+  - [x] Si l'utilisateur est connecté ET (`!emailVerified || !onboardingCompleted`) ET la route est premium → `Response.redirect(new URL("/dashboard?incomplete=1", nextUrl))`.
+  - [x] Conserver les routes autorisées : `/dashboard`, `/profile`, `/settings`, `/pricing`, `/onboarding/complete-profile`, `/auth/verify-email` et toutes les routes publiques/auth existantes.
+  - [x] Ne pas appliquer le soft-gate aux routes `/admin/*` (déjà gérées), `/api/*`, ou aux assets statiques.
+  - [x] S'assurer que la logique admin existante (L41-47 de `auth.config.ts`) reste intacte.
 
-- [ ] **AC3 — Auto-resend de l'email de vérification à la connexion**
-  - [ ] Modifier `src/lib/auth.ts` callback `signIn`.
-  - [ ] Pour credentials et Google OAuth, après authentification réussie, si `emailVerified === false` :
-    - [ ] Récupérer le dernier `VerificationToken.createdAt` pour cet utilisateur (`prisma.verificationToken.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } })`).
-    - [ ] Si aucun token dans les 24 dernières heures (ou pas de token du tout), créer un nouveau token et appeler `sendEmailVerificationEmail({ to, name, token })`.
-    - [ ] Stocker un flag dans un cookie court terme ou retourner un paramètre de redirection `?resend=1` pour afficher le toast côté client (préférer un cookie flash `ibc_verify_resend=1` lu par un ClientToast ou par le dashboard).
-  - [ ] Réutiliser la logique de `src/app/api/auth/send-verification/route.ts` (génération token SHA-256, expiration 24 h, suppression des anciens tokens) — extraire dans `src/lib/verification-email.server.ts` si nécessaire pour éviter la duplication.
-  - [ ] Respecter la limite 1 envoi / 24 h maximum ; logger les erreurs avec `sanitizeError`.
+- [x] **AC3 — Auto-resend de l'email de vérification à la connexion**
+  - [x] Modifier `src/lib/auth.ts` callback `signIn`.
+  - [x] Pour credentials et Google OAuth, après authentification réussie, si `emailVerified === false` :
+    - [x] Récupérer le dernier `VerificationToken.createdAt` pour cet utilisateur (`prisma.verificationToken.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } })`).
+    - [x] Si aucun token dans les 24 dernières heures (ou pas de token du tout), créer un nouveau token et appeler `sendEmailVerificationEmail({ to, name, token })`.
+    - [x] Stocker un flag dans un cookie court terme ou retourner un paramètre de redirection `?resend=1` pour afficher le toast côté client (préférer un cookie flash `ibc_verify_resend=1` lu par un ClientToast ou par le dashboard).
+  - [x] Réutiliser la logique de `src/app/api/auth/send-verification/route.ts` (génération token SHA-256, expiration 24 h, suppression des anciens tokens) — extraire dans `src/lib/verification-email.server.ts` si nécessaire pour éviter la duplication.
+  - [x] Respecter la limite 1 envoi / 24 h maximum ; logger les erreurs avec `sanitizeError`.
 
-- [ ] **AC3 — Afficher le toast de confirmation**
-  - [ ] Dans `src/app/(dashboard)/dashboard/page.tsx`, lire le cookie flash `ibc_verify_resend` (ou paramètre `resend=1`) et afficher un toast via `sonner` côté client.
-  - [ ] Créer un petit composant client `src/components/features/auth/verify-resend-toast.tsx` si nécessaire, qui consomme le cookie et le supprime.
+- [x] **AC3 — Afficher le toast de confirmation**
+  - [x] Dans `src/app/(dashboard)/dashboard/page.tsx`, lire le cookie flash `ibc_verify_resend` (ou paramètre `resend=1`) et afficher un toast via `sonner` côté client.
+  - [x] Créer un petit composant client `src/components/features/auth/verify-resend-toast.tsx` si nécessaire, qui consomme le cookie et le supprime.
 
-- [ ] **Tests et validation de non-régression**
-  - [ ] Tests unitaires/Vitest pour `OnboardingProgressWidget` :
-    - [ ] 0 %, 50 %, 100 % selon les props.
-    - [ ] Disparition quand 100 %.
-    - [ ] Mode prioritaire affiche la bordure/animation.
-    - [ ] CTAs pointent vers les bonnes routes.
-  - [ ] Tests middleware (via handler isolé ou integration) :
-    - [ ] Route premium bloquée si `emailVerified=false`.
-    - [ ] Route premium bloquée si `onboardingCompleted=false`.
-    - [ ] Routes autorisées accessibles.
-    - [ ] Redirection vers `/dashboard?incomplete=1`.
-  - [ ] Tests `auth.ts` / `auth.config.ts` :
-    - [ ] JWT claims contiennent `emailVerified` et `onboardingCompleted`.
-    - [ ] Auto-resend appelé une seule fois par fenêtre 24 h.
-    - [ ] Pas de resend si déjà vérifié.
-  - [ ] `npm run build` passe sans erreur.
-  - [ ] Aucun `&&` dans le JSX de la story.
+- [x] **Tests et validation de non-régression**
+  - [x] Tests unitaires/Vitest pour `OnboardingProgressWidget` :
+    - [x] 0 %, 50 %, 100 % selon les props.
+    - [x] Disparition quand 100 %.
+    - [x] Mode prioritaire affiche la bordure/animation.
+    - [x] CTAs pointent vers les bonnes routes.
+  - [x] Tests middleware (via handler isolé ou integration) :
+    - [x] Route premium bloquée si `emailVerified=false`.
+    - [x] Route premium bloquée si `onboardingCompleted=false`.
+    - [x] Routes autorisées accessibles.
+    - [x] Redirection vers `/dashboard?incomplete=1`.
+  - [x] Tests `auth.ts` / `auth.config.ts` :
+    - [x] JWT claims contiennent `emailVerified` et `onboardingCompleted`.
+    - [x] Auto-resend appelé une seule fois par fenêtre 24 h.
+    - [x] Pas de resend si déjà vérifié.
+  - [x] `npm run build` passe sans erreur.
+  - [x] Aucun `&&` dans le JSX de la story.
 
 ## Dev Notes
 
@@ -246,4 +247,31 @@ Tous les briques de base existent déjà ; cette story ne consiste qu'à ajouter
 
 ### Completion Notes List
 
+- AC5: JWT claims `emailVerified` et `onboardingCompleted` ajoutés dans `src/lib/auth.ts` (callback jwt + session) et `src/lib/auth.config.ts` (Edge config jwt + session).
+- AC1: `OnboardingProgressWidget` créé avec 2 étapes, pourcentage, CTAs, mode prioritaire (bordure destructive + animate-pulse), disparition quand 100%.
+- AC1: Banner ambre remplacée sur `/dashboard` par le widget, avec `priority={true}` quand `?incomplete=1`.
+- AC2/AC4: Soft-gate middleware implémenté dans `src/middleware.ts` sur `/dashboard/opportunities`, `/members`, `/dashboard/matching`, `/articles` redirigeant vers `/dashboard?incomplete=1`.
+- AC3: Auto-resend email de vérification à la connexion (credentials + Google OAuth) via `src/lib/verification-email.server.ts`, respectant la limite 1 envoi / 24h.
+- AC3: Toast de confirmation affiché via `src/components/features/auth/verify-resend-toast.tsx` quand `?resend=1`.
+- Tests ajoutés : widget (12), middleware (13), auto-resend (6) ; `auth.test.ts` mis à jour.
+- Vérifications : `npm run build` OK, `npx vitest run` OK (926 tests passés).
+
 ### File List
+
+- src/lib/auth.ts
+- src/lib/auth.config.ts
+- src/middleware.ts
+- src/app/(dashboard)/dashboard/page.tsx
+- src/components/features/onboarding/onboarding-progress-widget.tsx
+- src/components/features/auth/verify-resend-toast.tsx
+- src/lib/verification-email.server.ts
+- src/components/features/onboarding/onboarding-progress-widget.test.tsx
+- src/middleware.test.ts
+- src/lib/verification-email.server.test.ts
+- src/lib/auth.test.ts
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/story-15-1.md
+
+### Implementation Plan
+
+Story implémentée en delta sur le code existant, sans migration Prisma, en respectant le split Auth.js v5 Edge/Node et le guardrail JSX (ternaires uniquement).
