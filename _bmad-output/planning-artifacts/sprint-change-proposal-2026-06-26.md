@@ -230,13 +230,31 @@ L'analyse du code existant révèle que **tous les composants existent mais aucu
    - **Given** la route cron
    - **When** elle est déployée
    - **Then** la variable d'environnement `CRON_SECRET` est documentée dans `.env.example`
-   - **And** un exemple de déclencheur est documenté : `curl -X POST https://www.ivoire-business-club.com/api/cron/remind-incomplete-users -H "Authorization: Bearer $CRON_SECRET"`
+   - **And** les instructions de déploiement crontab VPS Hetzner sont documentées dans un fichier `docs/cron-setup.md`
+
+7. **AC7 — Déploiement crontab VPS Hetzner**
+   - **Given** le VPS Hetzner qui héberge IBC
+   - **When** l'admin configure le cron
+   - **Then** le secret est stocké dans un fichier protégé : `echo "<secret>" > /etc/ibc/cron-secret && chmod 600 /etc/ibc/cron-secret`
+   - **And** la ligne crontab suivante est ajoutée via `crontab -e` :
+     ```
+     # Daily onboarding reminders at 09:00
+     0 9 * * * curl -fsS -X POST https://www.ivoire-business-club.com/api/cron/remind-incomplete-users -H "Authorization: Bearer $(cat /etc/ibc/cron-secret)" >> /var/log/ibc-cron.log 2>&1
+     ```
+   - **And** le fichier de log est créé : `touch /var/log/ibc-cron.log`
+   - **And** le cron s'exécute une fois par jour à 09:00 (heure serveur)
+   - **And** les erreurs sont loggées dans `/var/log/ibc-cron.log`
 
 **Technical Notes :**
 - Pour le suivi des relances, ajouter un champ `lastReminderSentAt` (DateTime?) et `reminderCount` (Int, default 0) sur le modèle User, OU créer une table `ReminderLog` dédiée. Le champ sur User est plus simple et évite une migration de table.
 - Alternative sans migration : utiliser un champ JSON `reminders` sur User (`{ emailVerification: "2026-06-27T10:00:00Z", profileCompletion: "2026-06-29T10:00:00Z" }`).
-- Le cron peut être déclenché par : (a) Vercel Cron (si déployé sur Vercel), (b) cron job Hermes, (c) crontab sur le VPS Infomaniak, (d) curl manuel.
+- **Déploiement cron : crontab système sur le VPS Hetzner** (option retenue). Pourquoi :
+  - Tourne sur le même serveur que l'app → zéro latence, zéro dépendance externe
+  - Si le VPS est up (nécessaire pour servir le site), le cron fire
+  - Pas de dépendance à un PC local (contrairement à Hermes cronjob) ou à Vercel
+  - Setup en 3 commandes, une seule ligne crontab à maintenir
 - Les emails de relance réutilisent `sendEmail()` de `src/lib/email.ts`.
+- Les instructions détaillées de setup crontab VPS Hetzner sont dans `docs/cron-setup.md` (à créer par le DS).
 
 ---
 
@@ -282,8 +300,9 @@ L'analyse du code existant révèle que **tous les composants existent mais aucu
 
 | Action | Outil | Priorité |
 |--------|-------|----------|
-| Configurer `CRON_SECRET` dans `.env` | Variable d'environnement | P0 |
-| Mettre en place le déclencheur cron (Hermes cron job, crontab VPS, ou Vercel Cron) | `cronjob` Hermes ou crontab | P0 |
+| Configurer `CRON_SECRET` dans `.env` de l'app ET dans `/etc/ibc/cron-secret` sur le VPS | Variable d'environnement + fichier secret | P0 |
+| Mettre en place le crontab sur le VPS Hetzner | `crontab -e` sur le VPS | P0 |
+| Créer le fichier de log `/var/log/ibc-cron.log` | `touch` + `chown` sur le VPS | P0 |
 | Vérifier que les JWT claims incluent `emailVerified` et `onboardingCompleted` | Test avec `jwt.io` | P0 |
 
 ### 5.3 Success Criteria
