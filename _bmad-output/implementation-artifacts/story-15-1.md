@@ -241,7 +241,7 @@ Tous les briques de base existent déjà ; cette story ne consiste qu'à ajouter
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (via Hermes delegate_task)
 
 ### Debug Log References
 
