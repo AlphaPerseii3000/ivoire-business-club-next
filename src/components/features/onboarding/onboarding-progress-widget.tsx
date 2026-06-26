@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import ResendVerificationButton from "@/components/features/auth/resend-verification-button";
 
 type OnboardingProgressWidgetProps = {
   emailVerified: boolean;
@@ -67,7 +66,7 @@ export function OnboardingProgressWidget({
       <ul className="space-y-3" role="list" aria-label="Étapes d'inscription">
         {emailVerified ? null : (
           <li
-            data-testid="onboarding-step-email"
+            data-testid="onboarding-step-email-pending"
             className={cn(
               "flex items-start justify-between gap-3 rounded-md p-2",
               showPulseAnimation ? "animate-pulse" : ""
@@ -88,13 +87,23 @@ export function OnboardingProgressWidget({
                 </p>
               </div>
             </div>
-            <ResendVerificationButton />
+            <Link
+              href="/auth/verify-email"
+              className={cn(
+                "inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm font-medium",
+                "bg-primary text-primary-foreground hover:bg-primary/90",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              )}
+              data-testid="cta-verify-email"
+            >
+              Vérifier mon email
+            </Link>
           </li>
         )}
 
         {emailVerified ? (
           <li
-            data-testid="onboarding-step-email"
+            data-testid="onboarding-step-email-done"
             className="flex items-start gap-3 rounded-md p-2"
           >
             <span
@@ -113,7 +122,7 @@ export function OnboardingProgressWidget({
 
         {onboardingCompleted ? null : (
           <li
-            data-testid="onboarding-step-profile"
+            data-testid="onboarding-step-profile-pending"
             className={cn(
               "flex items-start justify-between gap-3 rounded-md p-2",
               showPulseAnimation ? "animate-pulse" : ""
@@ -150,7 +159,7 @@ export function OnboardingProgressWidget({
 
         {onboardingCompleted ? (
           <li
-            data-testid="onboarding-step-profile"
+            data-testid="onboarding-step-profile-done"
             className="flex items-start gap-3 rounded-md p-2"
           >
             <span

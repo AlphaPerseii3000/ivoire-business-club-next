@@ -19,8 +19,12 @@ export const authConfig: NextAuthConfig = {
         const extendedUser = user as unknown as Record<string, unknown>;
         token.emailVerified = typeof extendedUser.emailVerified === "boolean" ? extendedUser.emailVerified : false;
         token.onboardingCompleted = !!extendedUser.onboardingCompleted;
-      } else if (isConfiguredAdminEmail(token.email)) {
-        token.role = "ADMIN";
+      } else {
+        if (typeof token.emailVerified !== "boolean") token.emailVerified = false;
+        token.onboardingCompleted = !!token.onboardingCompleted;
+        if (isConfiguredAdminEmail(token.email)) {
+          token.role = "ADMIN";
+        }
       }
       return token;
     },

@@ -88,6 +88,28 @@ describe("verification-email.server", () => {
     );
   });
 
+  it("allows resend exactly 24 hours after the previous token", async () => {
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-boundary",
+      email: "exact@example.com",
+      name: "Exact Boundary User",
+      emailVerified: false,
+    });
+    mockVerificationTokenFindFirst.mockResolvedValueOnce({
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000 - 1),
+    });
+    mockSendEmailVerificationEmail.mockResolvedValueOnce(undefined);
+
+    const { sendVerificationEmailToUser } = await loadModule();
+    const result = await sendVerificationEmailToUser("user-boundary");
+
+    expect(result).toEqual({ sent: true, reason: "sent" });
+    expect(mockVerificationTokenDeleteMany).toHaveBeenCalledWith({
+      where: { userId: "user-boundary" },
+    });
+    expect(mockSendEmailVerificationEmail).toHaveBeenCalled();
+  });
+
   it("rate-limits when a token was created within the last 24 hours", async () => {
     mockUserFindUnique.mockResolvedValueOnce({
       id: "user-3",

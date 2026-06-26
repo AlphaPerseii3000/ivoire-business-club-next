@@ -18,7 +18,9 @@ type CredentialsProviderConfig = {
 type TestAuthConfig = {
   providers: Array<{ id: string } | CredentialsProviderConfig>;
   callbacks: {
-    signIn: (args: { user: { email?: string; id?: string }; account: { provider: string } }) => Promise<boolean>;
+    signIn: (args: { user: { email?: string; id?: string; emailVerified?: boolean }; account: { provider: string } }) => Promise<boolean | string>;
+    jwt: (args: { token: Record<string, unknown>; user?: Record<string, unknown> }) => Promise<Record<string, unknown>>;
+    session: (args: { session: { user: Record<string, unknown> }; token: Record<string, unknown> }) => Promise<{ user: Record<string, unknown> }>;
   };
   adapter: {
     createUser: (user: Record<string, unknown>) => Promise<Record<string, unknown>>;
@@ -32,7 +34,9 @@ vi.mock("@auth/prisma-adapter", () => ({ PrismaAdapter: vi.fn(() => ({ createUse
 vi.mock("bcryptjs", () => ({ default: { compare: mockCompare } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: mockFindUnique, update: mockUpdate } } }));
 vi.mock("@/lib/email", () => ({ sendWelcomeEmail: mockSendWelcomeEmail, sendEmailVerificationEmail: vi.fn() }));
-vi.mock("@/lib/verification-email.server", () => ({ sendVerificationEmailToUser: vi.fn(async () => ({ sent: true, reason: "sent" })) }));
+const mockSendVerificationEmailToUser = vi.hoisted(() => vi.fn(async () => ({ sent: true, reason: "sent" })));
+
+vi.mock("@/lib/verification-email.server", () => ({ sendVerificationEmailToUser: mockSendVerificationEmailToUser }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: mockSanitizeError }));
 
 async function loadAuthConfig() {
@@ -153,7 +157,7 @@ describe("auth.ts exports", () => {
 
   it("allows Google OAuth sign-in for active existing users", async () => {
     const config = await loadAuthConfig();
-    mockFindUnique.mockResolvedValueOnce({ id: "member-1", role: "MEMBER", status: "ACTIVE" });
+    mockFindUnique.mockResolvedValueOnce({ id: "member-1", role: "MEMBER", status: "ACTIVE", emailVerified: true });
 
     const result = await config.callbacks.signIn({ user: { email: "member@example.com" }, account: { provider: "google" } });
 
@@ -163,7 +167,7 @@ describe("auth.ts exports", () => {
 
   it("promotes configured bootstrap admins during Google OAuth sign-in", async () => {
     const config = await loadAuthConfig();
-    mockFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER", status: "ACTIVE" });
+    mockFindUnique.mockResolvedValueOnce({ id: "admin-1", role: "MEMBER", status: "ACTIVE", emailVerified: true });
 
     const result = await config.callbacks.signIn({ user: { email: "berseth.j@gmail.com" }, account: { provider: "google" } });
 
@@ -174,30 +178,132 @@ describe("auth.ts exports", () => {
     });
   });
 
-  it("sends welcome email for newly created Google OAuth user", async () => {
+  it("auto-resends verification email for unverified credentials users and redirects with ?resend=1", async () => {
     const config = await loadAuthConfig();
-    mockFindUnique.mockResolvedValueOnce({ id: "member-2", role: "MEMBER", status: "ACTIVE", createdAt: new Date() });
+    mockFindUnique.mockResolvedValueOnce({
+      id: "member-1",
+      email: "member@example.com",
+      name: "Awa",
+      tier: "BOSS",
+      role: "MEMBER",
+      status: "ACTIVE",
+      passwordHash: "hash",
+    });
+    mockCompare.mockResolvedValueOnce(true);
+
+    await config.providers
+      .find((item): item is CredentialsProviderConfig => item.id === "credentials" && "authorize" in item)
+      ?.authorize({ email: "member@example.com", password: "password" });
 
     const result = await config.callbacks.signIn({
-      user: { email: "new-google@example.com", name: "New Google User" },
+      user: { id: "member-1", email: "member@example.com", emailVerified: false },
+      account: { provider: "credentials" },
+    });
+
+    expect(mockSendVerificationEmailToUser).toHaveBeenCalledWith("member-1");
+    expect(result).toBe(`${process.env.APP_URL ?? ""}/dashboard?resend=1`);
+  });
+
+  it("does not auto-resend verification email for verified credentials users", async () => {
+    const config = await loadAuthConfig();
+
+    const result = await config.callbacks.signIn({
+      user: { id: "member-1", email: "member@example.com", emailVerified: true },
+      account: { provider: "credentials" },
+    });
+
+    expect(mockSendVerificationEmailToUser).not.toHaveBeenCalled();
+    expect(result).toBe(true);
+  });
+
+  it("writes emailVerified and onboardingCompleted claims into the JWT", async () => {
+    const config = await loadAuthConfig();
+    const jwtCallback = config.callbacks.jwt as (args: {
+      token: Record<string, unknown>;
+      user: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
+
+    const token = await jwtCallback({
+      token: {},
+      user: { id: "member-1", emailVerified: false, onboardingCompleted: false },
+    });
+
+    expect(token.emailVerified).toBe(false);
+    expect(token.onboardingCompleted).toBe(false);
+  });
+
+  it("propagates emailVerified and onboardingCompleted claims to session", async () => {
+    const config = await loadAuthConfig();
+    const sessionCallback = config.callbacks.session as (args: {
+      session: { user: Record<string, unknown> };
+      token: Record<string, unknown>;
+    }) => Promise<{ user: Record<string, unknown> }>;
+
+    const session = await sessionCallback({
+      session: { user: { id: "member-1" } },
+      token: { id: "member-1", emailVerified: true, onboardingCompleted: true },
+    });
+
+    expect(session.user.emailVerified).toBe(true);
+    expect(session.user.onboardingCompleted).toBe(true);
+  });
+
+  it("preserves JWT claims during token refresh when user is absent", async () => {
+    const config = await loadAuthConfig();
+    const jwtCallback = config.callbacks.jwt as (args: {
+      token: Record<string, unknown>;
+      user?: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
+
+    const token = await jwtCallback({
+      token: { id: "member-1", emailVerified: true, onboardingCompleted: true },
+    });
+
+    expect(token.emailVerified).toBe(true);
+    expect(token.onboardingCompleted).toBe(true);
+  });
+
+  it("normalizes missing JWT claims during token refresh when user is absent", async () => {
+    const config = await loadAuthConfig();
+    const jwtCallback = config.callbacks.jwt as (args: {
+      token: Record<string, unknown>;
+      user?: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
+
+    const token = await jwtCallback({
+      token: { id: "member-1" },
+    });
+
+    expect(token.emailVerified).toBe(false);
+    expect(token.onboardingCompleted).toBe(false);
+  });
+
+  it("auto-resends verification email for unverified Google users and redirects with ?resend=1", async () => {
+    const config = await loadAuthConfig();
+    mockFindUnique.mockResolvedValueOnce({
+      id: "member-google",
+      email: "member@example.com",
+      role: "MEMBER",
+      status: "ACTIVE",
+      emailVerified: false,
+      createdAt: new Date(Date.now() - 120_000),
+    });
+
+    const result = await config.callbacks.signIn({
+      user: { email: "member@example.com" },
       account: { provider: "google" },
     });
 
-    expect(result).toBe(true);
-    expect(mockSendWelcomeEmail).toHaveBeenCalledWith({
-      to: "new-google@example.com",
-      name: "New Google User",
-      tier: "AFFRANCHI",
-      userId: "member-2",
-    });
+    expect(mockSendVerificationEmailToUser).toHaveBeenCalledWith("member-google");
+    expect(result).toBe(`${process.env.APP_URL ?? ""}/dashboard?resend=1`);
   });
 
   it("does NOT send welcome email for existing Google OAuth user (createdAt > 60s)", async () => {
     const config = await loadAuthConfig();
-    mockFindUnique.mockResolvedValueOnce({ id: "member-3", role: "MEMBER", status: "ACTIVE", createdAt: new Date(Date.now() - 120_000) });
+    mockFindUnique.mockResolvedValueOnce({ id: "member-3", role: "MEMBER", status: "ACTIVE", emailVerified: true, createdAt: new Date(Date.now() - 120_000) });
 
     const result = await config.callbacks.signIn({
-      user: { email: "existing-google@example.com", name: "Existing Google User" },
+      user: { email: "existing-google@example.com" },
       account: { provider: "google" },
     });
 

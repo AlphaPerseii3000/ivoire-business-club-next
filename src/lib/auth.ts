@@ -102,6 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (targetUserId) {
               await sendVerificationEmailToUser(targetUserId);
             }
+            return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
           } catch (verificationError) {
             console.error("Failed to auto-resend verification email to Google user:", sanitizeError(verificationError));
           }
@@ -123,13 +124,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             console.error("Failed to send welcome email to Google user:", sanitizeError(welcomeEmailError));
           }
         }
+
+        return true;
       }
 
       if (account?.provider === "credentials" && user.id) {
         try {
           const { sendVerificationEmailToUser } = await import("@/lib/verification-email.server");
-          await sendVerificationEmailToUser(user.id as string);
-          return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
+          if (user.emailVerified === false) {
+            await sendVerificationEmailToUser(user.id as string);
+            return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
+          }
         } catch (verificationError) {
           console.error("Failed to auto-resend verification email on credentials sign-in:", sanitizeError(verificationError));
         }

@@ -7,7 +7,7 @@ const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function isWithinLast24h(date: Date | null): boolean {
   if (!date) return false;
-  return Date.now() - date.getTime() < VERIFICATION_TOKEN_TTL_MS;
+  return Date.now() - date.getTime() <= VERIFICATION_TOKEN_TTL_MS;
 }
 
 export async function sendVerificationEmailToUser(userId: string) {

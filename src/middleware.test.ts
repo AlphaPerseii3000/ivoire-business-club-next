@@ -183,6 +183,19 @@ describe("middleware soft-gate", () => {
     expect(response).toBeUndefined();
   });
 
+  it("treats undefined claims as incomplete (blocked)", async () => {
+    const handler = await loadMiddleware();
+    const response = await handler(
+      makeRequest("/dashboard/opportunities", {
+        emailVerified: undefined as unknown as boolean,
+        onboardingCompleted: undefined as unknown as boolean,
+      })
+    );
+
+    expect(response).toBeInstanceOf(Response);
+    expect((response as Response).headers.get("location")).toContain("/dashboard?incomplete=1");
+  });
+
   it("does not redirect unauthenticated requests", async () => {
     const handler = await loadMiddleware();
     const response = await handler(makeRequest("/dashboard/opportunities"));

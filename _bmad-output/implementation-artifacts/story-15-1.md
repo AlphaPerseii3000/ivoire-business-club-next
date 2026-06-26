@@ -255,6 +255,19 @@ kimi-k2.7-code (via Hermes delegate_task)
 - AC3: Toast de confirmation affiché via `src/components/features/auth/verify-resend-toast.tsx` quand `?resend=1`.
 - Tests ajoutés : widget (12), middleware (13), auto-resend (6) ; `auth.test.ts` mis à jour.
 - Vérifications : `npm run build` OK, `npx vitest run` OK (926 tests passés).
+- **CR follow-up (2026-06-26)** : corrections des 7 findings (P0 + 3 P1 + 3 P2) :
+  - P0 : persistance des claims JWT (`emailVerified`, `onboardingCompleted`) lors du refresh token dans `src/lib/auth.config.ts`.
+  - P1-1 : uniformisation du resend Google OAuth vers `/dashboard?resend=1` dans `src/lib/auth.ts`.
+  - P1-2 : tests ajoutés pour auto-resend credentials, claims JWT, session et refresh token.
+  - P1-3 : CTA "Vérifier mon email" explicite avec lien vers `/auth/verify-email` dans le widget.
+  - P2-1 : test middleware avec claims `undefined` traités comme incomplets.
+  - P2-2 : borne 24h corrigée en `<=` dans `src/lib/verification-email.server.ts`.
+  - P2-3 : `data-testid` distincts (`pending`/`done`) dans le widget.
+- Vérifications post-CR : `npm run build` OK, `npx vitest run` OK (935 tests passés).
+
+### Change Log
+
+- 2026-06-26 : corrections CR story 15-1 — 7 findings résolus (JWT claims refresh, resend Google OAuth, tests manquants, CTA widget, test undefined claims, borne 24h, data-testid distincts).
 
 ### File List
 

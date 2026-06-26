@@ -78,6 +78,20 @@ describe("OnboardingProgressWidget", () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it("shows a clickable CTA for the email step", () => {
+    render(
+      <OnboardingProgressWidget
+        emailVerified={false}
+        onboardingCompleted={false}
+      />
+    );
+
+    const cta = screen.getByTestId("cta-verify-email");
+    expect(cta).toBeInTheDocument();
+    expect(cta).toHaveAttribute("href", "/auth/verify-email");
+    expect(cta).toHaveTextContent("Vérifier mon email");
+  });
+
   it("shows a clickable CTA for the profile step", () => {
     render(
       <OnboardingProgressWidget
@@ -91,7 +105,7 @@ describe("OnboardingProgressWidget", () => {
     expect(cta).toHaveAttribute("href", "/onboarding/complete-profile");
   });
 
-  it("shows the resend verification button when email is not verified", () => {
+  it("does not render the legacy resend verification button", () => {
     render(
       <OnboardingProgressWidget
         emailVerified={false}
@@ -99,7 +113,7 @@ describe("OnboardingProgressWidget", () => {
       />
     );
 
-    expect(screen.getByTestId("resend-verification-button")).toBeInTheDocument();
+    expect(screen.queryByTestId("resend-verification-button")).not.toBeInTheDocument();
   });
 
   it("shows priority border and pulse animation when priority is true and incomplete", () => {
