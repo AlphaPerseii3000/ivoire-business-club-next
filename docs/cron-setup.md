@@ -99,7 +99,7 @@ On success the endpoint returns HTTP 200 with a JSON summary:
 
 | Symptom | Check |
 |---------|-------|
-| `401 Unauthorized` in logs | Verify the `Authorization: *** header matches `CRON_SECRET`. Check for leading/trailing whitespace. |
+| `401 Unauthorized` in logs | Verify the `Authorization: Bearer <...03e` header value matches `CRON_SECRET`. Check for leading/trailing whitespace. |
 | No emails sent | Confirm `APP_URL` is set and reachable. Check `MAIL_*` SMTP variables. |
 | Wrong reminder window | Ensure the VPS timezone matches expected scheduling; cron runs at 09:00 **server local time**. |
 | Emails duplicated | Confirm `lastReminderSentAt` and `reminderCount` columns exist (migration `add_user_reminder_fields`). |
@@ -111,6 +111,7 @@ On success the endpoint returns HTTP 200 with a JSON summary:
 - `/etc/ibc/cron-secret` must be readable only by the cron user (`chmod 600`).
 - Do not commit `CRON_SECRET` to version control; use `.env.example` only for documentation.
 - Do not expose `/api/cron/remind-incomplete-users` to public networks without the secret.
+- This endpoint relies on a single bearer secret over HTTPS. If the secret is compromised, an attacker can replay the request. For higher sensitivity environments, protect the endpoint with mTLS or an IP allow-list in addition to the secret.
 
 ## Maintenance
 

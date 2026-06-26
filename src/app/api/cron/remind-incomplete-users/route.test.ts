@@ -27,6 +27,10 @@ describe("POST /api/cron/remind-incomplete-users", () => {
     process.env = { ...originalEnv, CRON_SECRET: "super-secret-cron-key" };
   });
 
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   it("returns 401 when Authorization header is missing", async () => {
     const res = await POST(makeRequest());
     const json = await res.json();
