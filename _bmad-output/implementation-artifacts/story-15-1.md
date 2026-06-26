@@ -2,7 +2,7 @@
 Story: "15.1"
 StoryKey: "15-1-widget-progression-soft-gate"
 Title: "Widget de progression + soft-gate sur features premium"
-Status: "review"
+Status: "done"
 Priority: "P1"
 Epic: "Epic 15 — Onboarding Enforcement & Relances Automatiques"
 FRs: ["FR-ONB1", "FR-ONB2", "FR-ONB3"]
@@ -14,7 +14,7 @@ baseline_commit: "dd85fa8afbec93ae0227ce1d7d048ca8919f2b0d"
 
 # Story 15.1 : Widget de progression + soft-gate sur features premium
 
-Status: review
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Brownfield/delta story: email verification, verification page, resend button, complete-profile page/form/API, and welcome email already exist. Only build the missing enforcement layer: JWT claims, middleware soft-gate, dashboard widget, and auto-resend at sign-in. -->
 
