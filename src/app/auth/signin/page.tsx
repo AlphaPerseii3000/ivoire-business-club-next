@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import posthog from "posthog-js";
 import { signinSchema, type SigninInput } from "@/lib/validations";
 import { getOAuthErrorMessage } from "@/lib/oauth-errors";
 
@@ -40,6 +41,7 @@ export default function SignInPage() {
       if (result?.error) {
         setServerError("Email ou mot de passe incorrect.");
       } else if (result?.ok) {
+        posthog.capture("user_signed_in", { method: "credentials" });
         router.push("/dashboard");
       } else {
         setServerError("Email ou mot de passe incorrect.");

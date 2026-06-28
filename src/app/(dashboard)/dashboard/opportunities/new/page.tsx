@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import { opportunityCreateSchema, type OpportunityCreateInput } from "@/lib/validations";
 import { type MembershipTier } from "@/lib/tier-config";
@@ -101,6 +102,13 @@ export default function NewOpportunityPage() {
         }
       }
 
+      posthog.capture("opportunity_submitted", {
+        opportunity_id: opportunity.id,
+        category: data.category,
+        required_tier: data.requiredTier ?? "AFFRANCHI",
+        has_amount: data.amount != null,
+        has_documents: pendingDocuments.length > 0,
+      });
       toast.success("Deal soumis avec succès. Notre équipe le vérifie sous 48h.");
       router.push("/dashboard/opportunities");
     } catch {

@@ -18,6 +18,7 @@ if (shouldInitialize) {
     person_profiles: "identified_only",
     capture_pageview: false,
     capture_page_leave: true,
+    capture_exceptions: true,
   });
 }
 

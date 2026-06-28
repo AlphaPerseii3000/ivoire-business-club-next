@@ -7,6 +7,7 @@ import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { canManageDocuments } from "@/lib/document-access";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { posthogServer } from "@/lib/posthog-server";
 
 export async function POST(
   _req: Request,
@@ -97,6 +98,12 @@ export async function POST(
       entityType: "Document",
       entityId: documentId,
       metadata: { requesterId: userId, opportunityId },
+    });
+
+    posthogServer.capture({
+      distinctId: userId,
+      event: "document_access_requested",
+      properties: { opportunity_id: opportunityId, document_id: documentId },
     });
 
     return NextResponse.json({ data: accessRequest }, { status: 201 });

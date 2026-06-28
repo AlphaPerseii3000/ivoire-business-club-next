@@ -7,6 +7,7 @@ import { signupRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { roleForEmail } from "@/lib/admin-authorization";
 import { sendEmailVerificationEmail, sendWelcomeEmail } from "@/lib/email";
+import { posthogServer } from "@/lib/posthog-server";
 
 export async function POST(req: Request) {
   try {
@@ -81,6 +82,16 @@ export async function POST(req: Request) {
     } catch (welcomeEmailError) {
       console.error("Failed to send welcome email:", sanitizeError(welcomeEmailError));
     }
+
+    posthogServer.identify({
+      distinctId: user.id,
+      properties: { email: user.email, name: user.name },
+    });
+    posthogServer.capture({
+      distinctId: user.id,
+      event: "user_registered",
+      properties: { email: user.email, name: user.name, role: user.role },
+    });
 
     return NextResponse.json(
       { id: user.id, email: user.email, name: user.name },

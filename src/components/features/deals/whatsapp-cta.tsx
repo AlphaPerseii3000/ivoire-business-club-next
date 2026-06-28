@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
+import posthog from "posthog-js";
 
 import { buildWhatsAppSupportLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,14 @@ export function WhatsAppCTA({ phoneNumber, prefilledMessage, className, size = "
   }
 
   return (
-    <Link href={href} target="_blank" rel="noopener noreferrer" className={baseClassName} aria-label={label}>
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={baseClassName}
+      aria-label={label}
+      onClick={() => posthog.capture("whatsapp_contact_clicked", { label })}
+    >
       <MessageCircle className="h-4 w-4" aria-hidden="true" />
       {label}
     </Link>

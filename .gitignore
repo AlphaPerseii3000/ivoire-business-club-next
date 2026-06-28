@@ -65,3 +65,4 @@ public/avatars/
 .claude
 .codex-ssh/
 *.bak
+.env.local

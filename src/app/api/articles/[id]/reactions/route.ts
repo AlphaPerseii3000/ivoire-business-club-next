@@ -5,6 +5,7 @@ import { getAccessibleArticleVisibilities } from "@/lib/article-visibility";
 import { hasActiveSubscription } from "@/lib/subscription-access";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { ReactionType } from "@/generated/prisma/client";
+import { posthogServer } from "@/lib/posthog-server";
 
 export async function GET(
   req: Request,
@@ -168,6 +169,11 @@ export async function POST(
             where: { id: existing.id },
             data: { type: type as ReactionType },
           });
+          posthogServer.capture({
+            distinctId: userId,
+            event: "article_reaction_added",
+            properties: { article_id: article.id, reaction_type: updated.type, action: "updated" },
+          });
           return NextResponse.json({ ok: true, action: "updated", type: updated.type });
         }
       } else {
@@ -178,6 +184,11 @@ export async function POST(
             articleId: article.id,
             type: type as ReactionType,
           },
+        });
+        posthogServer.capture({
+          distinctId: userId,
+          event: "article_reaction_added",
+          properties: { article_id: article.id, reaction_type: created.type, action: "added" },
         });
         return NextResponse.json({ ok: true, action: "added", type: created.type });
       }

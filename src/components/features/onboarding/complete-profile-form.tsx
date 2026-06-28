@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 import { onboardingFormSchema, ALL_COUNTRIES, type OnboardingFormInput } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -110,6 +111,11 @@ export default function CompleteProfileForm({ defaultValues }: CompleteProfileFo
         return;
       }
 
+      posthog.capture("onboarding_profile_completed", {
+        tier: data.tier,
+        duration: data.duration,
+        country: data.country,
+      });
       toast.success("Profil complété. Bienvenue sur IBC !");
       router.push("/dashboard");
     } catch {

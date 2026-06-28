@@ -153,6 +153,7 @@ development_status:
   epic-18-retrospective: optional
   epic-19: in-progress
   19-1-installation-posthog: done
-  19-2-identification-evenements-metier: backlog
+  19-2-identification-evenements-metier: done
+  19-2b-posthog-identification-gaps: backlog
   19-3-dashboards-funnels-posthog: backlog
   epic-19-retrospective: optional

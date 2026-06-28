@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
 import { reviewCreateSchema } from "@/lib/validations";
+import { posthogServer } from "@/lib/posthog-server";
 
 type RouteContext = { params: Promise<{ id: string }> };
 type PrismaLikeError = { code?: string };
@@ -115,6 +116,16 @@ export async function POST(req: Request, { params }: RouteContext) {
 
       revalidatePath(`/dashboard/opportunities/${opportunity.id}`);
       revalidatePath(`/members/${opportunity.authorId}`);
+
+      posthogServer.capture({
+        distinctId: userId,
+        event: "opportunity_review_submitted",
+        properties: {
+          opportunity_id: opportunity.id,
+          rating: review.rating,
+          has_comment: !!review.comment,
+        },
+      });
 
       return NextResponse.json({ data: { review } }, { status: 201 });
     } catch (error) {

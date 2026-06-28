@@ -4,6 +4,7 @@ import { leadMagnetSchema } from "@/lib/validations";
 import { sendGuideEmail } from "@/lib/email";
 import { createRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { posthogServer } from "@/lib/posthog-server";
 
 const leadMagnetRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
 
@@ -61,6 +62,12 @@ export async function POST(request: NextRequest) {
     await prisma.leadMagnet.update({
       where: { id: leadMagnet.id },
       data: { guideSentAt: new Date() },
+    });
+
+    posthogServer.capture({
+      distinctId: email,
+      event: "lead_magnet_submitted",
+      properties: { email, $set: { email } },
     });
 
     return NextResponse.json(

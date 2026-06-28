@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
+import posthog from "posthog-js";
 
 export default function SignOutPage() {
   useEffect(() => {
+    posthog.reset();
     const timer = setTimeout(() => {
       signOut({ redirectTo: "/" });
     }, 500);

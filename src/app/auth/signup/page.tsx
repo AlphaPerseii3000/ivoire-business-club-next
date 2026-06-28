@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import posthog from "posthog-js";
 import { signupSchema, type SignupInput } from "@/lib/validations";
 import { getOAuthErrorMessage } from "@/lib/oauth-errors";
 
@@ -60,6 +61,8 @@ export default function SignUpPage() {
         return;
       }
 
+      const responseData = await res.json() as { id: string; email: string; name: string };
+
       // Auto sign in after signup
       const result = await signIn("credentials", {
         email: data.email,
@@ -67,6 +70,8 @@ export default function SignUpPage() {
         redirect: false,
       });
       if (result?.ok) {
+        posthog.identify(responseData.id, { email: responseData.email, name: responseData.name });
+        posthog.capture("user_signed_up", { method: "credentials" });
         window.location.href = "/dashboard?verify-email=1";
       } else {
         window.location.href = "/auth/signin";

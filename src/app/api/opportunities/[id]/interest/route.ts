@@ -5,6 +5,7 @@ import { canUserAccessOpportunity } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { getUserPremiumAccess } from "@/lib/subscription-access";
+import { posthogServer } from "@/lib/posthog-server";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -101,6 +102,17 @@ export async function POST(_req: Request, { params }: RouteContext) {
         });
 
         return interest;
+      });
+
+      posthogServer.capture({
+        distinctId: userId,
+        event: "opportunity_interest_recorded",
+        properties: {
+          opportunity_id: opportunity.id,
+          opportunity_title: opportunity.title,
+          user_tier: currentUser.tier,
+          required_tier: opportunity.requiredTier,
+        },
       });
 
       return NextResponse.json({ data: { created: true, interest: result } }, { status: 201 });
