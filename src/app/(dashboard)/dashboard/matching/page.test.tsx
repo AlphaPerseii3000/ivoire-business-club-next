@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
 describe("MatchingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAuth.mockResolvedValue({ user: { id: "member-1" } });
+    mockAuth.mockResolvedValue({ user: { id: "member-1", emailVerified: true, onboardingCompleted: true } });
     mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
     mockUserFindUnique.mockResolvedValue({ id: "member-1", role: "MEMBER", tier: "BOSS", tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }] });
     mockOpportunityFindMany.mockResolvedValue([]);

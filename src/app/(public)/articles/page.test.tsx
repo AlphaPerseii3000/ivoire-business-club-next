@@ -88,7 +88,7 @@ describe("Articles Catalogue Page", () => {
   });
 
   it("renders all articles for logged in members, but locks premium ones if inactive/unsubscribed", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", emailVerified: true, onboardingCompleted: true } });
     mockHasActiveSubscription.mockResolvedValue(false);
     mockFindMany.mockResolvedValue(mockArticles);
 
@@ -104,7 +104,7 @@ describe("Articles Catalogue Page", () => {
   });
 
   it("unlocks articles within the active user's tier for subscribed members", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", emailVerified: true, onboardingCompleted: true } });
     mockHasActiveSubscription.mockResolvedValue(true);
     mockFindMany.mockResolvedValue(mockArticles);
 

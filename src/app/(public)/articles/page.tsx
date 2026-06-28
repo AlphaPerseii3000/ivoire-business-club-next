@@ -2,6 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasActiveSubscription } from "@/lib/subscription-access";
@@ -54,6 +55,14 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   // 1. Get current session and roles
   const session = await auth();
   const isLoggedIn = !!session?.user;
+
+  if (isLoggedIn) {
+    const sessionUser = session.user as unknown as { emailVerified?: boolean; onboardingCompleted?: boolean };
+    if (!sessionUser.emailVerified || !sessionUser.onboardingCompleted) {
+      redirect("/dashboard?incomplete=1");
+    }
+  }
+
   const user = session?.user as CustomSessionUser | undefined;
   const userId = user?.id;
   const userTier = user?.tier ?? null;

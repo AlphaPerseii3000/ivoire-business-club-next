@@ -131,7 +131,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "credentials" && user.id) {
         try {
           const { sendVerificationEmailToUser } = await import("@/lib/verification-email.server");
-          if (user.emailVerified === false) {
+          const emailVerified = (user as unknown as { emailVerified?: boolean | null }).emailVerified;
+          if (emailVerified === false) {
             await sendVerificationEmailToUser(user.id as string);
             return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
           }

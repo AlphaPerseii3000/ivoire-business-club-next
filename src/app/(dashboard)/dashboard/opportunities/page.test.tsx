@@ -25,7 +25,7 @@ vi.mock("next/navigation", () => ({
 describe("OpportunitiesPage premium access and tier visibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAuth.mockResolvedValue({ user: { id: "member-1" } });
+    mockAuth.mockResolvedValue({ user: { id: "member-1", emailVerified: true, onboardingCompleted: true } });
     mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI", tags: [] });
   });
 

@@ -7,6 +7,11 @@ export default async function MembersPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
+  const sessionUser = session.user as unknown as { emailVerified?: boolean; onboardingCompleted?: boolean };
+  if (!sessionUser.emailVerified || !sessionUser.onboardingCompleted) {
+    redirect("/dashboard?incomplete=1");
+  }
+
   const members = await prisma.user.findMany({
     where: { verificationStatus: "VERIFIED" },
     orderBy: { createdAt: "desc" },

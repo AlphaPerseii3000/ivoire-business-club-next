@@ -41,6 +41,11 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
+  const sessionUser = session.user as unknown as { emailVerified?: boolean; onboardingCompleted?: boolean };
+  if (!sessionUser.emailVerified || !sessionUser.onboardingCompleted) {
+    redirect("/dashboard?incomplete=1");
+  }
+
   const resolvedSearchParams = (await searchParams) || {};
   const activeCategory = normalizeCategory(resolvedSearchParams.category);
   const activeTag = normalizeTagFilter(resolvedSearchParams.tagCategory, resolvedSearchParams.tagValue);

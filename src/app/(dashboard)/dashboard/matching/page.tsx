@@ -25,6 +25,11 @@ export default async function MatchingPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
+  const sessionUser = session.user as unknown as { emailVerified?: boolean; onboardingCompleted?: boolean };
+  if (!sessionUser.emailVerified || !sessionUser.onboardingCompleted) {
+    redirect("/dashboard?incomplete=1");
+  }
+
   const access = await getUserPremiumAccess(session.user.id);
   if (!access.hasAccess) {
     return (
