@@ -145,10 +145,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt(args) {
       const token = (authConfig.callbacks?.jwt ? await authConfig.callbacks.jwt(args) : args.token) ?? args.token;
       if (args.user) {
+        // Initial login — set from credentials/OAuth response
         const user = args.user as unknown as Record<string, unknown>;
         token.status = user.status ?? "ACTIVE";
         token.emailVerified = typeof user.emailVerified === "boolean" ? user.emailVerified : false;
         token.onboardingCompleted = !!user.onboardingCompleted;
+      } else if (token.id) {
+        // Session refresh — re-fetch from DB to catch onboarding/email changes
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { emailVerified: true, onboardingCompletedAt: true, status: true },
+        });
+        if (dbUser) {
+          token.emailVerified = dbUser.emailVerified;
+          token.onboardingCompleted = dbUser.onboardingCompletedAt !== null;
+          token.status = dbUser.status;
+        }
       }
       return token;
     },
