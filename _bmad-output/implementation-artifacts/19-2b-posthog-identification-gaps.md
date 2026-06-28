@@ -2,7 +2,7 @@
 story_id: 19.2b
 story_key: 19-2b-posthog-identification-gaps
 epic: 19 - Analytics Comportemental PostHog
-status: review
+status: done
 baseline_commit: b385d10
 created: 2026-06-28
 updated: 2026-06-28T19:04+02:00
