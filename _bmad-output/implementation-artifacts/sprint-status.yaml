@@ -1,9 +1,46 @@
-generated: 2026-05-12 23:04:29+00:00
-last_updated: '2026-06-28T20:30:00+0200'
+# generated: 2026-06-28T16:40:39+02:00
+# last_updated: 2026-06-28T16:40:39+02:00
+# project: ibc
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-06-28T16:40:39+02:00
+last_updated: 2026-06-28T16:40:39+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
-story_location: '{project-root}/_bmad-output/implementation-artifacts'
+story_location: _bmad-output/implementation-artifacts
+
 development_status:
   epic-1: done
   1-1-inscription-via-google-oauth: done
@@ -58,7 +95,7 @@ development_status:
   epic-8: done
   8-1-tests-e2e-playwright-complet: done
   epic-8-retrospective: optional
-  epic-9: in-progress
+  epic-9: done
   9-1-modele-article-migration-et-api-routes: done
   9-2-interface-admin-crud-articles: done
   9-3-catalogue-public-et-pages-detail-avec-gate-premium: done
@@ -69,42 +106,53 @@ development_status:
   9-8-section-commentaires-ui: done
   9-9-lead-magnet-guide-gratuit: done
   9-10-editeur-articles-tiptap: done
-  epic-10: in-progress
+  epic-9-retrospective: optional
+  epic-10: done
   10-1-verification-membres-pre-requis: done
   10-2-data-room-securisee: done
-  epic-11: in-progress
+  epic-10-retrospective: optional
+  epic-11: done
   11-1-email-accueil-post-inscription: done
   11-2-formulaire-completion-profil: done
   11-3-modele-paiement-mobile-money: done
   11-4-ui-selection-paiement-multi-provider: done
   11-5-validation-admin-paiement-mobile-money: done
-  epic-12: in-progress
+  epic-11-retrospective: optional
+  epic-12: done
   12-1-modele-event-crud-admin: done
   12-2-page-calendrier-evenements-publique: done
   12-3-composant-prochain-evenement-landing-popup: done
-  epic-13: in-progress
+  epic-12-retrospective: optional
+  epic-13: done
   13-1-modele-expert-crud-admin: done
   13-2-page-publique-liste-experts: done
   13-3-modele-company-crud-admin: done
   13-4-page-publique-liste-entreprises: done
-  epic-14: in-progress
+  epic-13-retrospective: optional
+  epic-14: done
   14-1-infrastructure-seo-technique: done
   14-2-pages-contenu-seo-quick-wins: done
-  epic-15: in-progress
+  epic-14-retrospective: optional
+  epic-15: done
   15-1-widget-progression-soft-gate: done
   15-2-relances-automatiques-cron: done
   15-3-indicateur-admin-onboarding: done
-  epic-16: in-progress
+  epic-15-retrospective: optional
+  epic-16: done
   16-1-sync-onboarding-to-user: done
   16-2-migration-retroactive-members: done
   16-3-email-accueil-dynamique-paiement: done
-  epic-17: in-progress
+  epic-16-retrospective: optional
+  epic-17: done
   17-1-pending-subscription-banner: done
+  epic-17-retrospective: optional
   epic-18: in-progress
   18-1-chat-message-model-api: backlog
   18-2-beta-chat-widget-ui: backlog
   18-3-hermes-skill-cron-integration: backlog
+  epic-18-retrospective: optional
   epic-19: in-progress
   19-1-installation-posthog: backlog
   19-2-identification-evenements-metier: backlog
   19-3-dashboards-funnels-posthog: backlog
+  epic-19-retrospective: optional
