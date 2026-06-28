@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { SubscriptionActivationNotice } from "@/components/subscription-activation-notice";
 import { OnboardingProgressWidget } from "@/components/features/onboarding/onboarding-progress-widget";
 import { VerifyResendToast } from "@/components/features/auth/verify-resend-toast";
+import { hasActiveSubscription } from "@/lib/subscription-access";
+import { PendingSubscriptionBanner } from "@/components/pending-subscription-banner";
 
 const ACTIVATION_NOTICE_DAYS = 7;
 
@@ -54,6 +56,9 @@ export default async function DashboardPage({
     ? isRecent(subscription.updatedAt, ACTIVATION_NOTICE_DAYS)
     : false;
   const activationNoticeSubscription = showActivationNotice ? subscription : null;
+  const showPendingBanner = user.onboardingCompletedAt !== null
+    ? user.role !== "ADMIN" ? !(await hasActiveSubscription(user.id)) : false
+    : false;
 
   return (
     <div data-testid="dashboard-page" className="mx-auto max-w-4xl px-4 py-8">
@@ -85,6 +90,10 @@ export default async function DashboardPage({
           tier={activationNoticeSubscription.tier}
           ctaHref="/opportunities"
         />
+      ) : null}
+
+      {showPendingBanner ? (
+        <PendingSubscriptionBanner tier={user.tier} />
       ) : null}
 
       <div className="mt-8 rounded-xl border bg-card p-6">
