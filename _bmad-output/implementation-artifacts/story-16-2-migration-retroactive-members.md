@@ -4,7 +4,7 @@ baseline_commit: bc740db0d4f00a0f5a8cd55a19d63da70b6a5443
 
 # Story 16.2 : Migration rétroactive — synchroniser les membres existants
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note : la validation est optionnelle. Lancer validate-create-story avant dev-story si souhaité. -->
 
@@ -68,52 +68,52 @@ Afin que personne n'ait à re-remplir le formulaire pour que la vérification ad
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 : Ajouter `ONBOARDING_SYNC_MIGRATION` dans `src/lib/audit-log.ts` (AC: #6)
-  - [ ] 1.1 Ajouter `ONBOARDING_SYNC_MIGRATION: "ONBOARDING_SYNC_MIGRATION"` dans `AUDIT_ACTIONS`
-  - [ ] 1.2 Vérifier que le type `AuditAction` le prend automatiquement en compte
+- [x] Task 1 : Ajouter `ONBOARDING_SYNC_MIGRATION` dans `src/lib/audit-log.ts` (AC: #6)
+  - [x] 1.1 Ajouter `ONBOARDING_SYNC_MIGRATION: "ONBOARDING_SYNC_MIGRATION"` dans `AUDIT_ACTIONS`
+  - [x] 1.2 Vérifier que le type `AuditAction` le prend automatiquement en compte
 
-- [ ] Task 2 : Créer le script de migration `scripts/sync-onboarding-to-profile.ts` (AC: #1, #2, #3, #4, #6)
-  - [ ] 2.1 Initialiser un client Prisma local (`import { prisma } from "@/lib/prisma"`) en mode Node script
-  - [ ] 2.2 Parser `process.argv` pour détecter `--dry-run`
-  - [ ] 2.3 Récupérer tous les utilisateurs avec `onboardingCompletedAt: { not: null }` ; `select` les champs User + `onboardingForm`
-  - [ ] 2.4 Pour chaque utilisateur, détecter `onboardingForm` null/vide et ignorer (incrémenter `withoutForm`)
-  - [ ] 2.5 Construire l'objet `data` de mise à jour avec la règle **ne remplir que si le champ User actuel est null** : 
+- [x] Task 2 : Créer le script de migration `scripts/sync-onboarding-to-profile.ts` (AC: #1, #2, #3, #4, #6)
+  - [x] 2.1 Initialiser un client Prisma local (`import { prisma } from "@/lib/prisma"`) en mode Node script
+  - [x] 2.2 Parser `process.argv` pour détecter `--dry-run`
+  - [x] 2.3 Récupérer tous les utilisateurs avec `onboardingCompletedAt: { not: null }` ; `select` les champs User + `onboardingForm`
+  - [x] 2.4 Pour chaque utilisateur, détecter `onboardingForm` null/vide et ignorer (incrémenter `withoutForm`)
+  - [x] 2.5 Construire l'objet `data` de mise à jour avec la règle **ne remplir que si le champ User actuel est null** :
     - `name: user.name ?? parsed.fullName`
     - `phone: user.phone ?? (parsed.phone || null)`
     - `location: user.location ?? (parsed.address || null)`
     - `country: user.country ?? (parsed.country || null)`
     - `bio: user.bio ?? (parsed.activity || null)`
     - `tier: user.tier ?? parsed.tier` (attention : `tier` a une valeur par défaut `AFFRANCHI` dans Prisma, donc ne jamais écraser si déjà défini)
-  - [ ] 2.6 Si `Object.keys(data).length === 0` → incrémenter `upToDate`, passer à l'utilisateur suivant
-  - [ ] 2.7 En mode `--dry-run`, logger l'utilisateur concerné et les champs qui seraient synchronisés, sans appeler `user.update`
-  - [ ] 2.8 En mode normal, exécuter `prisma.$transaction(async (tx) => { ... })` :
+  - [x] 2.6 Si `Object.keys(data).length === 0` → incrémenter `upToDate`, passer à l'utilisateur suivant
+  - [x] 2.7 En mode `--dry-run`, logger l'utilisateur concerné et les champs qui seraient synchronisés, sans appeler `user.update`
+  - [x] 2.8 En mode normal, exécuter `prisma.$transaction(async (tx) => { ... })` :
     - Mettre à jour l'utilisateur avec les champs vides
     - Appeler `autoTransitionVerificationStatus(user.id, tx)`
-  - [ ] 2.9 Après la transaction, créer un audit log `safeCreateAuditLog({ actorId: null, action: AUDIT_ACTIONS.ONBOARDING_SYNC_MIGRATION, entityType: "User", entityId: user.id, metadata: { syncedFields: [...] } })`
-  - [ ] 2.10 Incrémenter `synced` et logger par utilisateur synchronisé
-  - [ ] 2.11 À la fin, afficher le résumé : `N utilisateurs synchronisés, M utilisateurs déjà à jour, K utilisateurs sans onboardingForm`
-  - [ ] 2.12 Gérer les erreurs de parsing JSON : si `onboardingForm` n'est pas un objet valide, logger et ignorer
+  - [x] 2.9 Après la transaction, créer un audit log `safeCreateAuditLog({ actorId: null, action: AUDIT_ACTIONS.ONBOARDING_SYNC_MIGRATION, entityType: "User", entityId: user.id, metadata: { syncedFields: [...] } })`
+  - [x] 2.10 Incrémenter `synced` et logger par utilisateur synchronisé
+  - [x] 2.11 À la fin, afficher le résumé : `N utilisateurs synchronisés, M utilisateurs déjà à jour, K utilisateurs sans onboardingForm`
+  - [x] 2.12 Gérer les erreurs de parsing JSON : si `onboardingForm` n'est pas un objet valide, logger et ignorer
 
-- [ ] Task 3 : Créer les tests du script `scripts/sync-onboarding-to-profile.test.ts` (AC: #5)
-  - [ ] 3.1 Mocker `prisma` (Vitest) pour isoler le script ; utiliser un helper transactionnel si besoin
-  - [ ] 3.2 Test "champs vides → remplis" : fixture `onboardingForm` valide, `user.name=null`, etc. → vérifier que `tx.user.update` reçoit les bons champs et que `autoTransitionVerificationStatus` est appelée
-  - [ ] 3.3 Test "champs déjà remplis → inchangés" : fixture avec `user.name="Jean"`, etc. → vérifier que `user.update` n'est pas appelé (pas de synchronisation) et que `upToDate` est incrémenté
-  - [ ] 3.4 Test "sans onboardingForm → ignoré" : `onboardingForm=null` → `withoutForm` incrémenté, aucun update
-  - [ ] 3.5 Test "dry-run ne modifie pas la DB" : flag `--dry-run` → aucun `user.update` n'est appelé ; log/stdout contient les changements prévus
-  - [ ] 3.6 Test "idempotence" : exécuter la logique de synchronisation deux fois sur le même fixture → la deuxième fois `upToDate` est incrémenté
-  - [ ] 3.7 Test "audit log" : vérifier que `safeCreateAuditLog` est appelé avec `ONBOARDING_SYNC_MIGRATION` et `syncedFields` lors d'une synchronisation
+- [x] Task 3 : Créer les tests du script `scripts/sync-onboarding-to-profile.test.ts` (AC: #5)
+  - [x] 3.1 Mocker `prisma` (Vitest) pour isoler le script ; utiliser un helper transactionnel si besoin
+  - [x] 3.2 Test "champs vides → remplis" : fixture `onboardingForm` valide, `user.name=null`, etc. → vérifier que `tx.user.update` reçoit les bons champs et que `autoTransitionVerificationStatus` est appelée
+  - [x] 3.3 Test "champs déjà remplis → inchangés" : fixture avec `user.name="Jean"`, etc. → vérifier que `user.update` n'est pas appelé (pas de synchronisation) et que `upToDate` est incrémenté
+  - [x] 3.4 Test "sans onboardingForm → ignoré" : `onboardingForm=null` → `withoutForm` incrémenté, aucun update
+  - [x] 3.5 Test "dry-run ne modifie pas la DB" : flag `--dry-run` → aucun `user.update` n'est appelé ; log/stdout contient les changements prévus
+  - [x] 3.6 Test "idempotence" : exécuter la logique de synchronisation deux fois sur le même fixture → la deuxième fois `upToDate` est incrémenté
+  - [x] 3.7 Test "audit log" : vérifier que `safeCreateAuditLog` est appelé avec `ONBOARDING_SYNC_MIGRATION` et `syncedFields` lors d'une synchronisation
 
-- [ ] Task 4 : Créer la documentation `docs/sync-migration.md` (AC: #7)
-  - [ ] 4.1 Expliquer comment exécuter le script : `npx tsx scripts/sync-onboarding-to-profile.ts`
-  - [ ] 4.2 Expliquer le dry-run : `npx tsx scripts/sync-onboarding-to-profile.ts --dry-run`
-  - [ ] 4.3 Documenter les cas edge : `onboardingForm` null, champs User déjà remplis, Google OAuth sans onboarding
-  - [ ] 4.4 Documenter l'ajout de `ONBOARDING_SYNC_MIGRATION` dans `src/lib/audit-log.ts`
-  - [ ] 4.5 Mentionner la guardrail "ne jamais écraser un champ User non-null"
+- [x] Task 4 : Créer la documentation `docs/sync-migration.md` (AC: #7)
+  - [x] 4.1 Expliquer comment exécuter le script : `npx tsx scripts/sync-onboarding-to-profile.ts`
+  - [x] 4.2 Expliquer le dry-run : `npx tsx scripts/sync-onboarding-to-profile.ts --dry-run`
+  - [x] 4.3 Documenter les cas edge : `onboardingForm` null, champs User déjà remplis, Google OAuth sans onboarding
+  - [x] 4.4 Documenter l'ajout de `ONBOARDING_SYNC_MIGRATION` dans `src/lib/audit-log.ts`
+  - [x] 4.5 Mentionner la guardrail "ne jamais écraser un champ User non-null"
 
-- [ ] Task 5 : Vérifications finales
-  - [ ] 5.1 Lancer `npm run lint` et corriger les erreurs dans `scripts/sync-onboarding-to-profile.ts`
-  - [ ] 5.2 Lancer `npm run test -- scripts/sync-onboarding-to-profile.test.ts`
-  - [ ] 5.3 Lancer `npm run build` pour vérifier que le script compile avec le reste du projet
+- [x] Task 5 : Vérifications finales
+  - [x] 5.1 Lancer `npm run lint` et corriger les erreurs dans `scripts/sync-onboarding-to-profile.ts`
+  - [x] 5.2 Lancer `npm run test -- scripts/sync-onboarding-to-profile.test.ts`
+  - [x] 5.3 Lancer `npm run build` pour vérifier que le script compile avec le reste du projet
 
 ## Dev Notes
 
@@ -202,9 +202,18 @@ Kimi K2.7 Code (via Hermes delegate_task)
 
 ### Completion Notes List
 
+- Story 16.2 implémentée avec succès.
+- `ONBOARDING_SYNC_MIGRATION` ajouté à `src/lib/audit-log.ts`.
+- Script one-shot `scripts/sync-onboarding-to-profile.ts` créé avec dry-run, idempotence, gestion des erreurs, et audit log.
+- Tests unitaires créés dans `scripts/sync-onboarding-to-profile.test.ts` (8 tests, tous passés).
+- Documentation créée dans `docs/sync-migration.md`.
+- `vitest.config.ts` mis à jour pour inclure `scripts/**/*.test.ts`.
+- Vérifications : `npm run lint` OK, `npx vitest run` OK (983 tests), `npm run build` OK, dry-run OK.
+
 ### File List
 
-- À créer : `scripts/sync-onboarding-to-profile.ts`
-- À créer : `scripts/sync-onboarding-to-profile.test.ts`
-- À créer : `docs/sync-migration.md`
-- À modifier : `src/lib/audit-log.ts`
+- Modifié : `src/lib/audit-log.ts`
+- Modifié : `vitest.config.ts`
+- Créé : `scripts/sync-onboarding-to-profile.ts`
+- Créé : `scripts/sync-onboarding-to-profile.test.ts`
+- Créé : `docs/sync-migration.md`
