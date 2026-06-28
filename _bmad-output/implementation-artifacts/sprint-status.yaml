@@ -100,3 +100,7 @@ development_status:
   16-3-email-accueil-dynamique-paiement: done
   epic-17: in-progress
   17-1-pending-subscription-banner: done
+  epic-18: in-progress
+  18-1-chat-message-model-api: backlog
+  18-2-beta-chat-widget-ui: backlog
+  18-3-hermes-skill-cron-integration: backlog
