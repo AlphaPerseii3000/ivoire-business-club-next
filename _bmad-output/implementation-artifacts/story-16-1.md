@@ -4,7 +4,7 @@ baseline_commit: bc740db0d4f00a0f5a8cd55a19d63da70b6a5443
 
 # Story 16.1 : Synchronisation des champs onboarding → User
 
-Status: review
+Status: done
 
 <!-- Note : la validation est optionnelle. Lancer validate-create-story avant dev-story si souhaité. -->
 

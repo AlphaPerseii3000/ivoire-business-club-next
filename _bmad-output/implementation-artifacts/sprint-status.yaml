@@ -95,6 +95,6 @@ development_status:
   15-2-relances-automatiques-cron: done
   15-3-indicateur-admin-onboarding: done
   epic-16: in-progress
-  16-1-sync-onboarding-to-user: review
+  16-1-sync-onboarding-to-user: done
   16-2-migration-retroactive-members: backlog
   16-3-email-accueil-dynamique-paiement: backlog
