@@ -79,4 +79,10 @@
 - `docs/cron-setup.md` and `.env.example` do not warn that the cron endpoint remains unprotected against replay if `CRON_SECRET` is intercepted. The current model relies entirely on secret-in-transit over HTTPS; consider documenting mTLS or IP allow-listing as future hardening. Low priority / documentation.
 - `reminderCount` is currently a global counter on `User` rather than a per-type counter; if future stories require per-sequence analytics, a migration to a `ReminderLog` table may be needed. Acceptable for current scope.
 
+## Deferred from: code review of 19-1-installation-posthog.md (2026-06-28)
+
+- Stale Server-Side Singleton during Active Development [src/lib/posthog-server.ts] — The `posthogServer` instance is cached on `globalThis` in development. If configuration keys or env vars are updated during a dev session, they won't take effect until a full Node server restart is performed.
+- Missing server shutdown flush/close handler [src/lib/posthog-server.ts] — The integration does not handle Node server shutdown lifecycle events (like process exit signals) to cleanly flush/close the PostHog connection, which could lead to in-memory events being lost when server instances terminate.
+
+
 

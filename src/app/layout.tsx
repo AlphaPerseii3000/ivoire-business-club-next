@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { CSPostHogProvider, PostHogPageView } from "@/components/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -44,10 +45,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster richColors />
-            </TooltipProvider>
+            <CSPostHogProvider>
+              <PostHogPageView />
+              <TooltipProvider>
+                {children}
+                <Toaster richColors />
+              </TooltipProvider>
+            </CSPostHogProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
