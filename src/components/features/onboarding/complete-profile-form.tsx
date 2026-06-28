@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { onboardingFormSchema, type OnboardingFormInput } from "@/lib/validations";
+import { onboardingFormSchema, ALL_COUNTRIES, type OnboardingFormInput } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ interface CompleteProfileFormProps {
     fullName: string;
     address: string;
     phone: string;
+    country: string;
     email: string;
     duration: string;
     tier: string;
@@ -30,6 +31,19 @@ interface CompleteProfileFormProps {
     needs: string;
   };
 }
+
+const defaultValuesForForm: CompleteProfileFormProps["defaultValues"] = {
+  fullName: "",
+  address: "",
+  phone: "",
+  country: "",
+  email: "",
+  duration: "",
+  tier: "",
+  activity: "",
+  goals: "",
+  needs: "",
+};
 
 const DURATION_OPTIONS = [
   { value: "MONTHLY", label: "Mensuelle" },
@@ -47,6 +61,14 @@ export default function CompleteProfileForm({ defaultValues }: CompleteProfileFo
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formDefaultValues = {
+    ...defaultValuesForForm,
+    ...defaultValues,
+    duration: defaultValues.duration as OnboardingFormInput["duration"] || undefined,
+    tier: defaultValues.tier as OnboardingFormInput["tier"] || undefined,
+    country: defaultValues.country || "",
+  };
+
   const {
     register,
     handleSubmit,
@@ -57,11 +79,12 @@ export default function CompleteProfileForm({ defaultValues }: CompleteProfileFo
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(onboardingFormSchema) as any,
     mode: "onBlur",
-    defaultValues,
+    defaultValues: formDefaultValues,
   });
 
-  const durationValue = watch("duration");
-  const tierValue = watch("tier");
+  const durationValue = watch("duration") as OnboardingFormInput["duration"];
+  const tierValue = watch("tier") as OnboardingFormInput["tier"];
+  const countryValue = watch("country") as string || "";
 
   const onSubmit = async (data: OnboardingFormInput) => {
     setIsSubmitting(true);
@@ -141,6 +164,33 @@ export default function CompleteProfileForm({ defaultValues }: CompleteProfileFo
         />
         {errors.phone ? (
           <p className="text-xs text-destructive">{errors.phone.message}</p>
+        ) : null}
+      </div>
+
+      {/* Pays */}
+      <div className="space-y-2">
+        <Label htmlFor="country">Pays</Label>
+        <Select
+          value={countryValue}
+          onValueChange={(value) => {
+            const safeValue = value === "Autre" ? "" : (value || "");
+            setValue("country", safeValue as OnboardingFormInput["country"], { shouldValidate: true });
+          }}
+        >
+          <SelectTrigger id="country" className="min-h-[44px] w-full" data-testid="country-trigger">
+            <SelectValue placeholder="Sélectionne un pays" />
+          </SelectTrigger>
+          <SelectContent>
+            {ALL_COUNTRIES.map((c) => (
+              <SelectItem key={c.code} value={c.code}>
+                {c.label}
+              </SelectItem>
+            ))}
+            <SelectItem value="Autre">Autre</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.country ? (
+          <p className="text-xs text-destructive">{errors.country.message}</p>
         ) : null}
       </div>
 

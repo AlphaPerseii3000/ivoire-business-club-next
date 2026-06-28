@@ -20,6 +20,7 @@ const defaultValues = {
   fullName: "Jean Dupont",
   address: "12 rue des Affranchis",
   phone: "+225 0708091011",
+  country: "CI",
   email: "jean@example.com",
   duration: "MONTHLY",
   tier: "BOSS",
@@ -44,15 +45,36 @@ describe("CompleteProfileForm", () => {
     expect(screen.getByLabelText(/Nom/)).toHaveValue("Jean Dupont");
     expect(screen.getByLabelText(/Adresse/)).toHaveValue("12 rue des Affranchis");
     expect(screen.getByLabelText(/Téléphone/)).toHaveValue("+225 0708091011");
+    expect(screen.getByTestId("country-trigger")).toHaveTextContent("CI");
     expect(screen.getByLabelText(/Email/)).toHaveValue("jean@example.com");
     expect(screen.getByLabelText(/Email/)).toBeDisabled();
+  });
+
+  it("affiche le champ Pays (Select) entre Téléphone et Durée d'adhésion", () => {
+    renderForm();
+
+    const phoneInput = screen.getByLabelText(/Téléphone/);
+    const countryTrigger = screen.getByTestId("country-trigger");
+    const durationTrigger = screen.getByTestId("duration-trigger");
+
+    // Vérifie l'ordre d'apparition dans le DOM
+    expect(phoneInput.compareDocumentPosition(countryTrigger)).toBe(4);
+    expect(countryTrigger.compareDocumentPosition(durationTrigger)).toBe(4);
   });
 
   it("appelle l'API avec les données du formulaire à la soumission", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
-      json: async () => ({ data: { onboardingForm: defaultValues, onboardingCompletedAt: new Date().toISOString() } }),
+      json: async () => ({
+        data: {
+          onboardingForm: {
+            ...defaultValues,
+            country: "CI",
+          },
+          onboardingCompletedAt: new Date().toISOString(),
+        },
+      }),
     });
 
     renderForm();
@@ -73,6 +95,7 @@ describe("CompleteProfileForm", () => {
     const body = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
     expect(body.fullName).toBe("Jean Dupont");
     expect(body.email).toBe("jean@example.com");
+    expect(body.country).toBe("CI");
   });
 
   it("affiche un toast de succès et redirige vers /dashboard", async () => {
@@ -80,7 +103,15 @@ describe("CompleteProfileForm", () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
-      json: async () => ({ data: { onboardingForm: defaultValues, onboardingCompletedAt: new Date().toISOString() } }),
+      json: async () => ({
+        data: {
+          onboardingForm: {
+            ...defaultValues,
+            country: "CI",
+          },
+          onboardingCompletedAt: new Date().toISOString(),
+        },
+      }),
     });
 
     renderForm();
@@ -136,5 +167,12 @@ describe("CompleteProfileForm", () => {
     await userEvent.type(fullNameInput, "Marie Dubois");
 
     expect(fullNameInput).toHaveValue("Marie Dubois");
+  });
+
+  it("pré-remplit le pays avec la valeur par défaut", () => {
+    const customValues = { ...defaultValues, country: "FR" };
+    renderForm(customValues);
+
+    expect(screen.getByTestId("country-trigger")).toHaveTextContent("FR");
   });
 });

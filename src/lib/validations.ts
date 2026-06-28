@@ -468,6 +468,7 @@ export const onboardingFormSchema = z.object({
   fullName: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(150, "Le nom ne doit pas dépasser 150 caractères"),
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères").max(300, "L'adresse ne doit pas dépasser 300 caractères"),
   phone: z.string().regex(/^\+?\d[\d\s.-]{6,}$/, "Veuillez saisir un numéro de téléphone valide."),
+  country: z.string().min(2, "Sélectionne un pays"),
   email: z.string().email("Email invalide"),
   duration: z.enum(["MONTHLY", "SEMESTERIAL", "ANNUAL"], { message: "Durée d'adhésion invalide" }),
   tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"], { message: "Formule choisie invalide" }),

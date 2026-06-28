@@ -1,6 +1,10 @@
+|---
+baseline_commit: bc740db0d4f00a0f5a8cd55a19d63da70b6a5443
+---
+
 # Story 16.1 : Synchronisation des champs onboarding → User
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note : la validation est optionnelle. Lancer validate-create-story avant dev-story si souhaité. -->
 
@@ -62,13 +66,13 @@ Afin que mon profil soit complet pour la vérification admin sans avoir à rempl
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 : Étendre le schéma Zod `onboardingFormSchema` (AC: #2)
-  - [ ] 1.1 Ajouter le champ `country: z.string().min(2, "Sélectionne un pays")` dans `src/lib/validations.ts`
-  - [ ] 1.2 S'assurer que `OnboardingFormInput` reflète le nouveau champ
+- [x] Task 1 : Étendre le schéma Zod `onboardingFormSchema` (AC: #2)
+  - [x] 1.1 Ajouter le champ `country: z.string().min(2, "Sélectionne un pays")` dans `src/lib/validations.ts`
+  - [x] 1.2 S'assurer que `OnboardingFormInput` reflète le nouveau champ
 
-- [ ] Task 2 : Étendre l'API `PUT /api/user/onboarding` (AC: #1, #3, #4)
-  - [ ] 2.1 Transformer `prisma.user.update(...)` en `prisma.$transaction(async (tx) => { ... })`
-  - [ ] 2.2 Dans la transaction, mettre à jour `User` avec :
+- [x] Task 2 : Étendre l'API `PUT /api/user/onboarding` (AC: #1, #3, #4)
+  - [x] 2.1 Transformer `prisma.user.update(...)` en `prisma.$transaction(async (tx) => { ... })`
+  - [x] 2.2 Dans la transaction, mettre à jour `User` avec :
     - `onboardingForm: parsed.data`
     - `onboardingCompletedAt: now`
     - `name: parsed.data.fullName`
@@ -77,39 +81,41 @@ Afin que mon profil soit complet pour la vérification admin sans avoir à rempl
     - `country: parsed.data.country || null`
     - `bio: parsed.data.activity || null`
     - `tier: parsed.data.tier`
-  - [ ] 2.3 Appeler `autoTransitionVerificationStatus(session.user.id, tx)` dans la transaction et appliquer le `verificationStatus` retourné à l'objet user
-  - [ ] 2.4 Étendre `onboardingSelect` pour inclure `verificationStatus` dans la réponse
-  - [ ] 2.5 Conserver l'appel `safeCreateAuditLog(AUDIT_ACTIONS.ONBOARDING_COMPLETED)` juste après la transaction (hors transaction, pattern existant)
-  - [ ] 2.6 S'assurer que `passwordHash` n'est JAMAIS dans le `select`
+  - [x] 2.3 Appeler `autoTransitionVerificationStatus(session.user.id, tx)` dans la transaction et appliquer le `verificationStatus` retourné à l'objet user
+  - [x] 2.4 Étendre `onboardingSelect` pour inclure `verificationStatus` dans la réponse
+  - [x] 2.5 Conserver l'appel `safeCreateAuditLog(AUDIT_ACTIONS.ONBOARDING_COMPLETED)` juste après la transaction (hors transaction, pattern existant)
+  - [x] 2.6 S'assurer que `passwordHash` n'est JAMAIS dans le `select`
 
-- [ ] Task 3 : Ajouter le champ "Pays" au formulaire onboarding (AC: #2, #5)
-  - [ ] 3.1 Importer `ALL_COUNTRIES` depuis `src/lib/validations.ts` dans `src/components/features/onboarding/complete-profile-form.tsx`
-  - [ ] 3.2 Ajouter un `Select` "Pays" entre le champ Téléphone et le champ Durée d'adhésion
-  - [ ] 3.3 Utiliser les mêmes composants shadcn/ui `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` que dans `ProfileEditForm`
-  - [ ] 3.4 Afficher l'erreur Zod inline sous le champ
+- [x] Task 3 : Ajouter le champ "Pays" au formulaire onboarding (AC: #2, #5)
+  - [x] 3.1 Importer `ALL_COUNTRIES` depuis `src/lib/validations.ts` dans `src/components/features/onboarding/complete-profile-form.tsx`
+  - [x] 3.2 Ajouter un `Select` "Pays" entre le champ Téléphone et le champ Durée d'adhésion
+  - [x] 3.3 Utiliser les mêmes composants shadcn/ui `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` que dans `ProfileEditForm`
+  - [x] 3.4 Afficher l'erreur Zod inline sous le champ
 
-- [ ] Task 4 : Pré-remplissage cohérent du champ Pays (AC: #5)
-  - [ ] 4.1 Mettre à jour `src/app/onboarding/complete-profile/page.tsx` pour passer `country` au `defaultValues`
-  - [ ] 4.2 Logique de pré-remplissage : `onboardingForm.country` en priorité, sinon `user.country`, sinon `""`
-  - [ ] 4.3 Typographie : le type `CompleteProfileFormProps` doit accepter `country: string`
+- [x] Task 4 : Pré-remplissage cohérent du champ Pays (AC: #5)
+  - [x] 4.1 Mettre à jour `src/app/onboarding/complete-profile/page.tsx` pour passer `country` au `defaultValues`
+  - [x] 4.2 Logique de pré-remplissage : `onboardingForm.country` en priorité, sinon `user.country`, sinon `""`
+  - [x] 4.3 Typographie : le type `CompleteProfileFormProps` doit accepter `country: string`
 
-- [ ] Task 5 : Mettre à jour les tests de l'API onboarding (AC: #7)
-  - [ ] 5.1 Adapter le mock Prisma dans `src/app/api/user/onboarding/route.test.ts` pour supporter `prisma.$transaction`
-  - [ ] 5.2 Ajouter un test vérifiant que `user.update` écrit bien `name`, `phone`, `location`, `country`, `bio`, `tier`
-  - [ ] 5.3 Ajouter un test vérifiant l'appel à `autoTransitionVerificationStatus`
-  - [ ] 5.4 Vérifier que le `select` de l'API ne contient pas `passwordHash`
+- [x] Task 5 : Mettre à jour les tests de l'API onboarding (AC: #7)
+  - [x] 5.1 Adapter le mock Prisma dans `src/app/api/user/onboarding/route.test.ts` pour supporter `prisma.$transaction`
+  - [x] 5.2 Ajouter un test vérifiant que `user.update` écrit bien `name`, `phone`, `location`, `country`, `bio`, `tier`
+  - [x] 5.3 Ajouter un test vérifiant l'appel à `autoTransitionVerificationStatus`
+  - [x] 5.4 Vérifier que le `select` de l'API ne contient pas `passwordHash`
 
-- [ ] Task 6 : Mettre à jour les tests du formulaire (AC: #7)
-  - [ ] 6.1 Ajouter `country` dans les `defaultValues` des tests de `src/components/features/onboarding/complete-profile-form.test.tsx`
-  - [ ] 6.2 Ajouter un test vérifiant que le Select "Pays" est présent
-  - [ ] 6.3 Ajouter un test vérifiant que `country` est envoyé au body de la requête `PUT /api/user/onboarding`
+- [x] Task 6 : Mettre à jour les tests du formulaire (AC: #7)
+  - [x] 6.1 Ajouter `country` dans les `defaultValues` des tests de `src/components/features/onboarding/complete-profile-form.test.tsx`
+  - [x] 6.2 Ajouter un test vérifiant que le Select "Pays" est présent
+  - [x] 6.3 Ajouter un test vérifiant que `country` est envoyé au body de la requête `PUT /api/user/onboarding`
 
-- [ ] Task 7 : Vérifications finales
-  - [ ] 7.1 Lancer `npm run lint` et corriger les erreurs dans les fichiers modifiés
-  - [ ] 7.2 Lancer `npm run test -- src/app/api/user/onboarding/route.test.ts src/components/features/onboarding/complete-profile-form.test.tsx`
-  - [ ] 7.3 Lancer `npm run build` pour vérifier la compilation
+- [x] Task 7 : Vérifications finales
+  - [x] 7.1 Lancer `npm run lint` et corriger les erreurs dans les fichiers modifiés
+  - [x] 7.2 Lancer `npm run test -- src/app/api/user/onboarding/route.test.ts src/components/features/onboarding/complete-profile-form.test.tsx`
+  - [x] 7.3 Lancer `npm run build` pour vérifier la compilation
 
-## Dev Notes
+## Change Log
+
+- 2026-06-28 : Synchronisation des champs onboarding vers User, ajout du champ Pays, transaction atomique avec auto-transition du verificationStatus, mise à jour des tests API et du formulaire, build et tests OK.
 
 ### Contexte métier critique
 
@@ -198,6 +204,8 @@ Kimi K2.7 Code (via Hermes delegate_task)
 ### Debug Log References
 
 ### Completion Notes List
+
+- 2026-06-28 : Tous les critères d'acceptation sont satisfaits. L'API PUT /api/user/onboarding synchronise onboardingForm et les colonnes User (name, phone, location, country, bio, tier) dans une transaction Prisma atomique, appelle autoTransitionVerificationStatus avec le client transactionnel, conserve safeCreateAuditLog hors transaction, et enrichit la réponse avec verificationStatus sans jamais exposer passwordHash. Le formulaire CompleteProfileForm intègre un Select Pays basé sur ALL_COUNTRIES, positionné entre Téléphone et Durée d'adhésion, avec validation Zod requise et pré-remplissage depuis onboardingForm ou User.country. Les tests API et UI couvrent la synchronisation, l'auto-transition, le select sans passwordHash, la présence du champ Pays et son envoi au body. Build Next.js et suite de tests Vitest (975 tests) passent.
 
 ### File List
 

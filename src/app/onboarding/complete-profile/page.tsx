@@ -36,6 +36,7 @@ export default async function CompleteProfilePage() {
     fullName: String(onboarding?.fullName ?? user.name ?? ""),
     address: String(onboarding?.address ?? ""),
     phone: String(onboarding?.phone ?? user.phone ?? ""),
+    country: String(onboarding?.country ?? user.country ?? ""),
     email: user.email ?? "",
     duration: String(onboarding?.duration ?? ""),
     tier: String(onboarding?.tier ?? ""),

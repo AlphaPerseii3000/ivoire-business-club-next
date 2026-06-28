@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { onboardingFormSchema } from "@/lib/validations";
 import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { autoTransitionVerificationStatus } from "@/lib/verification.server";
 
 const onboardingSelect = {
   id: true,
@@ -11,8 +12,12 @@ const onboardingSelect = {
   name: true,
   phone: true,
   country: true,
+  location: true,
+  bio: true,
+  tier: true,
   onboardingForm: true,
   onboardingCompletedAt: true,
+  verificationStatus: true,
 };
 
 export async function PUT(req: Request) {
@@ -38,16 +43,32 @@ export async function PUT(req: Request) {
     }
 
     const now = new Date();
-    const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        onboardingForm: parsed.data,
-        onboardingCompletedAt: now,
-      },
-      select: onboardingSelect,
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          onboardingForm: parsed.data,
+          onboardingCompletedAt: now,
+          // Synchronisation des champs User depuis le formulaire d'onboarding
+          name: parsed.data.fullName,
+          phone: parsed.data.phone || null,
+          location: parsed.data.address || null,
+          country: parsed.data.country || null,
+          bio: parsed.data.activity || null,
+          tier: parsed.data.tier,
+        },
+        select: onboardingSelect,
+      });
+
+      const transition = await autoTransitionVerificationStatus(session.user.id, tx);
+      if (transition.changed) {
+        user.verificationStatus = transition.status;
+      }
+
+      return user;
     });
 
-    // Audit log créé immédiatement après la mutation DB, avant tout effet de bord.
+    // Audit log créé hors transaction (pattern existant — l'audit gère ses propres erreurs).
     await safeCreateAuditLog({
       actorId: session.user.id,
       action: AUDIT_ACTIONS.ONBOARDING_COMPLETED,
@@ -60,6 +81,13 @@ export async function PUT(req: Request) {
       data: {
         onboardingForm: updatedUser.onboardingForm,
         onboardingCompletedAt: updatedUser.onboardingCompletedAt,
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        location: updatedUser.location,
+        country: updatedUser.country,
+        bio: updatedUser.bio,
+        tier: updatedUser.tier,
+        verificationStatus: updatedUser.verificationStatus,
       },
     });
   } catch (error) {
