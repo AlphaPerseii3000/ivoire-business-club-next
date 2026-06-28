@@ -34,7 +34,8 @@ export default async function DashboardPage({
   if (!user) redirect("/auth/signin");
 
   const onboardingCompleted = user.onboardingCompletedAt !== null;
-  const showWidget = !user.emailVerified || !onboardingCompleted;
+  const onboardingIncomplete = !user.emailVerified || !onboardingCompleted;
+  const showWidget = onboardingIncomplete;
   const subscription = user.subscriptions[0];
   const tierLabel: Record<string, string> = {
     AFFRANCHI: "Les Affranchis",
@@ -120,24 +121,37 @@ export default async function DashboardPage({
         ) : null}
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-          <p className="text-lg font-semibold">📰 Articles</p>
-          <p className="mt-1 text-sm text-muted-foreground">Analyses, guides et témoignages</p>
-        </Link>
-        <Link href="/dashboard/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-          <p className="text-lg font-semibold">🎯 Opportunités</p>
-          <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
-        </Link>
-        <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-          <p className="text-lg font-semibold">🤝 Membres</p>
-          <p className="mt-1 text-sm text-muted-foreground">Réseau et mises en relation</p>
-        </Link>
-        <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-          <p className="text-lg font-semibold">👤 Mon profil</p>
-          <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
-        </Link>
-      </div>
+      {onboardingIncomplete ? (
+        <div className="mt-8 grid gap-4 sm:grid-cols-1">
+          <Link href="/onboarding/complete-profile" className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">🔒 Complète ton profil</p>
+            <p className="mt-1 text-sm text-muted-foreground">Termine ton onboarding pour débloquer les articles, opportunités et le répertoire des membres</p>
+          </Link>
+          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">👤 Mon profil</p>
+            <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">📰 Articles</p>
+            <p className="mt-1 text-sm text-muted-foreground">Analyses, guides et témoignages</p>
+          </Link>
+          <Link href="/dashboard/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">🎯 Opportunités</p>
+            <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
+          </Link>
+          <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">🤝 Membres</p>
+            <p className="mt-1 text-sm text-muted-foreground">Réseau et mises en relation</p>
+          </Link>
+          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
+            <p className="text-lg font-semibold">👤 Mon profil</p>
+            <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
