@@ -1,5 +1,5 @@
 generated: 2026-05-12 23:04:29+00:00
-last_updated: '2026-06-28T18:00:00+0200'
+last_updated: '2026-06-28T20:30:00+0200'
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -104,3 +104,7 @@ development_status:
   18-1-chat-message-model-api: backlog
   18-2-beta-chat-widget-ui: backlog
   18-3-hermes-skill-cron-integration: backlog
+  epic-19: in-progress
+  19-1-installation-posthog: backlog
+  19-2-identification-evenements-metier: backlog
+  19-3-dashboards-funnels-posthog: backlog
