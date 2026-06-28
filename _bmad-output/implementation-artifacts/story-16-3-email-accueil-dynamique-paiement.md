@@ -4,7 +4,7 @@ baseline_commit: ecb660bd8a8a51f1b5f8cd55a19d63da70b6a5443
 
 # Story 16.3 : Email d'accueil dynamique selon le mode de paiement
 
-Status: review
+Status: done
 
 <!-- Note : la validation est optionnelle. Lancer validate-create-story avant dev-story si souhaité. -->
 
