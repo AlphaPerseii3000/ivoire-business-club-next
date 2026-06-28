@@ -138,7 +138,44 @@ describe("email helpers", () => {
     );
   });
 
-  it("sends welcome email with tier label, profile link and payment instructions", async () => {
+  it("sends generic welcome email post-signup with /pricing link and no payment instructions", async () => {
+    process.env.APP_URL = "https://ivoirebusinessclub.test";
+    process.env.BANK_TRANSFER_IBAN = "FR76 3000 3069 9000 1016 1063 363";
+    process.env.BANK_TRANSFER_BIC = "SOGEFRPPXXX";
+    process.env.BANK_TRANSFER_BANK_ADDRESS = "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France";
+    process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
+
+    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
+    _resetTransporter();
+
+    await sendWelcomeEmail({
+      to: "newmember@example.com",
+      name: "Awa",
+      tier: "AFFRANCHI",
+      userId: "user123",
+    });
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain(
+      "Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier Affranchis (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."
+    );
+    expect(text).toContain(
+      "https://ivoirebusinessclub.test/onboarding/complete-profile"
+    );
+    expect(text).toContain(
+      "Choisissez votre formule d'abonnement dans votre espace membre : https://ivoirebusinessclub.test/pricing"
+    );
+    expect(text).not.toContain(
+      "Pour finaliser votre adhésion, merci d'effectuer"
+    );
+    expect(text).not.toContain("IBAN :");
+    expect(text).toContain(
+      "Contrat d'adhésion : https://ivoirebusinessclub.test/contrat-adhesion.pdf"
+    );
+  });
+
+  it("sends welcome email with bank transfer instructions when paymentProvider is BANK_TRANSFER", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
     process.env.BANK_TRANSFER_IBAN = "FR76 3000 3069 9000 1016 1063 363";
     process.env.BANK_TRANSFER_BIC = "SOGEFRPPXXX";
@@ -152,42 +189,28 @@ describe("email helpers", () => {
       to: "newmember@example.com",
       name: "Awa",
       tier: "GRAND_FRERE",
+      paymentProvider: "BANK_TRANSFER",
+      userId: "user123",
     });
 
     expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
-        to: "newmember@example.com",
-        subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
-        text: expect.stringContaining("Vous démarrez avec le tier Grands Frères (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."),
-      })
+    const text = mockSendMail.mock.calls[0][0].text;
+    expect(text).toContain(
+      "Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée."
     );
-    expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("https://ivoirebusinessclub.test/onboarding/complete-profile"),
-      })
+    expect(text).toContain(
+      "Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :"
     );
-    expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire"),
-      })
-    );
-    expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("IBAN : FR76 3000 3069 9000 1016 1063 363"),
-      })
-    );
-    expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("Contrat d'adhésion : https://ivoirebusinessclub.test/contrat-adhesion.pdf"),
-      })
+    expect(text).toContain("IBAN : FR76 3000 3069 9000 1016 1063 363");
+    expect(text).toContain("BIC : SOGEFRPPXXX");
+    expect(text).not.toContain(
+      "Choisissez votre formule d'abonnement dans votre espace membre"
     );
   });
 
   it("sends welcome email with Wave instructions when paymentProvider is WAVE", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    process.env.NEXT_PUBLIC_WAVE_MERCHANT_NUMBER = "+2250708100650";
+    process.env.NEXT_PUBLIC_WAVE_MERCHANT_NUMBER = "+225****0650";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
     const { sendWelcomeEmail, _resetTransporter } = await import("./email");
@@ -198,7 +221,7 @@ describe("email helpers", () => {
       name: "Awa",
       tier: "GRAND_FRERE",
       paymentProvider: "WAVE",
-      providerPhone: "+2250102030405",
+      providerPhone: "+225****0405",
       userId: "user123",
     });
 
@@ -212,15 +235,17 @@ describe("email helpers", () => {
       })
     );
     const text = mockSendMail.mock.calls[0][0].text;
-    expect(text).toContain("Numéro marchand Wave : +2250708100650");
-    expect(text).toContain("Depuis votre numéro Wave : +2250102030405");
+    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+    expect(text).toContain("Numéro marchand Wave : +225****0650");
+    expect(text).toContain("Depuis votre numéro Wave : +225****0405");
     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
     expect(text).toContain("- Ouvre ton application Wave.");
+    expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
   });
 
   it("sends welcome email with Orange Money instructions when paymentProvider is ORANGE_MONEY", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    process.env.NEXT_PUBLIC_ORANGE_MONEY_MERCHANT_NUMBER = "+2250708100650";
+    process.env.NEXT_PUBLIC_ORANGE_MONEY_MERCHANT_NUMBER = "+225****0650";
     process.env.NEXT_PUBLIC_ORANGE_MONEY_USSD_CODE = "#144#";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
@@ -232,7 +257,7 @@ describe("email helpers", () => {
       name: "Awa",
       tier: "GRAND_FRERE",
       paymentProvider: "ORANGE_MONEY",
-      providerPhone: "+2250102030405",
+      providerPhone: "+225****0405",
       userId: "user123",
     });
 
@@ -246,13 +271,15 @@ describe("email helpers", () => {
       })
     );
     const text = mockSendMail.mock.calls[0][0].text;
-    expect(text).toContain("Numéro marchand Orange Money : +2250708100650");
-    expect(text).toContain("Depuis votre numéro Orange Money : +2250102030405");
+    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+    expect(text).toContain("Numéro marchand Orange Money : +225****0650");
+    expect(text).toContain("Depuis votre numéro Orange Money : +225****0405");
     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
     expect(text).toContain("- Compose le code USSD #144# ou ouvre ton application Orange Money.");
+    expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
   });
 
-  it("omits contract line and payment instructions when env vars are not set", async () => {
+  it("does not include payment section but includes /pricing link when paymentProvider is null", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
     delete process.env.BANK_TRANSFER_IBAN;
     delete process.env.BANK_TRANSFER_BIC;
@@ -266,11 +293,16 @@ describe("email helpers", () => {
       to: "newmember@example.com",
       name: "Awa",
       tier: "AFFRANCHI",
+      paymentProvider: null,
+      userId: "user123",
     });
 
     expect(mockSendMail).toHaveBeenCalledTimes(1);
     const text = mockSendMail.mock.calls[0][0].text;
     expect(text).not.toContain("Pour finaliser votre adhésion");
+    expect(text).toContain(
+      "Choisissez votre formule d'abonnement dans votre espace membre : https://ivoirebusinessclub.test/pricing"
+    );
     expect(text).not.toContain("Contrat d'adhésion");
   });
 

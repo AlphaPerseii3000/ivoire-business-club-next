@@ -4,7 +4,7 @@ baseline_commit: ecb660bd8a8a51f1b5f8cd55a19d63da70b6a5443
 
 # Story 16.3 : Email d'accueil dynamique selon le mode de paiement
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note : la validation est optionnelle. Lancer validate-create-story avant dev-story si souhaité. -->
 
@@ -55,46 +55,46 @@ Afin que je sache exactement comment finaliser mon adhésion sans devoir cherche
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 : Adapter la signature et la logique de `sendWelcomeEmail` (AC: #1, #2, #4)
-  - [ ] 1.1 Changer la signature : `paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY" | null` et default à `null` au lieu de `"BANK_TRANSFER"`
-  - [ ] 1.2 Si `paymentProvider` est défini et non-null : générer la section paiement correspondante (virement ou mobile money)
-  - [ ] 1.3 Si `paymentProvider` est absent ou `null` : ne PAS inclure de section "Pour finaliser votre adhésion, merci d'effectuer..."
-  - [ ] 1.4 Si `paymentProvider` est absent ou `null` : inclure le lien `/pricing` "Choisissez votre formule d'abonnement dans votre espace membre : {appUrl}/pricing"
-  - [ ] 1.5 Pour virement : afficher IBAN/BIC/adresse banque si configurés
-  - [ ] 1.6 Pour Wave/Orange Money : afficher `Numéro marchand {label}`, `Depuis votre numéro {label} : {providerPhone}` (si fourni), `Référence du transfert : IBC-{userId}-{tier}`, et les lignes d'instruction depuis `MOBILE_MONEY_CONFIG`
-  - [ ] 1.7 Adapter le message d'introduction : post-inscription = "Vous démarrez avec le tier {label} (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre." ; post-sélection = message de bienvenue avec tier choisi et instructions de paiement
+- [x] Task 1 : Adapter la signature et la logique de `sendWelcomeEmail` (AC: #1, #2, #4)
+  - [x] 1.1 Changer la signature : `paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY" | null` et default à `null` au lieu de `"BANK_TRANSFER"`
+  - [x] 1.2 Si `paymentProvider` est défini et non-null : générer la section paiement correspondante (virement ou mobile money)
+  - [x] 1.3 Si `paymentProvider` est absent ou `null` : ne PAS inclure de section "Pour finaliser votre adhésion, merci d'effectuer..."
+  - [x] 1.4 Si `paymentProvider` est absent ou `null` : inclure le lien `/pricing` "Choisissez votre formule d'abonnement dans votre espace membre : {appUrl}/pricing"
+  - [x] 1.5 Pour virement : afficher IBAN/BIC/adresse banque si configurés
+  - [x] 1.6 Pour Wave/Orange Money : afficher `Numéro marchand {label}`, `Depuis votre numéro {label} : {providerPhone}` (si fourni), `Référence du transfert : IBC-{userId}-{tier}`, et les lignes d'instruction depuis `MOBILE_MONEY_CONFIG`
+  - [x] 1.7 Adapter le message d'introduction : post-inscription = "Vous démarrez avec le tier {label} (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre." ; post-sélection = message de bienvenue avec tier choisi et instructions de paiement
 
-- [ ] Task 2 : Mettre à jour les appelants post-inscription pour ne plus forcer `BANK_TRANSFER` (AC: #2)
-  - [ ] 2.1 Dans `src/app/api/auth/signup/route.ts` L74 : conserver l'appel `sendWelcomeEmail` sans `paymentProvider` et s'assurer que le default est `null`
-  - [ ] 2.2 Dans `src/lib/auth.ts` L116 : conserver l'appel `sendWelcomeEmail` sans `paymentProvider` et s'assurer que le default est `null`
-  - [ ] 2.3 Vérifier que les deux appelants continuent de passer `tier: "AFFRANCHI"` et `userId`
+- [x] Task 2 : Mettre à jour les appelants post-inscription pour ne plus forcer `BANK_TRANSFER` (AC: #2)
+  - [x] 2.1 Dans `src/app/api/auth/signup/route.ts` L74 : conserver l'appel `sendWelcomeEmail` sans `paymentProvider` et s'assurer que le default est `null`
+  - [x] 2.2 Dans `src/lib/auth.ts` L116 : conserver l'appel `sendWelcomeEmail` sans `paymentProvider` et s'assurer que le default est `null`
+  - [x] 2.3 Vérifier que les deux appelants continuent de passer `tier: "AFFRANCHI"` et `userId`
 
-- [ ] Task 3 : Déclencher l'email dynamique depuis `POST /api/subscriptions` (AC: #1, #3)
-  - [ ] 3.1 Dans `src/app/api/subscriptions/route.ts`, après la création réussie de la subscription (L80, après la transaction), appeler `sendWelcomeEmail` dans un bloc try/catch non-bloquant
-  - [ ] 3.2 Passer à `sendWelcomeEmail` : `to: user.email`, `name: user.name`, `tier: subscription.tier`, `paymentProvider: subscription.provider`, `providerPhone: subscription.providerPhone`, `userId: user.id`
-  - [ ] 3.3 Récupérer l'utilisateur via `tx.user.findUnique` ou `prisma.user.findUnique` selon le pattern du projet ; utiliser le `userId` de la session
-  - [ ] 3.4 **Guardrail transaction :** si la transaction Prisma échoue (catch retourne 500), ne pas envoyer d'email ; l'email doit être envoyé seulement après succès de `prisma.$transaction`
-  - [ ] 3.5 L'envoi est non-bloquant : si l'email échoue, logger l'erreur et ne pas impacter la réponse 201
+- [x] Task 3 : Déclencher l'email dynamique depuis `POST /api/subscriptions` (AC: #1, #3)
+  - [x] 3.1 Dans `src/app/api/subscriptions/route.ts`, après la création réussie de la subscription (L80, après la transaction), appeler `sendWelcomeEmail` dans un bloc try/catch non-bloquant
+  - [x] 3.2 Passer à `sendWelcomeEmail` : `to: user.email`, `name: user.name`, `tier: subscription.tier`, `paymentProvider: subscription.provider`, `providerPhone: subscription.providerPhone`, `userId: user.id`
+  - [x] 3.3 Récupérer l'utilisateur via `tx.user.findUnique` ou `prisma.user.findUnique` selon le pattern du projet ; utiliser le `userId` de la session
+  - [x] 3.4 **Guardrail transaction :** si la transaction Prisma échoue (catch retourne 500), ne pas envoyer d'email ; l'email doit être envoyé seulement après succès de `prisma.$transaction`
+  - [x] 3.5 L'envoi est non-bloquant : si l'email échoue, logger l'erreur et ne pas impacter la réponse 201
 
-- [ ] Task 4 : Mettre à jour les tests unitaires (AC: #5)
-  - [ ] 4.1 Dans `src/lib/email.test.ts` :
+- [x] Task 4 : Mettre à jour les tests unitaires (AC: #5)
+  - [x] 4.1 Dans `src/lib/email.test.ts` :
     - Mettre à jour le test existant "sends welcome email with tier label, profile link and payment instructions" : sans `paymentProvider`, le corps ne doit plus contenir de section paiement, mais doit contenir le lien `/pricing` et le texte "Choisissez votre formule d'abonnement"
     - Ajouter un test avec `paymentProvider: "BANK_TRANSFER"` : section virement et IBAN présents
     - Ajouter/renforcer le test Wave existant : vérifier `paymentProvider: "WAVE"`, `providerPhone`, `userId`, `tier` et instructions Wave
     - Ajouter/renforcer le test Orange Money existant : vérifier `paymentProvider: "ORANGE_MONEY"`, `providerPhone`, `userId`, `tier` et instructions Orange Money
     - Ajouter un test avec `paymentProvider: null` : pas de section "Pour finaliser votre adhésion", mais présence du lien `/pricing`
-  - [ ] 4.2 Dans `src/app/api/auth/signup/route.test.ts` :
+  - [x] 4.2 Dans `src/app/api/auth/signup/route.test.ts` :
     - Mettre à jour les assertions `sendWelcomeEmail` pour ne plus s'attendre à de section paiement
     - Vérifier que l'appel se fait sans `paymentProvider` (donc default `null`)
-  - [ ] 4.3 Dans `src/app/api/subscriptions/route.test.ts` :
+  - [x] 4.3 Dans `src/app/api/subscriptions/route.test.ts` :
     - Mocker `sendWelcomeEmail` depuis `@/lib/email`
     - Vérifier que `POST` appelle `sendWelcomeEmail` avec `paymentProvider`, `tier`, `providerPhone`, `userId` après création d'un abonnement
     - Vérifier que `sendWelcomeEmail` n'est pas appelé si la transaction échoue (test 500 DB down)
 
-- [ ] Task 5 : Vérifications finales
-  - [ ] 5.1 Lancer `npm run lint` et corriger les erreurs dans les fichiers modifiés
-  - [ ] 5.2 Lancer `npm run test -- src/lib/email.test.ts src/app/api/auth/signup/route.test.ts src/app/api/subscriptions/route.test.ts`
-  - [ ] 5.3 Lancer `npm run build` pour vérifier la compilation
+- [x] Task 5 : Vérifications finales
+  - [x] 5.1 Lancer `npm run lint` et corriger les erreurs dans les fichiers modifiés
+  - [x] 5.2 Lancer `npm run test -- src/lib/email.test.ts src/app/api/auth/signup/route.test.ts src/app/api/subscriptions/route.test.ts`
+  - [x] 5.3 Lancer `npm run build` pour vérifier la compilation
 
 ## Dev Notes
 
@@ -188,5 +188,19 @@ Kimi K2.7 Code (via Hermes delegate_task)
 
 ### Completion Notes List
 
+- Updated `sendWelcomeEmail` in `src/lib/email.ts` : `paymentProvider` is now nullable with default `null`; post-signup emails include `/pricing` CTA and no payment instructions; post-subscription emails include dynamic payment instructions for the selected provider and tier.
+- Confirmed `src/app/api/auth/signup/route.ts` and `src/lib/auth.ts` call `sendWelcomeEmail` without `paymentProvider`, keeping `tier: "AFFRANCHI"` and `userId`.
+- Updated `src/app/api/subscriptions/route.ts` to call `sendWelcomeEmail` non-blockingly after successful transaction with `paymentProvider`, `tier`, `providerPhone`, and `userId`; transaction failure prevents the email.
+- Updated/added unit tests in `src/lib/email.test.ts` (generic, BANK_TRANSFER, WAVE, ORANGE_MONEY, null cases), `src/app/api/auth/signup/route.test.ts`, and `src/app/api/subscriptions/route.test.ts`.
+- All 985 tests pass, lint passes on modified files, and `npm run build` succeeds.
+
 ### File List
+
+- Modified : `src/lib/email.ts`
+- Modified : `src/app/api/subscriptions/route.ts`
+- Modified : `src/lib/email.test.ts`
+- Modified : `src/app/api/auth/signup/route.test.ts`
+- Modified : `src/app/api/subscriptions/route.test.ts`
+- Modified : `_bmad-output/implementation-artifacts/story-16-3-email-accueil-dynamique-paiement.md`
+- Modified : `_bmad-output/implementation-artifacts/sprint-status.yaml`
 

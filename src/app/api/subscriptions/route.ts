@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { subscriptionCreateSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { getAmountForTier } from "@/lib/bank-transfer-config";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -94,6 +95,31 @@ export async function POST(req: Request) {
         },
       };
     });
+
+    // Send dynamic welcome email only after the subscription transaction succeeds.
+    // Failure here must not impact the 201 response.
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
+      });
+
+      if (user?.email) {
+        await sendWelcomeEmail({
+          to: user.email,
+          name: user.name,
+          tier: result.subscription.tier,
+          paymentProvider: result.subscription.provider,
+          providerPhone: result.subscription.providerPhone,
+          userId,
+        });
+      }
+    } catch (emailError) {
+      console.error(
+        "Failed to send post-subscription welcome email:",
+        sanitizeError(emailError)
+      );
+    }
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (error) {

@@ -7,6 +7,8 @@ const mockAuth = vi.hoisted(() =>
 const mockSubscriptionFindMany = vi.hoisted(() => vi.fn());
 const mockSubscriptionCreate = vi.hoisted(() => vi.fn());
 const mockPaymentCreate = vi.hoisted(() => vi.fn());
+const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockSendWelcomeEmail = vi.hoisted(() => vi.fn(async () => {}));
 const mockTransaction = vi.hoisted(() =>
   vi.fn(async (cb: (tx: unknown) => unknown) =>
     cb({
@@ -33,8 +35,15 @@ vi.mock("@/lib/prisma", () => ({
     payment: {
       create: mockPaymentCreate,
     },
+    user: {
+      findUnique: mockUserFindUnique,
+    },
     $transaction: mockTransaction,
   },
+}));
+
+vi.mock("@/lib/email", () => ({
+  sendWelcomeEmail: mockSendWelcomeEmail,
 }));
 
 vi.mock("@/lib/sanitize-log", () => ({
@@ -92,7 +101,7 @@ describe("GET /api/subscriptions", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    (mockAuth as any).mockResolvedValueOnce(null);
+    (mockAuth as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
 
     const res = await GET();
     const json = await res.json();
@@ -120,6 +129,7 @@ describe("POST /api/subscriptions", () => {
 
   it("creates PENDING subscription and pending BANK_TRANSFER payment with displayed providerRef and tier amount", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserFindUnique.mockResolvedValueOnce({ email: "jean@example.com", name: "Jean" });
     const mockSub = {
       id: "sub-new",
       userId: "user-123",
@@ -199,6 +209,18 @@ describe("POST /api/subscriptions", () => {
     expect(mockPaymentCreate.mock.calls[0][0].data.providerRef).toBe(
       mockSubscriptionCreate.mock.calls[0][0].data.providerRef
     );
+    expect(mockUserFindUnique).toHaveBeenCalledWith({
+      where: { id: "user-123" },
+      select: { email: true, name: true },
+    });
+    expect(mockSendWelcomeEmail).toHaveBeenCalledWith({
+      to: "jean@example.com",
+      name: "Jean",
+      tier: "GRAND_FRERE",
+      paymentProvider: "BANK_TRANSFER",
+      providerPhone: null,
+      userId: "user-123",
+    });
   });
 
   it.each([
@@ -240,7 +262,7 @@ describe("POST /api/subscriptions", () => {
   });
 
   it("returns 401 if not authenticated", async () => {
-    (mockAuth as any).mockResolvedValueOnce(null);
+    (mockAuth as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
 
     const req = makeRequest({ tier: "AFFRANCHI", period: "MONTHLY" });
     const res = await POST(req);
@@ -281,6 +303,7 @@ describe("POST /api/subscriptions", () => {
     "creates TRIAL %s subscription and pending payment with providerPhone",
     async (provider, providerPhone) => {
       mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+      mockUserFindUnique.mockResolvedValueOnce({ email: "jean@example.com", name: "Jean" });
       const typedProvider = provider as "WAVE" | "ORANGE_MONEY";
       const mockSub = {
         id: "sub-mobile",
@@ -331,6 +354,14 @@ describe("POST /api/subscriptions", () => {
           }),
         })
       );
+      expect(mockSendWelcomeEmail).toHaveBeenCalledWith({
+        to: "jean@example.com",
+        name: "Jean",
+        tier: "BOSS",
+        paymentProvider: typedProvider,
+        providerPhone,
+        userId: "user-123",
+      });
     }
   );
 
@@ -396,7 +427,7 @@ describe("POST /api/subscriptions", () => {
     expect(mockTransaction).not.toHaveBeenCalled();
   });
 
-  it("returns 500 on unexpected error", async () => {
+  it("returns 500 on unexpected error and does not send welcome email", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
     mockTransaction.mockRejectedValueOnce(new Error("DB down"));
 
@@ -406,5 +437,59 @@ describe("POST /api/subscriptions", () => {
 
     expect(res.status).toBe(500);
     expect(json.error).toBe("Erreur interne");
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockSendWelcomeEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns 201 even if sending the welcome email fails", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserFindUnique.mockResolvedValueOnce({ email: "jean@example.com", name: "Jean" });
+    mockSendWelcomeEmail.mockRejectedValueOnce(new Error("SMTP down"));
+    const mockSub = {
+      id: "sub-new",
+      userId: "user-123",
+      tier: "GRAND_FRERE",
+      period: "MONTHLY",
+      provider: "BANK_TRANSFER",
+      providerPhone: null,
+      providerRef: "IBC-user-123-GRAND_FRERE",
+      status: "PENDING",
+      startDate: new Date("2026-05-14"),
+      createdAt: new Date("2026-05-14"),
+      updatedAt: new Date("2026-05-14"),
+    };
+    const mockPayment = {
+      id: "pay-new",
+      userId: "user-123",
+      amount: 49,
+      currency: "EUR",
+      provider: "BANK_TRANSFER",
+      providerRef: "IBC-user-123-GRAND_FRERE",
+      status: "pending",
+      createdAt: new Date("2026-05-14"),
+    };
+    mockSubscriptionCreate.mockResolvedValueOnce(mockSub);
+    mockPaymentCreate.mockResolvedValueOnce(mockPayment);
+    mockTransaction.mockImplementationOnce(async (cb: (tx: unknown) => unknown) =>
+      cb({
+        subscription: { create: mockSubscriptionCreate },
+        payment: { create: mockPaymentCreate },
+      })
+    );
+
+    const req = makeRequest({ tier: "GRAND_FRERE", period: "MONTHLY" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.data.subscription.tier).toBe("GRAND_FRERE");
+    expect(mockSendWelcomeEmail).toHaveBeenCalledWith({
+      to: "jean@example.com",
+      name: "Jean",
+      tier: "GRAND_FRERE",
+      paymentProvider: "BANK_TRANSFER",
+      providerPhone: null,
+      userId: "user-123",
+    });
   });
 });

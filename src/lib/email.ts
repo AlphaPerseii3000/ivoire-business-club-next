@@ -1,6 +1,9 @@
 import nodemailer from "nodemailer";
 import { getTierBadgeConfig } from "@/lib/tier-config";
-import { MOBILE_MONEY_CONFIG } from "./mobile-money-config";
+import {
+  MOBILE_MONEY_CONFIG,
+  formatMobileMoneyReference,
+} from "./mobile-money-config";
 
 type SubscriptionEmailBase = {
   to: string;
@@ -214,14 +217,14 @@ export async function sendWelcomeEmail({
   to,
   name,
   tier,
-  paymentProvider = "BANK_TRANSFER",
+  paymentProvider = null,
   providerPhone,
   userId,
 }: {
   to: string;
   name?: string | null;
   tier: string;
-  paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY";
+  paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY" | null;
   providerPhone?: string | null;
   userId?: string;
 }) {
@@ -229,6 +232,7 @@ export async function sendWelcomeEmail({
   const completeProfileLink = appUrl
     ? `${appUrl}/onboarding/complete-profile`
     : "";
+  const pricingLink = appUrl ? `${appUrl}/pricing` : "";
 
   const iban = process.env.BANK_TRANSFER_IBAN;
   const bic = process.env.BANK_TRANSFER_BIC;
@@ -237,24 +241,28 @@ export async function sendWelcomeEmail({
 
   let paymentInstructions = "";
   if (paymentProvider === "BANK_TRANSFER") {
-    if (iban) {
-      const lines: string[] = [];
-      lines.push("Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :");
-      if (iban) lines.push(`IBAN : ${iban}`);
-      if (bic) lines.push(`BIC : ${bic}`);
-      if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
-      paymentInstructions = "\n\n" + lines.join("\n");
-    }
+    const lines: string[] = [];
+    lines.push(
+      "Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :"
+    );
+    if (iban) lines.push(`IBAN : ${iban}`);
+    if (bic) lines.push(`BIC : ${bic}`);
+    if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
+    paymentInstructions = lines.length > 1 ? "\n\n" + lines.join("\n") : "";
   } else if (paymentProvider === "WAVE" || paymentProvider === "ORANGE_MONEY") {
     const config = MOBILE_MONEY_CONFIG[paymentProvider];
     const lines: string[] = [];
-    lines.push(`Pour finaliser votre adhésion, merci d'effectuer un paiement ${config.label} :`);
+    lines.push(
+      `Pour finaliser votre adhésion, merci d'effectuer un paiement ${config.label} :`
+    );
     lines.push(`Numéro marchand ${config.label} : ${config.merchantNumber}`);
     if (providerPhone) {
       lines.push(`Depuis votre numéro ${config.label} : ${providerPhone}`);
     }
     if (userId) {
-      lines.push(`Référence du transfert : IBC-${userId}-${tier}`);
+      lines.push(
+        `Référence du transfert : ${formatMobileMoneyReference(userId, tier)}`
+      );
     }
     lines.push("Instructions :");
     for (const step of config.instructionLines) {
@@ -271,9 +279,18 @@ export async function sendWelcomeEmail({
     ? `\n\nComplétez votre profil : ${completeProfileLink}`
     : "";
 
+  const pricingBlock =
+    pricingLink && !paymentProvider
+      ? `\n\nChoisissez votre formule d'abonnement dans votre espace membre : ${pricingLink}`
+      : "";
+
   const label = tierLabel(tier);
 
-  const body = `${greeting(name)}\n\nVotre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier ${label} (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre.${completeProfileBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
+  const intro = paymentProvider
+    ? `Bienvenue sur Ivoire Business Club. Vous avez choisi le tier ${label}. Votre demande d'abonnement est enregistrée.`
+    : `Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier ${label} (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre.`;
+
+  const body = `${greeting(name)}\n\n${intro}${completeProfileBlock}${pricingBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
 
   await sendEmail({
     to,
