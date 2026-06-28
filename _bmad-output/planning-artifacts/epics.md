@@ -95,6 +95,17 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 - **FR44** : Le site est entièrement en français
 - **FR45** : Le site est responsive et mobile-first
 
+**Analytics & Observabilité**
+- **FR64** : Le système tracke automatiquement les vues de pages et clics utilisateurs (autocapture PostHog)
+- **FR65** : Le système identifie les utilisateurs connectés (userId, tier, role) dans PostHog pour segmenter l'analytics
+- **FR66** : Le système tracke les événements métier clés : inscription, sélection tier, soumission opportunité, upload document, manifestation intérêt, lecture article
+
+**Support Bêta & Feedback**
+- **FR73** : La plateforme affiche un bouton flottant en bas à gauche sur toutes les pages, permettant d'ouvrir une fenêtre de chat de support. Le chat indique clairement que la plateforme est en phase bêta.
+- **FR74** : Un membre connecté peut soumettre un message via le chat de support (bug technique, problème d'accessibilité, demande d'intégration). Le système envoie un auto-acknowledgement immédiat confirmant la réception.
+- **FR75** : Les messages de chat sont stockés en base de données et accessibles via une API authentifiée. Un agent externe (Hermes) peut lire les messages non traités et y répondre via une API sécurisée par token.
+- **FR76** : Chaque message de chat reçu est automatiquement ajouté à la to-do liste permanente du système de support (Hermes), permettant le suivi et la traitement des demandes.
+
 ### Non-Functional Requirements (NFR)
 
 **Performance**
@@ -266,6 +277,13 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 | FR51 | Epic 9 | 9.4 | Accès articles via /articles et SEO |
 | FR52 | Epic 9 | 9.5 | Réagir aux articles (LIKE, CLAP, INSIGHTFUL) |
 | FR53 | Epic 9 | 9.5 | Décompte et affichage des réactions |
+| FR64 | Epic 19 | 19-1 | Le système tracke automatiquement les vues de pages et clics (autocapture) |
+| FR65 | Epic 19 | 19-2 | Le système identifie les utilisateurs connectés dans PostHog |
+| FR66 | Epic 19 | 19-2 | Le système tracke les événements métier clés |
+| FR73 | Epic 18 | 18-2 | La plateforme affiche un bouton flottant et une fenêtre de chat de support |
+| FR74 | Epic 18 | 18-1 / 18-2 | Soumission message chat + auto-acknowledgement immédiat |
+| FR75 | Epic 18 | 18-1 | Messages stockés en base et API authentifiée pour Hermes |
+| FR76 | Epic 18 | 18-3 | Hermes récupère les messages et les ajoute à sa to-do list |
 
 ---
 
@@ -328,6 +346,19 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 **FRs couverts :** FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53
 **NFRs couverts :** NFR-P1, NFR-A1, NFR-A3
 **UX-DRs couverts :** UX-DR14 (formulaires), UX-DR19 (états chargement), UX-DR20 (états erreur)
+
+### Epic 18: Chat de Support Bêta & Feedback Membres
+Widget de support in-app permettant d'ouvrir un canal de support direct pour les membres connectés, avec auto-acknowledgement, rate limiting et polling/gestion sécurisée via l'agent Hermes.
+
+**FRs couverts :** FR73, FR74, FR75, FR76
+**NFRs couverts :** NFR-P2, NFR-S5, NFR-I1
+**UX-DRs couverts :** UX-DR9 (StatusPill), UX-DR16 (modales/sheets), UX-DR19 (loading states)
+
+### Epic 19: Analytics Comportemental PostHog
+Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilisateurs, identifier les membres d'après leur tier et configurer des insights et entonnoirs.
+
+**FRs couverts :** FR64, FR65, FR66
+**NFRs couverts :** NFR-P1
 
 ---
 
@@ -1538,8 +1569,168 @@ Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant au
 
 **Given** un membre sans abonnement actif ou un visiteur anonyme  
 **When** il consulte la page détail de l'article  
-**Then** la section des commentaires est remplacée par un encart d'incitation : "Devenez membre actif pour consulter et participer aux discussions."
+**Then** la section des commentaires est remplacée par un encart d'incitation : "Devenez membre actif pour consulter et participer aux discussions."  
+  
+---  
+
+## Epic 18: Chat de Support Bêta & Feedback Membres
+
+**Objectif :** Fournir un canal in-app pour que les membres bêta puissent soumettre des commentaires (bogues, accessibilité, suggestions d'intégration). Les messages sont stockés en DB, bénéficient d'un accusé de réception immédiat, et sont gérés de manière asynchrone par l'agent Hermes qui se synchronise avec l'API toutes les 5 minutes et gère les tâches via son fichier todo local.
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.3. Epic 9 mis à jour avec les Stories 9.2, 9.3 modifiées et 9.7, 9.8 ajoutées via Sprint Change Proposal 2026-06-16.*
+### Story 18-1: Modèle ChatMessage + API Routes de Support
+
+**En tant que** développeur,  
+**Je veux** créer le modèle de données `ChatMessage` dans Prisma, exécuter la migration et implémenter les routes API pour les membres et l'agent Hermes,  
+**Afin de** stocker et exposer de manière sécurisée les messages de support.
+
+**Acceptance Criteria :**
+
+**Given** le schéma Prisma mis à jour avec le modèle `ChatMessage` et ses enums `ChatMessageStatus` et `ChatMessageAuthor`  
+**When** la migration Prisma est lancée  
+**Then** les tables de chat sont créées en base PostgreSQL avec relations vers l'utilisateur et suppression en cascade  
+
+**Given** un membre connecté avec session active  
+**When** il envoie une requête POST `/api/chat/messages` avec un contenu valide  
+**Then** le système enregistre son message en base en statut `PENDING`  
+**And** crée automatiquement dans la même transaction un message système d'accusé de réception (`author = SYSTEM`, `status = ACKNOWLEDGED`)  
+
+**Given** un membre connecté  
+**When** il appelle GET `/api/chat/messages`  
+**Then** le système renvoie la liste paginée de ses messages et des réponses associées, ordonnés par date de création  
+
+**Given** l'agent externe Hermes  
+**When** il effectue des requêtes sur `/api/chat/agent/read`, `/api/chat/agent/reply` ou `/api/chat/agent/close`  
+**Then** les appels doivent être authentifiés par Bearer token (`CRON_SECRET`)  
+**And** Hermes ne peut lire que les messages `PENDING` et ne peut en aucun cas accéder à d'autres ressources DB via ces endpoints  
+
+---
+
+### Story 18-2: Widget UI de Chat de Support Bêta
+
+**En tant que** membre connecté,  
+**Je veux** disposer d'un bouton flottant de support ouvrant une fenêtre de chat,  
+**Afin de** signaler un bogue ou soumettre un feedback sans quitter la plateforme.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté naviguant sur l'application  
+**When** le layout principal est rendu  
+**Then** un bouton flottant `BetaChatWidget` est affiché en bas à gauche (`z-index: 50`)  
+
+**Given** le widget de chat  
+**When** le membre clique dessus  
+**Then** un panneau ou une fenêtre de chat s'ouvre, affichant clairement une bannière de phase bêta : « 🚧 Plateforme en phase bêta — Votre feedback nous aide à nous améliorer »  
+
+**Given** le formulaire de chat  
+**When** le membre sélectionne une catégorie (Bogue, Accessibilité, Intégration, Autre), écrit un message (max 5000 caractères) et clique sur envoyer  
+**Then** le message est transmis à l'API, s'affiche instantanément dans l'historique et l'auto-acknowledgement système s'affiche immédiatement en dessous  
+
+**Given** le widget de chat  
+**When** le membre le consulte  
+**Then** il voit l'historique de ses messages et les réponses de l'équipe, ainsi qu'un indicateur de statut "En ligne" (si Hermes a répondu récemment) ou "Hors ligne" (si pas d'activité Hermes depuis > 30 minutes)  
+**And** un badge numérique rouge indique le nombre de réponses d'Hermes non lues  
+
+---
+
+### Story 18-3: Intégration de l'Agent Hermes (Skill & Cron Job)
+
+**En tant que** Product Owner,  
+**Je veux** configurer le skill Hermes dédié et son cron job de polling régulier,  
+**Afin de** automatiser le traitement des messages et l'alimentation de la to-do list d'Hermes.
+
+**Acceptance Criteria :**
+
+**Given** le fichier de configuration du support Hermes  
+**When** le skill `ibc-beta-chat-support` est chargé  
+**Then** les outils système et de fichiers d'Hermes sont désactivés (`enabled_toolsets = ["web"]`), et le skill n'autorise des appels HTTP que vers les endpoints `/api/chat/agent/*`  
+
+**Given** le cron job Hermes configuré pour tourner toutes les 5 minutes  
+**When** il s'exécute sur la machine de l'admin  
+**Then** il effectue une requête GET `/api/chat/agent/read` pour récupérer tous les messages `PENDING`  
+
+**Given** un message de support récupéré par Hermes  
+**When** Hermes le traite  
+**Then** il génère une réponse appropriée et l'envoie via POST `/api/chat/agent/reply`  
+**And** il extrait la demande et l'ajoute au fichier local `~/.hermes/jonathan_todo.json` avec le préfixe `[IBC-CHAT]`  
+
+---
+
+## Epic 19: Analytics Comportemental PostHog
+
+**Objectif :** Intégrer PostHog sur la plateforme IBC pour suivre le comportement des utilisateurs, mesurer l'engagement sur les fonctionnalités clés, identifier les utilisateurs par tier d'abonnement et bâtir des entonnoirs d'acquisition et d'activation.
+
+---
+
+### Story 19-1: Installation et Initialisation de PostHog
+
+**En tant que** développeur,  
+**Je veux** installer les dépendances PostHog, configurer le provider client-side avec gestion SSR, et mettre à jour les variables d'environnement,  
+**Afin de** démarrer le tracking automatique des pages et des clics.
+
+**Acceptance Criteria :**
+
+**Given** le projet IBC  
+**When** les packages `posthog-js` et `posthog-node` sont installés  
+**Then** l'application compile sans erreur  
+
+**Given** le fichier `src/components/providers/posthog-provider.tsx` (ou similaire)  
+**When** il est inséré dans le layout racine après le AuthProvider  
+**Then** le script de tracking s'exécute uniquement côté client (gating `typeof window !== 'undefined'`) pour éviter tout plantage ou divergence de rendu au build  
+
+**Given** les variables d'environnement `NEXT_PUBLIC_POSTHOG_KEY` et `NEXT_PUBLIC_POSTHOG_HOST` configurées  
+**When** l'application tourne en production ou en développement  
+**Then** PostHog capture automatiquement les événements de page vue (`$pageview`) et d'autocapture des clics  
+
+---
+
+### Story 19-2: Identification et Tracking d'Événements Métier
+
+**En tant que** Product Owner,  
+**Je veux** que les utilisateurs connectés soient identifiés dans PostHog avec leurs attributs (tier, rôle) et que les actions métier soient trackées,  
+**Afin de** segmenter l'analytics et de construire des analyses précises.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté à la plateforme  
+**When** la session utilisateur est initialisée  
+**Then** le système appelle `posthog.identify(userId, { email, tier, role })` pour associer ses actions à son profil  
+
+**Given** un utilisateur connecté  
+**When** il se déconnecte de la plateforme  
+**Then** le système appelle `posthog.reset()` pour effacer les cookies et dissocier les futures actions anonymes  
+
+**Given** les actions métier clés effectuées par l'utilisateur (inscription, choix de tier, soumission d'une opportunité, upload de document juridique, clic sur WhatsApp)  
+**When** ces actions se produisent  
+**Then** les événements correspondants (ex: `user_signed_up`, `tier_selected`, `opportunity_submitted`, `interest_expressed`, `document_uploaded`) sont envoyés à PostHog avec leurs métadonnées  
+
+**Given** les routes API critiques côté serveur (comme la validation d'un abonnement ou l'inscription)  
+**When** elles s'exécutent  
+**Then** le SDK `posthog-node` est utilisé pour logger l'événement métier côté serveur avec le `distinctId` de l'utilisateur  
+
+---
+
+### Story 19-3: Configuration des Tableaux de Bord et Funnels PostHog
+
+**En tant que** Product Owner,  
+**Je veux** configurer des Insights, des Funnels d'acquisition, et activer les Session Replays dans la console PostHog,  
+**Afin de** analyser visuellement le trafic et détecter les points de friction.
+
+**Acceptance Criteria :**
+
+**Given** les événements envoyés à PostHog  
+**When** j'accède à l'interface d'administration PostHog  
+**Then** les funnels d'acquisition (Landing → Signup → Tier Selection → Activation) et d'engagement (Dashboard → Opportunity click → Interest expressed) sont créés et opérationnels  
+
+**Given** les attributs utilisateurs (tier et role)  
+**When** je filtre les tendances ou les funnels  
+**Then** je peux analyser distinctement le comportement des membres selon leur tier d'abonnement (Affranchis, Grands Frères, Boss)  
+
+**Given** les replays de sessions activés dans PostHog  
+**When** un utilisateur navigue sur la plateforme  
+**Then** je peux rejouer sa session de manière anonymisée pour comprendre son parcours d'onboarding  
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.4. Epics 18 et 19 ajoutés via Sprint Change Proposals le 2026-06-28.*

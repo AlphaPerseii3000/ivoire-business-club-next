@@ -334,6 +334,19 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR56** : L'administrateur peut associer un article à une opportunité existante. L'article affiche l'opportunité via le composant `DealCard` sous réserve que l'utilisateur ait le tier requis pour cette opportunité.
 - **FR57** : Les articles affichent des boutons de partage sur les réseaux sociaux (WhatsApp, LinkedIn, Twitter/X, Email, Copier le lien) utilisant des URLs de partage propres et dynamiques.
 
+### 8.8 Analytics & Observabilité
+
+- **FR64** : Le système tracke automatiquement les vues de pages et clics utilisateurs (autocapture PostHog)
+- **FR65** : Le système identifie les utilisateurs connectés (userId, tier, role) dans PostHog pour segmenter l'analytics
+- **FR66** : Le système tracke les événements métier clés : inscription, sélection tier, soumission opportunité, upload document, manifestation intérêt, lecture article
+
+### 8.9 Support Bêta & Feedback
+
+- **FR73** : La plateforme affiche un bouton flottant en bas à gauche sur toutes les pages, permettant d'ouvrir une fenêtre de chat de support. Le chat indique clairement que la plateforme est en phase bêta.
+- **FR74** : Un membre connecté peut soumettre un message via le chat de support (bug technique, problème d'accessibilité, demande d'intégration). Le système envoie un auto-acknowledgement immédiat confirmant la réception.
+- **FR75** : Les messages de chat sont stockés en base de données et accessibles via une API authentifiée. Un agent externe (Hermes) peut lire les messages non traités et y répondre via une API sécurisée par token.
+- **FR76** : Chaque message de chat reçu est automatiquement ajouté à la to-do liste permanente du système de support (Hermes), permettant le suivi et la traitement des demandes.
+
 ---
 
 ## 9. Exigences Non-Fonctionnelles (NFR)
@@ -403,7 +416,7 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 
 - `auth.config.ts` : Config Edge-compatible (pas de Prisma, pas de bcrypt), utilisée pour middleware
 - `auth.ts` : Instance complète Node.js avec PrismaAdapter + Credentials provider + bcrypt
-- **Action requise** : créer `src/middleware.ts` qui instancie Auth.js avec `authConfig`
+- **Action requise** : créer `src/middleware.ts` qui instancie Auth.js with `authConfig`
 
 ### 10.3 Modèle de données (Prisma)
 
@@ -467,13 +480,14 @@ Enums : `Tier` (AFFRANCHI, GRAND_FRERE, BOSS), `UserRole` (MEMBER, ADMIN), `Subs
 - [ ] Matching basique (règles + scoring)
 - [ ] Mur des succès (page statique + CMS léger)
 
-### 12.5 Semaine 7–8 — Lancement
+### 12.5 Semaine 7–8 — Lancement & Analytics
 
 - [ ] Onboarding guidé 3 clics
-- [ ] Analytics (PostHog ou Plausible)
+- [ ] Intégration PostHog pour l'analytics comportemental (Epic 19)
+- [ ] Chat de Support Beta & Feedback Membres avec intégration Hermes (Epic 18)
 - [ ] Newsletter hebdo + emails transactionnels
 - [ ] 5 premiers deals vérifiés et publiés
 
 ---
 
-*Document de Spécifications Produit IBC v1.0 — Synthèse des phases brainstorming, recherche domaine, marché, et faisabilité technique. Prochaine étape BMAD recommandée : `bmad-create-ux-design`.*
+*Document de Spécifications Produit IBC v1.1 — Mis à jour le 2026-06-28 avec Epic 18 (Support Chat Beta) et Epic 19 (PostHog Analytics).*

@@ -39,7 +39,7 @@ _This document was built collaboratively through the BMAD architecture workflow.
 
 **Functional Requirements:**
 
-The PRD defines 45 Functional Requirements (FR1–FR45) organized into 7 categories:
+The PRD defines the functional requirements organized into distinct categories:
 
 | Category | Count | Key Architectural Impact |
 |----------|-------|--------------------------|
@@ -50,6 +50,8 @@ The PRD defines 45 Functional Requirements (FR1–FR45) organized into 7 categor
 | Reviews & Reputation (FR31–FR34) | 4 | Bidirectional review system, score calculation, badge automation |
 | Admin & Back-office (FR35–FR40) | 6 | Kanban UI, audit logs, metrics dashboard |
 | Landing & Content (FR41–FR45) | 5 | Teaser deals, tier comparison, static success wall |
+| Analytics (FR64–FR66) | 3 | PostHog integration, client & server event tracking |
+| Support Chat (FR73–FR76) | 4 | In-app widget, ChatMessage database model, Hermes polling API |
 
 **Non-Functional Requirements:**
 
@@ -95,6 +97,8 @@ The PRD defines 45 Functional Requirements (FR1–FR45) organized into 7 categor
 6. **Mobile-First Responsiveness** — 80%+ traffic on smartphones, touch targets ≥44px
 7. **WhatsApp Integration** — Deep links on every profile/deal, pre-filled messages
 8. **Compliance & Audit** — CENTIF-CI AML trails, APDP data protection, non-financial intermediary status
+9. **Analytics & Observability** — Client & Server tracking with PostHog, user identification, and custom event instrumentation
+10. **Beta Support Chat & Hermes Integration** — In-app chat, secure external agent polling, and auto-acknowledgement
 
 ---
 
@@ -156,6 +160,7 @@ The codebase uses:
 - `Subscription` — tier, period, provider (will become `BANK_TRANSFER`), status lifecycle
 - `Opportunity` — deal postings with verification status, author, verifier
 - `Payment` — legacy Stripe/CinetPay records; to be repurposed or replaced for bank-transfer tracking
+- `ChatMessage` — support chat messages (bug, access, request) with enums `ChatMessageStatus` (PENDING, ACKNOWLEDGED, REPLIED, CLOSED) and `ChatMessageAuthor` (MEMBER, HERMES, SYSTEM), structured for threading and agent interaction
 
 **Data Validation:**
 - Server-side: Zod schemas in `src/lib/validations.ts`
@@ -202,8 +207,26 @@ src/app/api/
 │   └── users/[id]/tier/route.ts            # Tier management
 ├── opportunities/route.ts        # CRUD + listing
 ├── user/profile/route.ts         # Profile updates
+├── chat/
+│   ├── messages/route.ts         # Post and fetch user messages
+│   └── unread/route.ts           # Get unread message count
+├── chat/agent/
+│   ├── read/route.ts             # Hermes polling for PENDING messages
+│   ├── reply/route.ts            # Hermes reply submission
+│   └── close/route.ts            # Hermes closing conversations
 └── (future) subscriptions/       # Bank-transfer submission
 ```
+
+**Support Chat API Reference:**
+
+| Route | Méthode | Auth | Description |
+|-------|---------|------|-------------|
+| `/api/chat/messages` | `POST` | Session (membre) | Soumettre un nouveau message |
+| `/api/chat/messages` | `GET` | Session (membre) | Récupérer ses messages + réponses (paginé) |
+| `/api/chat/unread` | `GET` | Session (membre) | Compteur de messages non lus (badge) |
+| `/api/chat/agent/read` | `GET` | Bearer token (CRON_SECRET) | Hermes lit les messages PENDING (tous users) |
+| `/api/chat/agent/reply` | `POST` | Bearer token (CRON_SECRET) | Hermes répond à un message |
+| `/api/chat/agent/close` | `POST` | Bearer token (CRON_SECRET) | Hermes ferme une conversation |
 
 **API Response Format:**
 - Success: `Response.json({ data: T })` or `NextResponse.json({ data: T })`
@@ -228,7 +251,7 @@ src/app/api/
 - Server Components by default (data fetching, auth checks)
 - Client Components only when needed (`"use client"`) — interactivity, forms, hooks
 - shadcn/ui primitives themed with IBC teal/amber palette
-- Custom IBC components: `TrustBadge`, `DealCard`, `WhatsAppCTA`, `TierCard`, `StatusPill`
+- Custom IBC components: `TrustBadge`, `DealCard`, `WhatsAppCTA`, `TierCard`, `StatusPill`, `BetaChatWidget`, `PostHogProvider`
 
 **Routing Strategy:**
 - App Router with route groups for layout segmentation:
@@ -448,6 +471,13 @@ ibc/
 │   │   │   │   ├── users/[id]/tier/route.ts
 │   │   │   │   ├── users/[id]/verify/route.ts
 │   │   │   │   └── opportunities/[id]/verify/route.ts
+│   │   │   ├── chat/
+│   │   │   │   ├── messages/route.ts
+│   │   │   │   ├── unread/route.ts
+│   │   │   │   └── agent/
+│   │   │   │       ├── read/route.ts
+│   │   │   │       ├── reply/route.ts
+│   │   │   │       └── close/route.ts
 │   │   │   └── (future) subscriptions/
 │   │   ├── auth/
 │   │   │   ├── signin/page.tsx
@@ -471,7 +501,11 @@ ibc/
 │   │   │   │   ├── kanban-board.tsx
 │   │   │   │   ├── user-management.tsx
 │   │   │   │   └── metrics-cards.tsx
+│   │   │   ├── chat/
+│   │   │   │   └── beta-chat-widget.tsx
 │   │   │   └── landing/
+│   │   ├── providers/
+│   │   │   └── posthog-provider.tsx
 │   │   │       ├── hero.tsx
 │   │   │       ├── pricing.tsx
 │   │   │       └── footer.tsx
@@ -701,6 +735,13 @@ RESEND_API_KEY=
 
 # App
 APP_URL=                       # e.g., https://ivoirebusinessclub.com
+
+# PostHog Analytics
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=
+
+# Hermes support agent (CRON_SECRET for verification)
+CRON_SECRET=
 ```
 
 ### Technology Versions
@@ -716,6 +757,8 @@ APP_URL=                       # e.g., https://ivoirebusinessclub.com
 | bcryptjs | 3.0.3 | Credential auth hashing |
 | Zod | 4.4.3 | Schema validation |
 | React Hook Form | 7.75.0 | Form state management |
+| posthog-js | 1.x | Client-side behavioral analytics |
+| posthog-node | 4.x | Server-side event tracking |
 
 ### P0 Blockers to Resolve
 
@@ -728,4 +771,18 @@ APP_URL=                       # e.g., https://ivoirebusinessclub.com
 
 ---
 
-*Architecture document for IBC — completed via BMAD `bmad-create-architecture` workflow. All decisions validated and ready for AI agent implementation.*
+### Analytics & Observability (PostHog Integration)
+
+- **SDKs:** `posthog-js` (client-side) and `posthog-node` (server-side, for backend events like signup, payment activation, opportunities creation).
+- **Gating:** Client component initialization must be gated by checking if the browser is active (to avoid Next.js hydration mismatch or SSR build-time issues).
+- **Cookie Consent:** Autocapture will anonymize IP addresses by default, complying with UEMOA/EU regulations.
+
+### Support Chat & Hermes Integration
+
+- **Security:** Hermes interacts only via route handlers using `CRON_SECRET` validation. DB access is completely blocked from the external CLI agent.
+- **Auto-Acknowledgement:** Instant system message confirmation on member submission.
+- **Garde-fous:** Rate limit of 1 message/30s to prevent spamming. Threading via `replyTo` structures.
+
+---
+
+*Architecture document for IBC — updated on 2026-06-28 with PostHog analytics and support chat integration decisions.*
