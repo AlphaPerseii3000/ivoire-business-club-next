@@ -84,5 +84,18 @@
 - Stale Server-Side Singleton during Active Development [src/lib/posthog-server.ts] — The `posthogServer` instance is cached on `globalThis` in development. If configuration keys or env vars are updated during a dev session, they won't take effect until a full Node server restart is performed.
 - Missing server shutdown flush/close handler [src/lib/posthog-server.ts] — The integration does not handle Node server shutdown lifecycle events (like process exit signals) to cleanly flush/close the PostHog connection, which could lead to in-memory events being lost when server instances terminate.
 
+## Deferred from: code review of 19-3-dashboards-funnels-posthog.md (2026-06-28)
+
+- PostHog server capture error during server-side rendering: `posthogServer.capture` throws an unhandled error during page rendering if PostHog has network issues, which can crash the entire page with a 500 error [src/app/(public)/pricing/virement/page.tsx:43-47].
+- Duplicate events on page refresh/multiple visits: visiting the bank transfer page captures a server-side event each time the page is rendered (e.g. on refreshes), skewing funnel conversion metrics [src/app/(public)/pricing/virement/page.tsx:43-47].
+- Unhandled PostHog capture errors in opportunity interest API: API returns a 500 error on PostHog connection failure despite successful database transaction committing [src/app/api/opportunities/[id]/interest/route.ts:107-116].
+- Unhandled PostHog capture errors in opportunity reviews API: API returns a 500 error if PostHog connection fails after the review has been successfully created [src/app/api/opportunities/[id]/reviews/route.ts:120-128].
+- Unhandled PostHog capture errors in document access request API: API returns a 500 error on PostHog connection failure even if access request database write succeeds [src/app/api/opportunities/[id]/documents/[documentId]/request-access/route.ts:103-107].
+- Unhandled PostHog capture errors in article reactions API: API returns a 500 error if PostHog connection fails after reactions write succeeds [src/app/api/articles/[id]/reactions/route.ts:172-176].
+- Unhandled PostHog capture errors in signup credentials API: API returns a 500 error if PostHog connection fails after successful user registration [src/app/api/auth/signup/route.ts:90-94].
+- Unhandled PostHog capture errors in lead-magnet API: API returns a 500 error if PostHog capture fails after guide email is sent successfully [src/app/api/lead-magnet/route.ts:67-71].
+- Google OAuth sign-in events not tracked: signing in via Google OAuth does not trigger client-side `user_signed_in` event capture, breaking sign-in method tracking trends [src/app/auth/signin/page.tsx:59-63].
+
+
 
 

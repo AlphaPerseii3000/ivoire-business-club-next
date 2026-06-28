@@ -2,7 +2,7 @@
 Story: "19.3"
 StoryKey: "19-3-dashboards-funnels-posthog"
 Title: "Configuration des Tableaux de Bord et Funnels PostHog"
-Status: "in-progress"
+Status: "done"
 Priority: "P2"
 Epic: "Epic 19: Analytics Comportemental PostHog"
 FRs: ["FR64", "FR65", "FR66"]
@@ -12,7 +12,7 @@ baseline_commit: "dcc17ad"
 
 # Story 19.3 : Configuration des Tableaux de Bord et Funnels PostHog
 
-Status: in-progress
+Status: done
 
 <!-- Note: Ultimate context engine analysis completed - comprehensive developer guide created. Cette story consiste principalement en de la configuration d'insights, d'entonnoirs (funnels), de tableaux de bord et de Session Replays directement dans la console PostHog ou via les outils MCP PostHog, et à produire la documentation associée. Aucun changement majeur de code n'est attendu sauf ajustement mineur si un événement s'avère manquant. -->
 
@@ -188,3 +188,29 @@ Gemini 3.5 Flash (High) (via Antigravity-ide)
 ### File List
 
 - [posthog-setup-report.md](file:///d:/Code/ivoire-business-club-next/posthog-setup-report.md)
+
+### Review Findings
+
+- [x] [Review][Decision] Active Users Trend Breakdown by Role — Resolved: Option 1 (Added second breakdown by `role` property in PostHog).
+- [x] [Review][Patch] Document Session Replay & Anonymization [posthog-setup-report.md:28]
+- [x] [Review][Patch] Include `tier_selected` Event in Instrumented Events Table [posthog-setup-report.md:26]
+- [x] [Review][Patch] Next.js Route Syntax in Path Documentation [posthog-setup-report.md:34]
+- [x] [Review][Patch] LaTeX Notation in Standard Markdown [posthog-setup-report.md:34]
+- [x] [Review][Patch] Inconsistent Link Naming Pattern [posthog-setup-report.md:30]
+- [x] [Review][Patch] Redundant Label and Link Text [posthog-setup-report.md:43]
+- [x] [Review][Patch] Grammatical Inconsistency in Descriptions [posthog-setup-report.md:43]
+- [x] [Review][Patch] Timeframe Parameter Consistency [posthog-setup-report.md:34]
+- [x] [Review][Patch] Ambiguous Step Event Logic in Funnels [posthog-setup-report.md:34]
+- [x] [Review][Patch] Undocumented Event Property Context [posthog-setup-report.md:43]
+- [x] [Review][Patch] Inconsistent Paragraph Header Structure [posthog-setup-report.md:28]
+- [x] [Review][Patch] Orphaned Verify Section Header [posthog-setup-report.md:56]
+- [x] [Review][Defer] Unhandled PostHog capture errors during server rendering [src/app/(public)/pricing/virement/page.tsx:43-47] — deferred, pre-existing
+- [x] [Review][Defer] Duplicate events on page refresh/multiple visits [src/app/(public)/pricing/virement/page.tsx:43-47] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors after DB transaction commits [src/app/api/opportunities/[id]/interest/route.ts:107-116] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors in reviews API [src/app/api/opportunities/[id]/reviews/route.ts:120-128] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors in document access request API [src/app/api/opportunities/[id]/documents/[documentId]/request-access/route.ts:103-107] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors in reactions API [src/app/api/articles/[id]/reactions/route.ts:172-176] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors in signup API [src/app/api/auth/signup/route.ts:90-94] — deferred, pre-existing
+- [x] [Review][Defer] Unhandled PostHog capture errors in lead-magnet API [src/app/api/lead-magnet/route.ts:67-71] — deferred, pre-existing
+- [x] [Review][Defer] Google OAuth sign-in not tracked [src/app/auth/signin/page.tsx:59-63] — deferred, pre-existing
+

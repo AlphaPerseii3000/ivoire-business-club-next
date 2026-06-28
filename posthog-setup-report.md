@@ -24,6 +24,7 @@ The wizard has completed a deep integration of PostHog analytics into the Ivoire
 | `article_reaction_added` | A member added or changed their reaction on an article | `src/app/api/articles/[id]/reactions/route.ts` |
 | `document_access_requested` | A member requested access to a legal document attached to a deal | `src/app/api/opportunities/[id]/documents/[documentId]/request-access/route.ts` |
 | `onboarding_profile_completed` | A new member completed the onboarding profile form to finalize their membership | `src/components/features/onboarding/complete-profile-form.tsx` |
+| `tier_selected` | A member selected a membership tier on the pricing page | `src/components/pricing-tier-selection.tsx` |
 
 ## Cockpit Analytics Dashboard
 
@@ -33,25 +34,32 @@ We have configured and structured the main Cockpit dashboard to group all key bu
 
 ### Funnels
 
-1. **Acquisition & Activation Funnel:** [IBC - Acquisition & Activation Funnel](https://eu.posthog.com/project/211541/insights/9RXc39fs)
-   - Tracks the progression: Landing page view (`/`) $\rightarrow$ Inscription (`user_registered` / `user_signed_up`) $\rightarrow$ Complete Profile (`onboarding_profile_completed`) $\rightarrow$ Tier Selected (`tier_selected`) $\rightarrow$ Payment Intent (`bank_transfer_instructions_viewed`).
-2. **Deal Engagement Funnel:** [IBC - Deal Engagement Funnel](https://eu.posthog.com/project/211541/insights/30K1ORHR)
-   - Tracks: Dashboard view (`/dashboard`) $\rightarrow$ Opportunities Catalog view (`/dashboard/opportunities`) $\rightarrow$ Opportunity Detail view (`/dashboard/opportunities/[id]`) $\rightarrow$ Deal Engagement (`opportunity_interest_recorded` / `whatsapp_contact_clicked`).
-3. **Content Engagement Funnel:** [IBC - Content Engagement Funnel](https://eu.posthog.com/project/211541/insights/vtitETQ5)
-   - Tracks: Articles catalog view (`/articles`) $\rightarrow$ Article Detail view (`/articles/[slug]`) $\rightarrow$ Reaction Added (`article_reaction_added`).
+1. **Acquisition & Activation Funnel:** [IBC - Acquisition & Activation Funnel](https://eu.posthog.com/project/211541/insights/9RXc39fs) (90-day conversion window)
+   - Tracks the progression: Landing page view (`/`) → Inscription (logical OR of `user_registered` or `user_signed_up`) → Complete Profile (`onboarding_profile_completed`) → Tier Selected (`tier_selected`) → Payment Intent (`bank_transfer_instructions_viewed`).
+2. **Deal Engagement Funnel:** [IBC - Deal Engagement Funnel](https://eu.posthog.com/project/211541/insights/30K1ORHR) (14-day conversion window)
+   - Tracks the progression: Dashboard view (`/dashboard`) → Opportunities Catalog view (`/dashboard/opportunities`) → Opportunity Detail view (URL matching the regex pattern `^/dashboard/opportunities/[^/]+$` to capture specific deal IDs) → Deal Engagement (logical OR of `opportunity_interest_recorded` or `whatsapp_contact_clicked`).
+3. **Content Engagement Funnel:** [IBC - Content Engagement Funnel](https://eu.posthog.com/project/211541/insights/vtitETQ5) (14-day conversion window)
+   - Tracks the progression: Articles catalog view (`/articles`) → Article Detail view (URL matching the regex pattern `^/articles/[^/]+$`) → Reaction Added (`article_reaction_added`).
 
 ### Trends & Volume Metrics
 
 - **Active Users by Tier:** [IBC - Active Users by Tier](https://eu.posthog.com/project/211541/insights/jjm19kft)
-  - Daily active users (DAU) visiting the platform, broken down by their membership tier (`BOSS`, `GRAND_FRERE`, `AFFRANCHI`) and user roles (`MEMBER`, `ADMIN`).
+  - Shows daily active users (DAU) visiting the platform, broken down by their membership tier (`BOSS`, `GRAND_FRERE`, `AFFRANCHI`) and user roles (`MEMBER`, `ADMIN`) mapped as person properties.
 - **Daily Registrations:** [IBC - Daily Registrations](https://eu.posthog.com/project/211541/insights/5sANSPCh)
-  - Daily new member registrations (`user_registered`) trend over the last 30 days.
+  - Tracks daily new member registrations (`user_registered`) over the last 30 days.
 - **Acquisition Conversion Rate Trend:** [IBC - Acquisition Funnel Conversion Rate Trend](https://eu.posthog.com/project/211541/insights/gPNcghVR)
-  - Plotted conversion rate trend of the main acquisition funnel over 90 days.
-- **Lead Generation:** [Lead Generation](https://eu.posthog.com/project/211541/insights/hC6fnSX8)
-  - Daily guide download submissions (top of the funnel).
-- **Member Engagement Events:** [Member Engagement Events](https://eu.posthog.com/project/211541/insights/g3RIttOj)
-  - Aggregated trends of deal interest, reviews, and article reactions.
+  - Plots the overall conversion rate trend of the main acquisition funnel over 90 days.
+- **Lead Generation:** [IBC - Lead Generation](https://eu.posthog.com/project/211541/insights/hC6fnSX8)
+  - Tracks daily guide download submissions (top of the funnel) over the last 30 days.
+- **Member Engagement Events:** [IBC - Member Engagement Events](https://eu.posthog.com/project/211541/insights/g3RIttOj)
+  - Tracks aggregated trends of deal interest, reviews, and article reactions over the last 30 days.
+
+## Session Replay & Anonymization
+
+Session Recordings are activated and configured in the PostHog console to track user journeys:
+- **IP Anonymization:** Client IP addresses are anonymized by default (`anonymize_ips: true` is verified in the project settings).
+- **Form Masking:** Sensitive input fields (such as password fields, auth tokens, etc.) are masked automatically on the client to prevent sensitive data exposure.
+- **Person Identification:** Session replays are linked to identified member profile IDs after credential-based signup (`identify` is triggered with the user ID, role, and tier), allowing full visualization of onboarding journeys.
 
 ## Verify before merging
 
