@@ -15,13 +15,21 @@ vi.mock("next/font/google", () => ({
   Inter: () => ({ className: "mocked-inter-class" }),
 }));
 
-// Mock theme-provider and auth-provider components to avoid full context complexity
-vi.mock("@/components/theme-provider", () => ({
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
+// Mock posthog-provider components to avoid full context complexity
+vi.mock("@/components/providers/posthog-provider", () => ({
+  CSPostHogProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="posthog-provider">{children}</div>,
+  PostHogPageView: () => <div data-testid="posthog-pageview" />,
+  PostHogIdentitySync: () => <div data-testid="posthog-identity-sync" />,
 }));
 
+// Mock auth-provider to avoid full context complexity
 vi.mock("@/components/auth-provider", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
+}));
+
+// Mock theme-provider to avoid full context complexity
+vi.mock("@/components/theme-provider", () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
 }));
 
 vi.mock("@/components/ui/sonner", () => ({

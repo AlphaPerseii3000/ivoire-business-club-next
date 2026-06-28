@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import { OrangeMoneyInstructions } from "@/components/orange-money-instructions";
 import { PaymentMethodSelector, type PaymentProvider } from "@/components/payment-method-selector";
@@ -29,9 +30,12 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const hasSelectedAuthenticatedTier = isAuthenticated ? selectedTier !== null : false;
-  const isMobileMoneyStep = step === "instructions" && mobileProvider !== null && selectedTier !== null;
+  const shouldShowPaymentSelector = hasSelectedAuthenticatedTier && step === "select";
+  const shouldShowMobileInstructions = step === "instructions" && mobileProvider !== null && selectedTier !== null;
+  const shouldShowMobileInstructionsWithUser = shouldShowMobileInstructions && selectedTier !== null && userId !== undefined;
 
   function handleTierSelect(tier: MembershipTier) {
+    posthog.capture("tier_selected", { tier, source: "pricing_page" });
     setSelectedTier(tier);
     setStep("select");
     setMobileProvider(null);
@@ -116,7 +120,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
         </p>
       ) : null}
 
-      {hasSelectedAuthenticatedTier && step === "select" ? (
+      {shouldShowPaymentSelector ? (
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <p className="mb-4 text-sm text-muted-foreground">
             Offre sélectionnée. Choisis comment tu souhaites régler ton abonnement.
@@ -131,7 +135,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
         </div>
       ) : null}
 
-      {isMobileMoneyStep && selectedTier && userId ? (
+      {shouldShowMobileInstructionsWithUser ? (
         <div className="space-y-4">
           <button
             type="button"
@@ -146,9 +150,9 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
             ← Changer de moyen de paiement
           </button>
           {mobileProvider === "WAVE" ? (
-            <WaveInstructions tier={selectedTier} userId={userId} amount={getAmountForTier(selectedTier)} />
+            <WaveInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!)} />
           ) : (
-            <OrangeMoneyInstructions tier={selectedTier} userId={userId} amount={getAmountForTier(selectedTier)} />
+            <OrangeMoneyInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!)} />
           )}
         </div>
       ) : null}

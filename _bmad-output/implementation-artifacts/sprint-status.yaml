@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-06-28T18:10:00+02:00
+last_updated: 2026-06-28T19:04:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -154,6 +154,6 @@ development_status:
   epic-19: in-progress
   19-1-installation-posthog: done
   19-2-identification-evenements-metier: done
-  19-2b-posthog-identification-gaps: ready-for-dev
+  19-2b-posthog-identification-gaps: review
   19-3-dashboards-funnels-posthog: backlog
   epic-19-retrospective: optional

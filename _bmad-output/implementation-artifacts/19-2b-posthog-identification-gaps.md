@@ -2,9 +2,10 @@
 story_id: 19.2b
 story_key: 19-2b-posthog-identification-gaps
 epic: 19 - Analytics Comportemental PostHog
-status: ready-for-dev
+status: review
+baseline_commit: b385d10
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-28T19:04+02:00
 language: fr
 ---
 
@@ -57,40 +58,40 @@ La Story 19-2 a été marquée `done` car le wizard PostHog (`@posthog/wizard`) 
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Comprendre l’état existant** (AC1, AC2, AC3)
-  - [ ] Vérifier que `posthog-js` est initialisé dans `src/components/providers/posthog-provider.tsx` avec `capture_pageview: false` et `person_profiles: 'identified_only'`.
-  - [ ] Vérifier que `AuthProvider` enveloppe `CSPostHogProvider` dans `src/app/layout.tsx` (session disponible pour les hooks enfants).
-  - [ ] Confirmer que `session.user` expose `id`, `email`, `name`, `tier`, `role` via `auth.config.ts`.
+- [x] **T1 — Comprendre l’état existant** (AC1, AC2, AC3)
+  - [x] Vérifier que `posthog-js` est initialisé dans `src/components/providers/posthog-provider.tsx` avec `capture_pageview: false` et `person_profiles: 'identified_only'`.
+  - [x] Vérifier que `AuthProvider` enveloppe `CSPostHogProvider` dans `src/app/layout.tsx` (session disponible pour les hooks enfants).
+  - [x] Confirmer que `session.user` expose `id`, `email`, `name`, `tier`, `role` via `auth.config.ts`.
 
-- [ ] **T2 — Créer le hook client `usePostHogIdentify`** (AC1, AC2)
-  - [ ] Créer `src/hooks/use-posthog-identify.ts` (ou équivalent dans `src/components/providers/`).
-  - [ ] Utiliser `useSession` de `next-auth/react` pour écouter les changements de session.
-  - [ ] Si `status === 'authenticated'` et `session.user.id` existe :
+- [x] **T2 — Créer le hook client `usePostHogIdentify`** (AC1, AC2)
+  - [x] Créer `src/hooks/use-posthog-identify.ts` (ou équivalent dans `src/components/providers/`).
+  - [x] Utiliser `useSession` de `next-auth/react` pour écouter les changements de session.
+  - [x] Si `status === 'authenticated'` et `session.user.id` existe :
     - appeler `posthog.identify(session.user.id, { email, name, tier, role })`.
-  - [ ] Si `status === 'unauthenticated'` et qu’un utilisateur était précédemment identifié, ne pas appeler `reset` ici (déjà géré par `/auth/signout`).
-  - [ ] Garantir l’idempotence : ne pas rappeler `identify` si les propriétés n’ont pas changé (comparaison locale simple).
+  - [x] Si `status === 'unauthenticated'` et qu’un utilisateur était précédemment identifié, ne pas appeler `reset` ici (déjà géré par `/auth/signout`).
+  - [x] Garantir l’idempotence : ne pas rappeler `identify` si les propriétés n’ont pas changé (comparaison locale simple).
 
-- [ ] **T3 — Intégrer le hook dans le provider/layout** (AC1, AC2)
-  - [ ] Ajouter un composant client `<PostHogIdentitySync />` dans `src/components/providers/posthog-provider.tsx` (ou fichier dédié).
-  - [ ] Rendre ce composant dans `src/app/layout.tsx` à l’intérieur de `CSPostHogProvider` et `AuthProvider` afin que `useSession` fonctionne.
-  - [ ] Respecter le garde-fou JSX Next.js 16 : pas d’`&&` dans les expressions JSX, utiliser des ternaires pré-computées.
+- [x] **T3 — Intégrer le hook dans le provider/layout** (AC1, AC2)
+  - [x] Ajouter un composant client `<PostHogIdentitySync />` dans `src/components/providers/posthog-provider.tsx` (ou fichier dédié).
+  - [x] Rendre ce composant dans `src/app/layout.tsx` à l’intérieur de `CSPostHogProvider` et `AuthProvider` afin que `useSession` fonctionne.
+  - [x] Respecter le garde-fou JSX Next.js 16 : pas d’`&&` dans les expressions JSX, utiliser des ternaires pré-computées.
 
-- [ ] **T4 — Supprimer/aligner l’identify redondant sur signup** (AC1, AC2)
-  - [ ] Dans `src/app/auth/signup/page.tsx`, remplacer l’appel `posthog.identify(responseData.id, { email, name })` par le passage par le hook global (ou enrichir avec tier/role si le hook ne couvre pas le flux immédiat post-inscription avant le retour de session).
-  - [ ] Option recommandée : laisser le hook global gérer l’identify après le `signIn` credentials automatique ; s’assurer que `session.user` contient bien `tier`/`role` dès le premier render post-redirect.
+- [x] **T4 — Supprimer/aligner l’identify redondant sur signup** (AC1, AC2)
+  - [x] Dans `src/app/auth/signup/page.tsx`, remplacer l’appel `posthog.identify(responseData.id, { email, name })` par le passage par le hook global (ou enrichir avec tier/role si le hook ne couvre pas le flux immédiat post-inscription avant le retour de session).
+  - [x] Option recommandée : laisser le hook global gérer l’identify après le `signIn` credentials automatique ; s’assurer que `session.user` contient bien `tier`/`role` dès le premier render post-redirect.
 
-- [ ] **T5 — Capturer `tier_selected` sur `/pricing`** (AC3)
-  - [ ] Dans `src/components/pricing-tier-selection.tsx`, importer `posthog` depuis `posthog-js`.
-  - [ ] Dans `handleTierSelect`, avant/après `setSelectedTier`, appeler `posthog.capture('tier_selected', { tier, source: 'pricing_page' })`.
-  - [ ] S’assurer que le composant a `'use client'` en haut de fichier (déjà le cas).
+- [x] **T5 — Capturer `tier_selected` sur `/pricing`** (AC3)
+  - [x] Dans `src/components/pricing-tier-selection.tsx`, importer `posthog` depuis `posthog-js`.
+  - [x] Dans `handleTierSelect`, avant/après `setSelectedTier`, appeler `posthog.capture('tier_selected', { tier, source: 'pricing_page' })`.
+  - [x] S’assurer que le composant a `'use client'` en haut de fichier (déjà le cas).
 
-- [ ] **T6 — Vérifier le signout** (régression)
-  - [ ] Confirmer que `src/app/auth/signout/page.tsx` continue d’appeler `posthog.reset()` avant `signOut`.
+- [x] **T6 — Vérifier le signout** (régression)
+  - [x] Confirmer que `src/app/auth/signout/page.tsx` continue d’appeler `posthog.reset()` avant `signOut`.
 
-- [ ] **T7 — Tests et build**
-  - [ ] Mettre à jour ou ajouter des tests unitaires pour `usePostHogIdentify` / `PostHogIdentitySync` si possible (mocks de `posthog-js` et `next-auth/react`).
-  - [ ] Exécuter `npm run build` pour valider qu’aucune erreur de type ou de rendu SSR n’est introduite.
-  - [ ] Exécuter `npm test -- --run` pour vérifier les tests existants.
+- [x] **T7 — Tests et build**
+  - [x] Mettre à jour ou ajouter des tests unitaires pour `usePostHogIdentify` / `PostHogIdentitySync` si possible (mocks de `posthog-js` et `next-auth/react`).
+  - [x] Exécuter `npm run build` pour valider qu’aucune erreur de type ou de rendu SSR n’est introduite.
+  - [x] Exécuter `npm test -- --run` pour vérifier les tests existants.
 
 ## Dev Notes
 
@@ -152,8 +153,23 @@ N/A — story de formalisation, pas d’implémentation.
 - Story formalisée à partir du draft existant `19-2b-posthog-identification-gaps.md`.
 - Les 3 ACs du draft ont été conservées sans redéfinition de scope.
 - Ajout des dev notes détaillées : fichiers à modifier, anti-patterns, points de vigilance OAuth/credentials/hydratation.
+- **Implémentation 19.2b :**
+  - Création du hook `usePostHogIdentify` et du composant `PostHogIdentitySync` dans le provider PostHog.
+  - `posthog.identify()` est appelé automatiquement pour toute session authentifiée (credentials + OAuth), avec `email`, `name`, `tier`, `role`.
+  - Intégration dans `src/app/layout.tsx` à l’intérieur de `AuthProvider` + `CSPostHogProvider`.
+  - Suppression de l’`identify` manuel redondant dans `src/app/auth/signup/page.tsx`.
+  - Ajout de `posthog.capture('tier_selected', { tier, source: 'pricing_page' })` dans `handleTierSelect`.
+  - Mise à jour des tests unitaires `posthog-provider.test.tsx` et `accessibility.test.tsx`.
+  - `npm run build` et `npx vitest run` passent (997 tests).
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/19-2b-posthog-identification-gaps.md` (story formalisée)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (status mis à jour `backlog` → `ready-for-dev`)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (status mis à jour `backlog` → `ready-for-dev` → `in-progress` → `review`)
+- `src/hooks/use-posthog-identify.ts` (hook identité — créé)
+- `src/components/providers/posthog-provider.tsx` (`PostHogIdentitySync` — modifié)
+- `src/app/layout.tsx` (rendu `PostHogIdentitySync` — modifié)
+- `src/app/auth/signup/page.tsx` (suppression `identify` manuel — modifié)
+- `src/components/pricing-tier-selection.tsx` (event `tier_selected` — modifié)
+- `src/components/providers/posthog-provider.test.tsx` (tests `PostHogIdentitySync` — modifié)
+- `src/app/accessibility.test.tsx` (mock `PostHogIdentitySync` — modifié)
