@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { runSync } from "./sync-onboarding-to-profile";
+import { runSync } from "./sync-onboarding-to-profile.ts";
 
 const mockUserFindMany = vi.hoisted(() => vi.fn());
 const mockUserUpdate = vi.hoisted(() => vi.fn());

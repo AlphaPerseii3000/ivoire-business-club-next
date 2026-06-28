@@ -10,6 +10,23 @@ Les membres inscrits **avant** cette correction ont un `onboardingCompletedAt` r
 
 ## Exécution
 
+### Sur le VPS de production (recommandé)
+
+Le script `scripts/sync-onboarding-to-profile.js` est un script JS standalone (CommonJS) inclus dans le paquet de déploiement. Il ne dépend d'aucun module `@/` du projet et utilise directement le driver PostgreSQL `pg`.
+
+```bash
+cd /var/www/ibc/current
+source .env
+node scripts/sync-onboarding-to-profile.js --dry-run   # simulation
+node scripts/sync-onboarding-to-profile.js             # exécution réelle
+```
+
+Le script charge automatiquement `.env` si `DATABASE_URL` n'est pas déjà dans l'environnement. Le module `pg` est résolu depuis `node_modules/` ou `.next/standalone/node_modules/`.
+
+### En développement local (TypeScript)
+
+Le script TypeScript original `scripts/sync-onboarding-to-profile.ts` reste disponible pour le développement et les tests unitaires :
+
 ```bash
 npx tsx scripts/sync-onboarding-to-profile.ts
 ```
@@ -25,6 +42,10 @@ N utilisateurs synchronisés, M utilisateurs déjà à jour, K utilisateurs sans
 Pour visualiser les changements sans modifier la base de données :
 
 ```bash
+# VPS production
+node scripts/sync-onboarding-to-profile.js --dry-run
+
+# Développement local
 npx tsx scripts/sync-onboarding-to-profile.ts --dry-run
 ```
 
@@ -95,14 +116,22 @@ Si l'audit log échoue, la migration de l'utilisateur concerné **n'est pas roll
 
 ## Prérequis
 
+### VPS production
+
+- `DATABASE_URL` doit être configurée (fichier `.env` chargé automatiquement).
+- Le module `pg` doit être disponible dans `node_modules/` (inclus dans le build standalone).
+- Node.js 20+ doit être installé.
+
+### Développement local
+
 - `DATABASE_URL` doit être configurée (fichier `.env`).
-- `npx tsx` doit être disponible pour exécuter le script.
-- Le client Prisma (`@/lib/prisma`) doit être en mesure de se connecter à la base configurée.
+- `npx tsx` doit être disponible pour exécuter le script TypeScript.
 
 ## Fichiers liés
 
-- `scripts/sync-onboarding-to-profile.ts` — script de migration.
+- `scripts/sync-onboarding-to-profile.js` — script de migration standalone (VPS production).
+- `scripts/sync-onboarding-to-profile.ts` — script de migration TypeScript (dev local).
 - `scripts/sync-onboarding-to-profile.test.ts` — tests unitaires du script.
 - `src/lib/audit-log.ts` — définition de l'action `ONBOARDING_SYNC_MIGRATION`.
 - `src/app/api/user/onboarding/route.ts` — implémentation Story 16.1 (mapping réutilisé).
-- `src/lib/verification.server.ts` — `autoTransitionVerificationStatus` appelée après synchronisation.
+- `src/lib/verification.server.ts` — `autoTransitionVerificationStatus` (logique inlinée dans le script JS).
