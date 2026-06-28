@@ -386,6 +386,66 @@ country: z.string().min(2, "Sélectionne un pays"),
 
 ---
 
+### Story 16.3 : Email d'accueil dynamique selon le mode de paiement
+
+**En tant que** nouveau membre IBC,  
+**Je veux** que l'email d'accueil contienne les instructions de paiement correspondant au mode que j'ai choisi (virement bancaire, Wave, ou Orange Money),  
+**Afin que** je sache exactement comment finaliser mon adhésion sans devoir chercher l'information sur le site.
+
+**Contexte :** La fonction `sendWelcomeEmail` supporte déjà 3 modes de paiement (`BANK_TRANSFER`, `WAVE`, `ORANGE_MONEY`) avec des instructions dédiées, mais les deux appelants (signup route + Google OAuth) ne passent jamais `paymentProvider` ni `tier` — tout est hardcodé `AFFRANCHI` + `BANK_TRANSFER`.
+
+**Acceptance Criteria :**
+
+1. **AC1 — L'email d'accueil post-sélection de paiement est dynamique**
+   - **Given** un membre qui vient de choisir son tier et son mode de paiement sur `/pricing` (API `POST /api/subscriptions`)
+   - **When** la souscription est créée
+   - **Then** un email d'accueil est envoyé avec `paymentProvider` correspondant au choix du membre (`BANK_TRANSFER`, `WAVE`, ou `ORANGE_MONEY`)
+   - **And** le `tier` dans l'email correspond au tier choisi (pas `AFFRANCHI` par défaut)
+   - **And** les instructions de paiement correspondent au provider (IBAN pour virement, numéro marchand Wave/Orange Money + référence)
+   - **And** le `providerPhone` est inclus si le membre a fourni un numéro mobile money
+
+2. **AC2 — L'email d'accueil post-inscription reste générique (sans instructions de paiement)**
+   - **Given** un membre qui vient de s'inscrire (signup ou Google OAuth)
+   - **When** l'email de bienvenue est envoyé
+   - **Then** il ne contient **pas** d'instructions de paiement spécifiques (le membre n'a pas encore choisi son tier ni son mode de paiement)
+   - **And** le `tier` affiché est `AFFRANCHI` (par défaut, comme actuellement)
+   - **And** l'email invite le membre à choisir son abonnement dans son espace membre
+   - **And** l'email inclut le lien vers `/pricing`
+
+3. **AC3 — Non-doublon**
+   - **Given** un membre qui reçoit l'email de bienvenue post-inscription
+   - **When** il choisit ensuite son mode de paiement sur `/pricing`
+   - **Then** l'email d'accueil dynamique (post-sélection) est envoyé une seule fois
+   - **And** le membre ne reçoit pas l'email de bienvenue post-inscription à nouveau
+
+4. **AC4 — Extraction du corps d'email dans `sendWelcomeEmail`**
+   - **Given** la fonction `sendWelcomeEmail`
+   - **When** elle est appelée sans `paymentProvider` (ou avec `paymentProvider = null`)
+   - **Then** le corps de l'email ne contient aucune section "Pour finaliser votre adhésion, merci d'effectuer..."
+   - **And** le corps contient à la place un lien vers `/pricing` : "Choisissez votre formule d'abonnement dans votre espace membre : {appUrl}/pricing"
+
+5. **AC5 — Tests**
+   - **Given** les tests unitaires
+   - **When** ils s'exécutent
+   - **Then** les tests vérifient que `sendWelcomeEmail` avec `paymentProvider = "WAVE"` génère les instructions Wave
+   - **And** les tests vérifient que `sendWelcomeEmail` avec `paymentProvider = "ORANGE_MONEY"` génère les instructions Orange Money
+   - **And** les tests vérifient que `sendWelcomeEmail` sans `paymentProvider` ne génère pas de section paiement mais inclut le lien `/pricing`
+   - **And** les tests vérifient que l'API `POST /api/subscriptions` appelle `sendWelcomeEmail` avec le bon `paymentProvider` et `tier`
+   - **And** les tests existants de signup sont mis à jour : l'email post-inscription ne contient plus de section paiement
+
+**Technical Notes :**
+- **Fichiers à modifier :**
+  - `src/lib/email.ts` : Rendre `paymentProvider` optionnel (nullable). Si absent, ne pas inclure de section paiement, mais ajouter un lien vers `/pricing`.
+  - `src/app/api/auth/signup/route.ts` L74 : Retirer `paymentProvider` de l'appel (déjà absent, mais vérifier que le default ne force pas `BANK_TRANSFER`). Changer le default à `undefined`/`null`.
+  - `src/lib/auth.ts` L116 : Idem — retirer le default `BANK_TRANSFER`.
+  - `src/app/api/subscriptions/route.ts` : Après la création de la subscription (L80, après la transaction), appeler `sendWelcomeEmail` avec `paymentProvider`, `tier`, `providerPhone`, `userId`.
+- **Signature `sendWelcomeEmail` :** Changer `paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY"` → `paymentProvider?: "BANK_TRANSFER" | "WAVE" | "ORANGE_MONEY" | null` et default à `null` au lieu de `"BANK_TRANSFER"`.
+- La section paiement n'est générée que si `paymentProvider` est défini et non-null.
+- Le lien `/pricing` est toujours inclus dans l'email post-inscription (sans choix de paiement).
+- **Guardrail :** Ne pas envoyer l'email de bienvenue si la subscription est en échec (transaction Prisma échouée → pas d'email).
+
+---
+
 ## 6. Impact sur le PRD
 
 ### Nouvelles exigences fonctionnelles
@@ -394,6 +454,8 @@ country: z.string().min(2, "Sélectionne un pays"),
 |----|-------------|-------|
 | FR-SYNC1 | La soumission du formulaire d'onboarding synchronise les colonnes User (`name`, `phone`, `location`, `country`, `bio`, `tier`) en plus du JSON `onboardingForm` | 16.1 |
 | FR-SYNC2 | Un script de migration synchronise rétroactivement les membres existants ayant un `onboardingForm` rempli mais des champs User vides | 16.2 |
+| FR-SYNC3 | L'email d'accueil post-sélection de paiement inclut les instructions dynamiques selon le mode choisi (virement, Wave, Orange Money) | 16.3 |
+| FR-SYNC4 | L'email d'accueil post-inscription ne contient pas d'instructions de paiement (le membre n'a pas encore choisi) mais invite à choisir sur `/pricing` | 16.3 |
 
 ### Exigences existantes inchangées
 
@@ -407,13 +469,14 @@ country: z.string().min(2, "Sélectionne un pays"),
 
 ### 7.1 Classification du changement
 
-- **Scope :** Minor-to-Moderate — 1 nouvel epic, 2 nouvelles stories, 1 modification d'API, 1 script de migration, 1 champ de formulaire ajouté
+- **Scope :** Moderate — 1 nouvel epic, 3 nouvelles stories, 1 modification d'API, 1 script de migration, 1 champ de formulaire ajouté, 1 refonte de l'email d'accueil
 - **Handoff :** Developer agent (DS) pour chaque story, puis CR
 
 ### 7.2 Séquence d'implémentation
 
 1. **Story 16.1** (synchronisation onboarding → User) — doit être implémentée en premier
 2. **Story 16.2** (migration rétroactive) — peut être implémentée en parallèle ou après 16.1
+3. **Story 16.3** (email d'accueil dynamique) — indépendante, peut être implémentée en parallèle
 
 ### 7.3 Success Criteria
 
@@ -423,6 +486,8 @@ country: z.string().min(2, "Sélectionne un pays"),
 - `npm run build` passe sans erreur
 - Les tests unitaires couvrent : synchronisation des champs, auto-transition, cas edge du script de migration, idempotence
 - Le formulaire d'onboarding inclut un champ "Pays"
+- L'email d'accueil post-sélection de paiement contient les instructions dynamiques (virement, Wave, ou Orange Money)
+- L'email d'accueil post-inscription ne contient pas d'instructions de paiement mais un lien vers `/pricing`
 
 ---
 
@@ -434,4 +499,5 @@ Après validation, ajouter :
   epic-16: in-progress
   16-1-sync-onboarding-to-user: backlog
   16-2-migration-retroactive-members: backlog
+  16-3-email-accueil-dynamique-paiement: backlog
 ```
