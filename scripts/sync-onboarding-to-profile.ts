@@ -2,6 +2,7 @@ import { autoTransitionVerificationStatus } from "@/lib/verification.server";
 import { prisma } from "@/lib/prisma";
 import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { sanitizeError } from "@/lib/sanitize-log";
+import type { Prisma } from "@/generated/prisma/client";
 
 const userSelect = {
   id: true,
@@ -99,7 +100,7 @@ function parseOnboardingForm(onboardingForm: unknown): OnboardingFormData | null
 }
 
 function buildSyncData(user: MigrationUser, parsed: OnboardingFormData) {
-  const data: Partial<Pick<MigrationUser, "name" | "phone" | "location" | "country" | "bio" | "tier">> = {};
+  const data: Prisma.UserUpdateInput = {};
   const syncedFields: string[] = [];
 
   if (user.name === null && parsed.fullName !== undefined) {
