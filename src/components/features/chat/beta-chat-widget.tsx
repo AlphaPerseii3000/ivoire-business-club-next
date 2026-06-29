@@ -134,6 +134,7 @@ export default function BetaChatWidget() {
   const [category, setCategory] = useState<string>(CATEGORIES[0].value);
   const [content, setContent] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [mounted, setMounted] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -205,14 +206,18 @@ export default function BetaChatWidget() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || open || !mounted) {
       return;
     }
 
     fetchUnread();
     const interval = setInterval(fetchUnread, UNREAD_REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, open, mounted]);
 
   useEffect(() => {
     if (!open) {
@@ -231,7 +236,7 @@ export default function BetaChatWidget() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) {
+    if (!canSubmit || !category) {
       return;
     }
 
@@ -285,6 +290,9 @@ export default function BetaChatWidget() {
 
   const widgetVisible = isAuthenticated;
   const showBadge = unreadCount > 0;
+  const textareaDescribedBy = contentTooLong
+    ? "chat-counter chat-error"
+    : "chat-counter";
   const hasNoMessages = messages.length === 0;
   const notLoadingHistory = !loadingHistory;
   const noHistoryError = !historyError;
@@ -486,7 +494,7 @@ export default function BetaChatWidget() {
                       onChange={(event) => setContent(event.target.value)}
                       maxLength={MAX_CONTENT_LENGTH}
                       rows={3}
-                      aria-describedby="chat-counter chat-error"
+                      aria-describedby={textareaDescribedBy}
                       disabled={submitting}
                     />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
