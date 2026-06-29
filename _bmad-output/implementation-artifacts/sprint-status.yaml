@@ -148,7 +148,7 @@ development_status:
   epic-17-retrospective: optional
   epic-18: in-progress
   18-1-chat-message-model-api: done
-  18-2-beta-chat-widget-ui: review
+  18-2-beta-chat-widget-ui: done
   18-3-hermes-skill-cron-integration: backlog
   epic-18-retrospective: optional
 
