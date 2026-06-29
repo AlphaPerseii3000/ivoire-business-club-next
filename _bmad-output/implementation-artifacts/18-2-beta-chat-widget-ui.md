@@ -2,9 +2,10 @@
 story_id: 18.2
 story_key: 18-2-beta-chat-widget-ui
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: ready-for-dev
+status: review
+baseline_commit: c021940306bb7cca9119db89796293e008a7e5f6
 created: 2026-06-29
-updated: 2026-06-29T09:14:14+02:00
+updated: 2026-06-29T09:16:30+02:00
 language: fr
 ---
 
