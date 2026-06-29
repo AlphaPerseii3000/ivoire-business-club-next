@@ -5,7 +5,7 @@ epic: 18 - Chat de Support Beta & Feedback Membres
 status: review
 baseline_commit: 1942466
 created: 2026-06-29
-updated: 2026-06-29T13:00:00+02:00
+updated: 2026-06-29T13:45:00+02:00
 language: fr
 ---
 
@@ -26,7 +26,36 @@ Cette story **ne modifie pas le code de l'application IBC** : les routes API (`/
 3. Une **intégration to-do** : les demandes actionnables extraites des messages sont ajoutées à `~/.hermes/jonathan_todo.json` avec le préfixe `[IBC-CHAT]`.
 4. Un **test end-to-end** : poster un message via l'UI IBC et vérifier qu'Hermes le lit, répond, et met à jour la todo.
 
+) |
 > **Critique :** Cette story produit des artefacts **hors du repo IBC** (`~/.hermes/skills/...`, `~/.hermes/cron/jobs.json`, `~/.hermes/jonathan_todo.json`). Le dev agent doit clairement documenter dans la story et dans le code où chaque artefact va, car rien n'est versionné dans Git.
+
+## Review Findings
+
+### P0 — Cron job exécuté en mode script/no_agent
+
+**Finding (CR returned FAIL):** The cron job `ibc-beta-chat-support` was configured with `no_agent: true` and pointed to a shell script (`~/.hermes/scripts/ibc-beta-chat-support.sh`) instead of using Hermes agent execution with the skill.
+
+**Decision:** Option A — switch the cron job to `no_agent: false` and provide a French prompt that instructs Hermes to execute the `ibc-beta-chat-support` skill workflow. Delete the shell script. Keep `enabled_toolsets: ["web"]` and `skills: ["ibc-beta-chat-support"]` so the agent respects the skill guardrails.
+
+**Fix applied:**
+- Updated `~/.hermes/cron/jobs.json` job `6e345dcf4312`:
+  - `no_agent: false`
+  - `script: null`
+  - `prompt`: concise French workflow referencing the skill
+  - `enabled_toolsets: ["web"]`
+  - `skills: ["ibc-beta-chat-support"]`
+  - `schedule: every 5m`
+  - `enabled: true`
+  - `deliver: "local"`
+- Deleted `~/.hermes/scripts/ibc-beta-chat-support.sh`.
+- Tightened the skill guardrail about file access:
+  - "Write ONLY to `~/.hermes/jonathan_todo.json` via the file tool. No other file access is permitted."
+
+### P1 — Todo-write wording ambiguous
+
+**Finding:** The skill guardrail about file access was ambiguous, allowing interpretation that other runtime paths or toolsets could be used for the todo file.
+
+**Fix applied:** Replaced the ambiguous sentence with an explicit instruction that the skill may only write to `~/.hermes/jonathan_todo.json` and no other file access is permitted.
 
 ## Acceptance Criteria
 
@@ -246,6 +275,7 @@ DS subagent timed out after creating the skill and cron job but before committin
 - Skill contient tous les garde-fous : toolset web-only, endpoints hardcodés, CRON_SECRET from env, classification, réponses ≤1000 chars signées "L'équipe IBC", todo idempotent avec msg_id
 - Aucun fichier src/ du repo IBC modifié (conforme au scope)
 - DS timed out avant commit — orchestrator a finalisé : commit, status update, push
+- **CR fix 2026-06-29 :** `no_agent: false` + prompt skill + script supprimé + guardrail fichier resserré.
 
 ### File List
 
