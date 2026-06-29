@@ -1657,6 +1657,48 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 ---
 
+### Story 18-4: Webhook Temps Réel — Remplacement du Polling par Notification Push
+
+**En tant que** membre connecté,
+**Je veux** que mes messages de support soient traités en temps réel (et non dans un délai de 5 minutes),
+**Afin de** recevoir une réponse quasi-immédiate de l'équipe de support.
+
+**Contexte technique :** Le cron Hermes actuel (Story 18-3) pole l'API IBC toutes les 5 minutes pour récupérer les messages PENDING. L'expérience utilisateur est dégradée : un membre peut attendre jusqu'à 5 minutes. Ce story remplace le polling par un webhook temps réel, tout en conservant le cron comme filet de sécurité.
+
+**Architecture cible :**
+1. Tunnel Cloudflare expose le port 8644 du gateway Hermes sur une URL publique
+2. Webhook subscription Hermes `ibc-chat-trigger` déclenche le skill `ibc-beta-chat-support` à chaque POST reçu
+3. L'API IBC `POST /api/chat/messages` fait un appel webhook fire-and-forget vers Hermes après la création du message
+4. Le cron 5 min reste actif comme backup pour les messages ratés par le webhook
+
+**Acceptance Criteria :**
+
+**Given** le fichier `src/app/api/chat/messages/route.ts` modifié
+**When** un membre envoie un message via POST `/api/chat/messages` et que la transaction DB réussit
+**Then** l'API retourne 201 immédiatement (avant ou indépendamment de l'appel webhook)
+**And** un appel HTTP POST fire-and-forget est envoyé vers l'URL définie par `WEBHOOK_URL` avec un header d'authentification contenant le `WEBHOOK_SECRET`
+**And** si le webhook échoue (Hermes down, réseau, timeout), l'API retourne quand même 201 — l'échec est loggé mais ne bloque pas la réponse
+
+**Given** les variables d'environnement du projet IBC
+**When** le code lit `WEBHOOK_URL` et `WEBHOOK_SECRET`
+**Then** ces variables sont présentes dans `.env.example` avec des commentaires explicatifs
+**And** si `WEBHOOK_URL` n'est pas définie, l'appel webhook est silencieusement ignoré (pas d'erreur, pas de crash)
+
+**Given** le webhook Hermes configuré avec la subscription `ibc-chat-trigger`
+**When** un POST arrive sur l'URL du webhook avec un payload JSON contenant `{ "messageId": "...", "userId": "...", "category": "...", "content": "..." }`
+**Then** Hermes déclenche le skill `ibc-beta-chat-support` qui exécute le workflow de réponse en temps réel
+**And** la signature HMAC-SHA256 du header est validée avant le déclenchement
+
+**Given** le cron de backup 5 min toujours actif
+**When** un message a déjà été traité par le webhook
+**Then** le cron ne re-traite pas le message (idempotence via `msg_id` dans le todo file + statut non-PENDING en DB)
+
+**Given** le code modifié
+**When** `npm run build` et `npx vitest run` sont exécutés
+**Then** le build passe sans erreur et les tests existants passent (pas de régression)
+
+---
+
 ## Epic 19: Analytics Comportemental PostHog
 
 **Objectif :** Intégrer PostHog sur la plateforme IBC pour suivre le comportement des utilisateurs, mesurer l'engagement sur les fonctionnalités clés, identifier les utilisateurs par tier d'abonnement et bâtir des entonnoirs d'acquisition et d'activation.

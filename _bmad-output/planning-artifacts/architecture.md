@@ -228,6 +228,21 @@ src/app/api/
 | `/api/chat/agent/reply` | `POST` | Bearer token (CRON_SECRET) | Hermes répond à un message |
 | `/api/chat/agent/close` | `POST` | Bearer token (CRON_SECRET) | Hermes ferme une conversation |
 
+**Webhook Temps Réel (Story 18-4) :**
+
+L'API IBC notifie Hermes en temps réel via un webhook fire-and-forget après chaque création de message membre. Le cron 5 min reste actif comme filet de sécurité.
+
+| Élément | Description |
+|---------|-------------|
+| `WEBHOOK_URL` | URL publique du webhook Hermes (exposée via tunnel Cloudflare sur le port 8644 du gateway) |
+| `WEBHOOK_SECRET` | Secret partagé pour HMAC-SHA256 — différent du `CRON_SECRET` (le webhook Hermes a son propre secret global) |
+| Appel webhook | `POST {WEBHOOK_URL}` avec body `{ messageId, userId, category, content }` et header `X-Hermes-Signature: sha256=<hmac>` |
+| Fire-and-forget | L'appel est non bloquant — si Hermes est down, l'API retourne quand même 201. L'échec est loggé en warning. |
+| Conditional | Si `WEBHOOK_URL` n'est pas définie (env var absente), l'appel webhook est silencieusement ignoré. |
+| Tunnel Cloudflare | `cloudflared tunnel --url http://localhost:8644` expose le gateway Hermes. Quick tunnel pour dev (URL temporaire trycloudflare.com). Named tunnel + domaine Cloudflare pour la production. |
+| Webhook subscription Hermes | `hermes webhook subscribe ibc-chat-trigger --skills ibc-beta-chat-support --deliver local` — déclenche le skill en temps réel à chaque POST reçu. |
+| Cron backup | Le cron `6e345dcf4312` (poll 5 min) reste actif. L'idempotence est garantie par : (1) `msg_id` dans le todo file, (2) le statut du message n'est plus `PENDING` après traitement webhook. |
+
 **API Response Format:**
 - Success: `Response.json({ data: T })` or `NextResponse.json({ data: T })`
 - Error: `Response.json({ error: string, code?: string }, { status })`
