@@ -33,9 +33,9 @@
 # - Stories can be worked in parallel if team capacity allows
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
-
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-06-29T19:30:00+02:00
+# last_updated: 2026-06-29T19:30:00+02:00
+last_updated: 2026-06-29T07:18:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -147,10 +147,11 @@ development_status:
   17-1-pending-subscription-banner: done
   epic-17-retrospective: optional
   epic-18: in-progress
-  18-1-chat-message-model-api: ready-for-dev
+  18-1-chat-message-model-api: review
   18-2-beta-chat-widget-ui: backlog
   18-3-hermes-skill-cron-integration: backlog
   epic-18-retrospective: optional
+
   epic-19: in-progress
   19-1-installation-posthog: done
   19-2-identification-evenements-metier: done

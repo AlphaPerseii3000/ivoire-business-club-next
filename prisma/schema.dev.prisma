@@ -116,6 +116,7 @@ model User {
   comments           Comment[]
   documentAccessRequests DocumentAccessRequest[] @relation("DocumentAccessRequester")
   reviewedAccessRequests DocumentAccessRequest[] @relation("DocumentAccessReviewer")
+  chatMessages         ChatMessage[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -399,6 +400,39 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   CANCELLED
+}
+
+enum ChatMessageStatus {
+  PENDING
+  ACKNOWLEDGED
+  REPLIED
+  CLOSED
+}
+
+enum ChatMessageAuthor {
+  MEMBER
+  HERMES
+  SYSTEM
+}
+
+model ChatMessage {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  author      ChatMessageAuthor
+  status      ChatMessageStatus @default(PENDING)
+  category    String?           // bug_technique | accessibilite | demande_integration | autre
+  content     String            // markdown plain text, max 5000 chars
+  replyToId   String?
+  replyTo     ChatMessage?      @relation("ChatReply", fields: [replyToId], references: [id])
+  replies     ChatMessage[]     @relation("ChatReply")
+  readAt      DateTime?         // Optionnel : marque de lecture côté client
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("chat_messages")
 }
 
 enum ArticleVisibility {

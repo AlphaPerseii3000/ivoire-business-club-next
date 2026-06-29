@@ -671,4 +671,25 @@ export const companyUpdateSchema = companyCreateSchema.partial();
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
 export type CompanyUpdateInput = z.infer<typeof companyUpdateSchema>;
 
+const chatCategory = z.enum(["bug_technique", "accessibilite", "demande_integration", "autre"], {
+  message: "Catégorie invalide",
+});
+
+export const chatMessageCreateSchema = z.object({
+  category: chatCategory,
+  content: z.string().trim().min(1, "Le message est requis").max(5000, "Le message ne doit pas dépasser 5000 caractères"),
+});
+
+export const chatAgentReplySchema = z.object({
+  messageId: z.string().cuid({ message: "Identifiant de message invalide" }),
+  content: z.string().trim().min(1, "La réponse est requise").max(1000, "La réponse ne doit pas dépasser 1000 caractères"),
+});
+
+export const chatAgentCloseSchema = z.object({
+  messageId: z.string().cuid({ message: "Identifiant de message invalide" }),
+});
+
+export type ChatMessageCreateInput = z.infer<typeof chatMessageCreateSchema>;
+export type ChatAgentReplyInput = z.infer<typeof chatAgentReplySchema>;
+export type ChatAgentCloseInput = z.infer<typeof chatAgentCloseSchema>;
 

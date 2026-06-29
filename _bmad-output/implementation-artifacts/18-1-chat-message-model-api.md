@@ -2,10 +2,9 @@
 story_id: 18.1
 story_key: 18-1-chat-message-model-api
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: ready-for-dev
-baseline_commit: dcc17ad
+status: review
 created: 2026-06-29
-updated: 2026-06-29T19:30+02:00
+updated: 2026-06-29T07:18:00+02:00
 language: fr
 ---
 
@@ -114,42 +113,42 @@ Les messages sont stockés dans une table dédiée `ChatMessage` avec des statut
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Modèle et migration Prisma** (AC1, AC2)
-  - [ ] Ajouter dans `prisma/schema.prisma` les enums `ChatMessageStatus` et `ChatMessageAuthor` et le modèle `ChatMessage` (relation `User`, threading, indexes)
-  - [ ] Générer et appliquer la migration : `npx prisma migrate dev --name add_chat_message`
-  - [ ] Vérifier que le client Prisma est régénéré et que le build passe
+- [x] **T1 — Modèle et migration Prisma** (AC1, AC2)
+  - [x] Ajouter dans `prisma/schema.prisma` les enums `ChatMessageStatus` et `ChatMessageAuthor` et le modèle `ChatMessage` (relation `User`, threading, indexes)
+  - [x] Générer et appliquer la migration : `npx prisma migrate dev --name add_chat_message`
+  - [x] Vérifier que le client Prisma est régénéré et que le build passe
 
-- [ ] **T2 — Route POST /api/chat/messages** (AC3, AC4)
-  - [ ] Créer `src/app/api/chat/messages/route.ts`
-  - [ ] Protéger par `auth()` (membre connecté uniquement)
-  - [ ] Valider le payload avec Zod : category ∈ `{bug_technique, accessibilite, demande_integration, autre}`, content non vide, max 5000 chars
-  - [ ] Appliquer le rate limiting 1 req / 30 s / user en réutilisant `src/lib/rate-limit.ts`
-  - [ ] Créer le message membre + l'acknowledgement SYSTEM dans une transaction Prisma
-  - [ ] Retourner `201 { data: { message: ChatMessage, ack: ChatMessage } }`
+- [x] **T2 — Route POST /api/chat/messages** (AC3, AC4)
+  - [x] Créer `src/app/api/chat/messages/route.ts`
+  - [x] Protéger par `auth()` (membre connecté uniquement)
+  - [x] Valider le payload avec Zod : category ∈ `{bug_technique, accessibilite, demande_integration, autre}`, content non vide, max 5000 chars
+  - [x] Appliquer le rate limiting 1 req / 30 s / user en réutilisant `src/lib/rate-limit.ts`
+  - [x] Créer le message membre + l'acknowledgement SYSTEM dans une transaction Prisma
+  - [x] Retourner `201 { data: { message: ChatMessage, ack: ChatMessage } }`
 
-- [ ] **T3 — Route GET /api/chat/messages** (AC5)
-  - [ ] Ajouter la méthode GET dans `src/app/api/chat/messages/route.ts`
-  - [ ] Filtrer sur `userId` de la session, trier par `createdAt` desc
-  - [ ] Paginer avec `page`/`limit` (limit par défaut 20, max 50)
-  - [ ] Retourner `200 { data: { messages: ChatMessage[], total, page, limit } }`
+- [x] **T3 — Route GET /api/chat/messages** (AC5)
+  - [x] Ajouter la méthode GET dans `src/app/api/chat/messages/route.ts`
+  - [x] Filtrer sur `userId` de la session, trier par `createdAt` desc
+  - [x] Paginer avec `page`/`limit` (limit par défaut 20, max 50)
+  - [x] Retourner `200 { data: { messages: ChatMessage[], total, page, limit } }`
 
-- [ ] **T4 — Route GET /api/chat/unread** (AC6)
-  - [ ] Créer `src/app/api/chat/unread/route.ts`
-  - [ ] Protéger par `auth()`
-  - [ ] Compter les messages `author IN [HERMES, SYSTEM]` liés à l'utilisateur dont `readAt` est null
-  - [ ] Retourner `200 { data: { unreadCount: number } }`
+- [x] **T4 — Route GET /api/chat/unread** (AC6)
+  - [x] Créer `src/app/api/chat/unread/route.ts`
+  - [x] Protéger par `auth()`
+  - [x] Compter les messages `author IN [HERMES, SYSTEM]` liés à l'utilisateur dont `readAt` est null
+  - [x] Retourner `200 { data: { unreadCount: number } }`
 
-- [ ] **T5 — Routes agent /api/chat/agent/* ** (AC7, AC8, AC9)
-  - [ ] Créer `src/app/api/chat/agent/read/route.ts` — GET, Bearer `CRON_SECRET`, retourne messages `PENDING`
-  - [ ] Créer `src/app/api/chat/agent/reply/route.ts` — POST, Bearer `CRON_SECRET`, valide `{ messageId, content }`, met à jour le parent `REPLIED`, crée message HERMES
-  - [ ] Créer `src/app/api/chat/agent/close/route.ts` — POST, Bearer `CRON_SECRET`, valide `{ messageId }`, met à jour `CLOSED` de façon idempotente
-  - [ ] Réutiliser la fonction `getBearerToken` et le pattern de `src/app/api/cron/remind-incomplete-users/route.ts`
-  - [ ] S'assurer que les routes agent n'accèdent qu'à `prisma.chatMessage`
+- [x] **T5 — Routes agent /api/chat/agent/* ** (AC7, AC8, AC9)
+  - [x] Créer `src/app/api/chat/agent/read/route.ts` — GET, Bearer `CRON_SECRET`, retourne messages `PENDING`
+  - [x] Créer `src/app/api/chat/agent/reply/route.ts` — POST, Bearer `CRON_SECRET`, valide `{ messageId, content }`, met à jour le parent `REPLIED`, crée message HERMES
+  - [x] Créer `src/app/api/chat/agent/close/route.ts` — POST, Bearer `CRON_SECRET`, valide `{ messageId }`, met à jour `CLOSED` de façon idempotente
+  - [x] Réutiliser la fonction `getBearerToken` et le pattern de `src/app/api/cron/remind-incomplete-users/route.ts`
+  - [x] S'assurer que les routes agent n'accèdent qu'à `prisma.chatMessage`
 
-- [ ] **T6 — Tests et validation** (tous AC)
-  - [ ] Ajouter des tests unitaires pour les routes chat (mock `auth()` et rate limiter)
-  - [ ] Exécuter `npm run build`
-  - [ ] Exécuter `npx vitest run` (ou `npm test -- --run`)
+- [x] **T6 — Tests et validation** (tous AC)
+  - [x] Ajouter des tests unitaires pour les routes chat (mock `auth()` et rate limiter)
+  - [x] Exécuter `npm run build`
+  - [x] Exécuter `npx vitest run` (ou `npm test -- --run`)
 
 ## Dev Notes
 
@@ -280,19 +279,36 @@ N/A — story de formalisation, pas d'implémentation.
 
 ### Completion Notes List
 
-- Story 18-1 formalisée à partir du Sprint Change Proposal Chat Beta du 2026-06-28.
-- Modèle Prisma `ChatMessage`, enums `ChatMessageStatus`/`ChatMessageAuthor` et migration additive inclus.
-- Routes membres (POST/GET `/api/chat/messages`, GET `/api/chat/unread`) et routes agent (`/api/chat/agent/read|reply|close`) définies.
-- Auto-acknowledgement SYSTEM et rate limiting 1 msg / 30 s par utilisateur intégrés aux AC.
-- Champ optionnel `readAt` ajouté au modèle pour permettre le compteur de non-lus en V1.
+- Story 18-1 implémentée dans le code.
+- Modèle Prisma `ChatMessage`, enums `ChatMessageStatus`/`ChatMessageAuthor`, relation `User`, threading `replyToId`/`replies`, indexes `[userId, createdAt]` et `[status]` créés dans `prisma/schema.prisma` et `prisma/schema.dev.prisma`.
+- Migration `20260629050711_add_chat_message` générée et appliquée sous SQLite dev.
+- Routes membres : `POST/GET /api/chat/messages`, `GET /api/chat/unread` avec auth session, validation Zod, rate limiting 1 msg/30 s, pagination, compteur de non-lus.
+- Routes agent : `GET /api/chat/agent/read`, `POST /api/chat/agent/reply`, `POST /api/chat/agent/close` protégées par `CRON_SECRET` Bearer ; agent isolé à `prisma.chatMessage`.
+- Auto-acknowledgement SYSTEM créé dans la transaction du message membre avec le message bêta requis.
+- Tests unitaires co-localisés créés pour les 5 routes (26 tests chat), tous passent.
+- Build Next.js et suite de tests complète (1023 tests) passent sans régression.
+- Status de la story mis à jour à `review` dans `sprint-status.yaml`.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/18-1-chat-message-model-api.md` (story formalisée)
-- `prisma/schema.prisma` (modèle à ajouter)
-- `src/lib/rate-limit.ts` (limiter chat à ajouter)
-- `src/app/api/chat/messages/route.ts` (POST + GET membres — à créer)
-- `src/app/api/chat/unread/route.ts` (GET non-lus — à créer)
-- `src/app/api/chat/agent/read/route.ts` (GET PENDING agent — à créer)
-- `src/app/api/chat/agent/reply/route.ts` (POST réponse agent — à créer)
-- `src/app/api/chat/agent/close/route.ts` (POST clôture agent — à créer)
+- `_bmad-output/implementation-artifacts/18-1-chat-message-model-api.md` (status `review`, tâches cochées)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (story 18-1 → review)
+- `prisma/schema.prisma` (modèle `ChatMessage` et enums)
+- `prisma/schema.dev.prisma` (modèle `ChatMessage` et enums)
+- `prisma/migrations/20260629050711_add_chat_message/migration.sql` (migration additive SQLite)
+- `src/lib/rate-limit.ts` (ajout `chatMessageRateLimiter`)
+- `src/lib/validations.ts` (schémas Zod chat)
+- `src/app/api/chat/messages/route.ts` (POST + GET membres)
+- `src/app/api/chat/messages/route.test.ts`
+- `src/app/api/chat/unread/route.ts` (GET non-lus)
+- `src/app/api/chat/unread/route.test.ts`
+- `src/app/api/chat/agent/read/route.ts` (GET PENDING agent)
+- `src/app/api/chat/agent/read/route.test.ts`
+- `src/app/api/chat/agent/reply/route.ts` (POST réponse agent)
+- `src/app/api/chat/agent/reply/route.test.ts`
+- `src/app/api/chat/agent/close/route.ts` (POST clôture agent)
+- `src/app/api/chat/agent/close/route.test.ts`
+
+### Change Log
+
+- 2026-06-29 : Implémentation complète story 18-1 (modèle, migration, 5 routes API, tests, build + tests OK). Status `review`.
