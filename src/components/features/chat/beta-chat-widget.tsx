@@ -288,7 +288,11 @@ export default function BetaChatWidget() {
     }
   };
 
-  const widgetVisible = isAuthenticated;
+  // Wait for client-side mount before checking auth to avoid SSR hydration mismatch.
+  // useSession() returns status="loading" during SSR, which would render null.
+  // Without the mounted guard, Next.js may not re-render the component after hydration
+  // when the SessionProvider fetches the session asynchronously.
+  const widgetVisible = mounted && isAuthenticated;
   const showBadge = unreadCount > 0;
   const textareaDescribedBy = contentTooLong
     ? "chat-counter chat-error"
