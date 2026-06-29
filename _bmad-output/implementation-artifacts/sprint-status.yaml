@@ -147,7 +147,7 @@ development_status:
   17-1-pending-subscription-banner: done
   epic-17-retrospective: optional
   epic-18: in-progress
-  18-1-chat-message-model-api: review
+  18-1-chat-message-model-api: done
   18-2-beta-chat-widget-ui: backlog
   18-3-hermes-skill-cron-integration: backlog
   epic-18-retrospective: optional

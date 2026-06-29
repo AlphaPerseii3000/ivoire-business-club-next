@@ -2,7 +2,7 @@
 story_id: 18.1
 story_key: 18-1-chat-message-model-api
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: review
+status: done
 created: 2026-06-29
 updated: 2026-06-29T07:18:00+02:00
 language: fr
