@@ -150,7 +150,7 @@ development_status:
   18-1-chat-message-model-api: done
   18-2-beta-chat-widget-ui: done
   18-3-hermes-skill-cron-integration: done
-  18-4-webhook-realtime-trigger: review
+  18-4-webhook-realtime-trigger: done
   epic-18-retrospective: optional
 
   epic-19: in-progress
