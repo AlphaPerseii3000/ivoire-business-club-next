@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { CSPostHogProvider, PostHogIdentitySync, PostHogPageView } from "@/components/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import BetaChatWidget from "@/components/features/chat/beta-chat-widget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <TooltipProvider>
                 {children}
                 <Toaster richColors />
+                <BetaChatWidget />
               </TooltipProvider>
             </CSPostHogProvider>
           </AuthProvider>
