@@ -4,6 +4,7 @@ import { sanitizeError } from "@/lib/sanitize-log";
 import { chatMessageCreateSchema } from "@/lib/validations";
 import { chatMessageRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 const DEFAULT_PAGE_LIMIT = 20;
 const MAX_PAGE_LIMIT = 50;
@@ -62,20 +63,26 @@ export async function POST(req: Request) {
     });
 
     if (process.env.WEBHOOK_URL) {
+      const webhookBody = JSON.stringify({
+        messageId: result.message.id,
+        userId,
+        category,
+        content,
+      });
+      const signature = crypto
+        .createHmac("sha256", process.env.WEBHOOK_SECRET!)
+        .update(webhookBody)
+        .digest("hex");
+
       void (async () => {
         try {
           const response = await fetch(process.env.WEBHOOK_URL as string, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.WEBHOOK_SECRET ?? ""}`,
+              "X-Webhook-Signature": signature,
             },
-            body: JSON.stringify({
-              messageId: result.message.id,
-              userId,
-              category,
-              content,
-            }),
+            body: webhookBody,
           });
           if (!response.ok) {
             console.warn(

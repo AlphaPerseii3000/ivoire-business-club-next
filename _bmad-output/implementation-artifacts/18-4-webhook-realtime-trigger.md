@@ -43,8 +43,8 @@ L'objectif est de **remplacer le polling de 5 minutes par une notification push 
 **Then** l'API retourne `201 { data: { message, ack } }` immédiatement, sans attendre la réponse du webhook
 **And** un appel `fetch(WEBHOOK_URL, { method: "POST", body, headers })` est déclenché de façon asynchrone/non bloquante avec :
   - Body JSON minimal : `{ messageId, userId, category, content }`
-  - Header d'authentification contenant le secret (`X-Hermes-Signature: sha256=<hmac>` ou `Authorization: Bearer WEBHOOK_SECRET` selon la convention Hermes documentée)
-**And** si l'appel webhook échoue (Hermes down, timeout, erreur réseau), l'API retourne quand même 201 ; l'erreur est loggée en warning sans stack trace sensible
+  - Header d'authentification contenant le secret HMAC-SHA256 (`X-Webhook-Signature: <hex HMAC-SHA256 of body>`)
+  - Header `Content-Type: application/json`
 
 ### AC2 — Désactivation silencieuse si `WEBHOOK_URL` non configurée
 
@@ -119,7 +119,7 @@ L'objectif est de **remplacer le polling de 5 minutes par une notification push 
 - **Scope strictement additif** : cette story modifie uniquement `src/app/api/chat/messages/route.ts` et `.env.example`. Elle ne touche pas à `prisma/schema.prisma`, aux routes `/api/chat/agent/*`, au widget UI, ni au skill Hermes.
 - **Fire-and-forget** : l'appel webhook ne doit pas bloquer la réponse HTTP 201. Utiliser `fetch(...)` sans `await`, ou `void fetch(...)`, ou un wrapper qui catch et loggue. L'important est que l'exception éventuelle ne remonte pas jusqu'à la route.
 - **Lecture des env vars** : les variables doivent être lues via `process.env.WEBHOOK_URL` et `process.env.WEBHOOK_SECRET`. Pas de valeur par défaut en dur dans le code.
-- **Format du header d'authentification** : selon le SCP et `architecture.md`, le secret est envoyé dans le header. Le format exact dépend de la config Hermes. Le SCP mentionne "header `X-Hermes-Signature: sha256=<hmac>`" pour la validation côté Hermes, tandis que le texte parle aussi de `Authorization: Bearer WEBHOOK_SECRET`. **À vérifier avant implémentation** : le format attendu par le webhook platform activée dans `~/.hermes/config.yaml`. Si incertain, documenter les deux options et privilégier celui configuré dans Hermes.
+- **Format du header d'authentification** : Hermes `webhook` adapter accepte uniquement `X-Hub-Signature-256`, `X-Gitlab-Token`, `X-Webhook-Signature`, ou les headers Svix. La convention retenue pour IBC est **Generic HMAC-SHA256** : header `X-Webhook-Signature: <hex HMAC-SHA256 of body>`, calculé avec `crypto.createHmac('sha256', WEBHOOK_SECRET).update(JSON.stringify(body)).digest('hex')`. Le format `Authorization: Bearer <secret>` n'est PAS reconnu par Hermes.
 - **Body minimal** : envoyer uniquement les champs nécessaires au skill : `messageId`, `userId`, `category`, `content`. Le skill Hermes utilisera `messageId` pour appeler `/api/chat/agent/reply` et `/api/chat/agent/read` si besoin.
 - **Logging sécurisé** : ne jamais logger `WEBHOOK_SECRET` ni le body complet du message. Logger uniquement `messageId`, `userId`, `category` et le statut de l'appel (ok / échec).
 - **CRON_SECRET vs WEBHOOK_SECRET** : ce sont deux secrets distincts. `CRON_SECRET` protège `/api/chat/agent/*` ; `WEBHOOK_SECRET` authentifie les appels sortants de l'API IBC vers Hermes.
@@ -205,11 +205,12 @@ kimi-k2.7-code (via ollama-cloud)
 
 ### Completion Notes List
 
-- Added fire-and-forget webhook call after Prisma transaction in `POST /api/chat/messages`.
-- Guarded by `process.env.WEBHOOK_URL`; skipped silently when unset.
-- Sends JSON body `{ messageId, userId, category, content }` with `Authorization: Bearer <WEBHOOK_SECRET>` header.
-- Errors are logged via `console.warn` using `sanitizeError` without exposing the secret or full body.
-- Updated `.env.example` with documented `WEBHOOK_URL` and `WEBHOOK_SECRET`.
+- L'appel envoie `Authorization: Bearer <WEBHOOK_SECRET>`.
++ L'appel envoie `X-Webhook-Signature: <hex HMAC-SHA256 du body>`, calculé avec `crypto.createHmac('sha256', WEBHOOK_SECRET).update(JSON.stringify(body)).digest('hex')`.
++ L'appel reste fire-and-forget, protégé par `try/catch` et loggué en `console.warn`.
++ Le body JSON reste `{ messageId, userId, category, content }`.
++ `WEBHOOK_URL` non définie → appel ignoré silencieusement.
+- Updated `.env.example` comment for `WEBHOOK_SECRET` to indicate HMAC-SHA256 signing via `X-Webhook-Signature`.
 - No schema, agent route, widget, or skill changes.
 - Cron backup remains unchanged; idempotence relies on existing `PENDING` filter and `msg_id` todo guard.
 
