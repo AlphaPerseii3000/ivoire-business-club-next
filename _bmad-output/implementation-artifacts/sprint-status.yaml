@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-06-29T19:30:00+02:00
-last_updated: 2026-06-29T07:18:00+02:00
+last_updated: 2026-06-29T09:14:14+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -148,7 +148,7 @@ development_status:
   epic-17-retrospective: optional
   epic-18: in-progress
   18-1-chat-message-model-api: done
-  18-2-beta-chat-widget-ui: backlog
+  18-2-beta-chat-widget-ui: ready-for-dev
   18-3-hermes-skill-cron-integration: backlog
   epic-18-retrospective: optional
 
