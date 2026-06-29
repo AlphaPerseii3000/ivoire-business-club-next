@@ -1,8 +1,10 @@
 # generated: 2026-06-28T16:40:39+02:00
-# last_updated: 2026-06-28T19:59:12+02:00
+# last_updated: 2026-06-28T16:43:50+02:00
 # project: ibc
+# project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
+
 # STATUS DEFINITIONS:
 # ==================
 # Epic Status:
@@ -33,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-06-28T19:59:12+02:00
+last_updated: 2026-06-29T19:30:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -145,7 +147,7 @@ development_status:
   17-1-pending-subscription-banner: done
   epic-17-retrospective: optional
   epic-18: in-progress
-  18-1-chat-message-model-api: backlog
+  18-1-chat-message-model-api: ready-for-dev
   18-2-beta-chat-widget-ui: backlog
   18-3-hermes-skill-cron-integration: backlog
   epic-18-retrospective: optional
@@ -153,5 +155,5 @@ development_status:
   19-1-installation-posthog: done
   19-2-identification-evenements-metier: done
   19-2b-posthog-identification-gaps: done
-  19-3-dashboards-funnels-posthog: done
+  19-3-dashboards-funnels-posthog: backlog
   epic-19-retrospective: optional
