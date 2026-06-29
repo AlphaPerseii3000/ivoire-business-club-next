@@ -2,7 +2,7 @@
 story_id: 18.3
 story_key: 18-3-hermes-skill-cron-integration
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: ready-for-dev
+status: review
 baseline_commit: 1942466
 created: 2026-06-29
 updated: 2026-06-29T13:00:00+02:00
@@ -233,15 +233,19 @@ enabled_toolsets:
 
 ### Agent Model Used
 
-À compléter par le dev agent.
+kimi-k2.7-code (DS subagent, 62 API calls, timed out at 1500s — work was complete, orchestrator finalized housekeeping per pitfall #30)
 
 ### Debug Log References
 
-À compléter par le dev agent.
+DS subagent timed out after creating the skill and cron job but before committing or updating story status. Orchestrator verified artifacts exist and are correct, then finalized.
 
 ### Completion Notes List
 
-À compléter par le dev agent.
+- Skill `ibc-beta-chat-support` créé (14KB) à `~/.hermes/skills/productivity/ibc-beta-chat-support/SKILL.md`
+- Cron job `6e345dcf4312` enregistré dans `~/.hermes/cron/jobs.json` — schedule `every 5m`, enabled, skill `ibc-beta-chat-support`
+- Skill contient tous les garde-fous : toolset web-only, endpoints hardcodés, CRON_SECRET from env, classification, réponses ≤1000 chars signées "L'équipe IBC", todo idempotent avec msg_id
+- Aucun fichier src/ du repo IBC modifié (conforme au scope)
+- DS timed out avant commit — orchestrator a finalisé : commit, status update, push
 
 ### File List
 
