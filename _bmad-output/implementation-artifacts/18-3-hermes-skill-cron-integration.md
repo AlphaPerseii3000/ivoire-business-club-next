@@ -2,7 +2,7 @@
 story_id: 18.3
 story_key: 18-3-hermes-skill-cron-integration
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: review
+status: done
 baseline_commit: 1942466
 created: 2026-06-29
 updated: 2026-06-29T13:45:00+02:00
