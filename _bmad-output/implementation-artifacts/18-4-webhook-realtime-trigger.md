@@ -2,7 +2,8 @@
 story_id: 18.4
 story_key: 18-4-webhook-realtime-trigger
 epic: 18 - Chat de Support Beta & Feedback Membres
-status: ready-for-dev
+status: review
+baseline_commit: a50efb1f59749c52b341a6f74fcd282a1c861c46
 language: fr
 ---
 
@@ -84,32 +85,32 @@ L'objectif est de **remplacer le polling de 5 minutes par une notification push 
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Modifier `src/app/api/chat/messages/route.ts` pour l'appel webhook** (AC1, AC2)
-  - [ ] Extraire une fonction `triggerWebhook(message)` asynchrone dans le fichier ou dans `src/lib/chat/webhook.ts` si le projet nécessite une séparation (dans ce story, modification inline autorisée car unique point d'appel)
-  - [ ] Lire `WEBHOOK_URL` et `WEBHOOK_SECRET` via `process.env`
-  - [ ] Si `WEBHOOK_URL` est défini, appeler `fetch(WEBHOOK_URL, { method: "POST", ... })` après le `prisma.$transaction` et **avant** le `return NextResponse.json(..., { status: 201 })` dans le flux, mais sans `await` pour le fire-and-forget
-  - [ ] Wrapper l'appel dans `try/catch` ; logguer un warning sans révéler `WEBHOOK_SECRET`
-  - [ ] Construire le body JSON : `{ messageId: message.id, userId, category, content }`
-  - [ ] Ajouter le header d'authentification avec le secret (voir Dev Notes pour le format attendu par Hermes)
+- [x] **T1 — Modifier `src/app/api/chat/messages/route.ts` pour l'appel webhook** (AC1, AC2)
+  - [x] Extraire une fonction `triggerWebhook(message)` asynchrone dans le fichier ou dans `src/lib/chat/webhook.ts` si le projet nécessite une séparation (dans ce story, modification inline autorisée car unique point d'appel)
+  - [x] Lire `WEBHOOK_URL` et `WEBHOOK_SECRET` via `process.env`
+  - [x] Si `WEBHOOK_URL` est défini, appeler `fetch(WEBHOOK_URL, { method: "POST", ... })` après le `prisma.$transaction` et **avant** le `return NextResponse.json(..., { status: 201 })` dans le flux, mais sans `await` pour le fire-and-forget
+  - [x] Wrapper l'appel dans `try/catch` ; logguer un warning sans révéler `WEBHOOK_SECRET`
+  - [x] Construire le body JSON : `{ messageId: message.id, userId, category, content }`
+  - [x] Ajouter le header d'authentification avec le secret (voir Dev Notes pour le format attendu par Hermes)
 
-- [ ] **T2 — Mettre à jour `.env.example`** (AC3)
-  - [ ] Ajouter les variables `WEBHOOK_URL` et `WEBHOOK_SECRET` dans la section `# Support` ou une nouvelle section `# Webhook Temps Réel (Hermes)`
-  - [ ] Rédiger des commentaires explicatifs en français ou en anglais (cohérent avec le reste du fichier)
+- [x] **T2 — Mettre à jour `.env.example`** (AC3)
+  - [x] Ajouter les variables `WEBHOOK_URL` et `WEBHOOK_SECRET` dans la section `# Support` ou une nouvelle section `# Webhook Temps Réel (Hermes)`
+  - [x] Rédiger des commentaires explicatifs en français ou en anglais (cohérent avec le reste du fichier)
 
-- [ ] **T3 — Vérifier l'idempotence et le fallback cron** (AC5)
-  - [ ] S'assurer que `/api/chat/agent/read` continue de filtrer uniquement les messages `PENDING` (non modifié par cette story)
-  - [ ] Vérifier que le skill `ibc-beta-chat-support` gère déjà l'idempotence todo par `msg_id`
-  - [ ] Confirmer que le cron `6e345dcf4312` reste actif sans modification
+- [x] **T3 — Vérifier l'idempotence et le fallback cron** (AC5)
+  - [x] S'assurer que `/api/chat/agent/read` continue de filtrer uniquement les messages `PENDING` (non modifié par cette story)
+  - [x] Vérifier que le skill `ibc-beta-chat-support` gère déjà l'idempotence todo par `msg_id`
+  - [x] Confirmer que le cron `6e345dcf4312` reste actif sans modification
 
-- [ ] **T4 — Build et tests sans régression** (AC6)
-  - [ ] Exécuter `npm run build`
-  - [ ] Exécuter `npx vitest run`
-  - [ ] Corriger toute régression liée à l'ajout du webhook (types, env vars, tests existants)
+- [x] **T4 — Build et tests sans régression** (AC6)
+  - [x] Exécuter `npm run build`
+  - [x] Exécuter `npx vitest run`
+  - [x] Corriger toute régression liée à l'ajout du webhook (types, env vars, tests existants)
 
-- [ ] **T5 — Documentation du déploiement et de la subscription Hermes** (AC4)
-  - [ ] Documenter dans le story la commande de création de la subscription : `hermes webhook subscribe ibc-chat-trigger --skills ibc-beta-chat-support --deliver local`
-  - [ ] Documenter la commande de tunnel Cloudflare : `cloudflared tunnel --url http://localhost:8644`
-  - [ ] Indiquer que le quick tunnel a une URL temporaire et qu'un named tunnel est nécessaire en production
+- [x] **T5 — Documentation du déploiement et de la subscription Hermes** (AC4)
+  - [x] Documenter dans le story la commande de création de la subscription : `hermes webhook subscribe ibc-chat-trigger --skills ibc-beta-chat-support --deliver local`
+  - [x] Documenter la commande de tunnel Cloudflare : `cloudflared tunnel --url http://localhost:8644`
+  - [x] Indiquer que le quick tunnel a une URL temporaire et qu'un named tunnel est nécessaire en production
 
 ## Dev Notes
 
@@ -193,20 +194,33 @@ hermes webhook subscribe ibc-chat-trigger \
 
 ### Agent Model Used
 
-À compléter par le dev agent.
+kimi-k2.7-code (via ollama-cloud)
 
 ### Debug Log References
 
-À compléter par le dev agent.
+- Baseline commit: `a50efb1f59749c52b341a6f74fcd282a1c861c46`
+- Route test suite passes after webhook addition: `npx vitest run src/app/api/chat/messages/route.test.ts` — 8/8 OK.
+- Build passes with pre-existing static generation DB warnings.
+- Full `npx vitest run` shows 1 pre-existing BetaChatWidget/useSession failure in `src/app/accessibility.test.tsx`.
 
 ### Completion Notes List
 
-À compléter par le dev agent.
+- Added fire-and-forget webhook call after Prisma transaction in `POST /api/chat/messages`.
+- Guarded by `process.env.WEBHOOK_URL`; skipped silently when unset.
+- Sends JSON body `{ messageId, userId, category, content }` with `Authorization: Bearer <WEBHOOK_SECRET>` header.
+- Errors are logged via `console.warn` using `sanitizeError` without exposing the secret or full body.
+- Updated `.env.example` with documented `WEBHOOK_URL` and `WEBHOOK_SECRET`.
+- No schema, agent route, widget, or skill changes.
+- Cron backup remains unchanged; idempotence relies on existing `PENDING` filter and `msg_id` todo guard.
 
 ### File List
 
-À compléter par le dev agent.
+- `src/app/api/chat/messages/route.ts`
+- `.env.example`
+- `_bmad-output/implementation-artifacts/18-4-webhook-realtime-trigger.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ### Change Log
 
 - 2026-06-29 : Story créée par `bmad-create-story` — status `ready-for-dev`.
+- 2026-06-29 : Story implémentée — fire-and-forget webhook dans `POST /api/chat/messages`, env vars documentées, statut passé à `review`.

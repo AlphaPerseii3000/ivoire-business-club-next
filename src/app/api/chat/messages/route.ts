@@ -61,6 +61,36 @@ export async function POST(req: Request) {
       return { message, ack };
     });
 
+    if (process.env.WEBHOOK_URL) {
+      void (async () => {
+        try {
+          const response = await fetch(process.env.WEBHOOK_URL as string, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.WEBHOOK_SECRET ?? ""}`,
+            },
+            body: JSON.stringify({
+              messageId: result.message.id,
+              userId,
+              category,
+              content,
+            }),
+          });
+          if (!response.ok) {
+            console.warn(
+              `[chat/messages POST] Webhook call failed for messageId=${result.message.id} userId=${userId} category=${category}: HTTP ${response.status}`
+            );
+          }
+        } catch (error) {
+          console.warn(
+            `[chat/messages POST] Webhook call failed for messageId=${result.message.id} userId=${userId} category=${category}:`,
+            sanitizeError(error)
+          );
+        }
+      })();
+    }
+
     return NextResponse.json({ data: { message: result.message, ack: result.ack } }, { status: 201 });
   } catch (error) {
     console.error("[chat/messages POST] Unexpected error:", sanitizeError(error));
