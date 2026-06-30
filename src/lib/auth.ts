@@ -134,7 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const emailVerified = (user as unknown as { emailVerified?: boolean | null }).emailVerified;
           if (emailVerified === false) {
             await sendVerificationEmailToUser(user.id as string);
-            return `${process.env.APP_URL ?? ""}/dashboard?resend=1`;
+            return `${process.env.APP_URL ?? ""}/auth/signin?error=unverified`;
           }
         } catch (verificationError) {
           console.error("Failed to auto-resend verification email on credentials sign-in:", sanitizeError(verificationError));

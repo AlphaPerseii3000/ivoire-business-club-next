@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import posthog from "posthog-js";
 import { signupSchema, type SignupInput } from "@/lib/validations";
-import { getOAuthErrorMessage } from "@/lib/oauth-errors";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 function getPasswordStrength(password: string): { label: string; color: string } {
   if (password.length === 0) return { label: "", color: "" };
@@ -44,7 +44,7 @@ export default function SignUpPage() {
   const passwordValue = watch("password", "");
   const strength = getPasswordStrength(passwordValue);
 
-  const displayError = serverError || (urlError ? getOAuthErrorMessage(urlError) : "");
+  const displayError = serverError || (urlError ? getAuthErrorMessage(urlError) : "");
 
   const onSubmit = async (data: SignupInput) => {
     setServerError("");
@@ -71,7 +71,7 @@ export default function SignUpPage() {
         posthog.capture("user_signed_up", { method: "credentials" });
         window.location.href = "/dashboard?verify-email=1";
       } else {
-        window.location.href = "/auth/signin";
+        window.location.href = "/auth/signin?error=unverified";
       }
     } catch {
       setServerError("Erreur réseau");

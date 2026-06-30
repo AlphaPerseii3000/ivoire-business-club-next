@@ -178,7 +178,7 @@ describe("auth.ts exports", () => {
     });
   });
 
-  it("auto-resends verification email for unverified credentials users and redirects with ?resend=1", async () => {
+  it("auto-resends verification email for unverified credentials users and redirects with ?error=unverified", async () => {
     const config = await loadAuthConfig();
     mockFindUnique.mockResolvedValueOnce({
       id: "member-1",
@@ -201,7 +201,7 @@ describe("auth.ts exports", () => {
     });
 
     expect(mockSendVerificationEmailToUser).toHaveBeenCalledWith("member-1");
-    expect(result).toBe(`${process.env.APP_URL ?? ""}/dashboard?resend=1`);
+    expect(result).toBe(`${process.env.APP_URL ?? ""}/auth/signin?error=unverified`);
   });
 
   it("does not auto-resend verification email for verified credentials users", async () => {

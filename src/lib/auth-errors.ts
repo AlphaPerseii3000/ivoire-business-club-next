@@ -14,5 +14,3 @@ export function getAuthErrorMessage(error: string): string {
       return "Une erreur est survenue lors de la connexion. Réessaie.";
   }
 }
-
-export const getOAuthErrorMessage = getAuthErrorMessage;

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import posthog from "posthog-js";
 import { signinSchema, type SigninInput } from "@/lib/validations";
-import { getOAuthErrorMessage } from "@/lib/oauth-errors";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function SignInPage() {
     mode: "onBlur",
   });
 
-  const displayError = serverError || (urlError ? getOAuthErrorMessage(urlError) : "");
+  const displayError = serverError || (urlError ? getAuthErrorMessage(urlError) : "");
 
   const onSubmit = async (data: SigninInput) => {
     setServerError("");
