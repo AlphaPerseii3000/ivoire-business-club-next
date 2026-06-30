@@ -39,7 +39,7 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        setServerError("Email ou mot de passe incorrect.");
+        setServerError(getAuthErrorMessage(result.error));
       } else if (result?.ok) {
         posthog.capture("user_signed_in", { method: "credentials" });
         router.push("/dashboard");

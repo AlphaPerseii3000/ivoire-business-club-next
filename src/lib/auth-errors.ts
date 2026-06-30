@@ -2,6 +2,8 @@ export function getAuthErrorMessage(error: string): string {
   switch (error) {
     case "unverified":
       return "Vérifie ton email pour te connecter. Un lien de vérification t'a été envoyé.";
+    case "CredentialsSignin":
+      return "Email ou mot de passe incorrect.";
     case "OAuthCallback":
       return "La connexion avec Google a échoué. Veuillez réessayer.";
     case "OAuthAccountNotLinked":

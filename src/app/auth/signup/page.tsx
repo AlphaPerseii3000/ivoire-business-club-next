@@ -67,7 +67,7 @@ export default function SignUpPage() {
         password: data.password,
         redirect: false,
       });
-      if (result?.ok) {
+      if (result?.ok && !result?.error) {
         posthog.capture("user_signed_up", { method: "credentials" });
         window.location.href = "/dashboard?verify-email=1";
       } else {
