@@ -225,3 +225,88 @@ kimi-k2.7-code (via ollama-cloud)
 
 - 2026-06-29 : Story créée par `bmad-create-story` — status `ready-for-dev`.
 - 2026-06-29 : Story implémentée — fire-and-forget webhook dans `POST /api/chat/messages`, env vars documentées, statut passé à `review`.
+- 2026-06-29 : CR PASS — statut passé à `done`. Commit `65d02e6`.
+- 2026-06-30 : **Post-déploiement — configuration infrastructure Hermes et débogage**. Détails ci-dessous.
+
+## Post-Deployment Infrastructure Log (2026-06-30)
+
+### Contexte
+
+Après le passage en `done` de la story, la configuration de l'infrastructure Hermes (webhook subscription, toolsets, tunnel, VPS) a été nécessaire pour que le webhook fonctionne en production. Plusieurs problèmes ont été diagnostiqués et corrigés.
+
+### Problème 1 — Webhook subscription sans prompt (CRON_SECRET manquant)
+
+**Symptôme** : L'agent Hermes recevait le payload `{ messageId, userId, category, content }` mais ne pouvait pas s'authentifier à l'API IBC car `CRON_SECRET` et `APP_URL` n'étaient pas injectés dans le prompt.
+
+**Cause** : La subscription webhook `ibc-chat-trigger` avait été créée sans `--prompt`, donc le payload brut était envoyé à l'agent sans contexte d'authentification.
+
+**Fix** : Suppression et recréation de la subscription avec un `--prompt` incluant `CRON_SECRET`, `APP_URL`, les fields du payload (`{messageId}`, `{userId}`, `{category}`, `{content}`), et les instructions du workflow. Delivery changée de `telegram` vers `discord` (salon `#ibc-chat-support`, ID `1521267584144642200`).
+
+### Problème 2 — Toolsets webhook insuffisants (pas de terminal/file)
+
+**Symptôme** : L'agent Hermes répondait dans Discord qu'il n'avait pas accès au toolset `terminal` et ne pouvait pas exécuter `curl` pour appeler `/api/chat/agent/reply`.
+
+**Cause** : Le toolset par défaut pour les sessions webhook (`hermes-webhook`) ne contient que `web_search`, `web_extract`, `vision_analyze`, `clarify` — des "safe tools". Pas de `terminal` ni `file`, car les webhooks reçoivent des payloads non trusted. Le skill `ibc-beta-chat-support` exige `terminal` (pour curl avec headers Authorization) et `file` (pour `jonathan_todo.json`).
+
+**Fix** : Ajout de `terminal` et `file` au `platform_toolsets.webhook` dans `~/.hermes/config.yaml` :
+
+```yaml
+platform_toolsets:
+  webhook:
+    - hermes-webhook
+    - terminal
+    - file
+```
+
+**Note** : `hermes config set` sérialise les listes en string JSON. Il a fallu corriger avec `sed` pour obtenir une vraie liste YAML. Gateway redémarré via script différé (le gateway ne peut pas se redémarrer de l'intérieur).
+
+### Problème 3 — WEBHOOK_SECRET non rechargé par PM2
+
+**Symptôme** : Le webhook arrivait à Hermes avec une signature HMAC invalide (HTTP 401 dans les logs PM2 : `Webhook call failed ... HTTP 401`).
+
+**Cause** : `pm2 restart --update-env` ne recharge pas les variables d'environnement depuis le fichier `.env` — PM2 garde son dump en mémoire. Les 4 workers avaient toujours l'ancien `WEBHOOK_SECRET`.
+
+**Fix** : `pm2 delete ibc-app && pm2 start ecosystem.config.js` force le rechargement complet de l'environnement. Les nouveaux workers ont bien le nouveau secret.
+
+### Problème 4 — Pas de polling temps réel dans le widget (story 18-2)
+
+**Symptôme** : Les réponses d'Hermes arrivaient en DB mais n'apparaissaient pas dans le widget sans rafraîchir la page.
+
+**Cause** : Le `BetaChatWidget` ne chargeait l'historique qu'à l'ouverture, sans polling pendant que le chat est ouvert.
+
+**Fix** : Voir hotfix tracé dans `18-2-beta-chat-widget-ui.md` — commit `7ecc97d`.
+
+### Artefacts Hermes modifiés (hors repo IBC)
+
+| Artefact | Chemin | Changement |
+|---|---|---|
+| `webhook_subscriptions.json` | `~/.hermes/webhook_subscriptions.json` | Recréation de `ibc-chat-trigger` avec prompt, skills, delivery Discord, nouveau secret |
+| `config.yaml` | `~/.hermes/config.yaml` | `platform_toolsets.webhook` = `[hermes-webhook, terminal, file]` |
+| `.env` (VPS) | `/var/www/ibc/current/.env` | `WEBHOOK_SECRET` mis à jour avec le nouveau secret de la route |
+| Discord | Serveur "Hermès" | Salon `#ibc-chat-support` créé (ID `1521267584144642200`) |
+
+### Secrets concernés
+
+| Secret | Rôle | Valeur source |
+|---|---|---|
+| `WEBHOOK_SECRET` | Signe les appels webhook de l'app IBC vers Hermes | Secret de la route dans `webhook_subscriptions.json` |
+| `CRON_SECRET` | Authentifie les appels API agent (`/api/chat/agent/*`) | `.env` du VPS, injecté dans le prompt du webhook et du cron |
+| Global webhook secret | Valide les signatures entrantes au niveau du gateway | `config.yaml` → `platforms.webhook.extra.secret` |
+
+### Topologie finale
+
+```
+Membre envoie un message sur ivoire-business-club.com
+  ↓ POST /api/chat/messages (transaction Prisma + ack SYSTEM)
+  ↓ Fire-and-forget: POST HTTPS → hermes.ivoire-business-club.com/webhooks/ibc-chat-trigger
+  ↓ nginx (VPS) → localhost:8644 (VPS) → tunnel SSH reverse → localhost:8644 (WSL)
+  ↓ Hermes gateway valide HMAC-SHA256(X-Webhook-Signature)
+  ↓ Déclenche agent avec skill ibc-beta-chat-support, toolsets [hermes-webhook, terminal, file]
+  ↓ Agent classifie, curl POST /api/chat/agent/reply (avec CRON_SECRET), ajoute todo
+  ↓ Réponse livrée dans #ibc-chat-support sur Discord
+  ↓ Widget membre poll l'historique toutes les 5s → affiche la réponse
+```
+
+### Cron backup
+
+Le cron `6e345dcf4312` (toutes les 5 min) reste actif en parallèle comme filet de sécurité. Il lit `CRON_SECRET` depuis son prompt et traite les messages `PENDING` non déjà traités par le webhook.
