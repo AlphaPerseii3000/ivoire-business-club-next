@@ -159,3 +159,7 @@ development_status:
   19-2b-posthog-identification-gaps: done
   19-3-dashboards-funnels-posthog: backlog
   epic-19-retrospective: optional
+
+  epic-20: in-progress
+  20-1-fix-connexion-comptes-non-verifies: ready-for-dev
+  epic-20-retrospective: optional
