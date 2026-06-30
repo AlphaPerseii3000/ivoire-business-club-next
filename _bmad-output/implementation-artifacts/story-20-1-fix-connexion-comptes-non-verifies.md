@@ -2,7 +2,7 @@
 
 baseline_commit: 4280a77824c651c13378c7fcbe8432d743a46dc4
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -240,7 +240,7 @@ Aucune nouvelle variable requise. Variables existantes utilisées :
 
 ---
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 
