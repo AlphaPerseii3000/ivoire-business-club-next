@@ -228,6 +228,14 @@ export default function BetaChatWidget() {
     fetchUnread();
     // Reset local unread badge when the widget is opened.
     setUnreadCount(0);
+
+    // Poll for new messages every 5 seconds while the chat is open.
+    const pollInterval = setInterval(() => {
+      fetchHistory();
+      fetchUnread();
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
   }, [open]);
 
   useEffect(() => {
