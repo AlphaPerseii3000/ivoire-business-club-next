@@ -215,3 +215,23 @@ Les messages sont triés du plus ancien au plus récent dans la vue.
 ### Change Log
 
 - 2026-06-29 : Story créée par `bmad-create-story` — status `ready-for-dev`.
+- 2026-06-29 : Story implémentée — widget UI, polling unread, historique, ack. Status → `done`.
+- 2026-06-30 : **Hotfix post-déploiement** — ajout d'un polling de l'historique toutes les 5 secondes quand le chat est ouvert. Sans ce polling, les réponses d'Hermes (Epic 18 webhook temps réel) n'apparaissaient pas sans rafraîchir la page. Commit `7ecc97d`. Déployé dans la release `20260630055116`.
+
+## Post-Deployment Hotfix (2026-06-30)
+
+### Problème
+
+Après l'activation du webhook temps réel (Story 18-4), les réponses d'Hermes arrivent en DB dans les secondes qui suivent le message du membre. Mais le widget `BetaChatWidget` ne rafraîchissait l'historique qu'à l'ouverture — pas pendant que le chat était ouvert. Le membre devait rafraîchir la page pour voir la réponse.
+
+### Solution
+
+Ajout d'un `setInterval` de 5 secondes dans le `useEffect` déclenché par `open`. Le polling appelle `fetchHistory()` et `fetchUnread()` en continu tant que le chat est ouvert, et se nettoie avec `clearInterval` à la fermeture.
+
+### Fichiers modifiés
+
+- `src/components/features/chat/beta-chat-widget.tsx` — +8 lignes (useEffect polling)
+
+### Commit
+
+`7ecc97d` — `fix(18-2): add 5s polling interval for real-time chat updates while widget is open`
