@@ -1775,4 +1775,127 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.4. Epics 18 et 19 ajoutés via Sprint Change Proposals le 2026-06-28.*
+---
+
+## Epic 21: Gestion des Mots de Passe
+
+**Objectif :** Permettre aux utilisateurs de récupérer leur accès en cas de mot de passe oublié, de modifier leur mot de passe depuis leur profil, et de définir un mot de passe initial pour les comptes créés via WhatsApp/admin sans consentement explicite de l'utilisateur.
+
+**FRs couverts :** FR77, FR78, FR79
+**NFRs couverts :** NFR-S10, NFR-S11, NFR-S12
+**UX-DRs couverts :** UX-DR14 (formulaires), UX-DR19 (états chargement), UX-DR20 (états erreur), UX-DR23 (focus rings)
+
+### Story 21-1: Mot de Passe Oublié
+
+**En tant que** utilisateur non connecté,
+**Je veux** pouvoir demander un email de réinitialisation de mot de passe,
+**Afin de** récupérer l'accès à mon compte si j'ai oublié mon mot de passe.
+
+**Acceptance Criteria :**
+
+**Given** un visiteur sur la page `/auth/signin`
+**When** il clique sur le lien « Mot de passe oublié ? »
+**Then** il est redirigé vers `/auth/forgot-password`
+
+**Given** un visiteur sur la page `/auth/forgot-password`
+**When** il saisit une adresse email valide et soumet le formulaire
+**Then** le système génère un token de réinitialisation (expire dans 1 heure, NFR-S11) et envoie un email contenant un lien `/auth/reset-password?token=xxx`
+**And** un message générique s'affiche : « Si un compte est associé à cet email, un lien de réinitialisation a été envoyé. » (ne révèle pas si l'email existe)
+
+**Given** un visiteur saisit une email inexistant
+**When** il soumet le formulaire
+**Then** le même message générique s'affiche (pas de fuite d'information sur l'existence du compte)
+
+**Given** un visiteur tente de spammer l'endpoint forgot-password
+**When** il effectue plus de 3 demandes en 1 minute depuis la même IP
+**Then** la 4ème tentative est bloquée avec statut 429 (NFR-S10)
+
+**Given** un utilisateur clique sur le lien de reset dans l'email
+**When** il arrive sur `/auth/reset-password?token=xxx` avec un token valide
+**Then** il voit un formulaire avec nouveau mot de passe + confirmation
+**And** un indicateur de force du mot de passe s'affiche en temps réel
+
+**Given** un utilisateur sur la page reset-password avec un token valide
+**When** il saisit un nouveau mot de passe (≥ 8 caractères) et sa confirmation, puis soumet
+**Then** le système hash le nouveau password avec bcryptjs (coût ≥ 10), invalide le token, et redirige vers `/auth/signin` avec un message de succès
+
+**Given** un utilisateur clique sur un lien de reset avec un token expiré (> 1h)
+**When** il tente de soumettre un nouveau mot de passe
+**Then** un message d'erreur s'affiche : « Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau. »
+
+**Given** un utilisateur clique sur un lien de reset avec un token déjà utilisé
+**When** il tente de soumettre un nouveau mot de passe
+**Then** un message d'erreur s'affiche : « Ce lien a déjà été utilisé. »
+
+**Given** le code modifié
+**When** `npm run build` et `npx vitest run` sont exécutés
+**Then** le build passe sans erreur et les tests existants passent (pas de régression)
+
+---
+
+### Story 21-2: Changement de Mot de Passe dans le Profil
+
+**En tant que** membre connecté,
+**Je veux** modifier mon mot de passe depuis mon profil,
+**Afin de** sécuriser mon compte ou changer un mot de passe que je ne souhaite plus utiliser.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté sur `/profile`
+**When** il consulte sa page de profil
+**Then** il voit une section « Sécurité » avec un formulaire de changement de mot de passe (ancien mot de passe, nouveau mot de passe, confirmation)
+
+**Given** un membre connecté sur `/profile`
+**When** il saisit son ancien mot de passe correct et un nouveau mot de passe valide (≥ 8 caractères) avec confirmation matching
+**Then** le système vérifie l'ancien mot de passe avec bcrypt.compare (NFR-S12), hash le nouveau, met à jour `passwordHash` en base, et affiche un toast : « Mot de passe modifié avec succès. »
+
+**Given** un membre saisit un ancien mot de passe incorrect
+**When** il soumet le formulaire
+**Then** une erreur inline s'affiche : « Ancien mot de passe incorrect. »
+
+**Given** un membre saisit un nouveau mot de passe différent de la confirmation
+**When** il soumet le formulaire
+**Then** une erreur inline s'affiche : « Les mots de passe ne correspondent pas. »
+
+**Given** un membre connecté via Google OAuth (pas de passwordHash)
+**When** il consulte la section « Sécurité » de son profil
+**Then** la section affiche : « Votre compte utilise Google pour la connexion. Aucun mot de passe à modifier. »
+
+**Given** le code modifié
+**When** `npm run build` et `npx vitest run` sont exécutés
+**Then** le build passe sans erreur et les tests existants passent (pas de régression)
+
+---
+
+### Story 21-3: Set-Password Flow pour Utilisateurs Créés via WhatsApp
+
+**En tant que** utilisateur créé via WhatsApp par Sarah (sans mot de passe connu),
+**Je veux** recevoir un email me permettant de définir mon mot de passe,
+**Afin de** pouvoir me connecter à la plateforme IBC de manière autonome.
+
+**Acceptance Criteria :**
+
+**Given** un utilisateur existe en base avec un `passwordHash` généré automatiquement (créé via WhatsApp/admin) et `emailVerified = false`
+**When** l'admin ou le système déclenche l'envoi d'un email d'invitation (set-password)
+**Then** un token de type SET_PASSWORD est généré (expire 7 jours) et un email est envoyé avec un lien `/auth/reset-password?token=xxx&type=set`
+
+**Given** un utilisateur clique sur le lien d'invitation dans l'email
+**When** il arrive sur `/auth/reset-password?token=xxx&type=set`
+**Then** il voit un formulaire « Définir votre mot de passe » (sans champ ancien mot de passe)
+**And** un indicateur de force s'affiche en temps réel
+
+**Given** un utilisateur sur la page set-password avec un token valide
+**When** il saisit un nouveau mot de passe (≥ 8 caractères) et sa confirmation, puis soumet
+**Then** le système hash le password avec bcryptjs, invalide le token, marque `emailVerified = true`, et redirige vers `/auth/signin` avec un message : « Votre mot de passe a été défini. Vous pouvez vous connecter. »
+
+**Given** un token SET_PASSWORD expiré (> 7 jours)
+**When** l'utilisateur tente de soumettre
+**Then** un message s'affiche : « Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau. »
+
+**Given** le code modifié
+**When** `npm run build` et `npx vitest run` sont exécutés
+**Then** le build passe sans erreur et les tests existants passent (pas de régression)
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.5. Epic 21 ajouté via Sprint Change Proposal le 2026-07-01 (password management).*

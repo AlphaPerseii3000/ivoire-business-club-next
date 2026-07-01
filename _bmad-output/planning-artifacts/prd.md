@@ -265,6 +265,9 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR5** : Le système distingue les rôles MEMBER et ADMIN
 - **FR6** : Le système attribue un tier par défaut (AFFRANCHI) à l'inscription
 - **FR7** : L'admin peut lister, suspendre ou réactiver un compte utilisateur
+- **FR77** : Un utilisateur peut demander un email de réinitialisation de mot de passe en saisissant son adresse email
+- **FR78** : Un utilisateur connecté peut modifier son mot de passe depuis son profil (ancien mot de passe requis)
+- **FR79** : Un utilisateur créé sans mot de passe connu (via WhatsApp/admin) peut définir son mot de passe via un lien d'invitation email
 
 ### 8.2 Tiers & Abonnements
 
@@ -369,6 +372,9 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **NFR-S7** : Headers de sécurité : Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
 - **NFR-S8** : Pas de données sensibles en clair dans les logs
 - **NFR-S9** : Piste d'audit sur toutes les transactions d'abonnement et mises en relation
+- **NFR-S10** : Rate limiting sur `/api/auth/forgot-password` : 3 demandes/minute/IP
+- **NFR-S11** : Tokens de reset password expirent après 1 heure (set-password : 7 jours)
+- **NFR-S12** : Ancien mot de passe requis pour changement dans le profil (vérification bcrypt)
 
 ### 9.3 Scalabilité
 

@@ -163,3 +163,9 @@ development_status:
   epic-20: in-progress
   20-1-fix-connexion-comptes-non-verifies: done
   epic-20-retrospective: optional
+
+  epic-21: backlog
+  21-1-mot-de-passe-oublie: backlog
+  21-2-changement-mot-de-passe-profil: backlog
+  21-3-set-password-flow-whatsapp: backlog
+  epic-21-retrospective: optional
