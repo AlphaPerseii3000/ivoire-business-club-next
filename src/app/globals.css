@@ -140,6 +140,20 @@
   }
 }
 
+/* Grain de film rétro-chic */
+.grain-overlay::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0.025; /* Subtil sur fond sombre */
+  pointer-events: none;
+  z-index: 50;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23noise)'/></svg>");
+}
+
 /* Custom Premium animations & variables */
 @keyframes shine {
   0% {
@@ -180,6 +194,19 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Densité des verres IBC */
+.glass-ibc-dark {
+  background: rgba(9, 13, 22, 0.65);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(212, 168, 71, 0.15); /* Ligne dorée subtile */
+}
+
+.glass-ibc-gold {
+  background: rgba(212, 168, 71, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 168, 71, 0.25);
 }
 
 /* Mesh Gradients */

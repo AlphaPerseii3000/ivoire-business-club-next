@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-import { Hero } from '@/components/landing/hero';
+import { HeroShutter } from '@/components/landing/hero-shutter';
 import { Mission } from '@/components/landing/mission';
 import { HowItWorks } from '@/components/landing/how-it-works';
 
@@ -133,7 +133,7 @@ export default async function HomePage() {
   const hasNextEvent = nextEvent !== null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0">
+    <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0 grain-overlay">
       <LandingMobileNav />
 
       <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
@@ -177,7 +177,7 @@ export default async function HomePage() {
       </header>
 
       <main className="flex-1">
-        <Hero />
+        <HeroShutter />
         <Mission />
         <HowItWorks />
 
