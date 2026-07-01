@@ -416,9 +416,9 @@ describe("BetaChatWidget", () => {
     expect(screen.getByPlaceholderText(/décrivez votre demande/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /envoyer la demande/i })).toBeInTheDocument();
 
-    // Clic sur "Annuler"
-    const cancelButton = screen.getByRole("button", { name: /annuler/i });
-    await user.click(cancelButton);
+    // Clic sur "Répondre au fil"
+    const replyTabButton = screen.getByRole("button", { name: /répondre au fil/i });
+    await user.click(replyTabButton);
 
     // Retour en mode réponse
     expect(screen.queryByText(/quel est l'objet de votre demande/i)).not.toBeInTheDocument();

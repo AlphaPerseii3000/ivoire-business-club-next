@@ -367,7 +367,7 @@ export default function BetaChatWidget() {
                 className="flex h-[85vh] w-full flex-col sm:max-w-lg md:h-[80vh]"
                 showCloseButton={false}
               >
-                <SheetHeader className="shrink-0 space-y-2 border-b pb-3">
+                <SheetHeader className="shrink-0 space-y-2 border-b pb-3 px-6 pt-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <SheetTitle className="text-lg font-semibold tracking-tight text-foreground">
@@ -409,7 +409,7 @@ export default function BetaChatWidget() {
                   </div>
                 </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto px-1 py-3">
+                <div className="flex-1 overflow-y-auto px-6 py-4">
                   {showLoadingHistory ? (
                     <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -503,39 +503,42 @@ export default function BetaChatWidget() {
 
                 <form
                   onSubmit={handleSubmit}
-                  className="shrink-0 space-y-3.5 border-t pt-3"
+                  className="shrink-0 border-t pt-5 pb-6 px-6 space-y-5 bg-muted/20 dark:bg-zinc-950/20"
                 >
                   {showModeToggle ? (
-                    mode === "reply" ? (
-                      <div className="flex items-center justify-between text-xs pb-1">
-                        <span className="text-muted-foreground font-medium">Répondre à la conversation</span>
-                        <button
-                          type="button"
-                          className="text-[#D4A847] dark:text-[#E8C96A] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                          onClick={() => {
-                            setMode("new_request");
-                            setCategory("autre");
-                          }}
-                        >
-                          Nouvelle demande
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-xs pb-1">
-                        <span className="text-foreground font-semibold">Nouvelle demande</span>
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:underline font-medium cursor-pointer"
-                          onClick={() => setMode("reply")}
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    )
+                    <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/80 p-1 dark:bg-zinc-900/60 border border-muted/30">
+                      <button
+                        type="button"
+                        className={cn(
+                          "rounded-md py-1.5 text-center text-xs font-semibold transition-all cursor-pointer",
+                          mode === "reply"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setMode("reply")}
+                      >
+                        Répondre au fil
+                      </button>
+                      <button
+                        type="button"
+                        className={cn(
+                          "rounded-md py-1.5 text-center text-xs font-semibold transition-all cursor-pointer",
+                          mode === "new_request"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => {
+                          setMode("new_request");
+                          setCategory("autre");
+                        }}
+                      >
+                        Nouvelle demande
+                      </button>
+                    </div>
                   ) : null}
 
                   {showCategorySelector ? (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <Label id="chat-category-label" className="text-xs font-semibold text-foreground/80">
                         Quel est l'objet de votre demande ?
                       </Label>
@@ -565,7 +568,7 @@ export default function BetaChatWidget() {
                     </div>
                   ) : null}
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2.5">
                     <Label htmlFor="chat-message" className="sr-only">
                       Votre message
                     </Label>
@@ -578,21 +581,21 @@ export default function BetaChatWidget() {
                       rows={3}
                       aria-describedby={textareaDescribedBy}
                       disabled={submitting}
-                      className="resize-none"
+                      className="resize-none min-h-[90px] p-3.5 text-sm leading-relaxed"
                     />
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground/80 px-1.5">
                       <span
                         id="chat-counter"
                         className={cn(
                           contentTooLong
-                            ? "text-destructive"
-                            : "text-muted-foreground"
+                            ? "text-destructive font-medium"
+                            : "text-muted-foreground/80"
                         )}
                       >
                         {contentLength}/{MAX_CONTENT_LENGTH}
                       </span>
                       {contentTooLong ? (
-                        <span id="chat-error" className="text-destructive">
+                        <span id="chat-error" className="text-destructive font-medium">
                           Message trop long
                         </span>
                       ) : null}
@@ -601,7 +604,7 @@ export default function BetaChatWidget() {
 
                   <Button
                     type="submit"
-                    className="w-full font-medium"
+                    className="w-full font-semibold py-5 cursor-pointer"
                     disabled={!canSubmit}
                     aria-busy={submitting}
                   >
