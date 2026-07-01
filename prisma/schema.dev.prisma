@@ -163,11 +163,13 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
   userId     String?
+  tokenType  String   @default("EMAIL_VERIFICATION")
   createdAt  DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, token])
+  @@index([tokenType, expires])
   @@map("verification_tokens")
 }
 

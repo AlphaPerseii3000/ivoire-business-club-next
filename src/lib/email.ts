@@ -367,6 +367,27 @@ export async function sendGuideEmail({ to }: { to: string }) {
   });
 }
 
+export async function sendPasswordResetEmail({
+  to,
+  name,
+  token,
+  appUrl = process.env.APP_URL || "",
+}: {
+  to: string;
+  name?: string | null;
+  token: string;
+  appUrl?: string;
+}) {
+  const resetLink = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
+  const dashboard = dashboardLine();
+
+  await sendEmail({
+    to,
+    subject: "Réinitialise ton mot de passe - IBC",
+    text: `${greeting(name)}\n\nTu as demandé à réinitialiser ton mot de passe IBC. Clique sur le lien ci-dessous pour choisir un nouveau mot de passe :\n\n${resetLink}\n\nCe lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, tu peux ignorer cet email en toute sécurité.${dashboard}\n\nL'équipe IBC`,
+  });
+}
+
 // Reset transporter (for tests)
 export function _resetTransporter() {
   _transporter = null;

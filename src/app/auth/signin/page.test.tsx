@@ -27,6 +27,7 @@ describe("SignInPage", () => {
     render(<SignInPage />);
     expect(screen.getByText("Connexion")).toBeInTheDocument();
     expect(screen.getByText("Continuer avec Google")).toBeInTheDocument();
+    expect(screen.getByText("Mot de passe oublié ?")).toBeInTheDocument();
   });
 
   it("calls signIn with google and callbackUrl /dashboard when Google button is clicked", () => {

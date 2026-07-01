@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import posthog from "posthog-js";
 import { signinSchema, type SigninInput } from "@/lib/validations";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
+import Link from "next/link";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function SignInPage() {
   });
 
   const displayError = serverError || (urlError ? getAuthErrorMessage(urlError) : "");
+  const resetSuccess = searchParams.get("reset") === "success";
+  const displaySuccess = resetSuccess && !displayError;
 
   const onSubmit = async (data: SigninInput) => {
     setServerError("");
@@ -74,6 +77,11 @@ export default function SignInPage() {
         {displayError ? (
           <div data-testid="auth-error" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{displayError}</div>
         ) : null}
+        {displaySuccess ? (
+          <div data-testid="reset-success" className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+            Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.
+          </div>
+        ) : null}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">Email</label>
@@ -102,6 +110,11 @@ export default function SignInPage() {
             {errors.password ? (
               <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
             ) : null}
+          </div>
+          <div className="flex items-center justify-between">
+            <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">
+              Mot de passe oublié ?
+            </Link>
           </div>
           <button
             type="submit"

@@ -25,6 +25,20 @@ export const signinSchema = z.object({
   password: z.string().min(1, "Le mot de passe est requis"),
 });
 
+export const forgotPasswordRequestSchema = z.object({
+  email: z.string().email("Email invalide"),
+});
+
+export const passwordResetSchema = z
+  .object({
+    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+    confirmPassword: z.string().min(1, "La confirmation du mot de passe est requise"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas.",
+    path: ["confirmPassword"],
+  });
+
 export const profileUpdateSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   bio: z
@@ -59,6 +73,8 @@ export const accountDeletionSchema = z.object({
 
 export type SignupInput = z.infer<typeof signupSchema>;
 export type SigninInput = z.infer<typeof signinSchema>;
+export type ForgotPasswordRequestInput = z.infer<typeof forgotPasswordRequestSchema>;
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
 
