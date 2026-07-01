@@ -93,7 +93,7 @@ export default async function DashboardPage({
       ) : null}
 
       {showPendingBanner ? (
-        <PendingSubscriptionBanner tier={user.tier} />
+        <PendingSubscriptionBanner tier={subscription?.tier ?? user.tier} />
       ) : null}
 
       <div className="mt-8 rounded-xl border bg-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -103,7 +103,7 @@ export default async function DashboardPage({
             <div>
               <p className="text-sm text-muted-foreground">Plan</p>
               <p data-testid="dashboard-tier" className="text-lg font-semibold text-primary">
-                {subscription ? (tierLabel[user.tier] ?? user.tier) : "Aucun"}
+                {subscription ? (tierLabel[subscription.tier] ?? subscription.tier) : "Aucun"}
               </p>
             </div>
             <div>

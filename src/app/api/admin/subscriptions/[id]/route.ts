@@ -89,6 +89,10 @@ export async function PATCH(req: Request, { params }: Params) {
           include: { user: { select: { id: true, name: true, email: true } } },
         });
         await tx.payment.updateMany({ where: paymentWhere, data: { status: "succeeded" } });
+        await tx.user.update({
+          where: { id: subscription.userId },
+          data: { tier: subscription.tier },
+        });
         return updated;
       }
 
@@ -99,14 +103,23 @@ export async function PATCH(req: Request, { params }: Params) {
           include: { user: { select: { id: true, name: true, email: true } } },
         });
         await tx.payment.updateMany({ where: paymentWhere, data: { status: "failed" } });
+        await tx.user.update({
+          where: { id: subscription.userId },
+          data: { tier: "AFFRANCHI" },
+        });
         return updated;
       }
 
-      return tx.subscription.update({
+      const updated = await tx.subscription.update({
         where: { id },
         data: { status: "CANCELLED" },
         include: { user: { select: { id: true, name: true, email: true } } },
       });
+      await tx.user.update({
+        where: { id: subscription.userId },
+        data: { tier: "AFFRANCHI" },
+      });
+      return updated;
     });
 
     const auditAction =

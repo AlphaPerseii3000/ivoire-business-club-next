@@ -3,6 +3,7 @@ import { PATCH } from "./route";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserUpdate = vi.hoisted(() => vi.fn());
 const mockSubscriptionFindUnique = vi.hoisted(() => vi.fn());
 const mockSubscriptionUpdate = vi.hoisted(() => vi.fn());
 const mockPaymentUpdateMany = vi.hoisted(() => vi.fn());
@@ -30,7 +31,7 @@ vi.mock("@/lib/email", () => ({
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    user: { findUnique: mockUserFindUnique },
+    user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
     subscription: { findUnique: mockSubscriptionFindUnique, update: mockSubscriptionUpdate },
     payment: { updateMany: mockPaymentUpdateMany },
     $transaction: mockTransaction,
@@ -88,6 +89,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       cb({
         subscription: { update: mockSubscriptionUpdate },
         payment: { updateMany: mockPaymentUpdateMany },
+        user: { update: mockUserUpdate },
       })
     );
     mockSubscriptionUpdate.mockResolvedValue({ ...pendingSubscription, status: "ACTIVE" });
@@ -132,6 +134,10 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
       where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
       data: { status: "succeeded" },
+    });
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "member-1" },
+      data: { tier: "GRAND_FRERE" },
     });
     expect(mockSendActivated).toHaveBeenCalledWith({
       to: "jean@example.com",
@@ -187,6 +193,10 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
       data: { status: "failed" },
     });
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "member-1" },
+      data: { tier: "AFFRANCHI" },
+    });
     expect(mockSendRejected).toHaveBeenCalledWith({
       to: "jean@example.com",
       name: "Jean Kouassi",
@@ -222,6 +232,10 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
       include: { user: { select: { id: true, name: true, email: true } } },
     });
     expect(mockPaymentUpdateMany).not.toHaveBeenCalled();
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "member-1" },
+      data: { tier: "AFFRANCHI" },
+    });
     // AC4/AC8: audit log created with correct action/entity for suspend
     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
       actorId: "admin-1",
@@ -248,6 +262,10 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
        where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
        data: { status: "succeeded" },
      });
+     expect(mockUserUpdate).toHaveBeenCalledWith({
+       where: { id: "member-1" },
+       data: { tier: "GRAND_FRERE" },
+     });
      expect(mockSendActivated).toHaveBeenCalledWith({
        to: "jean@example.com",
        name: "Jean Kouassi",
@@ -267,14 +285,18 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
      });
    });
 
-   it("validates a TRIAL ORANGE_MONEY subscription and creates audit log with provider", async () => {
-     mockSubscriptionFindUnique.mockResolvedValueOnce(trialOrangeMoneySubscription);
+    it("validates a TRIAL ORANGE_MONEY subscription and creates audit log with provider", async () => {
+      mockSubscriptionFindUnique.mockResolvedValueOnce(trialOrangeMoneySubscription);
 
-     const res = await PATCH(request({ action: "validate" }), params);
-     const json = await res.json();
+      const res = await PATCH(request({ action: "validate" }), params);
+      const json = await res.json();
 
-     expect(res.status).toBe(200);
-     expect(json.data.status).toBe("ACTIVE");
+      expect(res.status).toBe(200);
+      expect(json.data.status).toBe("ACTIVE");
+      expect(mockUserUpdate).toHaveBeenCalledWith({
+        where: { id: "member-1" },
+        data: { tier: "GRAND_FRERE" },
+      });
      expect(mockSafeCreateAuditLog).toHaveBeenCalledWith({
        actorId: "admin-1",
        action: "SUBSCRIPTION_VALIDATE",
@@ -289,19 +311,23 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
      });
    });
 
-   it("rejects a TRIAL WAVE subscription, marks payment failed, sends refusal email, and creates audit log", async () => {
-     mockSubscriptionFindUnique.mockResolvedValueOnce(trialWaveSubscription);
-     mockSubscriptionUpdate.mockResolvedValueOnce({ ...trialWaveSubscription, status: "CANCELLED" });
+    it("rejects a TRIAL WAVE subscription, marks payment failed, sends refusal email, and creates audit log", async () => {
+      mockSubscriptionFindUnique.mockResolvedValueOnce(trialWaveSubscription);
+      mockSubscriptionUpdate.mockResolvedValueOnce({ ...trialWaveSubscription, status: "CANCELLED" });
 
-     const res = await PATCH(request({ action: "reject", reason: "Paiement non reçu" }), params);
-     const json = await res.json();
+      const res = await PATCH(request({ action: "reject", reason: "Paiement non reçu" }), params);
+      const json = await res.json();
 
-     expect(res.status).toBe(200);
-     expect(json.data.status).toBe("CANCELLED");
-     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
-       where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
-       data: { status: "failed" },
-     });
+      expect(res.status).toBe(200);
+      expect(json.data.status).toBe("CANCELLED");
+      expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
+        where: { userId: "member-1", providerRef: "IBC-member-1-GRAND_FRERE" },
+        data: { status: "failed" },
+      });
+      expect(mockUserUpdate).toHaveBeenCalledWith({
+        where: { id: "member-1" },
+        data: { tier: "AFFRANCHI" },
+      });
      expect(mockSendRejected).toHaveBeenCalledWith({
        to: "jean@example.com",
        name: "Jean Kouassi",
