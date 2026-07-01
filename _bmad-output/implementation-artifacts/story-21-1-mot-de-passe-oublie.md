@@ -1,6 +1,6 @@
 # Story 21.1 : Mot de Passe Oublié
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -250,7 +250,7 @@ Derniers commits pertinents :
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (DS + DS fix), kimi-k2.7-code (CR)
 
 ### Debug Log References
 
@@ -263,5 +263,5 @@ Derniers commits pertinents :
 
 ## Story Completion Status
 
-- Status: **review**
+- Status: **done**
 - Note: Ultimate context engine analysis completed — comprehensive developer guide created.
