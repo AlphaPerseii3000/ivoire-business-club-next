@@ -71,19 +71,6 @@ function authorLabel(author: ChatMessageAuthor) {
   }
 }
 
-function authorBubbleClass(author: ChatMessageAuthor) {
-  switch (author) {
-    case "MEMBER":
-      return "bg-primary text-primary-foreground self-end";
-    case "SYSTEM":
-      return "bg-muted text-muted-foreground self-start";
-    case "HERMES":
-      return "bg-secondary text-secondary-foreground self-start";
-    default:
-      return "bg-muted self-start";
-  }
-}
-
 function isMessageComplete(
   item: ChatMessage | null | undefined
 ): item is ChatMessage {
@@ -139,6 +126,8 @@ export default function BetaChatWidget() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mode, setMode] = useState<"reply" | "new_request">("new_request");
+  const [hasLoadedInitialHistory, setHasLoadedInitialHistory] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const contentLength = useMemo(() => content.length, [content]);
@@ -153,6 +142,18 @@ export default function BetaChatWidget() {
 
   const online = useMemo(() => isOnlineStatus(messages), [messages]);
   const statusLabel = online ? "En ligne" : "Hors ligne";
+
+  const lastCategory = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const cat = messages[i].category;
+      if (cat) {
+        return cat;
+      }
+    }
+    return "autre";
+  }, [messages]);
+
+  const resolvedCategory = mode === "new_request" ? category : lastCategory;
 
   const scrollToBottom = () => {
     try {
@@ -182,6 +183,10 @@ export default function BetaChatWidget() {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
       setMessages(sorted);
+      if (!hasLoadedInitialHistory) {
+        setMode(sorted.length > 0 ? "reply" : "new_request");
+        setHasLoadedInitialHistory(true);
+      }
     } catch (error) {
       setHistoryError(
         error instanceof Error ? error.message : "Erreur inconnue"
@@ -244,7 +249,7 @@ export default function BetaChatWidget() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit || !category) {
+    if (!canSubmit || !resolvedCategory) {
       return;
     }
 
@@ -254,7 +259,7 @@ export default function BetaChatWidget() {
       const res = await fetch("/api/chat/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, content: content.trim() }),
+        body: JSON.stringify({ category: resolvedCategory, content: content.trim() }),
       });
 
       if (!res.ok) {
@@ -279,6 +284,7 @@ export default function BetaChatWidget() {
         )
       );
       setContent("");
+      setMode("reply");
     } catch (error) {
       setHistoryError(
         error instanceof Error ? error.message : "Erreur inconnue"
@@ -293,6 +299,7 @@ export default function BetaChatWidget() {
     if (nextOpen) {
       setHistoryError(null);
       setUnreadCount(0);
+      setHasLoadedInitialHistory(false);
     }
   };
 
@@ -314,6 +321,13 @@ export default function BetaChatWidget() {
   const showError = Boolean(historyError);
   const showLoadingHistory = loadingHistory ? hasNoMessages : false;
 
+  const showModeToggle = messages.length > 0;
+  const showCategorySelector = mode === "new_request";
+  const textareaPlaceholder = mode === "reply"
+    ? "Écrire une réponse à l'équipe..."
+    : "Décrivez votre demande en détail (bug, suggestion, besoin...)";
+  const sendButtonText = mode === "reply" ? "Répondre" : "Envoyer la demande";
+
   if (!widgetVisible) {
     return null;
   }
@@ -324,7 +338,7 @@ export default function BetaChatWidget() {
         <SheetTrigger
           render={
             <Button
-              aria-label="Ouvrir le chat de support bêta"
+              aria-label="Ouvrir le formulaire de support"
               className="relative h-14 w-14 rounded-full shadow-lg"
               size="icon-lg"
               variant="default"
@@ -350,19 +364,19 @@ export default function BetaChatWidget() {
             >
               <SheetContent
                 side="left"
-                className="flex h-[85vh] w-full flex-col sm:max-w-md md:h-[80vh]"
+                className="flex h-[85vh] w-full flex-col sm:max-w-lg md:h-[80vh]"
                 showCloseButton={false}
               >
                 <SheetHeader className="shrink-0 space-y-2 border-b pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <SheetTitle>Chat de support</SheetTitle>
-                      <Badge variant="outline">Bêta</Badge>
+                      <SheetTitle className="text-lg font-semibold tracking-tight text-foreground">
+                        Contacter le support
+                      </SheetTitle>
+                      <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">Bêta</Badge>
                     </div>
                     <SheetDescription className="sr-only">
-                      Fenêtre de chat pour remonter un bug, un problème
-                      d'accessibilité, une demande d'intégration ou un
-                      feedback.
+                      Formulaire de support pour contacter l'équipe, remonter un bug, un problème d'accessibilité, une demande d'intégration ou un feedback.
                     </SheetDescription>
                     <Button
                       aria-label="Fermer le chat"
@@ -374,20 +388,24 @@ export default function BetaChatWidget() {
                     </Button>
                   </div>
 
-                  <div className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                    🚧 Plateforme en phase bêta — Votre feedback nous aide à
-                    nous améliorer
+                  <div className="text-[11px] leading-relaxed text-muted-foreground bg-muted/40 border border-muted/50 rounded px-2.5 py-1.5">
+                    Plateforme en phase bêta — Votre feedback nous aide à nous améliorer.
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span
-                      className={cn(
-                        "inline-block h-2 w-2 rounded-full",
-                        online ? "bg-green-500" : "bg-slate-400"
-                      )}
-                      aria-hidden="true"
-                    />
-                    <span>{statusLabel}</span>
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span
+                        className={cn(
+                          "inline-block h-2 w-2 rounded-full",
+                          online ? "bg-green-500" : "bg-slate-400"
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span className="font-semibold text-foreground/90">{statusLabel}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-normal">
+                      Nous répondons par message différé sous 24h ouvrées. Les réponses s'afficheront dans ce fil.
+                    </p>
                   </div>
                 </SheetHeader>
 
@@ -408,14 +426,14 @@ export default function BetaChatWidget() {
 
                   {showEmptyState ? (
                     <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
-                      <MessageCircle className="mb-2 h-8 w-8 opacity-50" />
-                      <p>Aucun message pour l'instant.</p>
-                      <p>Envoyez votre première remarque ci-dessous.</p>
+                      <MessageCircle className="mb-2 h-8 w-8 opacity-50 text-muted-foreground/60" />
+                      <p className="font-medium text-foreground/80">Aucune demande pour l'instant.</p>
+                      <p className="text-xs mt-1 text-muted-foreground">Remplissez le formulaire ci-dessous pour nous envoyer votre message.</p>
                     </div>
                   ) : null}
 
                   {showMessages ? (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                       {messages.map((message) => {
                         const categoryLabel = message.category
                           ? CATEGORIES.find((c) => c.value === message.category)
@@ -426,35 +444,53 @@ export default function BetaChatWidget() {
                         const isSystem = message.author === "SYSTEM";
                         const showCategoryLabel =
                           isMember ? Boolean(categoryLabel) : false;
+
+                        if (isSystem) {
+                          return (
+                            <div key={message.id} className="flex w-full flex-col items-center justify-center my-2 text-center">
+                              <div className="max-w-[90%] rounded-lg border border-dashed border-muted/70 dark:border-zinc-800/90 px-4 py-2 text-[11px] text-muted-foreground bg-muted/20 dark:bg-zinc-900/25">
+                                <div className="flex items-center justify-center gap-1.5 mb-1 font-semibold text-[9px] uppercase tracking-wider text-muted-foreground/80">
+                                  <Check className="h-3 w-3 text-green-500" />
+                                  <span>Accusé de réception</span>
+                                </div>
+                                <p className="italic leading-normal">{message.content}</p>
+                                <span className="mt-1 block text-[9px] opacity-60 font-medium">{formatTime(message.createdAt)}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (isHermes) {
+                          return (
+                            <div
+                              key={message.id}
+                              className="flex max-w-[85%] flex-col rounded-2xl rounded-tl-none px-4 py-2.5 text-sm bg-muted/60 dark:bg-zinc-900/60 border border-muted/70 dark:border-zinc-800/80 border-l-4 border-l-[#D4A847] self-start shadow-sm text-foreground"
+                            >
+                              <div className="mb-1 flex items-center justify-between gap-3 text-[10px] font-medium text-muted-foreground/90">
+                                <span className="text-[#D4A847] dark:text-[#E8C96A] font-bold">
+                                  {authorLabel(message.author)}
+                                </span>
+                                <span>{formatTime(message.createdAt)}</span>
+                              </div>
+                              <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                            </div>
+                          );
+                        }
+
+                        // Default MEMBER bubble
                         return (
                           <div
                             key={message.id}
-                            className={cn(
-                              "flex max-w-[85%] flex-col rounded-xl px-3 py-2 text-sm",
-                              authorBubbleClass(message.author)
-                            )}
+                            className="flex max-w-[85%] flex-col rounded-2xl rounded-tr-none px-4 py-2.5 text-sm bg-primary text-primary-foreground self-end shadow-sm border border-primary/20"
                           >
-                            <div className="mb-1 flex items-center justify-between gap-2 text-xs opacity-80">
-                              <span className="font-medium">
-                                {authorLabel(message.author)}
-                              </span>
+                            <div className="mb-1 flex items-center justify-between gap-3 text-[10px] font-semibold opacity-90">
+                              <span>{authorLabel(message.author)}</span>
                               <span>{formatTime(message.createdAt)}</span>
                             </div>
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                             {showCategoryLabel ? (
-                              <span className="mt-1 text-[10px] opacity-70">
+                              <span className="mt-1.5 text-[9px] font-semibold tracking-wide uppercase bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded w-fit self-start">
                                 {categoryLabel}
-                              </span>
-                            ) : null}
-                            {isSystem ? (
-                              <span className="mt-1 flex items-center gap-1 text-[10px] opacity-70">
-                                <Check className="h-3 w-3" />
-                                Accusé de réception
-                              </span>
-                            ) : null}
-                            {isHermes ? (
-                              <span className="mt-1 text-[10px] opacity-70">
-                                Réponse de l'équipe
                               </span>
                             ) : null}
                           </div>
@@ -467,33 +503,67 @@ export default function BetaChatWidget() {
 
                 <form
                   onSubmit={handleSubmit}
-                  className="shrink-0 space-y-3 border-t pt-3"
+                  className="shrink-0 space-y-3.5 border-t pt-3"
                 >
-                  <div className="space-y-1.5">
-                    <Label id="chat-category-label">Catégorie</Label>
-                    <div
-                      role="radiogroup"
-                      aria-labelledby="chat-category-label"
-                      className="flex flex-wrap gap-2"
-                    >
-                      {CATEGORIES.map((cat) => {
-                        const selected = category === cat.value;
-                        return (
-                          <Button
-                            key={cat.value}
-                            type="button"
-                            variant={selected ? "default" : "outline"}
-                            size="sm"
-                            role="radio"
-                            aria-checked={selected}
-                            onClick={() => setCategory(cat.value)}
-                          >
-                            {cat.label}
-                          </Button>
-                        );
-                      })}
+                  {showModeToggle ? (
+                    mode === "reply" ? (
+                      <div className="flex items-center justify-between text-xs pb-1">
+                        <span className="text-muted-foreground font-medium">Répondre à la conversation</span>
+                        <button
+                          type="button"
+                          className="text-[#D4A847] dark:text-[#E8C96A] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                          onClick={() => {
+                            setMode("new_request");
+                            setCategory("autre");
+                          }}
+                        >
+                          Nouvelle demande
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-xs pb-1">
+                        <span className="text-foreground font-semibold">Nouvelle demande</span>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:underline font-medium cursor-pointer"
+                          onClick={() => setMode("reply")}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    )
+                  ) : null}
+
+                  {showCategorySelector ? (
+                    <div className="space-y-1.5">
+                      <Label id="chat-category-label" className="text-xs font-semibold text-foreground/80">
+                        Quel est l'objet de votre demande ?
+                      </Label>
+                      <div
+                        role="radiogroup"
+                        aria-labelledby="chat-category-label"
+                        className="flex flex-wrap gap-2"
+                      >
+                        {CATEGORIES.map((cat) => {
+                          const selected = category === cat.value;
+                          return (
+                            <Button
+                              key={cat.value}
+                              type="button"
+                              variant={selected ? "default" : "outline"}
+                              size="sm"
+                              role="radio"
+                              aria-checked={selected}
+                              onClick={() => setCategory(cat.value)}
+                              className="text-xs"
+                            >
+                              {cat.label}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   <div className="space-y-1.5">
                     <Label htmlFor="chat-message" className="sr-only">
@@ -501,13 +571,14 @@ export default function BetaChatWidget() {
                     </Label>
                     <Textarea
                       id="chat-message"
-                      placeholder="Décrivez votre bug, remarque ou demande…"
+                      placeholder={textareaPlaceholder}
                       value={content}
                       onChange={(event) => setContent(event.target.value)}
                       maxLength={MAX_CONTENT_LENGTH}
                       rows={3}
                       aria-describedby={textareaDescribedBy}
                       disabled={submitting}
+                      className="resize-none"
                     />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span
@@ -530,7 +601,7 @@ export default function BetaChatWidget() {
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full font-medium"
                     disabled={!canSubmit}
                     aria-busy={submitting}
                   >
@@ -542,7 +613,7 @@ export default function BetaChatWidget() {
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Envoyer
+                        {sendButtonText}
                       </>
                     )}
                   </Button>

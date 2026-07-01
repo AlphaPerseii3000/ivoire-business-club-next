@@ -39,7 +39,7 @@ describe("BetaChatWidget", () => {
   it("affiche le bouton flottant pour un membre authentifié", () => {
     renderWidget();
     expect(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     ).toBeInTheDocument();
   });
 
@@ -74,7 +74,7 @@ describe("BetaChatWidget", () => {
     renderWidget();
 
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
@@ -127,7 +127,7 @@ describe("BetaChatWidget", () => {
     renderWidget();
 
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
@@ -135,7 +135,7 @@ describe("BetaChatWidget", () => {
     });
 
     expect(screen.getByText("Vous")).toBeInTheDocument();
-    expect(screen.getByText("Système")).toBeInTheDocument();
+    expect(screen.getByText("Accusé de réception")).toBeInTheDocument();
     expect(screen.getByText("Équipe IBC")).toBeInTheDocument();
   });
 
@@ -170,7 +170,7 @@ describe("BetaChatWidget", () => {
     const user = userEvent.setup();
     renderWidget();
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
@@ -195,7 +195,7 @@ describe("BetaChatWidget", () => {
     const user = userEvent.setup();
     renderWidget();
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
@@ -256,7 +256,7 @@ describe("BetaChatWidget", () => {
     const user = userEvent.setup();
     renderWidget();
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
@@ -266,10 +266,10 @@ describe("BetaChatWidget", () => {
     const categoryButton = screen.getByRole("radio", { name: /accessibilité/i });
     await user.click(categoryButton);
 
-    const textarea = screen.getByPlaceholderText(/décrivez votre bug/i);
+    const textarea = screen.getByPlaceholderText(/décrivez votre demande/i);
     await user.type(textarea, "Remarque accessibilité");
 
-    await user.click(screen.getByRole("button", { name: /envoyer/i }));
+    await user.click(screen.getByRole("button", { name: /envoyer la demande/i }));
 
     await waitFor(() => {
       const calls = mockFetch.mock.calls;
@@ -314,20 +314,202 @@ describe("BetaChatWidget", () => {
     const user = userEvent.setup();
     renderWidget();
     await user.click(
-      screen.getByRole("button", { name: /ouvrir le chat de support bêta/i })
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
     );
 
     await waitFor(() => {
       expect(screen.getByText(/plateforme en phase bêta/i)).toBeInTheDocument();
     });
 
-    const textarea = screen.getByPlaceholderText(/décrivez votre bug/i);
+    const textarea = screen.getByPlaceholderText(/décrivez votre demande/i);
     fireEvent.change(textarea, { target: { value: "a".repeat(5001) } });
 
     await waitFor(() => {
       expect(screen.getByText("5001/5000")).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("button", { name: /envoyer/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /envoyer la demande/i })).toBeDisabled();
   }, 10000);
+
+  it("démarre en mode réponse si l'historique contient des messages, cachant le sélecteur de catégorie", async () => {
+    const messages = [
+      {
+        id: "msg-1",
+        userId: "user-1",
+        author: "MEMBER",
+        category: "bug_technique",
+        content: "Problème",
+        createdAt: "2026-06-29T08:00:00.000Z",
+      },
+    ];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { unreadCount: 0 } }),
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: { messages, total: 1, page: 1, limit: 50 },
+      }),
+    });
+
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Problème")).toBeInTheDocument();
+    });
+
+    // Le sélecteur de catégorie ("Quel est l'objet de votre demande ?") ne doit pas être visible en mode réponse
+    expect(screen.queryByText(/quel est l'objet de votre demande/i)).not.toBeInTheDocument();
+    // Le placeholder doit être celui du mode réponse
+    expect(screen.getByPlaceholderText(/écrire une réponse/i)).toBeInTheDocument();
+    // Le bouton doit s'appeler "Répondre"
+    expect(screen.getByRole("button", { name: /^répondre$/i })).toBeInTheDocument();
+  });
+
+  it("permet de basculer entre le mode réponse et nouvelle demande", async () => {
+    const messages = [
+      {
+        id: "msg-1",
+        userId: "user-1",
+        author: "MEMBER",
+        category: "bug_technique",
+        content: "Problème",
+        createdAt: "2026-06-29T08:00:00.000Z",
+      },
+    ];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { unreadCount: 0 } }),
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: { messages, total: 1, page: 1, limit: 50 },
+      }),
+    });
+
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Problème")).toBeInTheDocument();
+    });
+
+    // Clic sur "Nouvelle demande"
+    const newRequestButton = screen.getByRole("button", { name: /nouvelle demande/i });
+    await user.click(newRequestButton);
+
+    // Le sélecteur de catégorie doit maintenant être visible
+    expect(screen.getByText(/quel est l'objet de votre demande/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/décrivez votre demande/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /envoyer la demande/i })).toBeInTheDocument();
+
+    // Clic sur "Annuler"
+    const cancelButton = screen.getByRole("button", { name: /annuler/i });
+    await user.click(cancelButton);
+
+    // Retour en mode réponse
+    expect(screen.queryByText(/quel est l'objet de votre demande/i)).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/écrire une réponse/i)).toBeInTheDocument();
+  });
+
+  it("soumet en mode réponse avec la catégorie du dernier message", async () => {
+    const messages = [
+      {
+        id: "msg-1",
+        userId: "user-1",
+        author: "MEMBER",
+        category: "accessibilite",
+        content: "Problème accessibilité",
+        createdAt: "2026-06-29T08:00:00.000Z",
+      },
+    ];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { unreadCount: 0 } }),
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: { messages, total: 1, page: 1, limit: 50 },
+      }),
+    });
+    mockFetch.mockImplementation((url: string) => {
+      if (url === "/api/chat/messages") {
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({
+            data: {
+              message: {
+                id: "msg-2",
+                userId: "user-1",
+                author: "MEMBER",
+                category: "accessibilite",
+                content: "Ma réponse",
+                createdAt: "2026-06-29T08:05:00.000Z",
+              },
+              ack: {
+                id: "ack-2",
+                userId: "user-1",
+                author: "SYSTEM",
+                content: "Reçu.",
+                createdAt: "2026-06-29T08:05:01.000Z",
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { unreadCount: 0 } }),
+      });
+    });
+
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(
+      screen.getByRole("button", { name: /ouvrir le formulaire de support/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Problème accessibilité")).toBeInTheDocument();
+    });
+
+    const textarea = screen.getByPlaceholderText(/écrire une réponse/i);
+    await user.type(textarea, "Ma réponse");
+
+    const replyButton = screen.getByRole("button", { name: /^répondre$/i });
+    await user.click(replyButton);
+
+    await waitFor(() => {
+      const calls = mockFetch.mock.calls;
+      const postCall = calls.find((call) => call[0] === "/api/chat/messages");
+      expect(postCall).toBeDefined();
+      expect(postCall![1]).toEqual(
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            category: "accessibilite", // hérité du dernier message msg-1
+            content: "Ma réponse",
+          }),
+        })
+      );
+    });
+  });
 });
