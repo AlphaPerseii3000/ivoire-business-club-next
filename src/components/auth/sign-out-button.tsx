@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useState } from "react";
+import { SquarePower } from "lucide-react";
 
 export default function SignOutButton() {
   const [loading, setLoading] = useState(false);
@@ -15,9 +16,11 @@ export default function SignOutButton() {
     <button
       onClick={handleSignOut}
       disabled={loading}
-      className="w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors text-left disabled:opacity-50"
+      className="logout-btn w-full rounded-md px-3 py-2 text-sm transition-colors text-left disabled:opacity-50 cursor-pointer"
     >
-      {loading ? "Déconnexion..." : "🚪 Déconnexion"}
+      <SquarePower className="sidebar-icon" />
+      <span>{loading ? "Déconnexion..." : "Déconnexion"}</span>
     </button>
   );
 }
+

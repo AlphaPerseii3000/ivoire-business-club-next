@@ -253,3 +253,31 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* --- Sidebar Navigation Icons & Style Customizations --- */
+
+/* Icône inactive (état par défaut) */
+.sidebar-icon {
+  color: #B8BCC8;
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+  transition: color 0.2s ease;
+}
+
+/* Icône active (page en cours) */
+.sidebar-item.active .sidebar-icon {
+  color: #D4A548;
+}
+
+/* Bouton déconnexion */
+.logout-btn {
+  color: #B8BCC8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logout-btn:hover {
+  color: #e57373; /* rouge doux au survol pour signaler l'action destructive */
+}
