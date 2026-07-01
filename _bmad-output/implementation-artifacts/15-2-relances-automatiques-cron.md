@@ -280,7 +280,7 @@ kimi-k2.7-code (via Hermes delegate_task)
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/story-15-2.md`
+- `_bmad-output/implementation-artifacts/15-2-relances-automatiques-cron.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (status mis à jour)
 
 ### Implementation Plan

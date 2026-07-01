@@ -178,14 +178,14 @@ Fichiers à LIRE pour le contexte :
 - `src/lib/audit-log.ts` — patterns `AUDIT_ACTIONS` et `safeCreateAuditLog`
 - `src/lib/validations.ts` — schéma `onboardingFormSchema` et `ALL_COUNTRIES`
 - `prisma/schema.prisma` — modèle `User`, champs et enums
-- `_bmad-output/implementation-artifacts/story-16-1.md` — contexte et mapping de la story précédente
+- `_bmad-output/implementation-artifacts/16-1-sync-onboarding-to-user.md` — contexte et mapping de la story précédente
 - `_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-28.md#Story 16.2` — AC et technical notes du SCP
 
 ### References
 
 - [Source: _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-28.md#Story 16.2] — AC complets et technical notes
 - [Source: _bmad-output/planning-artifacts/architecture.md#Core Architectural Decisions] — stack Next.js 16, Prisma 7, patterns API/DB
-- [Source: _bmad-output/implementation-artifacts/story-16-1.md] — mapping onboarding → User, transaction, autoTransitionVerificationStatus
+- [Source: _bmad-output/implementation-artifacts/16-1-sync-onboarding-to-user.md] — mapping onboarding → User, transaction, autoTransitionVerificationStatus
 - [Source: src/app/api/user/onboarding/route.ts] — implémentation 16.1 du mapping et de la transaction
 - [Source: src/lib/verification.server.ts] — `autoTransitionVerificationStatus(userId, txClient?)`
 - [Source: src/lib/audit-log.ts] — `AUDIT_ACTIONS`, `safeCreateAuditLog`, patterns audit

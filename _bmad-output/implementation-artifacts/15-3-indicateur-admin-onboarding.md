@@ -244,7 +244,7 @@ kimi-k2.7-code (via Hermes delegate_task)
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/story-15-3.md`
+- `_bmad-output/implementation-artifacts/15-3-indicateur-admin-onboarding.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (status mis à jour)
 - `src/lib/audit-log.ts` (ajout `USER_REMINDER_SEND`)
 - `src/app/(admin)/admin/members/page.tsx` (badges onboarding + filtre incomplet + lien détail)

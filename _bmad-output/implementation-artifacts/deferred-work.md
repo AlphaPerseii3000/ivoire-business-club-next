@@ -73,7 +73,7 @@
 
 - Lien d'ancre brisé pour "Tarifs" dans la navigation mobile sur les pages secondaires [src/components/landing/mobile-nav.tsx:7] — Le lien "Tarifs" utilise `#pricing`. Sur les pages `/partners` ou `/partners/[slug]`, cliquer dessus cherche l'ancre sur la page courante au lieu de rediriger vers la page d'accueil (`/#pricing`) (pré-existant).
 
-## Deferred from: code review of story-15-2 (2026-06-26)
+## Deferred from: code review of 15-2-relances-automatiques-cron (2026-06-26)
 
 - `CRON_SECRET` comparison is not timing-safe (`token !== expected`) and `getBearerToken` rejects headers with extra spaces between "Bearer" and the token [src/app/api/cron/remind-incomplete-users/route.ts:8-18]. Hard to exploit in practice because `CRON_SECRET` is high-entropy and network timing dominates, but consider switching to a constant-time `crypto.timingSafeEqual` comparison and allowing a single extra space in the bearer extraction. Low priority unless security hardening is mandated.
 - `docs/cron-setup.md` and `.env.example` do not warn that the cron endpoint remains unprotected against replay if `CRON_SECRET` is intercepted. The current model relies entirely on secret-in-transit over HTTPS; consider documenting mTLS or IP allow-listing as future hardening. Low priority / documentation.

@@ -1,4 +1,11 @@
-|---
+---
+Story: "16.1"
+StoryKey: "16-1-sync-onboarding-to-user"
+Title: "Synchronisation des champs onboarding → User"
+Status: "done"
+Priority: "P1"
+Epic: "Epic 16 — Automatisation & Synchro Données"
+Created: "2026-06-28"
 baseline_commit: bc740db0d4f00a0f5a8cd55a19d63da70b6a5443
 ---
 

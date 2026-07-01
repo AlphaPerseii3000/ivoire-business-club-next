@@ -172,8 +172,8 @@ Fichiers à LIRE pour le contexte :
 - [Source: src/app/api/subscriptions/route.ts] — API création d'abonnement
 - [Source: src/lib/mobile-money-config.ts] — config Wave/Orange Money
 - [Source: src/lib/email.test.ts] — tests email existants
-- [Source: _bmad-output/implementation-artifacts/story-16-1.md] — story précédente dans l'epic 16
-- [Source: _bmad-output/implementation-artifacts/story-16-2-migration-retroactive-members.md] — story précédente dans l'epic 16
+- [Source: _bmad-output/implementation-artifacts/16-1-sync-onboarding-to-user.md] — story précédente dans l'epic 16
+- [Source: _bmad-output/implementation-artifacts/16-2-migration-retroactive-members.md] — story précédente dans l'epic 16
 - [Source: _bmad-output/implementation-artifacts/11-1-email-accueil-post-inscription.md] — story ayant créé `sendWelcomeEmail`
 - [Source: _bmad-output/implementation-artifacts/11-3-modele-paiement-mobile-money.md] — mobile money backend
 - [Source: _bmad-output/implementation-artifacts/11-4-ui-selection-paiement-multi-provider.md] — UI sélection de paiement
@@ -201,6 +201,6 @@ Kimi K2.7 Code (via Hermes delegate_task)
 - Modified : `src/lib/email.test.ts`
 - Modified : `src/app/api/auth/signup/route.test.ts`
 - Modified : `src/app/api/subscriptions/route.test.ts`
-- Modified : `_bmad-output/implementation-artifacts/story-16-3-email-accueil-dynamique-paiement.md`
+- Modified : `_bmad-output/implementation-artifacts/16-3-email-accueil-dynamique-paiement.md`
 - Modified : `_bmad-output/implementation-artifacts/sprint-status.yaml`
 

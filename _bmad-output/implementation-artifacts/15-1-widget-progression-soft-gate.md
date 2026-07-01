@@ -283,7 +283,7 @@ kimi-k2.7-code (via Hermes delegate_task)
 - src/lib/verification-email.server.test.ts
 - src/lib/auth.test.ts
 - _bmad-output/implementation-artifacts/sprint-status.yaml
-- _bmad-output/implementation-artifacts/story-15-1.md
+- _bmad-output/implementation-artifacts/15-1-widget-progression-soft-gate.md
 
 ### Implementation Plan
 
