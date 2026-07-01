@@ -165,7 +165,7 @@ development_status:
   epic-20-retrospective: optional
 
   epic-21: in-progress
-  21-1-mot-de-passe-oublie: ready-for-dev
+  21-1-mot-de-passe-oublie: review
   21-2-changement-mot-de-passe-profil: backlog
   21-3-set-password-flow-whatsapp: backlog
   epic-21-retrospective: optional

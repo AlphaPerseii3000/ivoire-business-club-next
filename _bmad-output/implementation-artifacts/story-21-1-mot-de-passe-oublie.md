@@ -1,6 +1,6 @@
 # Story 21.1 : Mot de Passe Oublié
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -263,5 +263,5 @@ Derniers commits pertinents :
 
 ## Story Completion Status
 
-- Status: **ready-for-dev**
+- Status: **review**
 - Note: Ultimate context engine analysis completed — comprehensive developer guide created.
