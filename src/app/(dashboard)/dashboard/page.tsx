@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  Newspaper,
+  SquareMousePointer,
+  UsersRound,
+  UserRoundPen,
+  Lock,
+} from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -136,35 +143,53 @@ export default async function DashboardPage({
 
       {onboardingIncomplete ? (
         <div className="mt-8 grid gap-4 sm:grid-cols-1">
-          <Link href="/onboarding/complete-profile" className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">🔒 Complète ton profil</p>
+          <Link href="/onboarding/complete-profile" className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <Lock className="h-5 w-5 text-amber-500" />
+              <span>Complète ton profil</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Termine ton onboarding pour débloquer les articles, opportunités et le répertoire des membres</p>
           </Link>
-          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">👤 Mon profil</p>
+          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <UserRoundPen className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Mon profil</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
           </Link>
         </div>
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">📰 Articles</p>
+          <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <Newspaper className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Articles</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Analyses, guides et témoignages</p>
           </Link>
-          <Link href="/dashboard/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">🎯 Opportunités</p>
+          <Link href="/dashboard/opportunities" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <SquareMousePointer className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Opportunités</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
           </Link>
-          <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">🤝 Membres</p>
+          <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <UsersRound className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Membres</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Réseau et mises en relation</p>
           </Link>
-          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
-            <p className="text-lg font-semibold">👤 Mon profil</p>
+          <Link href="/profile" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <UserRoundPen className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Mon profil</span>
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Modifier mes informations</p>
           </Link>
         </div>
       )}
     </div>
   );
-}
+}
