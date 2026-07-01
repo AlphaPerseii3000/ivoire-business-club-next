@@ -71,12 +71,24 @@ export const accountDeletionSchema = z.object({
   confirmation: z.literal("SUPPRIMER"),
 });
 
+export const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Le mot de passe actuel est requis"),
+    newPassword: z.string().min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères"),
+    confirmNewPassword: z.string().min(1, "La confirmation du nouveau mot de passe est requise"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Les nouveaux mots de passe ne correspondent pas",
+    path: ["confirmNewPassword"],
+  });
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type SigninInput = z.infer<typeof signinSchema>;
 export type ForgotPasswordRequestInput = z.infer<typeof forgotPasswordRequestSchema>;
 export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
 
 const MOBILE_MONEY_PREFIXES = [
   "+225", // Côte d'Ivoire

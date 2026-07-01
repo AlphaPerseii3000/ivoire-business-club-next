@@ -165,4 +165,87 @@ describe("ProfileEditForm", () => {
     // shadcn Select renders as custom Radix — verify label is present
     expect(screen.getByText(/pays/i)).toBeInTheDocument();
   });
+
+  it("renders Google account info if hasPassword is false", () => {
+    render(<ProfileEditForm user={{ ...mockUser, hasPassword: false }} />);
+
+    expect(screen.getByText(/compte connecté via google/i)).toBeInTheDocument();
+    expect(screen.getByText(/aucun mot de passe local n'est configuré/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^mot de passe actuel$/i)).not.toBeInTheDocument();
+  });
+
+  it("renders password change fields if hasPassword is true", () => {
+    render(<ProfileEditForm user={{ ...mockUser, hasPassword: true }} />);
+
+    expect(screen.getByRole("heading", { name: /^sécurité$/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^mot de passe actuel$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nouveau mot de passe$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^confirmation du nouveau mot de passe$/i)).toBeInTheDocument();
+  });
+
+  it("shows validation error when passwords do not match on blur", async () => {
+    const user = userEvent.setup();
+    render(<ProfileEditForm user={{ ...mockUser, hasPassword: true }} />);
+
+    const currentInput = screen.getByLabelText(/^mot de passe actuel$/i);
+    const newInput = screen.getByLabelText(/^nouveau mot de passe$/i);
+    const confirmInput = screen.getByLabelText(/^confirmation du nouveau mot de passe$/i);
+
+    await user.type(currentInput, "oldPass123");
+    await user.type(newInput, "newSecure123!");
+    await user.type(confirmInput, "differentConfirm");
+    await user.tab(); // trigger validation onBlur
+
+    await waitFor(() => {
+      expect(screen.getByText(/les nouveaux mots de passe ne correspondent pas/i)).toBeInTheDocument();
+    });
+  });
+
+  it("shows validation error when new password is too short", async () => {
+    const user = userEvent.setup();
+    render(<ProfileEditForm user={{ ...mockUser, hasPassword: true }} />);
+
+    const newInput = screen.getByLabelText(/^nouveau mot de passe$/i);
+    await user.type(newInput, "short");
+    await user.tab();
+
+    await waitFor(() => {
+      expect(screen.getByText(/au moins 8 caractères/i)).toBeInTheDocument();
+    });
+  });
+
+  it("calls password API and shows success toast on valid submission", async () => {
+    const user = userEvent.setup();
+    const { toast } = await import("sonner");
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ message: "Mot de passe mis à jour avec succès." }),
+    });
+
+    render(<ProfileEditForm user={{ ...mockUser, hasPassword: true }} />);
+
+    const currentInput = screen.getByLabelText(/^mot de passe actuel$/i);
+    const newInput = screen.getByLabelText(/^nouveau mot de passe$/i);
+    const confirmInput = screen.getByLabelText(/^confirmation du nouveau mot de passe$/i);
+
+    await user.type(currentInput, "oldPass123");
+    await user.type(newInput, "newSecure123!");
+    await user.type(confirmInput, "newSecure123!");
+
+    const submitButton = screen.getByRole("button", { name: /mettre à jour le mot de passe/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith("/api/user/password", expect.objectContaining({
+        method: "POST",
+      }));
+      expect(toast.success).toHaveBeenCalledWith("Mot de passe mis à jour avec succès.");
+      // fields should be cleared
+      expect(currentInput).toHaveValue("");
+      expect(newInput).toHaveValue("");
+      expect(confirmInput).toHaveValue("");
+    });
+  });
 });
