@@ -74,12 +74,22 @@ export const accountDeletionSchema = z.object({
 export const passwordChangeSchema = z
   .object({
     currentPassword: z.string().min(1, "Le mot de passe actuel est requis"),
-    newPassword: z.string().min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères"),
+    newPassword: z
+      .string()
+      .min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères")
+      .max(72, "Le nouveau mot de passe ne peut pas dépasser 72 caractères")
+      .refine((val) => /[a-zA-Z]/.test(val) && /\d/.test(val), {
+        message: "Le nouveau mot de passe doit contenir au moins une lettre et un chiffre",
+      }),
     confirmNewPassword: z.string().min(1, "La confirmation du nouveau mot de passe est requise"),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
     message: "Les nouveaux mots de passe ne correspondent pas",
     path: ["confirmNewPassword"],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: "Le nouveau mot de passe doit être différent du mot de passe actuel",
+    path: ["newPassword"],
   });
 
 export type SignupInput = z.infer<typeof signupSchema>;

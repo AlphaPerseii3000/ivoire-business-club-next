@@ -340,11 +340,14 @@ function PasswordChangeForm() {
         <Input
           id="currentPassword"
           type="password"
+          autoComplete="current-password"
           className="min-h-[44px]"
+          aria-invalid={!!errors.currentPassword}
+          aria-describedby={errors.currentPassword ? "currentPassword-error" : undefined}
           {...register("currentPassword")}
         />
         {errors.currentPassword ? (
-          <p className="text-xs text-destructive">{errors.currentPassword.message}</p>
+          <p id="currentPassword-error" className="text-xs text-destructive">{errors.currentPassword.message}</p>
         ) : null}
       </div>
 
@@ -353,16 +356,22 @@ function PasswordChangeForm() {
         <Input
           id="newPassword"
           type="password"
+          autoComplete="new-password"
           className="min-h-[44px]"
+          aria-invalid={!!errors.newPassword}
+          aria-describedby={[
+            errors.newPassword ? "newPassword-error" : "",
+            strength.label ? "newPassword-strength" : "",
+          ].filter(Boolean).join(" ") || undefined}
           {...register("newPassword")}
         />
         {strength.label ? (
-          <p className={`text-xs font-medium ${strength.color}`}>
+          <p id="newPassword-strength" className={`text-xs font-medium ${strength.color}`}>
             Force : {strength.label}
           </p>
         ) : null}
         {errors.newPassword ? (
-          <p className="text-xs text-destructive">{errors.newPassword.message}</p>
+          <p id="newPassword-error" className="text-xs text-destructive">{errors.newPassword.message}</p>
         ) : null}
       </div>
 
@@ -371,11 +380,14 @@ function PasswordChangeForm() {
         <Input
           id="confirmNewPassword"
           type="password"
+          autoComplete="new-password"
           className="min-h-[44px]"
+          aria-invalid={!!errors.confirmNewPassword}
+          aria-describedby={errors.confirmNewPassword ? "confirmNewPassword-error" : undefined}
           {...register("confirmNewPassword")}
         />
         {errors.confirmNewPassword ? (
-          <p className="text-xs text-destructive">{errors.confirmNewPassword.message}</p>
+          <p id="confirmNewPassword-error" className="text-xs text-destructive">{errors.confirmNewPassword.message}</p>
         ) : null}
       </div>
 

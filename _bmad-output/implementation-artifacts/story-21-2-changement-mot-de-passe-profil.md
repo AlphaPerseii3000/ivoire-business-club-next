@@ -3,7 +3,7 @@ baseline_commit: 9b338c06aea9846d43c3b211e7d94d192a32cf0e
 ---
 # Story 21.2 : Changement de mot de passe dans le profil
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -134,6 +134,18 @@ Cette story est la deuxième de l'**Epic 21 : Gestion des mots de passe**. Elle 
     - Tester l'appel API de changement de mot de passe et l'affichage du toast de succès
   - [x] 5.3 Exécuter le build et les tests (`npm run build` et `npx vitest run`) pour s'assurer que tout passe sans régression.
 
+### Review Findings
+
+- [x] [Review][Decision] Server Password Complexity Validation Gap — Discrepancy between client-side strength meter and server-side Zod validation. Server-side validation only verifies min(8), letting users bypass client constraints and set weak passwords (e.g. "aaaaaaaa").
+- [x] [Review][Patch] Suspended User Changing Password [src/app/api/user/password/route.ts:502]
+- [x] [Review][Patch] Insecure Password Reuse Validation [src/lib/validations.ts:74]
+- [x] [Review][Patch] Password Maximum Length Limit [src/lib/validations.ts:77]
+- [x] [Review][Patch] Missing Input Autocomplete Attributes [src/components/features/auth/profile-edit-form.tsx]
+- [x] [Review][Patch] Absence of Accessibility Attributes (WCAG Compliance) [src/components/features/auth/profile-edit-form.tsx]
+- [x] [Review][Defer] Google OAuth Accounts Password Setup (Dead-End UX) [src/components/features/auth/profile-edit-form.tsx:693] — deferred, pre-existing
+- [x] [Review][Defer] Lack of Backend Rate Limiting [src/app/api/user/password/route.ts] — deferred, pre-existing
+- [x] [Review][Defer] Missing Security Auditing and Email Notifications [src/app/api/user/password/route.ts] — deferred, pre-existing
+
 ## Dev Notes
 
 ### Architecture & patterns à suivre
@@ -224,5 +236,5 @@ Gemini 3.5 Flash (High)
 
 ## Story Completion Status
 
-- Status: **review**
+- Status: **done**
 - Note: Ultimate context engine analysis completed - comprehensive developer guide created.

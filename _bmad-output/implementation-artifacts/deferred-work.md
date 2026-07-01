@@ -96,6 +96,8 @@
 - Unhandled PostHog capture errors in lead-magnet API: API returns a 500 error if PostHog capture fails after guide email is sent successfully [src/app/api/lead-magnet/route.ts:67-71].
 - Google OAuth sign-in events not tracked: signing in via Google OAuth does not trigger client-side `user_signed_in` event capture, breaking sign-in method tracking trends [src/app/auth/signin/page.tsx:59-63].
 
+## Deferred from: code review of story-21-2-changement-mot-de-passe-profil.md (2026-07-01)
 
-
-
+- Google OAuth Accounts Password Setup (Dead-End UX) [src/components/features/auth/profile-edit-form.tsx:693] — Users authenticated via Google are shown a static message and completely locked out of configuring a local password.
+- Lack of Backend Rate Limiting [src/app/api/user/password/route.ts] — The password update API route performs expensive bcrypt operations without rate limiting.
+- Missing Security Auditing and Email Notifications [src/app/api/user/password/route.ts] — The API route successfully updates the password without triggering security logs or email notifications.

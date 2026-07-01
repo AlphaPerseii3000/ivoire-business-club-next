@@ -34,11 +34,15 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { passwordHash: true },
+      select: { passwordHash: true, status: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    if (user.status === "SUSPENDED") {
+      return NextResponse.json({ error: "Compte suspendu" }, { status: 403 });
     }
 
     if (!user.passwordHash) {

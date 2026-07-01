@@ -165,4 +165,77 @@ describe("POST /api/user/password", () => {
     expect(json.details.newPassword).toBeDefined();
     expect(mockUserUpdate).not.toHaveBeenCalled();
   });
+
+  it("returns 400 if new password lacks complexity (no digits)", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      currentPassword: "correct-password",
+      newPassword: "onlyletters",
+      confirmNewPassword: "onlyletters",
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.newPassword).toBeDefined();
+  });
+
+  it("returns 400 if new password is too long (> 72 chars)", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      currentPassword: "correct-password",
+      newPassword: "a".repeat(73),
+      confirmNewPassword: "a".repeat(73),
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.newPassword).toBeDefined();
+  });
+
+  it("returns 400 if user attempts to reuse their current password", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+
+    const req = makeRequest({
+      currentPassword: "correct-password",
+      newPassword: "correct-password",
+      confirmNewPassword: "correct-password",
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Données invalides");
+    expect(json.details.newPassword).toBeDefined();
+  });
+
+  it("returns 403 if the user is suspended", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-123",
+      passwordHash: "correct-password-hash",
+      status: "SUSPENDED",
+    });
+
+    const req = makeRequest({
+      currentPassword: "correct-password",
+      newPassword: "newSecurePassword123!",
+      confirmNewPassword: "newSecurePassword123!",
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(json.error).toBe("Compte suspendu");
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+  });
 });
