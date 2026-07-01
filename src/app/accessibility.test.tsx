@@ -15,6 +15,11 @@ vi.mock("next/font/google", () => ({
   Inter: () => ({ className: "mocked-inter-class" }),
 }));
 
+// Mock next-auth/react
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null, status: "unauthenticated" }),
+}));
+
 // Mock posthog-provider components to avoid full context complexity
 vi.mock("@/components/providers/posthog-provider", () => ({
   CSPostHogProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="posthog-provider">{children}</div>,

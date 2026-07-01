@@ -333,7 +333,7 @@ export default function BetaChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50">
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger
           render={
@@ -363,7 +363,7 @@ export default function BetaChatWidget() {
               transition={{ duration: 0.2 }}
             >
               <SheetContent
-                side="left"
+                side="right"
                 className="flex h-[85vh] w-full flex-col sm:max-w-lg md:h-[80vh]"
                 showCloseButton={false}
               >

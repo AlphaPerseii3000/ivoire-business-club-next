@@ -96,37 +96,41 @@ export default async function DashboardPage({
         <PendingSubscriptionBanner tier={user.tier} />
       ) : null}
 
-      <div className="mt-8 rounded-xl border bg-card p-6">
-        <h2 className="text-lg font-semibold">Mon abonnement</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-sm text-muted-foreground">Plan</p>
-            <p data-testid="dashboard-tier" className="text-lg font-semibold text-primary">
-              {tierLabel[user.tier] ?? user.tier}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Statut</p>
-            <p data-testid="dashboard-subscription-status" className="text-lg font-semibold">
-              {subscription ? statusLabel[subscription.status] ?? subscription.status : "Aucun"}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Expire le</p>
-            <p className="text-lg font-semibold">
-              {subscription?.endDate
-                ? new Date(subscription.endDate).toLocaleDateString("fr-FR")
-                : "—"}
-            </p>
+      <div className="mt-8 rounded-xl border bg-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex-1">
+          <h2 className="text-lg font-semibold">Mon abonnement</h2>
+          <div className="mt-4 grid gap-4 grid-cols-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Plan</p>
+              <p data-testid="dashboard-tier" className="text-lg font-semibold text-primary">
+                {subscription ? (tierLabel[user.tier] ?? user.tier) : "Aucun"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Statut</p>
+              <p data-testid="dashboard-subscription-status" className="text-lg font-semibold">
+                {subscription ? statusLabel[subscription.status] ?? subscription.status : "Aucun"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Expire le</p>
+              <p className="text-lg font-semibold">
+                {subscription?.endDate
+                  ? new Date(subscription.endDate).toLocaleDateString("fr-FR")
+                  : "—"}
+              </p>
+            </div>
           </div>
         </div>
         {!subscription || subscription.status === "TRIAL" ? (
-          <Link
-            href="/pricing"
-            className="mt-4 inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          >
-            Choisir un plan
-          </Link>
+          <div className="flex shrink-0">
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Choisir un plan
+            </Link>
+          </div>
         ) : null}
       </div>
 
@@ -142,7 +146,7 @@ export default async function DashboardPage({
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Link href="/articles" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow">
             <p className="text-lg font-semibold">📰 Articles</p>
             <p className="mt-1 text-sm text-muted-foreground">Analyses, guides et témoignages</p>
