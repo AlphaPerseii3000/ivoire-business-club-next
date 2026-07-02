@@ -59,7 +59,7 @@
 
 /* IBC Theme — Light Mode (default) */
 :root {
-  --background: oklch(0.98 0.005 90);
+  --background: #F6F5F2;
   --foreground: oklch(0.15 0.02 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.02 260);
@@ -134,9 +134,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), sans-serif;
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-dm-sans), sans-serif;
   }
 }
 
