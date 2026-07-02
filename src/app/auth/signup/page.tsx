@@ -61,18 +61,8 @@ export default function SignUpPage() {
         return;
       }
 
-      // Auto sign in after signup
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-      if (result?.ok && !result?.error) {
-        posthog.capture("user_signed_up", { method: "credentials" });
-        window.location.href = "/dashboard?verify-email=1";
-      } else {
-        window.location.href = "/auth/signin?error=unverified";
-      }
+      posthog.capture("user_signed_up", { method: "credentials" });
+      window.location.href = "/auth/signup-success";
     } catch {
       setServerError("Erreur réseau");
     }

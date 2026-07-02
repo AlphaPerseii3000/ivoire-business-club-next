@@ -92,13 +92,20 @@ describe("SignUpPage", () => {
     });
   });
 
-  it("submits form via fetch with correct payload and redirects to /dashboard on success", async () => {
+  it("submits form via fetch with correct payload and redirects to /auth/signup-success on success", async () => {
+    const originalWindow = window;
+    const assignMock = vi.fn();
+    vi.stubGlobal("window", {
+      ...originalWindow,
+      document: originalWindow.document,
+      location: { ...originalWindow.location, href: "", assign: assignMock },
+    });
+
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ id: "u-1", email: "test@example.com", name: "Jean" }),
     });
     vi.stubGlobal("fetch", mockFetch);
-    mockSignIn.mockResolvedValue({ ok: true });
 
     render(<SignUpPage />);
     fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
@@ -116,12 +123,10 @@ describe("SignUpPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockSignIn).toHaveBeenCalledWith("credentials", {
-        email: "test@example.com",
-        password: "securePass123!",
-        redirect: false,
-      });
+      expect(window.location.href).toBe("/auth/signup-success");
     });
+
+    vi.stubGlobal("window", originalWindow);
   });
 
   it("displays exact French duplicate-email error from API", async () => {
