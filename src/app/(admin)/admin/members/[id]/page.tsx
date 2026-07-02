@@ -128,7 +128,7 @@ export default async function AdminMemberDetailPage({
           {isIncomplete ? (
             <AdminMemberReminderButton userId={member.id} disabled={member.status === "SUSPENDED"} />
           ) : null}
-          {!emailVerified && member.status !== "SUSPENDED" ? (
+          {!emailVerified && member.status !== "SUSPENDED" && member.passwordHash !== null ? (
             <AdminMemberInviteButton userId={member.id} />
           ) : null}
         </div>

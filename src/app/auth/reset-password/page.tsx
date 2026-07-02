@@ -62,6 +62,7 @@ export default function ResetPasswordPage() {
           token,
           password: data.password,
           confirmPassword: data.confirmPassword,
+          type,
         }),
       });
 

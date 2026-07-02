@@ -3,7 +3,7 @@ baseline_commit: 817a6e66f09da20c22e2c1e887e7e071f0cd4b62
 ---
 # Story 21.3 : Set-Password Flow pour Utilisateurs Créés via WhatsApp
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -137,3 +137,18 @@ Gemini 3.5 Flash (High)
 - `src/app/auth/reset-password/page.tsx`
 - `src/app/auth/reset-password/page.test.tsx`
 - `src/app/auth/signin/page.tsx`
+
+### Review Findings
+
+- [x] [Review][Patch] Test d'intégration échoue à cause du mock `next/navigation` manquant dans les tests [src/app/(admin)/admin/members/[id]/page.test.tsx]
+- [x] [Review][Patch] `emailVerified` manquant dans le bloc `select` Prisma de la page de détails du membre [src/app/(admin)/admin/members/[id]/page.tsx:47]
+- [x] [Review][Patch] Absence de validation de la présence du `passwordHash` (non nul) pour le bouton d'invitation et la route API (violation AC1) [src/app/(admin)/admin/members/[id]/page.tsx]
+- [x] [Review][Patch] Message d'erreur générique pour un jeton inexistant ou déjà utilisé au lieu du message spécifique d'invitation expirée (violation AC4) [src/app/api/auth/reset-password/route.ts:43-52]
+- [x] [Review][Patch] Log d'audit généré avant l'envoi réussi de l'e-mail d'invitation [src/app/api/admin/users/[id]/invite/route.ts:91-109]
+- [x] [Review][Patch] URL d'invitation relative envoyée dans les e-mails si la variable d'environnement `APP_URL` n'est pas définie [src/lib/email.ts:388]
+- [x] [Review][Patch] Gestion fragile des erreurs dans le bloc catch lors du nettoyage des jetons [src/app/api/admin/users/[id]/invite/route.ts:106-109]
+- [x] [Review][Patch] Absence de validation du statut de l'utilisateur (SUSPENDED) lors de la réinitialisation du mot de passe [src/app/api/auth/reset-password/route.ts]
+- [x] [Review][Defer] Absence de rate-limiting (limitation de débit) sur les routes d'API d'invitation et de mot de passe — deferred, pre-existing
+- [x] [Review][Defer] Absence de cooldown sur le bouton d'invitation pour empêcher le spam d'e-mails — deferred, pre-existing
+- [x] [Review][Defer] Validation initiale du token au chargement de la page de réinitialisation avant soumission du formulaire — deferred, pre-existing
+

@@ -8,6 +8,8 @@ const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockRedirect = vi.hoisted(() => vi.fn((url: string) => {
   throw new Error(`redirect:${url}`);
 }));
+const mockPush = vi.hoisted(() => vi.fn());
+const mockRefresh = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
@@ -15,10 +17,19 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("next/navigation", () => ({
   redirect: mockRedirect,
+  useRouter: () => ({
+    push: mockPush,
+    refresh: mockRefresh,
+  }),
 }));
 vi.mock("@/components/features/admin/admin-member-reminder-button", () => ({
   AdminMemberReminderButton: ({ userId, disabled }: { userId: string; disabled: boolean }) => (
     <button data-testid="reminder-button" data-userid={userId} data-disabled={disabled}>Relancer par email</button>
+  ),
+}));
+vi.mock("@/components/features/admin/admin-member-invite-button", () => ({
+  AdminMemberInviteButton: ({ userId, disabled }: { userId: string; disabled?: boolean }) => (
+    <button data-testid="invite-button" data-userid={userId} data-disabled={disabled}>Inviter à définir le mot de passe</button>
   ),
 }));
 
@@ -38,6 +49,7 @@ function baseMember() {
     country: "CI",
     status: "ACTIVE",
     verificationStatus: "PENDING",
+    passwordHash: "hashed-pwd",
     createdAt: new Date("2026-05-10T10:00:00Z"),
   };
 }
@@ -124,5 +136,31 @@ describe("AdminMemberDetailPage", () => {
     });
 
     await expect(AdminMemberDetailPage({ params: Promise.resolve({ id: "missing" }) })).rejects.toThrow("redirect:/admin/members");
+  });
+
+  it("shows the invite button when member has a passwordHash but email is unverified", async () => {
+    mockUserFindUnique.mockImplementation((args: { where: { id: string } }) => {
+      if (args.where.id === "admin-1") {
+        return Promise.resolve({ id: "admin-1", role: "ADMIN", status: "ACTIVE" });
+      }
+      return Promise.resolve(buildMember({ emailVerified: false, passwordHash: "hashed-pwd" }));
+    });
+
+    render(await AdminMemberDetailPage({ params: Promise.resolve({ id: "member-1" }) }));
+
+    expect(screen.getByTestId("invite-button")).toBeInTheDocument();
+  });
+
+  it("hides the invite button when member has no passwordHash", async () => {
+    mockUserFindUnique.mockImplementation((args: { where: { id: string } }) => {
+      if (args.where.id === "admin-1") {
+        return Promise.resolve({ id: "admin-1", role: "ADMIN", status: "ACTIVE" });
+      }
+      return Promise.resolve(buildMember({ emailVerified: false, passwordHash: null }));
+    });
+
+    render(await AdminMemberDetailPage({ params: Promise.resolve({ id: "member-1" }) }));
+
+    expect(screen.queryByTestId("invite-button")).not.toBeInTheDocument();
   });
 });

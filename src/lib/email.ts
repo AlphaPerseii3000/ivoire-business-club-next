@@ -399,6 +399,9 @@ export async function sendSetPasswordEmail({
   token: string;
   appUrl?: string;
 }) {
+  if (!appUrl) {
+    throw new Error("APP_URL variable is not configured");
+  }
   const inviteLink = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}&type=set`;
   const dashboard = dashboardLine();
 

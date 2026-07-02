@@ -101,3 +101,10 @@
 - Google OAuth Accounts Password Setup (Dead-End UX) [src/components/features/auth/profile-edit-form.tsx:693] — Users authenticated via Google are shown a static message and completely locked out of configuring a local password.
 - Lack of Backend Rate Limiting [src/app/api/user/password/route.ts] — The password update API route performs expensive bcrypt operations without rate limiting.
 - Missing Security Auditing and Email Notifications [src/app/api/user/password/route.ts] — The API route successfully updates the password without triggering security logs or email notifications.
+
+## Deferred from: code review of 21-3-set-password-flow-whatsapp.md (2026-07-02)
+
+- Absence de rate-limiting (limitation de débit) sur les routes d'API d'invitation et de mot de passe.
+- Absence de cooldown sur le bouton d'invitation pour empêcher le spam d'e-mails.
+- Validation initiale du token au chargement de la page de réinitialisation avant soumission du formulaire.
+

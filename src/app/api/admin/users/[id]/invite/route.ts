@@ -44,6 +44,7 @@ export async function POST(
         email: true,
         emailVerified: true,
         status: true,
+        passwordHash: true,
       },
     });
 
@@ -57,6 +58,13 @@ export async function POST(
     if (user.status === "SUSPENDED") {
       return NextResponse.json(
         { error: "Impossible d'inviter un utilisateur suspendu." },
+        { status: 400 }
+      );
+    }
+
+    if (user.passwordHash === null) {
+      return NextResponse.json(
+        { error: "L'utilisateur n'a pas de mot de passe initial à définir." },
         { status: 400 }
       );
     }
@@ -89,16 +97,6 @@ export async function POST(
       },
     });
 
-    await safeCreateAuditLog({
-      actorId: session.user.id,
-      action: AUDIT_ACTIONS.USER_INVITATION_EMAIL_SEND,
-      entityType: "User",
-      entityId: id,
-      metadata: {
-        targetUserId: user.id,
-      },
-    });
-
     try {
       await sendSetPasswordEmail({
         to: user.email,
@@ -107,9 +105,16 @@ export async function POST(
       });
     } catch (emailError) {
       // Nettoyer le token si l'envoi d'email échoue
-      await prisma.verificationToken.deleteMany({
-        where: { token: hashedToken },
-      });
+      try {
+        await prisma.verificationToken.deleteMany({
+          where: { token: hashedToken },
+        });
+      } catch (cleanError) {
+        console.error(
+          "[admin-user-invite] Failed to clean up token:",
+          sanitizeError(cleanError)
+        );
+      }
       console.error(
         "[admin-user-invite] Failed to send set-password email:",
         sanitizeError(emailError)
@@ -119,6 +124,16 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    await safeCreateAuditLog({
+      actorId: session.user.id,
+      action: AUDIT_ACTIONS.USER_INVITATION_EMAIL_SEND,
+      entityType: "User",
+      entityId: id,
+      metadata: {
+        targetUserId: user.id,
+      },
+    });
 
     return NextResponse.json({ message: "Invitation envoyée avec succès." });
   } catch (error) {

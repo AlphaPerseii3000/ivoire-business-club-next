@@ -16,10 +16,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Requête malformée." }, { status: 400 });
     }
 
-    const { token, password, confirmPassword } = body as {
+    const { token, password, confirmPassword, type } = body as {
       token?: string;
       password?: string;
       confirmPassword?: string;
+      type?: string;
     };
 
     if (!token || typeof token !== "string" || token.trim() === "") {
@@ -45,6 +46,15 @@ export async function POST(req: Request) {
       (verificationToken.tokenType !== "PASSWORD_RESET" &&
         verificationToken.tokenType !== "SET_PASSWORD")
     ) {
+      if (type === "set" || (verificationToken && verificationToken.tokenType === "SET_PASSWORD")) {
+        return NextResponse.json(
+          {
+            error:
+              "Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau.",
+          },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: "Ce lien est invalide." },
         { status: 400 }
@@ -84,6 +94,25 @@ export async function POST(req: Request) {
     if (!userId) {
       return NextResponse.json(
         { error: "Ce lien est invalide." },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, status: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Utilisateur introuvable." },
+        { status: 400 }
+      );
+    }
+
+    if (user.status === "SUSPENDED") {
+      return NextResponse.json(
+        { error: "Ce compte a été suspendu." },
         { status: 400 }
       );
     }

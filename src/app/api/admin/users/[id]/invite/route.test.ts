@@ -47,11 +47,35 @@ describe("POST /api/admin/users/[id]/invite", () => {
         email: "jean@example.com",
         emailVerified: false,
         status: "ACTIVE",
+        passwordHash: "hashed-pwd",
       });
     });
     mockVerificationTokenDeleteMany.mockResolvedValue({ count: 1 });
     mockVerificationTokenCreate.mockResolvedValue({});
     mockSendSetPasswordEmail.mockResolvedValue(undefined);
+  });
+
+  it("returns 400 when user has no passwordHash", async () => {
+    mockUserFindUnique.mockImplementation((args: { where: { id: string } }) => {
+      if (args.where.id === "admin-1") {
+        return Promise.resolve({ id: "admin-1", role: "ADMIN", status: "ACTIVE" });
+      }
+      return Promise.resolve({
+        id: "user-1",
+        name: "Jean WhatsApp",
+        email: "jean@example.com",
+        emailVerified: false,
+        status: "ACTIVE",
+        passwordHash: null,
+      });
+    });
+
+    const response = await POST(buildRequest(), {
+      params: Promise.resolve({ id: "user-1" }),
+    });
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("L'utilisateur n'a pas de mot de passe initial à définir.");
   });
 
   it("returns 401 when not authenticated", async () => {
