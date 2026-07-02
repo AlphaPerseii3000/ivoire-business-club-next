@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { forgotPasswordRequestSchema } from "@/lib/validations";
-import { passwordResetRateLimiter, getClientIp } from "@/lib/api-rate-limit";
+import { passwordResetRateLimiter } from "@/lib/api-rate-limit";
+import { getClientIp } from "@/lib/rate-limit";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { sanitizeError } from "@/lib/sanitize-log";
 
