@@ -35,6 +35,19 @@ fi
 printf "  ✓ Build Next.js standalone réussi.\n"
 
 # Verify standalone output exists
+# Turbopack (Next.js 16) may nest server.js under the project path, e.g.
+#   .next/standalone/projects/ibc/server.js
+# Flatten it so PM2's ecosystem.config.js (script: ./.next/standalone/server.js) works.
+if [ ! -f ".next/standalone/server.js" ]; then
+  NESTED=$(find .next/standalone -name "server.js" -path "*/projects/*" 2>/dev/null | head -1)
+  if [ -n "$NESTED" ]; then
+    printf "  ℹ️  Turbopack a placé server.js sous %s — aplatissement...\n" "$NESTED"
+    NESTED_DIR=$(dirname "$NESTED")
+    # Move all contents of the nested dir to standalone root, preserving node_modules merges
+    cp -a "$NESTED_DIR"/. .next/standalone/
+    rm -rf "$NESTED_DIR"
+  fi
+fi
 if [ ! -f ".next/standalone/server.js" ]; then
   printf "❌ Erreur : .next/standalone/server.js n'existe pas après le build.\n" >&2
   exit 1
