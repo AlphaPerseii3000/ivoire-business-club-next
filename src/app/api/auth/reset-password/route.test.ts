@@ -151,4 +151,47 @@ describe("POST /api/auth/reset-password", () => {
     expect(res.status).toBe(500);
     expect(json.error).toBe("Erreur interne");
   });
+
+  it("sets password and verifies email with a valid SET_PASSWORD token", async () => {
+    mockVerificationTokenFindUnique.mockResolvedValue({
+      token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+      expires: new Date(Date.now() + 60 * 60 * 1000),
+      userId: "user-123",
+      tokenType: "SET_PASSWORD",
+    });
+
+    const req = makeRequest({ token: "raw-token", password: "newPass123!", confirmPassword: "newPass123!" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.message).toBe("Votre mot de passe a été défini. Vous pouvez vous connecter.");
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "user-123" },
+      data: { passwordHash: "new-hashed-password", emailVerified: true },
+    });
+    expect(mockVerificationTokenDelete).toHaveBeenCalledWith({
+      where: { token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943" },
+    });
+  });
+
+  it("returns 400 for expired SET_PASSWORD token and deletes it", async () => {
+    mockVerificationTokenFindUnique.mockResolvedValue({
+      token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+      expires: new Date(Date.now() - 60 * 60 * 1000),
+      userId: "user-123",
+      tokenType: "SET_PASSWORD",
+    });
+
+    const req = makeRequest({ token: "raw-token", password: "newPass123!", confirmPassword: "newPass123!" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBe("Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau.");
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+    expect(mockVerificationTokenDelete).toHaveBeenCalledWith({
+      where: { token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943" },
+    });
+  });
 });

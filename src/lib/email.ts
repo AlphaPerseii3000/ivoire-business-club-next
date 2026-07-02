@@ -388,6 +388,27 @@ export async function sendPasswordResetEmail({
   });
 }
 
+export async function sendSetPasswordEmail({
+  to,
+  name,
+  token,
+  appUrl = process.env.APP_URL || "",
+}: {
+  to: string;
+  name?: string | null;
+  token: string;
+  appUrl?: string;
+}) {
+  const inviteLink = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}&type=set`;
+  const dashboard = dashboardLine();
+
+  await sendEmail({
+    to,
+    subject: "Définissez votre mot de passe - Ivoire Business Club",
+    text: `${greeting(name)}\n\nVous avez été invité à rejoindre l'Ivoire Business Club. Veuillez définir votre mot de passe pour activer votre compte et y accéder de manière autonome :\n\n${inviteLink}\n\nCe lien d'invitation expire dans 7 jours. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.\n\nL'équipe IBC`,
+  });
+}
+
 // Reset transporter (for tests)
 export function _resetTransporter() {
   _transporter = null;

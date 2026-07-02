@@ -40,7 +40,11 @@ export async function POST(req: Request) {
       where: { token: hashedToken },
     });
 
-    if (!verificationToken || verificationToken.tokenType !== "PASSWORD_RESET") {
+    if (
+      !verificationToken ||
+      (verificationToken.tokenType !== "PASSWORD_RESET" &&
+        verificationToken.tokenType !== "SET_PASSWORD")
+    ) {
       return NextResponse.json(
         { error: "Ce lien est invalide." },
         { status: 400 }
@@ -57,8 +61,21 @@ export async function POST(req: Request) {
         console.warn("Could not delete expired reset token:", sanitizeError(e));
       }
 
+      if (verificationToken.tokenType === "SET_PASSWORD") {
+        return NextResponse.json(
+          {
+            error:
+              "Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau.",
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { error: "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau." },
+        {
+          error:
+            "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.",
+        },
         { status: 400 }
       );
     }
@@ -73,17 +90,30 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(parsed.data.password, BCRYPT_COST);
 
+    const userUpdateData: { passwordHash: string; emailVerified?: boolean } = {
+      passwordHash,
+    };
+
+    if (verificationToken.tokenType === "SET_PASSWORD") {
+      userUpdateData.emailVerified = true;
+    }
+
     await prisma.$transaction([
       prisma.user.update({
         where: { id: userId },
-        data: { passwordHash },
+        data: userUpdateData,
       }),
       prisma.verificationToken.delete({
         where: { token: hashedToken },
       }),
     ]);
 
-    return NextResponse.json({ message: "Mot de passe réinitialisé avec succès." });
+    const successMessage =
+      verificationToken.tokenType === "SET_PASSWORD"
+        ? "Votre mot de passe a été défini. Vous pouvez vous connecter."
+        : "Mot de passe réinitialisé avec succès.";
+
+    return NextResponse.json({ message: successMessage });
   } catch (error) {
     console.error("Reset password error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });

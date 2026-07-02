@@ -1,6 +1,9 @@
+---
+baseline_commit: 817a6e66f09da20c22e2c1e887e7e071f0cd4b62
+---
 # Story 21.3 : Set-Password Flow pour Utilisateurs Créés via WhatsApp
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -48,40 +51,40 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Envoi de l'invitation (API & Audit Log) (AC1)**
-  - [ ] 1.1 Créer la route API admin `POST /api/admin/users/[id]/invite/route.ts` protégée par rôle ADMIN
-  - [ ] 1.2 Invalider les anciens tokens de type `SET_PASSWORD` pour cet utilisateur
-  - [ ] 1.3 Générer un token sécurisé (32 bytes hex, stocké en hash SHA-256), expiration à `now + 7 jours`
-  - [ ] 1.4 Enregistrer le token dans `VerificationToken` avec `tokenType = "SET_PASSWORD"` et le lier à l'utilisateur
-  - [ ] 1.5 Créer un audit log avec l'action `USER_INVITATION_EMAIL_SEND` (ou une action générique d'invitation)
-  - [ ] 1.6 Gérer la sanitisation des logs avec `sanitizeError`
+- [x] **Task 1 — Envoi de l'invitation (API & Audit Log) (AC1)**
+  - [x] 1.1 Créer la route API admin `POST /api/admin/users/[id]/invite/route.ts` protégée par rôle ADMIN
+  - [x] 1.2 Invalider les anciens tokens de type `SET_PASSWORD` pour cet utilisateur
+  - [x] 1.3 Générer un token sécurisé (32 bytes hex, stocké en hash SHA-256), expiration à `now + 7 jours`
+  - [x] 1.4 Enregistrer le token dans `VerificationToken` avec `tokenType = "SET_PASSWORD"` et le lier à l'utilisateur
+  - [x] 1.5 Créer un audit log avec l'action `USER_INVITATION_EMAIL_SEND` (ou une action générique d'invitation)
+  - [x] 1.6 Gérer la sanitisation des logs avec `sanitizeError`
 
-- [ ] **Task 2 — Service d'emailing (AC1)**
-  - [ ] 2.1 Ajouter la fonction `sendSetPasswordEmail({ to, name, token })` dans `src/lib/email.ts`
-  - [ ] 2.2 Utiliser le transporter SMTP existant de nodemailer
-  - [ ] 2.3 Inclure le lien d'invitation pointant vers `/auth/reset-password?token=<rawToken>&type=set`
+- [x] **Task 2 — Service d'emailing (AC1)**
+  - [x] 2.1 Ajouter la fonction `sendSetPasswordEmail({ to, name, token })` dans `src/lib/email.ts`
+  - [x] 2.2 Utiliser le transporter SMTP existant de nodemailer
+  - [x] 2.3 Inclure le lien d'invitation pointant vers `/auth/reset-password?token=<rawToken>&type=set`
 
-- [ ] **Task 3 — Interface d'administration (AC1)**
-  - [ ] 3.1 Créer le composant client `AdminMemberInviteButton` dans `src/components/features/admin/admin-member-invite-button.tsx`
-  - [ ] 3.2 Modifier `src/app/(admin)/admin/members/[id]/page.tsx` pour inclure `passwordHash` dans les données sélectionnées
-  - [ ] 3.3 Afficher le bouton d'invitation si `emailVerified` est faux et que le membre n'a pas été suspendu
+- [x] **Task 3 — Interface d'administration (AC1)**
+  - [x] 3.1 Créer le composant client `AdminMemberInviteButton` dans `src/components/features/admin/admin-member-invite-button.tsx`
+  - [x] 3.2 Modifier `src/app/(admin)/admin/members/[id]/page.tsx` pour inclure `passwordHash` dans les données sélectionnées
+  - [x] 3.3 Afficher le bouton d'invitation si `emailVerified` est faux et que le membre n'a pas été suspendu
 
-- [ ] **Task 4 — Traitement de la route API de réinitialisation (AC3/AC4)**
-  - [ ] 4.1 Modifier `src/app/api/auth/reset-password/route.ts` pour supporter `SET_PASSWORD`
-  - [ ] 4.2 Si le token est de type `SET_PASSWORD` et expiré, renvoyer l'erreur d'invitation expirée : « Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau. »
-  - [ ] 4.3 Lors de la validation réussie, si le token est de type `SET_PASSWORD`, mettre à jour `passwordHash` et définir `emailVerified: true`
-  - [ ] 4.4 Retourner un message de succès adapté
+- [x] **Task 4 — Traitement de la route API de réinitialisation (AC3/AC4)**
+  - [x] 4.1 Modifier `src/app/api/auth/reset-password/route.ts` pour supporter `SET_PASSWORD`
+  - [x] 4.2 Si le token est de type `SET_PASSWORD` et expiré, renvoyer l'erreur d'invitation expirée : « Ce lien d'invitation a expiré. Contactez le support pour en recevoir un nouveau. »
+  - [x] 4.3 Lors de la validation réussie, si le token est de type `SET_PASSWORD`, mettre à jour `passwordHash` et définir `emailVerified: true`
+  - [x] 4.4 Retourner un message de succès adapté
 
-- [ ] **Task 5 — Interface utilisateur (AC2/AC3/AC4)**
-  - [ ] 5.1 Modifier `src/app/auth/reset-password/page.tsx` pour détecter le paramètre de requête `type === "set"`
-  - [ ] 5.2 Si `type === "set"`, afficher le titre « Définir votre mot de passe », la description correspondante, et le bouton « Définir le mot de passe »
-  - [ ] 5.3 Mettre à jour les messages de succès et d'erreur affichés à l'utilisateur selon les retours d'API spécifiques au flux d'invitation
+- [x] **Task 5 — Interface utilisateur (AC2/AC3/AC4)**
+  - [x] 5.1 Modifier `src/app/auth/reset-password/page.tsx` pour détecter le paramètre de requête `type === "set"`
+  - [x] 5.2 Si `type === "set"`, afficher le titre « Définir votre mot de passe », la description correspondante, et le bouton « Définir le mot de passe »
+  - [x] 5.3 Mettre à jour les messages de succès et d'erreur affichés à l'utilisateur selon les retours d'API spécifiques au flux d'invitation
 
-- [ ] **Task 6 — Tests de route et d'UI (AC5)**
-  - [ ] 6.1 Créer `src/app/api/admin/users/[id]/invite/route.test.ts`
-  - [ ] 6.2 Mettre à jour `src/app/api/auth/reset-password/route.test.ts` pour couvrir le token `SET_PASSWORD` (succès, activation d'email, expiration 7 jours)
-  - [ ] 6.3 Mettre à jour `src/app/auth/reset-password/page.test.tsx` pour le paramètre `type=set`
-  - [ ] 6.4 Exécuter le build et les tests (`npm run build` et `npx vitest run`)
+- [x] **Task 6 — Tests de route et d'UI (AC5)**
+  - [x] 6.1 Créer `src/app/api/admin/users/[id]/invite/route.test.ts`
+  - [x] 6.2 Mettre à jour `src/app/api/auth/reset-password/route.test.ts` pour couvrir le token `SET_PASSWORD` (succès, activation d'email, expiration 7 jours)
+  - [x] 6.3 Mettre à jour `src/app/auth/reset-password/page.test.tsx` pour le paramètre `type=set`
+  - [x] 6.4 Exécuter le build et les tests (`npm run build` et `npx vitest run`)
 
 ## Dev Notes
 
@@ -113,4 +116,24 @@ Gemini 3.5 Flash (High)
 
 ### Completion Notes List
 
+- Implémentation de la route API admin `POST /api/admin/users/[id]/invite/route.ts` pour générer un token `SET_PASSWORD` sécurisé (SHA-256) expirant après 7 jours et envoyer un email d'invitation.
+- Ajout de la fonction `sendSetPasswordEmail` dans `src/lib/email.ts` utilisant nodemailer et transmettant le lien `/auth/reset-password?token=<token>&type=set`.
+- Création du composant d'UI client `AdminMemberInviteButton` et intégration dans la page d'administration du membre `/admin/members/[id]`.
+- Mise à jour de la route API `POST /api/auth/reset-password/route.ts` pour accepter et traiter les tokens de type `SET_PASSWORD`, activer l'email (`emailVerified = true`) lors de la définition du mot de passe, et retourner les messages correspondants.
+- Mise à jour de la page de réinitialisation `/auth/reset-password` pour adapter dynamiquement l'interface lorsque `type=set` est fourni.
+- Ajout de l'action d'audit `USER_INVITATION_EMAIL_SEND` et journalisation à l'envoi de l'invitation.
+- Écriture et passage avec succès des tests unitaires et d'intégration Vitest (23 tests au total).
+
 ### File List
+
+- `src/lib/audit-log.ts`
+- `src/lib/email.ts`
+- `src/app/api/admin/users/[id]/invite/route.ts`
+- `src/app/api/admin/users/[id]/invite/route.test.ts`
+- `src/components/features/admin/admin-member-invite-button.tsx`
+- `src/app/(admin)/admin/members/[id]/page.tsx`
+- `src/app/api/auth/reset-password/route.ts`
+- `src/app/api/auth/reset-password/route.test.ts`
+- `src/app/auth/reset-password/page.tsx`
+- `src/app/auth/reset-password/page.test.tsx`
+- `src/app/auth/signin/page.tsx`

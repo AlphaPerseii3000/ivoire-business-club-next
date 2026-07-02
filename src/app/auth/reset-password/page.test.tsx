@@ -77,4 +77,43 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByTestId("auth-error")).toHaveTextContent("Ce lien a déjà été utilisé.");
     }, { timeout: 2000 });
   });
+
+  it("renders the set password form when type=set", () => {
+    mockSearchParams = new URLSearchParams("token=raw-token&type=set");
+    render(<ResetPasswordPage />);
+    expect(
+      screen.getByRole("heading", { name: "Définir votre mot de passe" })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    expect(screen.getByTestId("submit-button")).toHaveTextContent(
+      "Définir le mot de passe"
+    );
+  });
+
+  it("submits defined password and shows success when type=set", async () => {
+    mockSearchParams = new URLSearchParams("token=raw-token&type=set");
+    global.fetch = mockFetch(200, {
+      message: "Votre mot de passe a été défini. Vous pouvez vous connecter.",
+    });
+
+    render(<ResetPasswordPage />);
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("password-input"), {
+        target: { value: "newPass123!" },
+      });
+      fireEvent.change(screen.getByTestId("confirm-password-input"), {
+        target: { value: "newPass123!" },
+      });
+      fireEvent.click(screen.getByTestId("submit-button"));
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("success-message")).toHaveTextContent(
+          "Votre mot de passe a été défini. Redirection..."
+        );
+      },
+      { timeout: 2000 }
+    );
+  });
 });

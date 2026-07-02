@@ -29,7 +29,8 @@ export default function SignInPage() {
 
   const displayError = serverError || (urlError ? getAuthErrorMessage(urlError) : "");
   const resetSuccess = searchParams.get("reset") === "success";
-  const displaySuccess = resetSuccess && !displayError;
+  const setSuccess = searchParams.get("reset") === "set-success" || searchParams.get("set") === "success";
+  const displaySuccess = (resetSuccess || setSuccess) && !displayError;
 
   const onSubmit = async (data: SigninInput) => {
     setServerError("");
@@ -79,7 +80,9 @@ export default function SignInPage() {
         ) : null}
         {displaySuccess ? (
           <div data-testid="reset-success" className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-            Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.
+            {setSuccess
+              ? "Votre mot de passe a été défini. Vous pouvez vous connecter."
+              : "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter."}
           </div>
         ) : null}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

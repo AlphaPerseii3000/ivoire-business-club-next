@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { AdminMemberReminderButton } from "@/components/features/admin/admin-member-reminder-button";
+import { AdminMemberInviteButton } from "@/components/features/admin/admin-member-invite-button";
 
 const verificationStatusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -46,6 +47,7 @@ export default async function AdminMemberDetailPage({
       status: true,
       verificationStatus: true,
       createdAt: true,
+      passwordHash: true,
     },
   });
 
@@ -122,9 +124,12 @@ export default async function AdminMemberDetailPage({
           </Badge>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap gap-3">
           {isIncomplete ? (
             <AdminMemberReminderButton userId={member.id} disabled={member.status === "SUSPENDED"} />
+          ) : null}
+          {!emailVerified && member.status !== "SUSPENDED" ? (
+            <AdminMemberInviteButton userId={member.id} />
           ) : null}
         </div>
       </div>
