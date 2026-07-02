@@ -139,7 +139,7 @@ export default async function HomePage() {
       <LandingMobileNav />
 
       <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
           <Link
             href="/"
             className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2"

@@ -58,8 +58,9 @@ export function ScrollLoopBackground({
         style={{ opacity: isActive ? opacity : 0 }}
         className="w-full h-full object-cover transition-opacity duration-1000"
       />
-      {/* Dark vignette overlay to ensure text contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#090D16] via-[#090D16]/80 to-[#090D16]" />
+      {/* Top and Bottom vignettes to blend video with background */}
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#090D16] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#090D16] to-transparent pointer-events-none" />
     </div>
   );
 }

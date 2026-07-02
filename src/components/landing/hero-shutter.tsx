@@ -8,6 +8,7 @@ export function HeroShutter() {
   const growingVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
   const moverRef = useRef<HTMLDivElement>(null);
+  const simulatorRef = useRef<HTMLDivElement>(null);
   const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
@@ -38,12 +39,16 @@ export function HeroShutter() {
     const loopVideo = loopVideoRef.current;
     const container = containerRef.current;
     const mover = moverRef.current;
+    const simulator = simulatorRef.current;
     if (!growingVideo || !loopVideo || !container || !mover) return;
 
     let targetTimeGrowing = 0;
     let currentTimeGrowing = 0;
     let targetMoverY = 0;
     let currentMoverY = 0;
+    let targetSimulatorY = 0;
+    let currentSimulatorY = 0;
+    let currentX = 50;
     let animationFrameId: number;
 
     const updateFrame = () => {
@@ -60,30 +65,64 @@ export function HeroShutter() {
         // Calculate max scroll for mover so that the last slide is centered at progress 1.0
         const maxMoverScroll = Math.max(0, moverHeight - windowHeight);
         targetMoverY = progress * maxMoverScroll;
+
+        // Parallax translation for the matchmaking widget (-80px at progress = 1.0)
+        targetSimulatorY = progress * -80;
       }
 
-      // Calculate video transition opacities (cross-fade between 0.80 and 0.90)
+      // Video transition: instant switch at progress >= 0.95 (end of growing video)
       let growingOpacity = 0.75;
       let loopOpacity = 0;
 
-      if (progress <= 0.80) {
-        growingOpacity = 0.75;
-        loopOpacity = 0;
-      } else if (progress >= 0.90) {
+      if (progress >= 0.95) {
         growingOpacity = 0;
         loopOpacity = 0.75;
       } else {
-        const t = (progress - 0.80) / 0.10;
-        growingOpacity = 0.75 * (1 - t);
-        loopOpacity = 0.75 * t;
+        growingOpacity = 0.75;
+        loopOpacity = 0;
       }
 
       // Directly update DOM style for optimal rendering performance
       growingVideo.style.opacity = growingOpacity.toString();
       loopVideo.style.opacity = loopOpacity.toString();
 
-      // Play or pause the loop video depending on visibility threshold (0.80)
-      if (progress >= 0.80) {
+      // Lerp video objectPosition for mobile camera panning (shift to the left from 50% to 90% to reveal text)
+      let targetXVal = 50;
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        if (progress <= 0.70) {
+          targetXVal = 50;
+        } else if (progress >= 0.95) {
+          targetXVal = 90;
+        } else {
+          const t = (progress - 0.70) / 0.25;
+          targetXVal = 50 + t * 40;
+        }
+      } else {
+        targetXVal = 50;
+      }
+      currentX += (targetXVal - currentX) * 0.12;
+      growingVideo.style.objectPosition = `${currentX}% center`;
+      loopVideo.style.objectPosition = `${currentX}% center`;
+
+      // Animate simulator opacity and parallax translation directly on DOM
+      if (simulator) {
+        let simOpacity = 1;
+        if (progress <= 0.65) {
+          simOpacity = 1;
+        } else if (progress >= 0.85) {
+          simOpacity = 0;
+        } else {
+          // Linear fade out between 0.65 and 0.85
+          simOpacity = 1 - (progress - 0.65) / 0.20;
+        }
+
+        currentSimulatorY += (targetSimulatorY - currentSimulatorY) * 0.12;
+        simulator.style.opacity = simOpacity.toString();
+        simulator.style.transform = `translate3d(0, ${currentSimulatorY}px, 0)`;
+      }
+
+      // Play or pause the loop video depending on visibility threshold (0.95)
+      if (progress >= 0.95) {
         if (loopVideo.paused) {
           loopVideo.play().catch((err) => {
             console.log('Autoplay loop video blocked:', err);
@@ -95,9 +134,9 @@ export function HeroShutter() {
         }
       }
 
-      // Scrub the growing video from 0% to 100% of its duration over the progress range 0.0 to 0.85
+      // Scrub the growing video from 0% to 100% of its duration over the progress range 0.0 to 0.95
       if (growingVideo.duration) {
-        const scrubProgress = Math.min(progress / 0.85, 1);
+        const scrubProgress = Math.min(progress / 0.95, 1);
         targetTimeGrowing = scrubProgress * growingVideo.duration;
       }
 
@@ -149,7 +188,7 @@ export function HeroShutter() {
           {/* Fallback Slide 1 */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-12 min-h-[70vh]">
             <div className="flex flex-col gap-4 max-w-xl">
-              <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+              <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
                 Le Cercle des Décideurs d&apos;Afrique
               </span>
               <h1 className="font-sans font-bold text-4xl sm:text-6xl leading-[1.02] tracking-[-0.04em] text-white">
@@ -175,7 +214,7 @@ export function HeroShutter() {
 
           {/* Fallback Slide 2 */}
           <div className="flex flex-col gap-4 max-w-xl min-h-[50vh] justify-center">
-            <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+            <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
               Opportunités & Deals
             </span>
             <h2 className="font-sans font-bold text-3xl sm:text-5xl leading-[1.02] tracking-[-0.04em] text-white">
@@ -189,7 +228,7 @@ export function HeroShutter() {
 
           {/* Fallback Slide 3 */}
           <div className="flex flex-col gap-4 max-w-xl min-h-[50vh] justify-center">
-            <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+            <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
               Écosystème Unique
             </span>
             <h2 className="font-sans font-bold text-3xl sm:text-5xl leading-[1.02] tracking-[-0.04em] text-white">
@@ -217,6 +256,8 @@ export function HeroShutter() {
           {/* Top and Bottom vignettes to blend video with background */}
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#090D16] to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#090D16] to-transparent z-10 pointer-events-none" />
+          {/* Left-to-right dark gradient for text readability */}
+          <div className="absolute inset-y-0 left-0 w-full md:w-[60%] bg-gradient-to-r from-[#090D16] via-[#090D16]/80 to-transparent z-10 pointer-events-none" />
           
           {/* Growing Tree Video (Phase 1) */}
           <video
@@ -252,7 +293,7 @@ export function HeroShutter() {
             >
               {/* Slide 1 */}
               <div className="h-screen flex flex-col justify-center items-start gap-4">
-                <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+                <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
                   Le Cercle des Décideurs d&apos;Afrique
                 </span>
                 <h1 className="font-sans font-bold text-[clamp(32px,5vw,56px)] leading-[1.02] tracking-[-0.04em] text-white">
@@ -289,7 +330,7 @@ export function HeroShutter() {
 
               {/* Slide 2 */}
               <div className="h-screen flex flex-col justify-center items-start gap-4">
-                <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+                <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
                   Opportunités & Deals
                 </span>
                 <h2 className="font-sans font-bold text-[clamp(32px,5vw,56px)] leading-[1.02] tracking-[-0.04em] text-white">
@@ -314,7 +355,7 @@ export function HeroShutter() {
 
               {/* Slide 3 */}
               <div className="h-screen flex flex-col justify-center items-start gap-4">
-                <span className="uppercase text-[12px] tracking-[0.1em] text-[#ff3b30] font-bold">
+                <span className="uppercase text-[12px] tracking-[0.1em] text-white font-bold">
                   Écosystème Unique
                 </span>
                 <h2 className="font-sans font-bold text-[clamp(32px,5vw,56px)] leading-[1.02] tracking-[-0.04em] text-white">
@@ -345,7 +386,10 @@ export function HeroShutter() {
           </div>
 
           {/* Right Column: Sticky Simulator for Desktop only */}
-          <div className="hidden md:block w-[40%] max-w-[400px] relative z-20">
+          <div
+            ref={simulatorRef}
+            className="hidden md:block w-[40%] max-w-[400px] relative z-20"
+          >
             <LiveSimulator />
           </div>
         </div>

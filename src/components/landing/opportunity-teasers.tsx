@@ -48,7 +48,7 @@ export function OpportunityTeasers({
           </div>
         ) : (
           <BlurReveal>
-            <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-white/10 bg-[#0F172A] p-8 text-center text-slate-400">
+            <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-white/10 bg-white/5 backdrop-blur-md p-8 text-center text-slate-400">
               Aucun teaser vérifié disponible pour le moment.
             </div>
           </BlurReveal>

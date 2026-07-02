@@ -13,7 +13,7 @@ export default async function PricingPage() {
     <div className="flex min-h-screen flex-col">
       <LandingMobileNav />
       <header className="hidden md:flex border-b bg-card">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <Link href="/" className="rounded-md text-xl font-bold text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
             IBC
           </Link>

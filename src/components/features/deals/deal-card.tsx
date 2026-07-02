@@ -43,7 +43,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   if (isTeaser) {
     const categoryLabel = deal.category ? deal.category : "Opportunité Privée";
     return (
-      <article data-testid="opportunity-card" className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] min-h-[300px] p-6 shadow-xl transition-all duration-300 hover:border-[#D4A847]/30">
+      <article data-testid="opportunity-card" className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md min-h-[300px] p-6 shadow-xl transition-all duration-300 hover:border-[#D4A847]/30">
         {/* Background WebP Image with low opacity for premium look */}
         <div className="absolute inset-0 z-0">
           <img
@@ -51,7 +51,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
             alt=""
             className="w-full h-full object-cover opacity-10 filter brightness-[0.3]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-[#090D16]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#090D16]/40 via-transparent to-transparent" />
         </div>
 
         {/* Blurred card content underneath */}
@@ -69,7 +69,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
         </div>
 
         {/* Absolute locked overlay */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-[2px] transition-all duration-300">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-black/40 backdrop-blur-[2px] transition-all duration-300">
           <div className="w-full flex flex-col items-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D4A847]/10 border border-[#D4A847]/30 mb-3">
               <LockKeyhole className="h-5 w-5 text-[#D4A847]" aria-hidden="true" />
@@ -91,7 +91,7 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
                 href="/auth/signup"
                 className="text-xs font-semibold text-[#D4A847] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A847]"
               >
-                S'inscrire pour postuler
+                S&apos;inscrire pour postuler
               </Link>
             </div>
           </div>

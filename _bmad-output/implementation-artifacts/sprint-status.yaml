@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-06-29T19:30:00+02:00
-last_updated: 2026-07-01T21:44:00+02:00
+last_updated: 2026-07-02T16:57:39+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -157,7 +157,7 @@ development_status:
   19-1-installation-posthog: done
   19-2-identification-evenements-metier: done
   19-2b-posthog-identification-gaps: done
-  19-3-dashboards-funnels-posthog: backlog
+  19-3-dashboards-funnels-posthog: done
   epic-19-retrospective: optional
 
   epic-20: done
@@ -167,7 +167,7 @@ development_status:
   epic-21: in-progress
   21-1-mot-de-passe-oublie: done
   21-2-changement-mot-de-passe-profil: done
-  21-3-set-password-flow-whatsapp: backlog
+  21-3-set-password-flow-whatsapp: ready-for-dev
   epic-21-retrospective: optional
 
   epic-22: in-progress
