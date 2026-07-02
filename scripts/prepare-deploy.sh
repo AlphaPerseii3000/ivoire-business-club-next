@@ -44,9 +44,10 @@ if [ ! -f ".next/standalone/server.js" ] || ! head -1 .next/standalone/server.js
   if [ -f "$NESTED" ]; then
     printf "  ℹ️  Turbopack a placé server.js sous %s — aplatissement...\n" "$NESTED"
     cp -a "$NESTED" .next/standalone/server.js
-    # Also copy any siblings (package.json, public, node_modules) to standalone root
+    # Also copy any siblings (package.json, public, node_modules, .next) to standalone root
     NESTED_DIR=$(dirname "$NESTED")
-    for item in "$NESTED_DIR"/*; do
+    for item in "$NESTED_DIR"/* "$NESTED_DIR"/.[!.]*; do
+      [ -e "$item" ] || continue
       base=$(basename "$item")
       if [ "$base" != "server.js" ]; then
         cp -a "$item" .next/standalone/
