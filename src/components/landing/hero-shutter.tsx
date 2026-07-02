@@ -5,7 +5,8 @@ import { LiveSimulator } from '@/components/landing/live-simulator';
 
 export function HeroShutter() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const growingVideoRef = useRef<HTMLVideoElement>(null);
+  const loopVideoRef = useRef<HTMLVideoElement>(null);
   const moverRef = useRef<HTMLDivElement>(null);
   const [useFallback, setUseFallback] = useState(false);
 
@@ -16,6 +17,7 @@ export function HeroShutter() {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return true;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const conn = (navigator as any).connection;
       if (conn) {
         if (conn.saveData) return true;
@@ -24,6 +26,7 @@ export function HeroShutter() {
       }
       return false;
     };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUseFallback(checkFallback());
   }, []);
 
@@ -31,13 +34,14 @@ export function HeroShutter() {
   useEffect(() => {
     if (useFallback) return;
 
-    const video = videoRef.current;
+    const growingVideo = growingVideoRef.current;
+    const loopVideo = loopVideoRef.current;
     const container = containerRef.current;
     const mover = moverRef.current;
-    if (!video || !container || !mover) return;
+    if (!growingVideo || !loopVideo || !container || !mover) return;
 
-    let targetTime = 0;
-    let currentTime = 0;
+    let targetTimeGrowing = 0;
+    let currentTimeGrowing = 0;
     let targetMoverY = 0;
     let currentMoverY = 0;
     let animationFrameId: number;
@@ -48,12 +52,9 @@ export function HeroShutter() {
       const windowHeight = window.innerHeight;
       const scrollRange = trackHeight - windowHeight;
 
+      let progress = 0;
       if (scrollRange > 0) {
-        const progress = Math.min(Math.max(0, scrollY / scrollRange), 1);
-
-        if (video.duration) {
-          targetTime = progress * video.duration;
-        }
+        progress = Math.min(Math.max(0, scrollY / scrollRange), 1);
 
         const moverHeight = mover.offsetHeight;
         // Calculate max scroll for mover so that the last slide is centered at progress 1.0
@@ -61,11 +62,50 @@ export function HeroShutter() {
         targetMoverY = progress * maxMoverScroll;
       }
 
-      // Lerp video currentTime for buttery smooth scrub
-      if (video.readyState >= 2 && video.duration) {
-        currentTime += (targetTime - currentTime) * 0.12;
-        if (Math.abs(currentTime - video.currentTime) > 0.01) {
-          video.currentTime = currentTime;
+      // Calculate video transition opacities (cross-fade between 0.80 and 0.90)
+      let growingOpacity = 0.75;
+      let loopOpacity = 0;
+
+      if (progress <= 0.80) {
+        growingOpacity = 0.75;
+        loopOpacity = 0;
+      } else if (progress >= 0.90) {
+        growingOpacity = 0;
+        loopOpacity = 0.75;
+      } else {
+        const t = (progress - 0.80) / 0.10;
+        growingOpacity = 0.75 * (1 - t);
+        loopOpacity = 0.75 * t;
+      }
+
+      // Directly update DOM style for optimal rendering performance
+      growingVideo.style.opacity = growingOpacity.toString();
+      loopVideo.style.opacity = loopOpacity.toString();
+
+      // Play or pause the loop video depending on visibility threshold (0.80)
+      if (progress >= 0.80) {
+        if (loopVideo.paused) {
+          loopVideo.play().catch((err) => {
+            console.log('Autoplay loop video blocked:', err);
+          });
+        }
+      } else {
+        if (!loopVideo.paused) {
+          loopVideo.pause();
+        }
+      }
+
+      // Scrub the growing video from 0% to 100% of its duration over the progress range 0.0 to 0.85
+      if (growingVideo.duration) {
+        const scrubProgress = Math.min(progress / 0.85, 1);
+        targetTimeGrowing = scrubProgress * growingVideo.duration;
+      }
+
+      // Lerp growing video currentTime for buttery smooth scrub
+      if (growingVideo.readyState >= 2 && growingVideo.duration) {
+        currentTimeGrowing += (targetTimeGrowing - currentTimeGrowing) * 0.12;
+        if (Math.abs(currentTimeGrowing - growingVideo.currentTime) > 0.01) {
+          growingVideo.currentTime = currentTimeGrowing;
         }
       }
 
@@ -77,17 +117,17 @@ export function HeroShutter() {
     };
 
     const handleLoadedMetadata = () => {
-      if (video.duration) {
-        targetTime = 0;
+      if (growingVideo.duration) {
+        targetTimeGrowing = 0;
       }
     };
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    growingVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
 
     // Start loop
     animationFrameId = requestAnimationFrame(updateFrame);
 
     return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      growingVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
       cancelAnimationFrame(animationFrameId);
     };
   }, [useFallback]);
@@ -178,13 +218,27 @@ export function HeroShutter() {
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#090D16] to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#090D16] to-transparent z-10 pointer-events-none" />
           
+          {/* Growing Tree Video (Phase 1) */}
           <video
-            ref={videoRef}
-            src="/Ivoire_business_club_loop_all-i.mp4"
+            ref={growingVideoRef}
+            src="/Ivoire_business_club_growing_tree_all-i.mp4"
             muted
             playsInline
             preload="auto"
-            className="w-full h-full object-cover opacity-75 pointer-events-none"
+            style={{ opacity: 0.75 }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+
+          {/* Loop Video (Phase 2 - bottom of section) */}
+          <video
+            ref={loopVideoRef}
+            src="/Ivoire_business_club_loop_all-i.mp4"
+            muted
+            playsInline
+            loop
+            preload="auto"
+            style={{ opacity: 0 }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           />
         </div>
 

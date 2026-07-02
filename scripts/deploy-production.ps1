@@ -135,7 +135,7 @@ Invoke-Step "Compression et transfert" {
 }
 
 Invoke-Step "Activation de la release" {
-  $RemoteScript | ssh $Remote "bash -s"
+  ($RemoteScript -replace "`r`n", "`n") | ssh $Remote "bash -s"
 }
 
 Invoke-Step "Verification HTTPS publique" {
