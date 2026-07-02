@@ -70,25 +70,7 @@ export function HeroShutter() {
     const videoGrowing = videoGrowingRef.current;
     if (!videoGrowing) return;
 
-    let targetTime = 0;
-    let currentTime = 0;
     let animationFrameId: number | null = null;
-    let isLoopingFrame = false;
-
-    const updateVideoFrame = () => {
-      if (videoGrowing.readyState >= 2 && videoGrowing.duration) {
-        currentTime += (targetTime - currentTime) * 0.15;
-        if (Math.abs(currentTime - videoGrowing.currentTime) > 0.01) {
-          videoGrowing.currentTime = currentTime;
-        }
-      }
-
-      if (Math.abs(currentTime - targetTime) > 0.001) {
-        animationFrameId = requestAnimationFrame(updateVideoFrame);
-      } else {
-        isLoopingFrame = false;
-      }
-    };
 
     const handleScrollEvent = () => {
       const currentScroll = window.scrollY;
@@ -99,27 +81,33 @@ export function HeroShutter() {
       // Calculate scroll range dynamically (total height of container minus viewport height)
       const scrollRange = container.offsetHeight - window.innerHeight;
 
-      if (currentScroll <= scrollRange) {
-        // Scrub the entire 24 seconds video
-        targetTime = (currentScroll / Math.max(1, scrollRange)) * 24.0;
-        if (videoGrowing.duration) {
-          targetTime = Math.min(targetTime, videoGrowing.duration);
+      if (videoGrowing.readyState >= 2 && videoGrowing.duration) {
+        let targetTime = (currentScroll / Math.max(1, scrollRange)) * videoGrowing.duration;
+        targetTime = Math.min(Math.max(0, targetTime), videoGrowing.duration);
+
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
         }
-        if (!isLoopingFrame) {
-          isLoopingFrame = true;
-          animationFrameId = requestAnimationFrame(updateVideoFrame);
-        }
-      } else {
-        targetTime = 24.0;
+
+        animationFrameId = requestAnimationFrame(() => {
+          videoGrowing.currentTime = targetTime;
+        });
       }
     };
 
     window.addEventListener('scroll', handleScrollEvent, { passive: true });
+
+    const handleLoadedMetadata = () => {
+      handleScrollEvent();
+    };
+    videoGrowing.addEventListener('loadedmetadata', handleLoadedMetadata);
+
     // Initialize
     handleScrollEvent();
 
     return () => {
       window.removeEventListener('scroll', handleScrollEvent);
+      videoGrowing.removeEventListener('loadedmetadata', handleLoadedMetadata);
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
       }
@@ -133,7 +121,7 @@ export function HeroShutter() {
     >
       {/* Sticky container */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-        
+
         {/* Background Visuals */}
         <div className="absolute inset-0 z-0">
           {useFallback ? (
@@ -149,7 +137,7 @@ export function HeroShutter() {
             <motion.div style={{ scale: videoScale }} className="relative w-full h-full bg-black">
               {/* Top and Bottom Black Vignettes */}
               <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-b from-[#090D16] via-transparent to-[#090D16]/90" />
-              
+
               {/* Video A: Growing Tree (Phase 1, scrubbed) */}
               <motion.video
                 ref={videoGrowingRef}
@@ -166,7 +154,7 @@ export function HeroShutter() {
 
         {/* Shutter Content Grid */}
         <div className="relative z-30 mx-auto max-w-7xl px-6 w-full h-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-16 md:pt-0">
-          
+
           {/* Left Rail: 3 Sections stacked vertically */}
           <motion.div
             style={{ y: leftRailY }}
@@ -177,7 +165,7 @@ export function HeroShutter() {
               <span className="text-[#D4A847] text-xs font-semibold uppercase tracking-wider bg-[#D4A847]/10 px-3 py-1.5 rounded-full border border-[#D4A847]/20">
                 Le Cercle des Décideurs d&apos;Afrique
               </span>
-              
+
               <h1 className="text-4xl sm:text-6xl font-black text-white tracking-[-0.04em] leading-[1.05]">
                 <SplitText
                   text="Bâtir son futur"
@@ -199,7 +187,7 @@ export function HeroShutter() {
                 </span>
               </h1>
 
-              <p className="max-w-xl text-base sm:text-lg text-black leading-relaxed font-semibold bg-white/90 backdrop-blur-md px-5 py-4 rounded-xl border border-white/20 shadow-lg">
+              <p className="max-w-xl text-base sm:text-lg text-black leading-relaxed font-semibold">
                 Le réseau de référence pour investir, entreprendre et bâtir des opportunités fiables en Côte d&apos;Ivoire. IBC connecte la diaspora et les investisseurs internationaux avec les meilleurs deals d&apos;Abidjan.
               </p>
 
@@ -225,7 +213,7 @@ export function HeroShutter() {
                   <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#090D16]" src="/avatars/avatar-2.webp" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces'; }} alt="" />
                   <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#090D16]" src="/avatars/avatar-3.webp" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces'; }} alt="" />
                 </div>
-                <span>Rejoint par <strong>+500 leaders</strong> à Abidjan et en Europe</span>
+                <span className="text-[#D4A847]">Rejoint par <strong>+500 leaders</strong> à Abidjan et en Europe</span>
               </div>
             </div>
 
@@ -238,7 +226,7 @@ export function HeroShutter() {
                 Accéder aux deals <br />
                 <span className="text-[#D4A847]">les plus exclusifs</span>
               </h2>
-              <p className="max-w-xl text-base sm:text-lg text-slate-300 leading-relaxed font-light">
+              <p className="max-w-xl text-base sm:text-lg text-white leading-relaxed font-semibold">
                 Chaque opportunité fait l&apos;objet d&apos;un audit rigoureux par nos experts locaux. De l&apos;immobilier à Abidjan aux projets agro-industriels, investissez en toute confiance.
               </p>
               <div className="flex items-center gap-4 mt-2">
@@ -247,7 +235,7 @@ export function HeroShutter() {
                 </div>
                 <div>
                   <span className="text-sm font-bold text-white block">Sécurité Maximale</span>
-                  <span className="text-xs text-slate-400">Due diligence complète de chaque dossier</span>
+                  <span className="text-xs text-[#D4A847]">Due diligence complète de chaque dossier</span>
                 </div>
               </div>
             </div>
@@ -261,7 +249,7 @@ export function HeroShutter() {
                 Connecter la diaspora <br />
                 <span className="text-[#D4A847]">avec les décideurs</span>
               </h2>
-              <p className="max-w-xl text-base sm:text-lg text-slate-300 leading-relaxed font-light">
+              <p className="max-w-xl text-base sm:text-lg text-black leading-relaxed font-semibold">
                 Rejoignez un réseau de professionnels, de mentors et de chefs d&apos;entreprise pour accélérer votre croissance en Côte d&apos;Ivoire et à l&apos;international.
               </p>
               <div className="flex items-center gap-4 mt-2">
@@ -270,7 +258,7 @@ export function HeroShutter() {
                 </div>
                 <div>
                   <span className="text-sm font-bold text-white block">Croissance Accélérée</span>
-                  <span className="text-xs text-slate-400">Mentorat, synergies et événements networking</span>
+                  <span className="text-xs text-[#D4A847]">Mentorat, synergies et événements networking</span>
                 </div>
               </div>
             </div>
@@ -307,7 +295,7 @@ export function HeroShutter() {
               </div>
             </div>
           </motion.div>
-          
+
         </div>
 
         {/* Dynamic bottom transition gradient */}
@@ -315,7 +303,7 @@ export function HeroShutter() {
           style={{ opacity: bottomGradientOpacity }}
           className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none bg-gradient-to-t from-[#090D16] via-[#090D16]/95 to-transparent h-[25vh]"
         />
-        
+
       </div>
 
       {/* Absolute bottom gradient mask to fade Hero into Mission */}
