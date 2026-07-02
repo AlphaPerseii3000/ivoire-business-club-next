@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     siteName: 'Ivoire Business Club',
     images: [
       {
-        url: '/logo-ibc.webp',
+        url: '/logo-ibc-landing.webp',
         width: 800,
         height: 600,
         alt: 'Logo Ivoire Business Club',
@@ -144,7 +144,7 @@ export default async function HomePage() {
             href="/"
             className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
           >
-            <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
+            <img src="/logo-ibc-landing.webp" alt="IBC Logo" className="h-8 w-auto" />
             <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
               Ivoire Business Club
             </span>

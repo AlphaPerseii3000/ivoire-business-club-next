@@ -10,7 +10,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/logo-ibc.webp" alt="IBC Logo" className="h-8 w-auto" />
+              <img src="/logo-ibc-landing.webp" alt="IBC Logo" className="h-8 w-auto" />
               <span className="font-extrabold text-white">Ivoire Business Club</span>
             </div>
             <p className="text-sm text-slate-400">Bâtir son futur en Afrique</p>
