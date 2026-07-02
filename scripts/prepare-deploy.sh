@@ -38,14 +38,20 @@ printf "  ✓ Build Next.js standalone réussi.\n"
 # Turbopack (Next.js 16) may nest server.js under the project path, e.g.
 #   .next/standalone/projects/ibc/server.js
 # Flatten it so PM2's ecosystem.config.js (script: ./.next/standalone/server.js) works.
-if [ ! -f ".next/standalone/server.js" ]; then
-  NESTED=$(find .next/standalone -name "server.js" -path "*/projects/*" 2>/dev/null | head -1)
-  if [ -n "$NESTED" ]; then
+# CRITICAL: must match the PROJECT server.js, not next/dist/server/typescript/rules/server.js
+if [ ! -f ".next/standalone/server.js" ] || ! head -1 .next/standalone/server.js | grep -q "path"; then
+  NESTED=".next/standalone/projects/ibc/server.js"
+  if [ -f "$NESTED" ]; then
     printf "  ℹ️  Turbopack a placé server.js sous %s — aplatissement...\n" "$NESTED"
+    cp -a "$NESTED" .next/standalone/server.js
+    # Also copy any siblings (package.json, public, node_modules) to standalone root
     NESTED_DIR=$(dirname "$NESTED")
-    # Move all contents of the nested dir to standalone root, preserving node_modules merges
-    cp -a "$NESTED_DIR"/. .next/standalone/
-    rm -rf "$NESTED_DIR"
+    for item in "$NESTED_DIR"/*; do
+      base=$(basename "$item")
+      if [ "$base" != "server.js" ]; then
+        cp -a "$item" .next/standalone/
+      fi
+    done
   fi
 fi
 if [ ! -f ".next/standalone/server.js" ]; then
