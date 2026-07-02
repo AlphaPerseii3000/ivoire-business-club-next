@@ -23,7 +23,7 @@ export function OpportunityTeasers({
   description = 'Quelques deals sont visibles publiquement. Les détails restent réservés aux membres actifs.',
 }: OpportunityTeasersProps) {
   return (
-    <section id="opportunites" className="bg-[#090D16] py-24 text-white">
+    <section id="opportunites" className="bg-transparent py-24 text-white">
       <div className="mx-auto max-w-7xl px-4">
         <BlurReveal>
           <div className="mx-auto max-w-2xl text-center mb-16">

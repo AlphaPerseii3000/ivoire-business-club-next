@@ -27,7 +27,7 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 bg-[#090D16] text-white">
+    <section className="py-24 bg-transparent text-white">
       <div className="mx-auto max-w-7xl px-4">
         <BlurReveal>
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -38,7 +38,7 @@ export function HowItWorks() {
               Comment ça marche ?
             </h2>
             <p className="mt-4 text-slate-400">
-              Une boucle de valeur en 3 étapes conçue pour maximiser votre impact et vos connexions en Côte d'Ivoire.
+              Une boucle de valeur en 3 étapes conçue pour maximiser votre impact et vos connexions en Côte d&apos;Ivoire.
             </p>
           </div>
         </BlurReveal>

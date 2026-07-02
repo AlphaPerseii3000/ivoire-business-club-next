@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { HeroShutter } from '@/components/landing/hero-shutter';
 import { Mission } from '@/components/landing/mission';
 import { HowItWorks } from '@/components/landing/how-it-works';
+import { ScrollLoopBackground } from '@/components/landing/scroll-loop-background';
 
 import { Pricing } from '@/components/landing/pricing';
 import { OpportunityTeasers } from '@/components/landing/opportunity-teasers';
@@ -133,7 +134,8 @@ export default async function HomePage() {
   const hasNextEvent = nextEvent !== null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#090D16] text-white pb-20 md:pb-0 grain-overlay">
+    <div className="flex min-h-screen flex-col text-white pb-20 md:pb-0 grain-overlay relative">
+      <ScrollLoopBackground threshold={2800} opacity={0.25} />
       <LandingMobileNav />
 
       <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
@@ -176,7 +178,7 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <HeroShutter />
         <Mission />
         <HowItWorks />
@@ -188,63 +190,27 @@ export default async function HomePage() {
         />
 
         <SuccessWall />
-        {hasNextEvent ? <NextEventCard event={nextEvent} /> : null}
+        {nextEvent ? <NextEventCard event={nextEvent} /> : null}
         <OpportunityTeasers opportunities={teasers} />
         <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
         <Pricing />
         <LeadMagnet />
-
-        {/* Internal SEO links section */}
-        <section className="border-t border-white/10 bg-[#090D16] py-16 md:py-20" data-testid="seo-internal-links">
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="max-w-3xl mb-10">
-              <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                Découvrir IBC
-              </h2>
-              <p className="mt-4 text-base text-slate-400 leading-relaxed">
-                Explorez nos ressources pour investir et entreprendre en Côte d&apos;Ivoire.
-              </p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <Link
-                href="/business-abidjan"
-                className="group block rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-[#D4A847]/30 hover:bg-white/[0.07]"
-              >
-                <h3 className="text-lg font-semibold text-white group-hover:text-[#D4A847] transition-colors">
-                  Business à Abidjan — opportunités et networking
-                </h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Opportunités business à Abidjan, conseils pour investir et networking avec l&apos;Ivoire Business Club.
-                </p>
-              </Link>
-              <Link
-                href="/actualites"
-                className="group block rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-[#D4A847]/30 hover:bg-white/[0.07]"
-              >
-                <h3 className="text-lg font-semibold text-white group-hover:text-[#D4A847] transition-colors">
-                  Actualités Ivoire Business Club
-                </h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Articles et événements récents de l&apos;Ivoire Business Club pour rester informé et développer votre business.
-                </p>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
-      {hasNextEvent ? <EventPopup event={nextEvent} enabled={showEventPopup} /> : null}
+      <div className="relative z-10">
+        {nextEvent ? <EventPopup event={nextEvent} enabled={showEventPopup} /> : null}
 
-      <Footer />
+        <Footer />
 
-      {/* Sticky Bottom CTA for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
-        <Link
-          href="/auth/signup"
-          className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#D4A847] text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"
-        >
-          Rejoins le club
-        </Link>
+        {/* Sticky Bottom CTA for Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+          <Link
+            href="/auth/signup"
+            className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#D4A847] text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"
+          >
+            Rejoins le club
+          </Link>
+        </div>
       </div>
     </div>
   );

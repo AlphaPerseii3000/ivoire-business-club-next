@@ -2,7 +2,7 @@
 title: 'Refonte Premium de la Landing Page'
 type: 'feature'
 created: '2026-07-01'
-status: 'in-review'
+status: 'done'
 baseline_commit: '1f5133eea2530e1af49be208af027abf29c72ebb'
 context: []
 ---
@@ -56,7 +56,16 @@ context: []
 
 ## Spec Change Log
 
-*(Pas encore d'entrée)*
+### 2026-07-02 — Ajustements Premium et Scroll Video
+- **Déclencheur :** Demandes d'ajustements utilisateur pour le contraste textuel, l'allongement du scroll, l'ajout de sections dans le rail gauche du Hero, la boucle vidéo globale et la suppression de la section finale.
+- **Modifications :**
+  - Allongement du Hero Shutter à `h-[500vh]` et lecture de la vidéo de 24s sur une plage de 0-3200px.
+  - Ajout de 2 nouvelles sections dans le rail gauche du Hero ("Deals & Investissements" et "Réseau & Mentorat").
+  - Intégration du composant global `ScrollLoopBackground` jouant la boucle vidéo sous les sections transparentes et glassmorphic ("Comment ça marche ?", "Aperçu des opportunités").
+  - Remplacement du paragraphe de description par un texte contrasté noir en gras sur fond de carte blanc translucide.
+  - Masque dégradé de 64 unités de hauteur en bas du Hero.
+  - Suppression de la section "Découvrir IBC".
+- **Préservation :** Les styles Bento Grid des tarifs et le simulateur live de mise en relation restent pleinement opérationnels.
 
 ## Design Notes
 
