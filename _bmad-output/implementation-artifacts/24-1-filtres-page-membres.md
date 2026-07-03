@@ -203,7 +203,7 @@ Créer `src/app/(dashboard)/members/page.test.tsx` en s'inspirant de `src/app/(d
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (via Hermes delegate_task)
 
 ### Debug Log References
 
