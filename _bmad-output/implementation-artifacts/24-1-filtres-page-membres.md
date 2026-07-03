@@ -1,6 +1,8 @@
 # Story 24.1: Filtrage de la page membres (espace membre)
 
-Status: ready-for-dev
+Status: review
+
+baseline_commit: 9a4202946b92f1409f9240b8e32e78f1333f0d18
 
 ## Story
 
@@ -21,31 +23,31 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] Étendre le Server Component `src/app/(dashboard)/members/page.tsx` pour accepter et parser `searchParams` (AC #1, #3, #4, #5).
-  - [ ] Parser `q`, `tier`, `sort`, `page` de manière robuste (tableaux, valeurs invalides).
-  - [ ] Valider `tier` contre l'enum Prisma `Tier`.
-  - [ ] Valider `sort` contre les 4 valeurs supportées.
-  - [ ] Construire le `where` Prisma et l'`orderBy` correspondants.
-- [ ] Créer un petit Client Component pour le search input avec debounce 300 ms (AC #1, #5, #7).
-  - [ ] Utiliser `useSearchParams` + `useRouter` + `useTransition` si pertinent.
-  - [ ] Ne pas perdre les autres paramètres (`tier`, `sort`, `page`) lors de la mise à jour de `q`.
-- [ ] Implémenter les filter chips de tier (AC #2, #5, #7).
-  - [ ] Remplacer ou étendre l'affichage existant des labels/couleurs de tier.
-  - [ ] Gérer l'état "Tous" (pas de `tier` dans l'URL).
-- [ ] Implémenter le dropdown de tri (AC #3, #5, #7).
-  - [ ] Utiliser le composant `Select` existant (`@/components/ui/select`).
-- [ ] Implémenter la pagination (AC #4, #5).
-  - [ ] `PAGE_SIZE = 20`.
-  - [ ] Calculer `totalPages`, `hasPreviousPage`, `hasNextPage`.
-  - [ ] Conserver les filtres actifs dans les liens de pagination.
-- [ ] Implémenter l'empty state (AC #6).
-  - [ ] Afficher le message + bouton de réinitialisation.
-  - [ ] Le bouton réinitialise tous les filtres (`/members`).
-- [ ] Écrire les tests unitaires (AC #8).
-  - [ ] Tester le rendu avec différentes combinaisons de `searchParams`.
-  - [ ] Tester l'empty state.
-  - [ ] S'appuyer sur le pattern de mock de `src/app/(dashboard)/members/[id]/page.test.tsx`.
-- [ ] Vérifier le build (`npm run build`) et les tests (`npx vitest run`).
+- [x] Étendre le Server Component `src/app/(dashboard)/members/page.tsx` pour accepter et parser `searchParams` (AC #1, #3, #4, #5).
+  - [x] Parser `q`, `tier`, `sort`, `page` de manière robuste (tableaux, valeurs invalides).
+  - [x] Valider `tier` contre l'enum Prisma `Tier`.
+  - [x] Valider `sort` contre les 4 valeurs supportées.
+  - [x] Construire le `where` Prisma et l'`orderBy` correspondants.
+- [x] Créer un petit Client Component pour le search input avec debounce 300 ms (AC #1, #5, #7).
+  - [x] Utiliser `useSearchParams` + `useRouter` + `useTransition` si pertinent.
+  - [x] Ne pas perdre les autres paramètres (`tier`, `sort`, `page`) lors de la mise à jour de `q`.
+- [x] Implémenter les filter chips de tier (AC #2, #5, #7).
+  - [x] Remplacer ou étendre l'affichage existant des labels/couleurs de tier.
+  - [x] Gérer l'état "Tous" (pas de `tier` dans l'URL).
+- [x] Implémenter le dropdown de tri (AC #3, #5, #7).
+  - [x] Utiliser le composant `Select` existant (`@/components/ui/select`).
+- [x] Implémenter la pagination (AC #4, #5).
+  - [x] `PAGE_SIZE = 20`.
+  - [x] Calculer `totalPages`, `hasPreviousPage`, `hasNextPage`.
+  - [x] Conserver les filtres actifs dans les liens de pagination.
+- [x] Implémenter l'empty state (AC #6).
+  - [x] Afficher le message + bouton de réinitialisation.
+  - [x] Le bouton réinitialise tous les filtres (`/members`).
+- [x] Écrire les tests unitaires (AC #8).
+  - [x] Tester le rendu avec différentes combinaisons de `searchParams`.
+  - [x] Tester l'empty state.
+  - [x] S'appuyer sur le pattern de mock de `src/app/(dashboard)/members/[id]/page.test.tsx`.
+- [x] Vérifier le build (`npm run build`) et les tests (`npx vitest run`).
 
 ## Dev Notes
 
@@ -226,5 +228,5 @@ Créer `src/app/(dashboard)/members/page.test.tsx` en s'inspirant de `src/app/(d
 
 ## Story Completion Status
 
-- Status: **ready-for-dev**
-- Completion note: Ultimate context engine analysis completed - comprehensive developer guide created for Story 24-1.
+- Status: **review**
+- Completion note: Story 24-1 implemented: search debounce, tier filter chips, sort links, pagination, empty state, tests, build and tests passed.

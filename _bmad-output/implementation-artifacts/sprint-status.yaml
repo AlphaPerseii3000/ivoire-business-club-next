@@ -36,7 +36,8 @@
 generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-06-29T19:30:00+02:00
 # last_updated: 2026-07-02T17:28:40+02:00
-last_updated: 2026-07-03T12:00:00+02:00
+# last_updated: 2026-07-03T12:00:00+02:00
+last_updated: 2026-07-03T22:05:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -180,6 +181,6 @@ development_status:
   epic-23-retrospective: optional
 
   epic-24: in-progress
-  24-1-filtres-page-membres: ready-for-dev
+  24-1-filtres-page-membres: review
   24-2-filtres-admin-members: backlog
   epic-24-retrospective: optional
