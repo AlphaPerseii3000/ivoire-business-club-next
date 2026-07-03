@@ -1,6 +1,6 @@
 # Story 24.1: Filtrage de la page membres (espace membre)
 
-Status: review
+Status: done
 
 baseline_commit: 9a4202946b92f1409f9240b8e32e78f1333f0d18
 
@@ -228,5 +228,5 @@ kimi-k2.7-code (via Hermes delegate_task)
 
 ## Story Completion Status
 
-- Status: **review**
+- Status: **done**
 - Completion note: Story 24-1 implemented: search debounce, tier filter chips, sort links, pagination, empty state, tests, build and tests passed.
