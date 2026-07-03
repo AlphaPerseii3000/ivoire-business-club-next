@@ -9,7 +9,7 @@ describe("TierCard", () => {
     render(<TierCard tier="GRAND_FRERE" actionLabel="Choisir Grands Frères" href="/auth/signup" />);
 
     expect(screen.getByRole("heading", { name: "Grands Frères" })).toBeInTheDocument();
-    expect(screen.getByText("€49/mois")).toBeInTheDocument();
+    expect(screen.getByText("€59/mois")).toBeInTheDocument();
     expect(screen.getByText(/deals prioritaires \+ events/i)).toBeInTheDocument();
     expect(screen.getByText("Accès aux deals prioritaires")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Choisir Grands Frères" })).toHaveAttribute("href", "/auth/signup");

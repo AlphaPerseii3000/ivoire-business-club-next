@@ -28,11 +28,11 @@ describe("WaveInstructions", () => {
   });
 
   it("renders Wave instructions with merchant number, amount and reference", () => {
-    render(<WaveInstructions tier="GRAND_FRERE" userId="user-123" amount={49} />);
+    render(<WaveInstructions tier="GRAND_FRERE" userId="user-123" amount={59} />);
 
     expect(screen.getByTestId("wave-instructions")).toBeInTheDocument();
     expect(screen.getByTestId("wave-merchant-number")).toBeInTheDocument();
-    expect(screen.getByTestId("wave-amount")).toHaveTextContent("49,00 €");
+    expect(screen.getByTestId("wave-amount")).toHaveTextContent("59,00 €");
     expect(screen.getByTestId("wave-reference")).toHaveTextContent("IBC-user-123-GRAND_FRERE");
     expect(screen.getByText(/Effectue ton paiement depuis l'application Wave/i)).toBeInTheDocument();
   });
@@ -50,7 +50,7 @@ describe("WaveInstructions", () => {
   });
 
   it("copies the merchant number when its copy button is clicked", async () => {
-    render(<WaveInstructions tier="BOSS" userId="user-789" amount={99} />);
+    render(<WaveInstructions tier="BOSS" userId="user-789" amount={129} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Copier le numéro/i }));
 

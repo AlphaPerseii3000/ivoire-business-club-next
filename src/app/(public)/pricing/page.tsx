@@ -49,7 +49,7 @@ export default async function PricingPage() {
             Compare les trois niveaux IBC et choisis l&apos;accès qui correspond à tes objectifs.
           </p>
           <p className="mt-3 text-sm font-medium text-foreground">
-            Prix mensuels en euros : €29, €49 et €99. Sélectionne une offre pour recevoir les instructions de virement.
+            Prix mensuels en euros : €29, €59 et €129. Sélectionne une offre pour recevoir les instructions de virement.
           </p>
         </div>
 

@@ -55,6 +55,7 @@ const pendingSubscription = {
   id: "sub-1",
   userId: "member-1",
   tier: "GRAND_FRERE",
+  period: "MONTHLY",
   provider: "BANK_TRANSFER",
   providerRef: "IBC-member-1-GRAND_FRERE",
   status: "PENDING",
@@ -128,7 +129,7 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
     expect(json.data.status).toBe("ACTIVE");
     expect(mockSubscriptionUpdate).toHaveBeenCalledWith({
       where: { id: "sub-1" },
-      data: { status: "ACTIVE" },
+      data: { status: "ACTIVE", endDate: expect.any(Date) },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
@@ -293,6 +294,11 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
 
       expect(res.status).toBe(200);
       expect(json.data.status).toBe("ACTIVE");
+      expect(mockSubscriptionUpdate).toHaveBeenCalledWith({
+        where: { id: "sub-1" },
+        data: { status: "ACTIVE", endDate: expect.any(Date) },
+        include: { user: { select: { id: true, name: true, email: true } } },
+      });
       expect(mockUserUpdate).toHaveBeenCalledWith({
         where: { id: "member-1" },
         data: { tier: "GRAND_FRERE" },

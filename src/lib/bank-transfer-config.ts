@@ -2,16 +2,34 @@ export const BANK_TRANSFER_CONFIG = {
   beneficiary: "KS Investment",
   currency: "EUR",
   amounts: {
-    AFFRANCHI: 29,
-    GRAND_FRERE: 49,
-    BOSS: 99,
-  } as Record<string, number>,
+    AFFRANCHI: {
+      MONTHLY: 29,
+      SEMESTERIAL: 160,
+      ANNUAL: 290,
+    },
+    GRAND_FRERE: {
+      MONTHLY: 59,
+      SEMESTERIAL: 299,
+      ANNUAL: 590,
+    },
+    BOSS: {
+      MONTHLY: 129,
+      SEMESTERIAL: 690,
+      ANNUAL: 1290,
+    },
+  } as Record<string, Record<string, number>>,
 } as const;
 
 export const XOF_ROUNDED_AMOUNTS: Record<number, number> = {
   29: 19000,
-  49: 32000,
-  99: 65000,
+  59: 39000,
+  129: 85000,
+  160: 105000,
+  299: 196000,
+  690: 453000,
+  290: 190000,
+  590: 387000,
+  1290: 846000,
 };
 
 export function formatNumber(num: number): string {
@@ -99,8 +117,8 @@ export function getBankTransferDetails() {
   };
 }
 
-export function getAmountForTier(tier: string): number {
-  return BANK_TRANSFER_CONFIG.amounts[tier] ?? 0;
+export function getAmountForTier(tier: string, period: string = "MONTHLY"): number {
+  return BANK_TRANSFER_CONFIG.amounts[tier]?.[period] ?? 0;
 }
 
 

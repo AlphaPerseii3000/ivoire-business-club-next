@@ -191,7 +191,20 @@ describe("subscriptionCreateSchema", () => {
     }
   });
 
-  it("rejects providerPhone for BANK_TRANSFER", () => {
+  it("accepts SEMESTERIAL period", async () => {
+    const result = subscriptionCreateSchema.safeParse({
+      tier: "AFFRANCHI",
+      period: "SEMESTERIAL",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.period).toBe("SEMESTERIAL");
+      expect(result.data.provider).toBe("BANK_TRANSFER");
+      expect(result.data.providerPhone).toBeNull();
+    }
+  });
+
+  it("rejects providerPhone for BANK_TRANSFER", async () => {
     const result = subscriptionCreateSchema.safeParse({
       tier: "AFFRANCHI",
       period: "MONTHLY",

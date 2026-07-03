@@ -28,12 +28,12 @@ describe("OrangeMoneyInstructions", () => {
   });
 
   it("renders Orange Money instructions with USSD code, merchant number, amount and reference", () => {
-    render(<OrangeMoneyInstructions tier="GRAND_FRERE" userId="user-123" amount={49} />);
+    render(<OrangeMoneyInstructions tier="GRAND_FRERE" userId="user-123" amount={59} />);
 
     expect(screen.getByTestId("orange-money-instructions")).toBeInTheDocument();
     expect(screen.getByTestId("orange-money-ussd")).toBeInTheDocument();
     expect(screen.getByTestId("orange-money-merchant-number")).toBeInTheDocument();
-    expect(screen.getByTestId("orange-money-amount")).toHaveTextContent("49,00 €");
+    expect(screen.getByTestId("orange-money-amount")).toHaveTextContent("59,00 €");
     expect(screen.getByTestId("orange-money-reference")).toHaveTextContent("IBC-user-123-GRAND_FRERE");
     expect(screen.getByText(/Effectue ton paiement depuis l'application Orange Money ou le code USSD/i)).toBeInTheDocument();
   });
@@ -51,7 +51,7 @@ describe("OrangeMoneyInstructions", () => {
   });
 
   it("copies the USSD code when its copy button is clicked", async () => {
-    render(<OrangeMoneyInstructions tier="BOSS" userId="user-789" amount={99} />);
+    render(<OrangeMoneyInstructions tier="BOSS" userId="user-789" amount={129} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Copier le code/i }));
 

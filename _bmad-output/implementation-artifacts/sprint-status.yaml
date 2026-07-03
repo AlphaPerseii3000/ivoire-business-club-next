@@ -170,6 +170,10 @@ development_status:
   21-3-set-password-flow-whatsapp: done
   epic-21-retrospective: optional
 
-  epic-22: in-progress
+  epic-22: done
   22-1-fix-ux-post-signup-page-confirmation: done
   epic-22-retrospective: optional
+
+  epic-23: in-progress
+  23-1-duree-abonnement-tarification-periodique: ready-for-dev
+  epic-23-retrospective: optional

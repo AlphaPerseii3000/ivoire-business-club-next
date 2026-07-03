@@ -23,10 +23,10 @@ describe("BankTransferPage", () => {
     process.env.BANK_TRANSFER_BANK_ADDRESS = "1 avenue de la Banque, Abidjan";
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
 
-    render(await BankTransferPage({ searchParams: Promise.resolve({ tier: "BOSS" }) }));
+    render(await BankTransferPage({ searchParams: Promise.resolve({ tier: "BOSS", period: "ANNUAL" }) }));
 
     expect(screen.getByText("KS Investment")).toBeInTheDocument();
-    expect(screen.getByText("99 EUR")).toBeInTheDocument();
+    expect(screen.getByText("1290 EUR")).toBeInTheDocument();
     expect(screen.getByText("IBC-user-123-BOSS")).toBeInTheDocument();
     expect(screen.getByText("FR76 3000 6000 0112 3456 7890 189")).toBeInTheDocument();
   });

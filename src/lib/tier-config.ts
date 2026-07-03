@@ -1,4 +1,4 @@
-import { BANK_TRANSFER_CONFIG, XOF_ROUNDED_AMOUNTS, formatNumber } from "@/lib/bank-transfer-config";
+import { BANK_TRANSFER_CONFIG, XOF_ROUNDED_AMOUNTS, formatNumber, getAmountForTier } from "@/lib/bank-transfer-config";
 
 export type MembershipTier = "AFFRANCHI" | "GRAND_FRERE" | "BOSS";
 
@@ -66,18 +66,18 @@ const tierCopy: Record<MembershipTier, Omit<TierConfig, "tier" | "price" | "pric
 };
 
 export function getTierPriceLabel(tier: MembershipTier): string {
-  return `€${BANK_TRANSFER_CONFIG.amounts[tier]}/mois`;
+  return `€${getAmountForTier(tier, "MONTHLY")}/mois`;
 }
 
 export function getXofPriceLabel(tier: MembershipTier): string {
-  const eurPrice = BANK_TRANSFER_CONFIG.amounts[tier];
+  const eurPrice = getAmountForTier(tier, "MONTHLY");
   const xofPrice = XOF_ROUNDED_AMOUNTS[eurPrice] ?? 0;
   return `${formatNumber(xofPrice)} CFA/mois`;
 }
 
 export function getTierConfig(tier: MembershipTier): TierConfig {
   const copy = tierCopy[tier];
-  const price = BANK_TRANSFER_CONFIG.amounts[tier];
+  const price = getAmountForTier(tier, "MONTHLY");
 
   return {
     tier,

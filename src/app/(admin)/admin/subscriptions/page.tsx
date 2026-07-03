@@ -11,11 +11,14 @@ type AdminSubscription = {
   id: string;
   userId: string;
   tier: string;
+  period: string;
   provider: PaymentProvider;
   providerPhone: string | null;
   providerRef: string | null;
   status: string;
   createdAt: Date;
+  startDate: Date;
+  endDate: Date | null;
   user: { name: string | null; email: string };
 };
 
@@ -36,6 +39,16 @@ function formatCurrency(amount: number) {
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("fr-FR");
+}
+
+function formatDurationLabel(period: string): string {
+  if (period === "SEMESTERIAL") return "6 mois";
+  if (period === "ANNUAL") return "Annuel";
+  return "Mensuel";
+}
+
+function formatDateOrDash(date: Date | null): string {
+  return date ? formatDate(date) : "—";
 }
 
 function getPaymentForSubscription(subscription: AdminSubscription, payments: PaymentSummary[]) {
@@ -65,8 +78,10 @@ function SubscriptionTable({
             <th className="px-4 py-3 font-medium">Membre</th>
             <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Tier</th>
+            <th className="px-4 py-3 font-medium">Durée</th>
             <th className="px-4 py-3 font-medium">Montant</th>
             <th className="px-4 py-3 font-medium">Date de soumission</th>
+            <th className="px-4 py-3 font-medium">Échéance</th>
             <th className="px-4 py-3 font-medium">Moyen de paiement</th>
             <th className="px-4 py-3 font-medium">Référence virement</th>
             <th className="px-4 py-3 font-medium">Actions</th>
@@ -75,15 +90,17 @@ function SubscriptionTable({
         <tbody>
           {subscriptions.map((subscription) => {
             const payment = getPaymentForSubscription(subscription, payments);
-            const amount = payment?.amount ?? getAmountForTier(subscription.tier);
+            const amount = payment?.amount ?? getAmountForTier(subscription.tier, subscription.period);
             const tier = getTierBadgeConfig(subscription.tier);
             return (
               <tr key={subscription.id} className="border-b last:border-b-0 hover:bg-muted/30">
                 <td className="px-4 py-4 font-medium">{subscription.user.name || "Membre IBC"}</td>
                 <td className="px-4 py-4 text-muted-foreground">{subscription.user.email}</td>
                 <td className="px-4 py-4">{tier.label}</td>
+                <td className="px-4 py-4">{formatDurationLabel(subscription.period)}</td>
                 <td className="px-4 py-4">{formatCurrency(amount)}</td>
                 <td className="px-4 py-4">{formatDate(subscription.createdAt)}</td>
+                <td className="px-4 py-4">{formatDateOrDash(subscription.endDate)}</td>
                 <td className="px-4 py-4">
                   <PaymentProviderBadge
                     provider={subscription.provider}

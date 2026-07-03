@@ -25,8 +25,9 @@ function subscription(overrides: Partial<Parameters<typeof buildAdminAnalyticsMe
   return {
     id: "sub-1",
     userId: "user-1",
-    tier: "AFFRANCHI",
-    status: "ACTIVE",
+    tier: "AFFRANCHI" as const,
+    period: "MONTHLY" as const,
+    status: "ACTIVE" as const,
     createdAt: daysAgo(10),
     updatedAt: daysAgo(1),
     ...overrides,
@@ -71,7 +72,7 @@ describe("admin analytics helpers", () => {
       ],
     });
 
-    expect(metrics.find((metric) => metric.id === "mrr")?.value).toContain("177");
+    expect(metrics.find((metric) => metric.id === "mrr")?.value).toContain("217");
   });
 
   it("counts distinct server sessions active over the last 7 days", () => {

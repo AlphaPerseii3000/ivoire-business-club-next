@@ -51,7 +51,7 @@ describe("PricingTierSelection multi-provider flow", () => {
     await user.click(cards[2]!.querySelector("button")!);
     await user.click(screen.getByTestId("payment-method-submit"));
 
-    expect(mockPush).toHaveBeenCalledWith("/pricing/virement?tier=BOSS");
+    expect(mockPush).toHaveBeenCalledWith("/pricing/virement?tier=BOSS&period=MONTHLY");
   });
 
   it("creates a Wave subscription and displays Wave instructions", async () => {

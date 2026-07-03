@@ -12,8 +12,8 @@ describe("landing Pricing", () => {
 
     expect(cards).toHaveLength(3);
     expect(within(cards[0]!).getByText("€29/mois")).toBeInTheDocument();
-    expect(within(cards[1]!).getByText("€49/mois")).toBeInTheDocument();
-    expect(within(cards[2]!).getByText("€99/mois")).toBeInTheDocument();
+    expect(within(cards[1]!).getByText("€59/mois")).toBeInTheDocument();
+    expect(within(cards[2]!).getByText("€129/mois")).toBeInTheDocument();
 
     // Verify correct uppercase tier redirect URLs
     expect(within(cards[0]!).getByRole("link", { name: "Choisir Affranchis" })).toHaveAttribute(

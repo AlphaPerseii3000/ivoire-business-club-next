@@ -25,9 +25,9 @@ describe("PricingPage", () => {
     expect(within(cards[0]!).getByRole("heading", { name: "Affranchis" })).toBeInTheDocument();
     expect(within(cards[0]!).getByText("€29/mois")).toBeInTheDocument();
     expect(within(cards[1]!).getByRole("heading", { name: "Grands Frères" })).toBeInTheDocument();
-    expect(within(cards[1]!).getByText("€49/mois")).toBeInTheDocument();
+    expect(within(cards[1]!).getByText("€59/mois")).toBeInTheDocument();
     expect(within(cards[2]!).getByRole("heading", { name: "Boss" })).toBeInTheDocument();
-    expect(within(cards[2]!).getByText("€99/mois")).toBeInTheDocument();
+    expect(within(cards[2]!).getByText("€129/mois")).toBeInTheDocument();
   });
 
   it("uses a mobile-first one-column then desktop three-column grid", async () => {

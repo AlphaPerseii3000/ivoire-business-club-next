@@ -13,12 +13,18 @@ import { posthogServer } from "@/lib/posthog-server";
 const allowedTiers: MembershipTier[] = ["AFFRANCHI", "GRAND_FRERE", "BOSS"];
 
 type VirementPageProps = {
-  searchParams: Promise<{ tier?: string | string[] }>;
+  searchParams: Promise<{ tier?: string | string[]; period?: string | string[] }>;
 };
 
 function normalizeTier(value: string | string[] | undefined): MembershipTier | null {
   const tier = Array.isArray(value) ? value[0] : value;
   return allowedTiers.includes(tier as MembershipTier) ? (tier as MembershipTier) : null;
+}
+
+function normalizePeriod(value: string | string[] | undefined): "MONTHLY" | "SEMESTERIAL" | "ANNUAL" {
+  const period = Array.isArray(value) ? value[0] : value;
+  if (period === "SEMESTERIAL" || period === "ANNUAL" || period === "MONTHLY") return period;
+  return "MONTHLY";
 }
 
 export default async function BankTransferPage({ searchParams }: VirementPageProps) {
@@ -30,20 +36,21 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
 
   const params = await searchParams;
   const tier = normalizeTier(params.tier);
+  const period = normalizePeriod(params.period);
 
   if (!tier) {
     redirect("/pricing");
   }
 
   const details = getBankTransferDetails();
-  const amount = getAmountForTier(tier);
+  const amount = getAmountForTier(tier, period);
   const reference = `IBC-${session.user.id}-${tier}`;
   const tierConfig = getTierConfig(tier);
 
   posthogServer.capture({
     distinctId: session.user.id,
     event: "bank_transfer_instructions_viewed",
-    properties: { tier, amount },
+    properties: { tier, period, amount },
   });
 
   return (
@@ -65,6 +72,7 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
 
       <BankTransferInstructions
         tier={tier}
+        period={period}
         beneficiary={details.beneficiary}
         iban={details.iban}
         bic={details.bic}

@@ -126,7 +126,7 @@ function isSupportedMobileMoneyPrefix(phone: string | undefined | null) {
 export const subscriptionCreateSchema = z
   .object({
     tier: z.enum(["AFFRANCHI", "GRAND_FRERE", "BOSS"]),
-    period: z.enum(["MONTHLY", "ANNUAL"]),
+    period: z.enum(["MONTHLY", "SEMESTERIAL", "ANNUAL"]),
     provider: z.enum(["BANK_TRANSFER", "WAVE", "ORANGE_MONEY"]).default("BANK_TRANSFER"),
     providerPhone: z.string().optional().nullable(),
   })

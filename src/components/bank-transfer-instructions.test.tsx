@@ -18,13 +18,19 @@ vi.mock("sonner", () => ({
 
 const defaultProps = {
   tier: "GRAND_FRERE" as const,
+  period: "MONTHLY" as const,
   beneficiary: "KS Investment",
   iban: "FR76 3000 6000 0112 3456 7890 189",
   bic: "AGRIFRPP",
   bankAddress: "1 avenue de la Banque, Abidjan",
   currency: "EUR",
-  amount: 49,
+  amount: 59,
   reference: "IBC-user-123-GRAND_FRERE",
+};
+
+const defaultPropsPeriodMonthly = {
+  ...defaultProps,
+  period: "MONTHLY" as const,
 };
 
 describe("BankTransferInstructions", () => {
@@ -41,11 +47,11 @@ describe("BankTransferInstructions", () => {
   });
 
   it("renders complete bank-transfer details and allows toggling between EUR and XOF using fallback props", async () => {
-    render(<BankTransferInstructions {...defaultProps} />);
+    render(<BankTransferInstructions {...defaultPropsPeriodMonthly} />);
 
     // 1. Verify default view (EUR) using fallbacks
     expect(screen.getByText("KS Investment")).toBeInTheDocument();
-    expect(screen.getByText("49 EUR")).toBeInTheDocument();
+    expect(screen.getByText("59 EUR")).toBeInTheDocument();
     expect(screen.getByText(defaultProps.iban)).toBeInTheDocument();
     expect(screen.getByText("SOCIETE GENERALE - PARIS")).toBeInTheDocument();
     expect(screen.getByText("1 avenue de la Banque, Abidjan")).toBeInTheDocument();
@@ -86,8 +92,8 @@ describe("BankTransferInstructions", () => {
     fireEvent.click(xofTabTrigger);
 
     // Verify XOF view content
-    expect(screen.getByText("32 000 XOF")).toBeInTheDocument(); // 49 EUR rounded is 32000
-    expect(screen.getByText("Montant exact converti (1€ = 655,957 XOF) : 32 142 XOF")).toBeInTheDocument();
+    expect(screen.getByText("39 000 XOF")).toBeInTheDocument(); // 59 EUR rounded is 39000
+    expect(screen.getByText("Montant exact converti (1€ = 655,957 XOF) : 38 701 XOF")).toBeInTheDocument();
     expect(screen.getByText("VERSUS BANK (01005-AGENCE ANGRE)")).toBeInTheDocument();
 
     // Verify copy all button in XOF tab
@@ -100,7 +106,7 @@ describe("BankTransferInstructions", () => {
       );
     });
     expect(mockClipboardWriteText).toHaveBeenLastCalledWith(
-      expect.stringMatching(/Montant Suggéré : 32\s000 XOF/)
+      expect.stringMatching(/Montant Suggéré : 39\s000 XOF/)
     );
   });
 
@@ -109,7 +115,7 @@ describe("BankTransferInstructions", () => {
 
     render(
       <BankTransferInstructions
-        {...defaultProps}
+        {...defaultPropsPeriodMonthly}
         xofDetails={details.xof}
         eurDetails={details.eur}
       />
@@ -143,14 +149,14 @@ describe("BankTransferInstructions", () => {
               provider: "BANK_TRANSFER",
               providerRef: "IBC-user-123-GRAND_FRERE",
             },
-            payment: { amount: 49, status: "pending" },
+            payment: { amount: 59, status: "pending" },
           },
         }),
         { status: 201, headers: { "Content-Type": "application/json" } }
       )
     );
 
-    render(<BankTransferInstructions {...defaultProps} />);
+    render(<BankTransferInstructions {...defaultPropsPeriodMonthly} />);
     await user.click(screen.getByRole("button", { name: "J'ai effectué le virement" }));
 
     await waitFor(() => {

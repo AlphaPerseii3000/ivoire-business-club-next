@@ -22,6 +22,7 @@ type SubscriptionAnalyticsInput = {
   id: string;
   userId: string;
   tier: string;
+  period: string;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -136,7 +137,15 @@ export function buildAdminAnalyticsMetrics(input: AdminAnalyticsInput): Analytic
 export async function getAdminAnalyticsMetrics(now = new Date()) {
   const [subscriptions, users, sessions] = await Promise.all([
     prisma.subscription.findMany({
-      select: { id: true, userId: true, tier: true, status: true, createdAt: true, updatedAt: true },
+      select: {
+        id: true,
+        userId: true,
+        tier: true,
+        period: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.user.findMany({ select: { id: true, createdAt: true } }),
     prisma.session.findMany({ select: { userId: true, updatedAt: true, expires: true } }),
@@ -183,7 +192,7 @@ function calculateMrrAt(subscriptions: SubscriptionAnalyticsInput[], at: Date) {
     const isActive = subscription.status === "ACTIVE";
     const cancelledAfterDate = subscription.status === "CANCELLED" && subscription.updatedAt > at;
     const shouldCount = wasCreated && (isActive || cancelledAfterDate);
-    return shouldCount ? total + getAmountForTier(subscription.tier) : total;
+    return shouldCount ? total + getAmountForTier(subscription.tier, subscription.period) : total;
   }, 0);
 }
 

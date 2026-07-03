@@ -140,13 +140,14 @@ describe("POST /api/subscriptions", () => {
       providerRef: "IBC-user-123-GRAND_FRERE",
       status: "PENDING",
       startDate: new Date("2026-05-14"),
+      endDate: new Date("2026-06-14"),
       createdAt: new Date("2026-05-14"),
       updatedAt: new Date("2026-05-14"),
     };
     const mockPayment = {
       id: "pay-new",
       userId: "user-123",
-      amount: 49,
+      amount: 59,
       currency: "EUR",
       provider: "BANK_TRANSFER",
       providerRef: "IBC-user-123-GRAND_FRERE",
@@ -170,12 +171,13 @@ describe("POST /api/subscriptions", () => {
     expect(json.data.subscription).toEqual({
       ...mockSub,
       startDate: "2026-05-14T00:00:00.000Z",
+      endDate: expect.any(String),
       createdAt: "2026-05-14T00:00:00.000Z",
       updatedAt: "2026-05-14T00:00:00.000Z",
     });
     expect(json.data.payment).toEqual({
       id: "pay-new",
-      amount: 49,
+      amount: 59,
       currency: "EUR",
       status: "pending",
       provider: "BANK_TRANSFER",
@@ -191,6 +193,7 @@ describe("POST /api/subscriptions", () => {
           providerPhone: null,
           providerRef: "IBC-user-123-GRAND_FRERE",
           status: "PENDING",
+          endDate: expect.any(Date),
         }),
       })
     );
@@ -198,7 +201,7 @@ describe("POST /api/subscriptions", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           userId: "user-123",
-          amount: 49,
+          amount: 59,
           currency: "EUR",
           provider: "BANK_TRANSFER",
           providerRef: "IBC-user-123-GRAND_FRERE",
@@ -224,10 +227,16 @@ describe("POST /api/subscriptions", () => {
   });
 
   it.each([
-    ["AFFRANCHI", 29],
-    ["GRAND_FRERE", 49],
-    ["BOSS", 99],
-  ])("creates payment amount %s => %i EUR", async (tier, amount) => {
+    ["AFFRANCHI", "MONTHLY", 29],
+    ["AFFRANCHI", "SEMESTERIAL", 160],
+    ["AFFRANCHI", "ANNUAL", 290],
+    ["GRAND_FRERE", "MONTHLY", 59],
+    ["GRAND_FRERE", "SEMESTERIAL", 299],
+    ["GRAND_FRERE", "ANNUAL", 590],
+    ["BOSS", "MONTHLY", 129],
+    ["BOSS", "SEMESTERIAL", 690],
+    ["BOSS", "ANNUAL", 1290],
+  ])("creates payment amount %s/%s => %i EUR", async (tier, period, amount) => {
     mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
     mockSubscriptionCreate.mockResolvedValueOnce({
       id: "sub-new",
@@ -252,7 +261,7 @@ describe("POST /api/subscriptions", () => {
       })
     );
 
-    await POST(makeRequest({ tier, period: "MONTHLY" }));
+    await POST(makeRequest({ tier, period }));
 
     expect(mockPaymentCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -294,6 +303,38 @@ describe("POST /api/subscriptions", () => {
     expect(res.status).toBe(400);
     expect(json.error).toBe("Données invalides");
     expect(json.details).toBeDefined();
+  });
+
+  it("accepts SEMESTERIAL period and uses the semestrial amount", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockSubscriptionCreate.mockResolvedValueOnce({
+      id: "sub-new",
+      tier: "AFFRANCHI",
+      period: "SEMESTERIAL",
+      provider: "BANK_TRANSFER",
+      providerRef: "IBC-user-123-AFFRANCHI",
+      status: "PENDING",
+    });
+    mockPaymentCreate.mockResolvedValueOnce({
+      id: "pay-new",
+      amount: 160,
+      currency: "EUR",
+      status: "pending",
+      provider: "BANK_TRANSFER",
+      providerRef: "IBC-user-123-AFFRANCHI",
+    });
+    mockTransaction.mockImplementationOnce(async (cb) =>
+      cb({
+        subscription: { create: mockSubscriptionCreate },
+        payment: { create: mockPaymentCreate },
+      })
+    );
+
+    const res = await POST(makeRequest({ tier: "AFFRANCHI", period: "SEMESTERIAL" }));
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.data.payment.amount).toBe(160);
   });
 
   it.each([

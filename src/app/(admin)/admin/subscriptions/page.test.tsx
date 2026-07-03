@@ -62,6 +62,7 @@ const active = {
   providerPhone: null,
   providerRef: "IBC-member-2-BOSS",
   tier: "BOSS",
+  period: "MONTHLY",
   createdAt: new Date("2026-05-14T00:00:00.000Z"),
   status: "ACTIVE",
   user: { name: "Marc Diallo", email: "marc@example.com" },
@@ -93,8 +94,8 @@ describe("AdminSubscriptionsPage", () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1" } });
     mockUserFindUnique.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPaymentFindMany.mockResolvedValue([
-      { id: "pay-1", providerRef: "IBC-member-1-GRAND_FRERE", amount: 49, status: "pending" },
-      { id: "pay-2", providerRef: "IBC-member-2-BOSS", amount: 99, status: "succeeded" },
+      { id: "pay-1", providerRef: "IBC-member-1-GRAND_FRERE", amount: 59, status: "pending" },
+      { id: "pay-2", providerRef: "IBC-member-2-BOSS", amount: 129, status: "succeeded" },
     ]);
   });
 
@@ -102,7 +103,7 @@ describe("AdminSubscriptionsPage", () => {
     mockSubscriptionFindMany
       .mockResolvedValueOnce([pending])
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([active]);
+      .mockResolvedValueOnce([]);
 
     render(await AdminSubscriptionsPage());
 
@@ -110,9 +111,11 @@ describe("AdminSubscriptionsPage", () => {
     expect(within(pendingSection).getByText("Awa Traoré")).toBeInTheDocument();
     expect(within(pendingSection).getByText("awa@example.com")).toBeInTheDocument();
     expect(within(pendingSection).getByText("Grands Frères")).toBeInTheDocument();
-    expect(within(pendingSection).getByText("49,00 €")).toBeInTheDocument();
     const row = within(pendingSection).getByText("Awa Traoré").closest("tr") as HTMLElement;
+    expect(within(row).getByText("Mensuel")).toBeInTheDocument();
+    expect(within(row).getByText("59,00 €")).toBeInTheDocument();
     expect(within(row).getByText("13/05/2026")).toBeInTheDocument();
+    expect(within(row).getByText("—")).toBeInTheDocument();
     expect(within(pendingSection).getByText("IBC-member-1-GRAND_FRERE")).toBeInTheDocument();
     expect(within(pendingSection).getByText(/Valider Refuser/)).toBeInTheDocument();
   });

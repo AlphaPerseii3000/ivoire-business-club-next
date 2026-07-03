@@ -12,8 +12,8 @@ describe("tier config", () => {
     expect(TIER_ORDER).toEqual(["AFFRANCHI", "GRAND_FRERE", "BOSS"]);
     expect(MEMBERSHIP_TIERS.map((tier) => [tier.tier, tier.label, tier.priceLabel])).toEqual([
       ["AFFRANCHI", "Affranchis", "€29/mois"],
-      ["GRAND_FRERE", "Grands Frères", "€49/mois"],
-      ["BOSS", "Boss", "€99/mois"],
+      ["GRAND_FRERE", "Grands Frères", "€59/mois"],
+      ["BOSS", "Boss", "€129/mois"],
     ]);
   });
 
@@ -34,7 +34,7 @@ describe("tier config", () => {
 
   it("formats tier prices in French monthly euros", () => {
     expect(getTierPriceLabel("AFFRANCHI")).toBe("€29/mois");
-    expect(getTierPriceLabel("GRAND_FRERE")).toBe("€49/mois");
-    expect(getTierPriceLabel("BOSS")).toBe("€99/mois");
+    expect(getTierPriceLabel("GRAND_FRERE")).toBe("€59/mois");
+    expect(getTierPriceLabel("BOSS")).toBe("€129/mois");
   });
 });

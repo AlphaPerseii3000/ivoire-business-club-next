@@ -165,8 +165,8 @@ export function Pricing() {
                         <ShinyText text="Recommandé" color="#D4A847" shineColor="#FFFFFF" speed={2.5} />
                       </div>
                     </div>
-                    <span className="text-sm text-[#D4A847]">€49 / mois</span>
-                    <span className="text-xs text-[#D4A847]">32 000 CFA / mois</span>
+                    <span className="text-sm text-[#D4A847]">€59 / mois</span>
+                    <span className="text-xs text-[#D4A847]">39 000 CFA / mois</span>
                     <a
                       href="/auth/signup?tier=GRAND_FRERE"
                       className="mt-2 text-center text-xs font-semibold py-2 px-4 rounded bg-[#D4A847] text-black hover:bg-[#bfa03f] transition-all min-h-11 flex items-center justify-center"
@@ -178,8 +178,8 @@ export function Pricing() {
                 <th className="p-6 w-1/4">
                   <div className="flex flex-col gap-2">
                     <span className="text-xl font-bold text-white">Boss</span>
-                    <span className="text-sm text-[#D4A847]">€99 / mois</span>
-                    <span className="text-xs text-[#D4A847]">65 000 CFA / mois</span>
+                    <span className="text-sm text-[#D4A847]">€129 / mois</span>
+                    <span className="text-xs text-[#D4A847]">85 000 CFA / mois</span>
                     <a
                       href="/auth/signup?tier=BOSS"
                       className="mt-2 text-center text-xs font-semibold py-2 px-4 rounded border border-white/20 text-white hover:bg-white/10 hover:border-white transition-all min-h-11 flex items-center justify-center"
@@ -222,12 +222,12 @@ export function Pricing() {
                   <span className="block text-xs text-[#D4A847]">19 000 CFA / mois</span>
                 </td>
                 <td className="p-6 border-x border-white/5 bg-white/5">
-                  <span className="text-sm text-[#D4A847] font-bold">€49 / mois</span>
-                  <span className="block text-xs text-[#D4A847]">32 000 CFA / mois</span>
+                  <span className="text-sm text-[#D4A847] font-bold">€59 / mois</span>
+                  <span className="block text-xs text-[#D4A847]">39 000 CFA / mois</span>
                 </td>
                 <td className="p-6">
-                  <span className="text-sm text-[#D4A847] font-semibold">€99 / mois</span>
-                  <span className="block text-xs text-[#D4A847]">65 000 CFA / mois</span>
+                  <span className="text-sm text-[#D4A847] font-semibold">€129 / mois</span>
+                  <span className="block text-xs text-[#D4A847]">85 000 CFA / mois</span>
                 </td>
               </tr>
             </tbody>

@@ -12,6 +12,8 @@ import { TierCard } from "@/components/tier-card";
 import { WaveInstructions } from "@/components/wave-instructions";
 import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { MEMBERSHIP_TIERS, type MembershipTier } from "@/lib/tier-config";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface PricingTierSelectionProps {
   isAuthenticated: boolean;
@@ -26,6 +28,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
   const [selectedTier, setSelectedTier] = useState<MembershipTier | null>(null);
   const [step, setStep] = useState<Step>("select");
   const [mobileProvider, setMobileProvider] = useState<MobileProvider | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<"MONTHLY" | "SEMESTERIAL" | "ANNUAL">("MONTHLY");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -39,6 +42,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
     setSelectedTier(tier);
     setStep("select");
     setMobileProvider(null);
+    setSelectedPeriod("MONTHLY");
     setSubmitError(null);
   }
 
@@ -48,7 +52,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
     if (!selectedTier) return;
 
     if (provider === "BANK_TRANSFER") {
-      router.push(`/pricing/virement?tier=${selectedTier}`);
+      router.push(`/pricing/virement?tier=${selectedTier}&period=${selectedPeriod}`);
       return;
     }
 
@@ -60,7 +64,7 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tier: selectedTier,
-          period: "MONTHLY",
+          period: selectedPeriod,
           provider,
           providerPhone: phone,
         }),
@@ -122,8 +126,49 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
 
       {shouldShowPaymentSelector ? (
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Offre sélectionnée. Choisis la durée de ton abonnement.
+              </p>
+              {selectedTier ? (
+                <p className="text-sm font-semibold text-primary" data-testid="selected-amount">
+                  {getAmountForTier(selectedTier, selectedPeriod)} €
+                </p>
+              ) : null}
+            </div>
+            <div
+              data-testid="period-selector"
+              className="inline-flex flex-wrap gap-2 rounded-xl border bg-muted p-1"
+              role="group"
+              aria-label="Durée de l'abonnement"
+            >
+              {[
+                { value: "MONTHLY", label: "Mensuel" },
+                { value: "SEMESTERIAL", label: "Semestriel" },
+                { value: "ANNUAL", label: "Annuel" },
+              ].map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedPeriod(option.value as "MONTHLY" | "SEMESTERIAL" | "ANNUAL")}
+                  className={cn(
+                    "rounded-lg text-sm font-medium transition-all",
+                    selectedPeriod === option.value
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-pressed={selectedPeriod === option.value}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
           <p className="mb-4 text-sm text-muted-foreground">
-            Offre sélectionnée. Choisis comment tu souhaites régler ton abonnement.
+            Choisis comment tu souhaites régler ton abonnement.
           </p>
           <PaymentMethodSelector
             defaultProvider="BANK_TRANSFER"
@@ -150,9 +195,9 @@ export function PricingTierSelection({ isAuthenticated, userId }: PricingTierSel
             ← Changer de moyen de paiement
           </button>
           {mobileProvider === "WAVE" ? (
-            <WaveInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!)} />
+            <WaveInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!, selectedPeriod)} />
           ) : (
-            <OrangeMoneyInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!)} />
+            <OrangeMoneyInstructions tier={selectedTier!} userId={userId} amount={getAmountForTier(selectedTier!, selectedPeriod)} />
           )}
         </div>
       ) : null}

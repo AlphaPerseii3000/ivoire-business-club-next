@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { AUDIT_ACTIONS, safeCreateAuditLog } from "@/lib/audit-log";
 import { sendSubscriptionActivatedEmail, sendSubscriptionRejectedEmail } from "@/lib/email";
+import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 
@@ -83,9 +84,23 @@ export async function PATCH(req: Request, { params }: Params) {
 
     const updatedSubscription = await prisma.$transaction(async (tx) => {
       if (action === "validate") {
+        let endDate = subscription.endDate;
+        if (!endDate) {
+          const now = new Date();
+          const period = subscription.period;
+          if (period === "SEMESTERIAL") {
+            now.setMonth(now.getMonth() + 6);
+          } else if (period === "ANNUAL") {
+            now.setMonth(now.getMonth() + 12);
+          } else {
+            now.setMonth(now.getMonth() + 1);
+          }
+          endDate = now;
+        }
+
         const updated = await tx.subscription.update({
           where: { id },
-          data: { status: "ACTIVE" },
+          data: { status: "ACTIVE", endDate },
           include: { user: { select: { id: true, name: true, email: true } } },
         });
         await tx.payment.updateMany({ where: paymentWhere, data: { status: "succeeded" } });

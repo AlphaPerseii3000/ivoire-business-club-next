@@ -55,8 +55,20 @@ export async function POST(req: Request) {
     const { tier, period, provider, providerPhone } = parsed.data;
     const userId = session.user.id;
     const providerRef = `IBC-${userId}-${tier}`;
-    const amount = getAmountForTier(tier);
+    const amount = getAmountForTier(tier, period);
     const isMobileMoney = provider === "WAVE" || provider === "ORANGE_MONEY";
+
+    function calculateEndDate(period: string): Date {
+      const now = new Date();
+      if (period === "SEMESTERIAL") {
+        now.setMonth(now.getMonth() + 6);
+      } else if (period === "ANNUAL") {
+        now.setMonth(now.getMonth() + 12);
+      } else {
+        now.setMonth(now.getMonth() + 1);
+      }
+      return now;
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const subscription = await tx.subscription.create({
@@ -69,6 +81,7 @@ export async function POST(req: Request) {
           providerRef,
           status: isMobileMoney ? "TRIAL" : "PENDING",
           startDate: new Date(),
+          endDate: calculateEndDate(period),
         },
       });
 

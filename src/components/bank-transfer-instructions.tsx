@@ -15,6 +15,7 @@ import { type BankAccountXOF, type BankAccountEUR, XOF_ROUNDED_AMOUNTS, formatNu
 
 interface BankTransferInstructionsProps {
   tier: MembershipTier;
+  period: string;
   beneficiary: string;
   iban: string;
   bic: string;
@@ -33,6 +34,7 @@ type ConfirmationState =
 
 export function BankTransferInstructions({
   tier,
+  period,
   beneficiary,
   iban,
   bic,
@@ -157,7 +159,7 @@ export function BankTransferInstructions({
       const response = await fetch("/api/subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, period: "MONTHLY" }),
+        body: JSON.stringify({ tier, period: period }),
       });
       const payload = await response.json().catch(() => ({}));
 
