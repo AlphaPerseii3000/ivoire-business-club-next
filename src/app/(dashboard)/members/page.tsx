@@ -68,7 +68,9 @@ export default async function MembersPage({
   }
 
   const query = searchParams ? await searchParams : {};
-  const q = parseStringParam(query.q)?.trim();
+  const MAX_QUERY_LENGTH = 100;
+
+  const q = parseStringParam(query.q)?.trim().slice(0, MAX_QUERY_LENGTH);
   const tierRaw = parseStringParam(query.tier);
   const sortRaw = parseStringParam(query.sort);
   const pageRaw = parseStringParam(query.page);
@@ -83,7 +85,7 @@ export default async function MembersPage({
   const where: Prisma.UserWhereInput = {
     verificationStatus: "VERIFIED",
     ...(tier ? { tier } : {}),
-    ...(q ? { name: { contains: q } } : {}),
+    ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
   };
 
   const [members, totalCount] = await Promise.all([
@@ -125,7 +127,6 @@ export default async function MembersPage({
     { value: "oldest", label: sortLabels.oldest },
   ];
 
-  const currentFilters = buildSearchParams({ q, tier: tier ?? "", sort });
   const previousSearch = buildSearchParams({ q, tier: tier ?? "", sort, page: String(page - 1) });
   const nextSearch = buildSearchParams({ q, tier: tier ?? "", sort, page: String(page + 1) });
 
@@ -147,7 +148,7 @@ export default async function MembersPage({
                   key={option.value || "all"}
                   href={`/members${tierSearch ? `?${tierSearch}` : ""}`}
                   aria-current={isActive ? "true" : undefined}
-                  className={`inline-flex h-9 items-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                  className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                     isActive
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-foreground hover:bg-muted"
@@ -176,7 +177,7 @@ export default async function MembersPage({
                   key={option.value}
                   href={`/members?${sortSearch}`}
                   className={cn(
-                    "inline-flex h-8 items-center rounded-lg border px-3 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                    "inline-flex min-h-11 items-center rounded-lg border px-3 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                     isSortActive
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-foreground hover:bg-muted"
@@ -231,7 +232,7 @@ export default async function MembersPage({
           {hasPreviousPage ? (
             <Link href={`/members?${previousSearch}`} className={buttonVariants({ variant: "outline" })}>Page précédente</Link>
           ) : (
-            <span />
+            <span className="min-h-11" />
           )}
           <p className="text-sm text-muted-foreground">Page {page} / {totalPages}</p>
           {hasNextPage ? (

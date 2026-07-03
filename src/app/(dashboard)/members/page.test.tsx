@@ -67,8 +67,43 @@ describe("MembersPage", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           verificationStatus: "VERIFIED",
-          name: { contains: "Awa" },
+          name: { contains: "Awa", mode: "insensitive" },
         }),
+      })
+    );
+  });
+
+  it("ignores invalid tier, sort and page params", async () => {
+    render(await MembersPage(makeSearchParams({ tier: "INVALID", sort: "invalid", page: "abc" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          verificationStatus: "VERIFIED",
+        }),
+        orderBy: { createdAt: "desc" },
+        skip: 0,
+        take: 20,
+      })
+    );
+  });
+
+  it("combines search, tier and sort params", async () => {
+    mockUserFindMany.mockResolvedValue(verifiedMembers(2, { tier: "BOSS" as const }));
+    mockUserCount.mockResolvedValue(2);
+
+    render(await MembersPage(makeSearchParams({ q: "Awa", tier: "BOSS", sort: "name_asc", page: "2" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          verificationStatus: "VERIFIED",
+          name: { contains: "Awa", mode: "insensitive" },
+          tier: "BOSS",
+        }),
+        orderBy: { name: "asc" },
+        skip: 20,
+        take: 20,
       })
     );
   });
@@ -125,6 +160,15 @@ describe("MembersPage", () => {
 
     expect(screen.getByText("Aucun membre ne correspond à vos critères")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Réinitialiser les filtres" })).toHaveAttribute("href", "/members");
+  });
+
+  it("renders empty state when there are no verified members at all", async () => {
+    mockUserFindMany.mockResolvedValue([]);
+    mockUserCount.mockResolvedValue(0);
+
+    render(await MembersPage({}));
+
+    expect(screen.getByText("Aucun membre ne correspond à vos critères")).toBeInTheDocument();
   });
 
   it("redirects unauthenticated users to signin", async () => {
