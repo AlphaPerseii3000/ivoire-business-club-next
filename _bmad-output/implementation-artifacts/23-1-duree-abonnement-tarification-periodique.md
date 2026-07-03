@@ -2,7 +2,7 @@
 story_key: "23-1"
 epic: "23"
 title: "Durée d'abonnement et tarification périodique"
-status: "ready-for-dev"
+status: "done"
 created: "2026-07-03"
 assigned_to: "DS"
 ---
@@ -104,4 +104,4 @@ La durée d'abonnement n'est pas implémentée dans l'UI. Le champ `period` est 
 
 ## Dev Agent Record
 
-_Status: ready-for-dev_
+_Status: done_
