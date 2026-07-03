@@ -1898,4 +1898,94 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.5. Epic 21 ajouté via Sprint Change Proposal le 2026-07-01 (password management).*
+### Epic 24: Filtrage et Recherche des Membres
+
+Permettre aux membres et aux admins de rechercher et filtrer la liste des membres par nom, tier, statut d'abonnement, statut de compte, statut de vérification et date d'inscription, avec tri et pagination. Active le requirement UX-DR18 ("Recherche et filtrage — search debounced 300ms, filter chips horizontaux scrollables, tri dropdown") qui n'avait jamais été implémenté pour la liste des membres.
+
+**FRs couverts :** FR77 (recherche et filtrage membres côté espace membre), FR78 (filtrage avancé admin members)
+**UX-DRs couverts :** UX-DR18 (recherche debounced, filter chips, tri dropdown)
+**NFRs couverts :** NFR-P2 (temps réponse < 500ms), NFR-A1 (accessibilité)
+
+---
+
+### Story 24-1: Filtrage de la page membres (espace membre)
+
+**En tant que** membre connecté,
+**Je veux** rechercher et filtrer les membres par nom et tier,
+**Afin de** trouver rapidement des membres selon des critères pertinents.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté sur la page `/members`
+**When** il saisit du texte dans le champ de recherche
+**Then** les résultats sont filtrés par nom avec un debounce de 300ms et l'URL est mise à jour (`?q=...`)
+
+**Given** un membre sur la page `/members`
+**When** il clique sur un filter chip de tier (Affranchis / Grands Frères / Boss)
+**Then** seuls les membres du tier sélectionné s'affichent et l'URL est mise à jour (`?tier=...`)
+
+**Given** un membre sur la page `/members`
+**When** il sélectionne un tri dans le dropdown (Nom A→Z, Nom Z→A, Plus récents, Plus anciens)
+**Then** l'ordre des résultats change et l'URL est mise à jour (`?sort=...`)
+
+**Given** plus de 20 membres dans les résultats
+**When** l'utilisateur scroll en bas
+**Then** une pagination s'affiche (page précédente / suivante) via `?page=...`
+
+**Given** des filtres actifs ne retournant aucun résultat
+**When** la page se charge
+**Then** un empty state s'affiche : "Aucun membre ne correspond à vos critères" avec un bouton "Réinitialiser les filtres"
+
+**Given** la page `/members` avec différents `searchParams`
+**When** `npm run build` et les tests sont exécutés
+**Then** le build passe et les tests unitaires vérifient le rendu selon les paramètres
+
+---
+
+### Story 24-2: Filtrage avancé de la page admin members
+
+**En tant qu'** admin,
+**Je veux** rechercher et filtrer les membres par nom, tier, statut d'abonnement, statut de compte, statut de vérification et date d'inscription,
+**Afin de** gérer efficacement la base de membres.
+
+**Acceptance Criteria :**
+
+**Given** un admin sur la page `/admin/members`
+**When** il saisit du texte dans le champ de recherche
+**Then** les résultats sont filtrés par nom OU email (debounce 300ms) via `?q=...`
+
+**Given** un admin sur la page `/admin/members`
+**When** il sélectionne un tier dans le dropdown
+**Then** seuls les membres du tier sélectionné s'affichent via `?tier=...`
+
+**Given** un admin sur la page `/admin/members`
+**When** il sélectionne un statut d'abonnement (TRIAL / PENDING / ACTIVE / PAST_DUE / CANCELLED)
+**Then** seuls les membres avec ce statut d'abonnement s'affichent via `?subscription=...`
+
+**Given** un admin sur la page `/admin/members`
+**When** il sélectionne un statut de compte (Actif / Suspendu)
+**Then** seuls les membres avec ce statut s'affichent via `?status=...`
+
+**Given** un admin sur la page `/admin/members`
+**When** il sélectionne un statut de vérification (PENDING / EN_COURS / VERIFIED / REJECTED)
+**Then** seuls les membres avec ce statut s'affichent via `?verification=...`
+
+**Given** un admin avec le filtre `?incomplete=1` actif
+**When** il ajoute d'autres filtres (tier, statut, etc.)
+**Then** les filtres se combinent (AND logique) et `?incomplete=1` reste actif
+
+**Given** plus de 25 membres dans les résultats
+**When** l'admin scroll en bas
+**Then** une pagination s'affiche via `?page=...`
+
+**Given** des filtres actifs ne retournant aucun résultat
+**When** la page se charge
+**Then** un empty state s'affiche avec un bouton de réinitialisation
+
+**Given** la page `/admin/members` avec différentes combinaisons de `searchParams`
+**When** les tests sont exécutés
+**Then** les tests unitaires vérifient le `whereClause` selon les paramètres
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.6. Epic 24 ajouté via Sprint Change Proposal le 2026-07-03 (member filtering).*
