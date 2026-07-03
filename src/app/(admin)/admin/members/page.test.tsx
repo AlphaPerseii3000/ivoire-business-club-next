@@ -258,8 +258,8 @@ describe("AdminMembersPage", () => {
           AND: [
             {
               OR: [
-                { name: { contains: "awa", mode: "insensitive" } },
-                { email: { contains: "awa", mode: "insensitive" } },
+                { name: { contains: "awa" } },
+                { email: { contains: "awa" } },
               ],
             },
           ],
@@ -400,14 +400,50 @@ describe("AdminMembersPage", () => {
             expect.objectContaining({ status: "ACTIVE" }),
             expect.objectContaining({
               OR: [
-                { name: { contains: "awa", mode: "insensitive" } },
-                { email: { contains: "awa", mode: "insensitive" } },
+                { name: { contains: "awa" } },
+                { email: { contains: "awa" } },
               ],
             }),
           ]),
         }),
       })
     );
+  });
+
+  it("pagination links preserve active filters", async () => {
+    mockUserFindMany.mockResolvedValueOnce(Array.from({ length: 25 }, (_, i) => buildMember({ id: `member-${i}`, name: `Member ${i}` })));
+    mockUserCount.mockResolvedValueOnce(60);
+
+    render(await AdminMembersPage(makeSearchParams({ q: "awa", tier: "BOSS", subscription: "ACTIVE", status: "SUSPENDED", verification: "VERIFIED", sort: "name_asc", page: "2" })));
+
+    expect(screen.getByRole("link", { name: "Page précédente" })).toHaveAttribute(
+      "href",
+      "/admin/members?q=awa&tier=BOSS&subscription=ACTIVE&status=SUSPENDED&verification=VERIFIED&sort=name_asc&page=1"
+    );
+    expect(screen.getByRole("link", { name: "Page suivante" })).toHaveAttribute(
+      "href",
+      "/admin/members?q=awa&tier=BOSS&subscription=ACTIVE&status=SUSPENDED&verification=VERIFIED&sort=name_asc&page=3"
+    );
+  });
+
+  it("default sort is createdAt desc when sort param is absent", async () => {
+    render(await AdminMembersPage(makeSearchParams({})));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      })
+    );
+  });
+
+  it("renders generic empty state when only sort is active and no members", async () => {
+    mockUserFindMany.mockResolvedValueOnce([]);
+    mockUserCount.mockResolvedValueOnce(0);
+
+    render(await AdminMembersPage(makeSearchParams({ sort: "name_asc" })));
+
+    expect(screen.getByText("Aucun utilisateur à afficher pour le moment.")).toBeInTheDocument();
+    expect(screen.queryByText("Aucun membre ne correspond à vos critères")).not.toBeInTheDocument();
   });
 
   it("renders reset empty state when filters match nothing", async () => {

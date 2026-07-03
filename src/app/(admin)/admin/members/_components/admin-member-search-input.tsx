@@ -13,8 +13,7 @@ export function AdminMemberSearchInput({ defaultValue }: { defaultValue?: string
   const [value, setValue] = useState(defaultValue ?? "");
 
   useEffect(() => {
-    const handler = setTimeout(() => setValue(defaultValue ?? ""), 0);
-    return () => clearTimeout(handler);
+    setValue(defaultValue ?? "");
   }, [defaultValue]);
 
   useEffect(() => {

@@ -417,7 +417,19 @@ kimi-k2.7-code
 - Création d'un Client Component dédié `AdminMemberFilterSelect` pour contourner la règle ESLint `react-hooks/immutability` qui interdit la modification de `window.location.href` dans un Server Component.
 - Correction du mock `next/font/google` dans `src/app/accessibility.test.tsx` pour inclure `DM_Sans` (régression externe non liée à la story).
 
-### Completion Notes List
+### Review Findings
+
+This section documents the patches applied after the initial CR review for Story 24-2.
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| **P1 — TypeScript type errors** | BLOCKER | Removed `mode: "insensitive"` from the name/email `contains` query (SQLite is case-insensitive by default for ASCII). Cast validated filter strings to their Prisma enum types: `tier as Tier`, `status as UserStatus`, `verification as VerificationStatus`, `subscription as SubscriptionStatus`. Added the corresponding enum imports from `@/generated/prisma/client`. |
+| **P2 — Search input `setTimeout` anti-pattern** | BLOCKER | Replaced the `setTimeout(() => setValue(defaultValue ?? ""), 0)` pattern in `AdminMemberSearchInput` with a direct `setValue(defaultValue ?? "")`, matching the proven pattern from Story 24-1. |
+| **P3 — Select filters don't reset page=1** | MINOR | `AdminMemberFilterSelect` now wraps params in `URLSearchParams` and explicitly calls `nextParams.delete("page")` before `router.replace(...)`. |
+| **P4 — Missing tests** | MINOR | Added tests in `page.test.tsx` for: pagination links preserving active filters; default sort `createdAt desc` when `sort` is absent; generic empty state when only `sort` is active. Added dedicated component tests: `admin-member-search-input.test.tsx` and `admin-member-filter-select.test.tsx`. |
+| **P6 — sort counted as active filter** | MINOR | Excluded `sort` from `activeFiltersCount` so that sorting alone shows the generic empty state "Aucun utilisateur à afficher pour le moment." instead of the filter reset UI. |
+
+All other findings (P5, P7, P8) were explicitly kept out of scope per the CR instructions.
 
 - Étendu `searchParams` de la page admin members avec `q`, `tier`, `subscription`, `status`, `verification`, `sort`, `page`, `incomplete` et parsing via `parseStringParam`.
 - Construit un `whereClause` Prisma combiné via un tableau `andConditions` et `AND` pour éviter la collision de deux clés `OR` lorsque `q` et `incomplete=1` sont actifs simultanément.

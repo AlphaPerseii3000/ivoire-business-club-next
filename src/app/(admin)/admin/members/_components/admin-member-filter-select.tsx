@@ -3,14 +3,6 @@
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-function buildSearchParams(params: Record<string, string | undefined>): string {
-  const next = new URLSearchParams();
-  Object.entries(params).forEach(([key, val]) => {
-    if (val) next.set(key, val);
-  });
-  return next.toString();
-}
-
 type FilterOption = { value: string; label: string };
 
 type AdminMemberFilterSelectProps = {
@@ -26,6 +18,23 @@ type AdminMemberFilterSelectProps = {
   sort: string | undefined;
   paramName: "tier" | "subscription" | "status" | "verification" | "sort";
 };
+
+function buildSearchParams(params: Record<string, string | null | undefined>): URLSearchParams {
+  const next = new URLSearchParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val) next.set(key, val);
+  });
+  return next;
+}
+
+function resolveParam(paramName: AdminMemberFilterSelectProps["paramName"], newValue: string, current: string | undefined): string | undefined {
+  if (paramName === "tier") return newValue === "" ? undefined : newValue || current;
+  if (paramName === "subscription") return newValue === "" ? undefined : newValue || current;
+  if (paramName === "status") return newValue === "" ? undefined : newValue || current;
+  if (paramName === "verification") return newValue === "" ? undefined : newValue || current;
+  if (paramName === "sort") return newValue === "" ? undefined : newValue || current;
+  return undefined;
+}
 
 export function AdminMemberFilterSelect({
   value,
@@ -48,13 +57,14 @@ export function AdminMemberFilterSelect({
       onValueChange={(newValue) => {
         const nextParams = buildSearchParams({
           q,
-          tier: paramName === "tier" ? (newValue === "" ? undefined : newValue) : tier,
-          subscription: paramName === "subscription" ? (newValue === "" ? undefined : newValue) : subscription,
-          status: paramName === "status" ? (newValue === "" ? undefined : newValue) : status,
-          verification: paramName === "verification" ? (newValue === "" ? undefined : newValue) : verification,
-          sort: paramName === "sort" ? (newValue === "" ? undefined : newValue) : sort,
+          tier: resolveParam("tier", newValue, tier),
+          subscription: resolveParam("subscription", newValue, subscription),
+          status: resolveParam("status", newValue, status),
+          verification: resolveParam("verification", newValue, verification),
+          sort: resolveParam("sort", newValue, sort),
         });
-        router.replace(`/admin/members${nextParams ? `?${nextParams}` : ""}`);
+        nextParams.delete("page");
+        router.replace(`/admin/members${nextParams.toString() ? `?${nextParams.toString()}` : ""}`);
       }}
       aria-label={ariaLabel}
     >

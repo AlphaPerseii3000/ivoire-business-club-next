@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma, Tier, UserStatus, VerificationStatus, SubscriptionStatus } from "@/generated/prisma/client";
 import { redirect } from "next/navigation";
 import { isEligibleForVerification } from "@/lib/verification";
 import Link from "next/link";
@@ -115,10 +115,10 @@ export default async function AdminMembersPage({
   const showIncompleteOnly = incomplete === "1";
 
   const q = qRaw ? qRaw : undefined;
-  const tier = validTierValues.includes(tierRaw ?? "") ? tierRaw : undefined;
-  const subscription = validSubscriptionValues.includes(subscriptionRaw ?? "") ? subscriptionRaw : undefined;
-  const status = validStatusValues.includes(statusRaw ?? "") ? statusRaw : undefined;
-  const verification = validVerificationValues.includes(verificationRaw ?? "") ? verificationRaw : undefined;
+  const tier = validTierValues.includes(tierRaw ?? "") ? (tierRaw as Tier) : undefined;
+  const subscription = validSubscriptionValues.includes(subscriptionRaw ?? "") ? (subscriptionRaw as SubscriptionStatus) : undefined;
+  const status = validStatusValues.includes(statusRaw ?? "") ? (statusRaw as UserStatus) : undefined;
+  const verification = validVerificationValues.includes(verificationRaw ?? "") ? (verificationRaw as VerificationStatus) : undefined;
   const sort = validSortValues.includes(sortRaw ?? "") ? sortRaw : undefined;
   const orderBy = sortOrder[sort ?? ""] ?? { createdAt: "desc" };
   const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
@@ -135,8 +135,8 @@ export default async function AdminMembersPage({
   if (q) {
     andConditions.push({
       OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
+        { name: { contains: q } },
+        { email: { contains: q } },
       ],
     });
   }
@@ -178,7 +178,7 @@ export default async function AdminMembersPage({
   const hasPreviousPage = page > 1 && totalPages > 1;
   const hasNextPage = page < totalPages;
   const showPagination = totalPages > 1;
-  const activeFiltersCount = [q, tier, subscription, status, verification, sort, showIncompleteOnly].filter(Boolean).length;
+  const activeFiltersCount = [q, tier, subscription, status, verification, showIncompleteOnly].filter(Boolean).length;
   const hasActiveFilters = activeFiltersCount > 0;
   const showResetEmptyState = hasActiveFilters && !hasMembers;
   const showGenericEmptyState = !hasActiveFilters && !hasMembers;
