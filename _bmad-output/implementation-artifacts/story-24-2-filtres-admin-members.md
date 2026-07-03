@@ -1,6 +1,6 @@
 # Story 24.2: Filtrage avancé de la page admin members
 
-Status: review
+Status: done
 
 baseline_commit: 51b0fecf9a342976188385e75ec8dd63a433b8e1
 
