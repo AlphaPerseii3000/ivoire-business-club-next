@@ -13,6 +13,7 @@ expect.extend(axeMatchers);
 // Mock next/font/google
 vi.mock("next/font/google", () => ({
   Inter: () => ({ className: "mocked-inter-class" }),
+  DM_Sans: () => ({ className: "mocked-dm-sans-class", variable: "--font-dm-sans" }),
 }));
 
 // Mock next-auth/react

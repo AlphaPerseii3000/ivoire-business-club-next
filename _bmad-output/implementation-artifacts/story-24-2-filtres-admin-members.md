@@ -1,8 +1,10 @@
 # Story 24.2: Filtrage avancé de la page admin members
 
-Status: ready-for-dev
+Status: review
 
 baseline_commit: 51b0fecf9a342976188385e75ec8dd63a433b8e1
+
+dev_agent_model: kimi-k2.7-code
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,42 +30,42 @@ baseline_commit: 51b0fecf9a342976188385e75ec8dd63a433b8e1
 
 ## Tasks / Subtasks
 
-- [ ] **Étendre le Server Component `src/app/(admin)/admin/members/page.tsx` — parsing `searchParams`** (AC #1–#9)
-  - [ ] Étendre le type `searchParams` pour accepter `q`, `tier`, `subscription`, `status`, `verification`, `sort`, `page`, `incomplete` (tous `string | string[]`).
-  - [ ] Implémenter un helper `parseStringParam(value: string | string[] | undefined)` (réutiliser le pattern de story 24-1).
-  - [ ] Parser et valider chaque paramètre contre des allow-lists :
-    - `q` : trim + slice(0, 100) (limite anti-abus, identique à 24-1).
-    - `tier` : valider contre `["AFFRANCHI", "GRAND_FRERE", "BOSS"]`.
-    - `subscription` : valider contre `["TRIAL", "PENDING", "ACTIVE", "PAST_DUE", "CANCELLED"]`.
-    - `status` : valider contre `["ACTIVE", "SUSPENDED"]`.
-    - `verification` : valider contre `["PENDING", "EN_COURS", "VERIFIED", "REJECTED"]`.
-    - `sort` : valider contre `["name_asc", "name_desc", "recent", "oldest"]`.
-    - `page` : `Math.max(1, parseInt(pageRaw ?? "1", 10) || 1)`.
-    - `incomplete` : conserver la logique existante (`=== "1"`).
-  - [ ] Valeur invalide → ignorer (fallback à undefined), jamais crasher.
+- [x] **Étendre le Server Component `src/app/(admin)/admin/members/page.tsx` — parsing `searchParams`** (AC #1–#9)
+  - [x] Étendre le type `searchParams` pour accepter `q`, `tier`, `subscription`, `status`, `verification`, `sort`, `page`, `incomplete` (tous `string | string[]`).
+  - [x] Implémenter un helper `parseStringParam(value: string | string[] | undefined)` (réutiliser le pattern de story 24-1).
+  - [x] Parser et valider chaque paramètre contre des allow-lists :
+    - [x] `q` : trim + slice(0, 100) (limite anti-abus, identique à 24-1).
+    - [x] `tier` : valider contre `["AFFRANCHI", "GRAND_FRERE", "BOSS"]`.
+    - [x] `subscription` : valider contre `["TRIAL", "PENDING", "ACTIVE", "PAST_DUE", "CANCELLED"]`.
+    - [x] `status` : valider contre `["ACTIVE", "SUSPENDED"]`.
+    - [x] `verification` : valider contre `["PENDING", "EN_COURS", "VERIFIED", "REJECTED"]`.
+    - [x] `sort` : valider contre `["name_asc", "name_desc", "recent", "oldest"]`.
+    - [x] `page` : `Math.max(1, parseInt(pageRaw ?? "1", 10) || 1)`.
+    - [x] `incomplete` : conserver la logique existante (`=== "1"`).
+  - [x] Valeur invalide → ignorer (fallback à undefined), jamais crasher.
 
-- [ ] **Construire le `whereClause` Prisma combinable** (AC #1–#7, #9)
-  - [ ] Rechercher par nom OU email (AC #1) :
+- [x] **Construire le `whereClause` Prisma combinable** (AC #1–#7, #9)
+  - [x] Rechercher par nom OU email (AC #1) :
     ```ts
     ...(q ? { OR: [
       { name: { contains: q, mode: "insensitive" } },
       { email: { contains: q, mode: "insensitive" } },
     ]} : {})
     ```
-  - [ ] Filtre tier : `...(tier ? { tier } : {})` (AC #2).
-  - [ ] Filtre statut compte : `...(status ? { status } : {})` (AC #4).
-  - [ ] Filtre statut vérification : `...(verification ? { verificationStatus: verification } : {})` (AC #5).
-  - [ ] Filtre statut abonnement (AC #3) — filtrer via la relation `subscriptions` :
+  - [x] Filtre tier : `...(tier ? { tier } : {})` (AC #2).
+  - [x] Filtre statut compte : `...(status ? { status } : {})` (AC #4).
+  - [x] Filtre statut vérification : `...(verification ? { verificationStatus: verification } : {})` (AC #5).
+  - [x] Filtre statut abonnement (AC #3) — filtrer via la relation `subscriptions` :
     ```ts
     ...(subscription ? {
       subscriptions: { some: { status: subscription } }
     } : {})
     ```
-  - [ ] Préserver le filtre `incomplete=1` existant (AC #7) : la condition `OR: [{ emailVerified: false }, { onboardingCompletedAt: null }]` s'ajoute en AND avec les autres filtres.
-  - [ ] Construire le `whereClause` final en mergeant toutes les conditions avec l'opérateur spread (AND logique par défaut en Prisma).
+  - [x] Préserver le filtre `incomplete=1` existant (AC #7) : la condition `OR: [{ emailVerified: false }, { onboardingCompletedAt: null }]` s'ajoute en AND avec les autres filtres.
+  - [x] Construire le `whereClause` final en mergeant toutes les conditions avec l'opérateur spread (AND logique par défaut en Prisma).
 
-- [ ] **Construire l'`orderBy`** (AC #6)
-  - [ ] Définir un mapping `sortOrder` (identique à 24-1) :
+- [x] **Construire l'`orderBy`** (AC #6)
+  - [x] Définir un mapping `sortOrder` (identique à 24-1) :
     ```ts
     const sortOrder: Record<string, Prisma.UserOrderByWithRelationInput> = {
       name_asc: { name: "asc" },
@@ -74,75 +76,75 @@ baseline_commit: 51b0fecf9a342976188385e75ec8dd63a433b8e1
     const orderBy = sortOrder[sort ?? ""] ?? { createdAt: "desc" };
     ```
 
-- [ ] **Implémenter la pagination** (AC #8)
-  - [ ] `PAGE_SIZE = 25` (différent de 24-1 qui utilise 20).
-  - [ ] Ajouter `prisma.user.count({ where })` pour le total.
-  - [ ] `skip = (page - 1) * PAGE_SIZE`, `take = PAGE_SIZE`.
-  - [ ] Calculer `totalPages`, `hasPreviousPage`, `hasNextPage`.
+- [x] **Implémenter la pagination** (AC #8)
+  - [x] `PAGE_SIZE = 25` (différent de 24-1 qui utilise 20).
+  - [x] Ajouter `prisma.user.count({ where })` pour le total.
+  - [x] `skip = (page - 1) * PAGE_SIZE`, `take = PAGE_SIZE`.
+  - [x] Calculer `totalPages`, `hasPreviousPage`, `hasNextPage`.
 
-- [ ] **Créer un Client Component pour le search input avec debounce 300 ms** (AC #1, #9)
-  - [ ] Créer `src/app/(admin)/admin/members/_components/admin-member-search-input.tsx` ("use client").
-  - [ ] Réutiliser le pattern du `MemberSearchInput` de 24-1 (`src/app/(dashboard)/members/_components/member-search-input.tsx`) : `useSearchParams`, `useRouter`, `usePathname`, `useTransition`, `setTimeout(300)`.
-  - [ ] Placeholder : "Rechercher par nom ou email..."
-  - [ ] `aria-label="Rechercher un membre par nom ou email"`.
-  - [ ] Conserver les autres paramètres (`tier`, `subscription`, `status`, `verification`, `sort`, `incomplete`) lors de la mise à jour de `q`.
-  - [ ] Réinitialiser `page` quand `q` change.
+- [x] **Créer un Client Component pour le search input avec debounce 300 ms** (AC #1, #9)
+  - [x] Créer `src/app/(admin)/admin/members/_components/admin-member-search-input.tsx` ("use client").
+  - [x] Réutiliser le pattern du `MemberSearchInput` de 24-1 (`src/app/(dashboard)/members/_components/member-search-input.tsx`) : `useSearchParams`, `useRouter`, `usePathname`, `useTransition`, `setTimeout(300)`.
+  - [x] Placeholder : "Rechercher par nom ou email..."
+  - [x] `aria-label="Rechercher un membre par nom ou email"`.
+  - [x] Conserver les autres paramètres (`tier`, `subscription`, `status`, `verification`, `sort`, `incomplete`) lors de la mise à jour de `q`.
+  - [x] Réinitialiser `page` quand `q` change.
 
-- [ ] **Implémenter les dropdowns de filtres côté serveur** (AC #2–#6, #9)
-  - [ ] Utiliser le composant `Select` existant (`@/components/ui/select`) ou des `Link` avec `searchParams` reconstruits (comme 24-1 pour les chips de tri).
-  - [ ] **Dropdown tier** (AC #2) : Tous / Affranchi / Grand Frère / Boss, via `?tier=...`.
-  - [ ] **Dropdown statut abonnement** (AC #3) : Tous / TRIAL / PENDING / ACTIVE / PAST_DUE / CANCELLED. Utiliser les labels existants `subscriptionStatusLabels` déjà définis dans `page.tsx`.
-  - [ ] **Dropdown statut compte** (AC #4) : Tous / Actif / Suspendu. Utiliser `accountStatusLabels` existant.
-  - [ ] **Dropdown statut vérification** (AC #5) : Tous / PENDING / EN_COURS / VERIFIED / REJECTED. Utiliser `verificationStatusLabels` existant.
-  - [ ] **Dropdown tri** (AC #6) : Nom A→Z, Nom Z→A, Plus récents, Plus anciens. Identique à 24-1.
-  - [ ] Chaque changement de filtre réinitialise `page=1`.
-  - [ ] Helper `buildSearchParams(params)` pour reconstruire l'URL en conservant tous les filtres actifs (réutiliser le pattern de 24-1).
+- [x] **Implémenter les dropdowns de filtres côté serveur** (AC #2–#6, #9)
+  - [x] Utiliser le composant `Select` existant (`@/components/ui/select`) ou des `Link` avec `searchParams` reconstruits (comme 24-1 pour les chips de tri).
+  - [x] **Dropdown tier** (AC #2) : Tous / Affranchi / Grand Frère / Boss, via `?tier=...`.
+  - [x] **Dropdown statut abonnement** (AC #3) : Tous / TRIAL / PENDING / ACTIVE / PAST_DUE / CANCELLED. Utiliser les labels existants `subscriptionStatusLabels` déjà définis dans `page.tsx`.
+  - [x] **Dropdown statut compte** (AC #4) : Tous / Actif / Suspendu. Utiliser `accountStatusLabels` existant.
+  - [x] **Dropdown statut vérification** (AC #5) : Tous / PENDING / EN_COURS / VERIFIED / REJECTED. Utiliser `verificationStatusLabels` existant.
+  - [x] **Dropdown tri** (AC #6) : Nom A→Z, Nom Z→A, Plus récents, Plus anciens. Identique à 24-1.
+  - [x] Chaque changement de filtre réinitialise `page=1`.
+  - [x] Helper `buildSearchParams(params)` pour reconstruire l'URL en conservant tous les filtres actifs (réutiliser le pattern de 24-1).
 
-- [ ] **Préserver le filtre `?incomplete=1` dans l'UI** (AC #7)
-  - [ ] Conserver le badge "Incomplets uniquement" + le lien "Voir tous" quand `incomplete=1` est actif.
-  - [ ] Conserver le lien "Afficher les incomplèts" quand aucun filtre n'est actif.
-  - [ ] Le lien "Afficher les incomplèts" doit conserver les autres filtres actifs (ex: `?incomplete=1&tier=BOSS`).
-  - [ ] Le lien "Voir tous" doit conserver les autres filtres mais retirer `incomplete=1`.
+- [x] **Préserver le filtre `?incomplete=1` dans l'UI** (AC #7)
+  - [x] Conserver le badge "Incomplets uniquement" + le lien "Voir tous" quand `incomplete=1` est actif.
+  - [x] Conserver le lien "Afficher les incomplèts" quand aucun filtre n'est actif.
+  - [x] Le lien "Afficher les incomplèts" doit conserver les autres filtres actifs (ex: `?incomplete=1&tier=BOSS`).
+  - [x] Le lien "Voir tous" doit conserver les autres filtres mais retirer `incomplete=1`.
 
-- [ ] **Implémenter la pagination UI** (AC #8)
-  - [ ] Afficher "Page précédente" / "Page suivante" en bas de page quand `totalPages > 1`.
-  - [ ] Utiliser des `Link` avec `searchParams` reconstruits (conservant tous les filtres).
-  - [ ] Afficher "Page X / Y".
-  - [ ] `aria-label="Pagination des membres"` sur le `<nav>`.
+- [x] **Implémenter la pagination UI** (AC #8)
+  - [x] Afficher "Page précédente" / "Page suivante" en bas de page quand `totalPages > 1`.
+  - [x] Utiliser des `Link` avec `searchParams` reconstruits (conservant tous les filtres).
+  - [x] Afficher "Page X / Y".
+  - [x] `aria-label="Pagination des membres"` sur le `<nav>`.
 
-- [ ] **Implémenter l'empty state** (AC #10)
-  - [ ] Remplacer le message existant "Aucun utilisateur à afficher pour le moment." par "Aucun membre ne correspond à vos critères" quand des filtres sont actifs.
-  - [ ] Ajouter un bouton "Réinitialiser les filtres" pointant vers `/admin/members` (retire tous les query params).
-  - [ ] Si aucun filtre n'est actif et aucun membre → conserver un message générique ("Aucun utilisateur à afficher pour le moment.").
+- [x] **Implémenter l'empty state** (AC #10)
+  - [x] Remplacer le message existant "Aucun utilisateur à afficher pour le moment." par "Aucun membre ne correspond à vos critères" quand des filtres sont actifs.
+  - [x] Ajouter un bouton "Réinitialiser les filtres" pointant vers `/admin/members` (retire tous les query params).
+  - [x] Si aucun filtre n'est actif et aucun membre → conserver un message générique ("Aucun utilisateur à afficher pour le moment.").
 
-- [ ] **Accessibilité** (UX-DR18, NFR-A1)
-  - [ ] `aria-label` sur le search input.
-  - [ ] `aria-label` sur chaque dropdown de filtre.
-  - [ ] Touch targets ≥ 44 px sur tous les éléments interactifs (NFR-A1, UX-DR25).
+- [x] **Accessibilité** (UX-DR18, NFR-A1)
+  - [x] `aria-label` sur le search input.
+  - [x] `aria-label` sur chaque dropdown de filtre.
+  - [x] Touch targets ≥ 44 px sur tous les éléments interactifs (NFR-A1, UX-DR25).
 
-- [ ] **Écrire les tests unitaires** (AC #11)
-  - [ ] Étendre `src/app/(admin)/admin/members/page.test.tsx` en s'appuyant sur le pattern existant.
-  - [ ] Tester le `whereClause` avec différentes combinaisons de `searchParams` :
-    - `?q=awa` → filtre par nom OU email (`OR: [{ name: { contains: "awa" } }, { email: { contains: "awa" } }]`).
-    - `?tier=BOSS` → filtre par tier.
-    - `?subscription=ACTIVE` → filtre via `subscriptions: { some: { status: "ACTIVE" } }`.
-    - `?status=SUSPENDED` → filtre par statut compte.
-    - `?verification=VERIFIED` → filtre par statut vérification.
-    - `?sort=name_asc` → `orderBy: { name: "asc" }`.
-    - `?page=2` → `skip: 25, take: 25`.
-    - `?incomplete=1` → `OR: [{ emailVerified: false }, { onboardingCompletedAt: null }]`.
-    - `?incomplete=1&tier=BOSS` → combinaison AND (incomplete + tier).
-    - `?q=awa&subscription=ACTIVE&status=ACTIVE` → combinaison multiple.
-    - Paramètres invalides (`?tier=INVALID`, `?subscription=FAKE`, `?page=abc`) → ignorés, pas de crash.
-  - [ ] Tester l'empty state avec bouton de réinitialisation.
-  - [ ] Tester la pagination (plus de 25 résultats).
-  - [ ] Conserver les tests existants (redirect non auth, redirect non admin, rendu des membres, badges onboarding, filtre incomplete=1).
-  - [ ] Mocker `MemberSearchInput` (ou `AdminMemberSearchInput`) dans les tests, comme 24-1 moque `MemberSearchInput`.
-  - [ ] Ajouter `mockUserCount` au mock Prisma (actuellement seul `findUnique` et `findMany` sont mockés).
+- [x] **Écrire les tests unitaires** (AC #11)
+  - [x] Étendre `src/app/(admin)/admin/members/page.test.tsx` en s'appuyant sur le pattern existant.
+  - [x] Tester le `whereClause` avec différentes combinaisons de `searchParams` :
+    - [x] `?q=awa` → filtre par nom OU email (`OR: [{ name: { contains: "awa" } }, { email: { contains: "awa" } }]`).
+    - [x] `?tier=BOSS` → filtre par tier.
+    - [x] `?subscription=ACTIVE` → filtre via `subscriptions: { some: { status: "ACTIVE" } }`.
+    - [x] `?status=SUSPENDED` → filtre par statut compte.
+    - [x] `?verification=VERIFIED` → filtre par statut vérification.
+    - [x] `?sort=name_asc` → `orderBy: { name: "asc" }`.
+    - [x] `?page=2` → `skip: 25, take: 25`.
+    - [x] `?incomplete=1` → `OR: [{ emailVerified: false }, { onboardingCompletedAt: null }]`.
+    - [x] `?incomplete=1&tier=BOSS` → combinaison AND (incomplete + tier).
+    - [x] `?q=awa&subscription=ACTIVE&status=ACTIVE` → combinaison multiple.
+    - [x] Paramètres invalides (`?tier=INVALID`, `?subscription=FAKE`, `?page=abc`) → ignorés, pas de crash.
+  - [x] Tester l'empty state avec bouton de réinitialisation.
+  - [x] Tester la pagination (plus de 25 résultats).
+  - [x] Conserver les tests existants (redirect non auth, redirect non admin, rendu des membres, badges onboarding, filtre incomplete=1).
+  - [x] Mocker `MemberSearchInput` (ou `AdminMemberSearchInput`) dans les tests, comme 24-1 moque `MemberSearchInput`.
+  - [x] Ajouter `mockUserCount` au mock Prisma (actuellement seul `findUnique` et `findMany` sont mockés).
 
-- [ ] **Vérifier le build et les tests**
-  - [ ] `npm run build` passe sans erreur.
-  - [ ] `npx vitest run` passe (tests existants + nouveaux).
+- [x] **Vérifier le build et les tests**
+  - [x] `npm run build` passe sans erreur.
+  - [x] `npx vitest run` passe (tests existants + nouveaux).
 
 ## Dev Notes
 
@@ -407,10 +409,31 @@ Le fichier `src/app/(admin)/admin/members/page.test.tsx` existe déjà avec 6 te
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code
 
 ### Debug Log References
 
+- Ajustement de l'import `Prisma` pour éviter les conflits de type (`@/generated/prisma/client`).
+- Création d'un Client Component dédié `AdminMemberFilterSelect` pour contourner la règle ESLint `react-hooks/immutability` qui interdit la modification de `window.location.href` dans un Server Component.
+- Correction du mock `next/font/google` dans `src/app/accessibility.test.tsx` pour inclure `DM_Sans` (régression externe non liée à la story).
+
 ### Completion Notes List
 
+- Étendu `searchParams` de la page admin members avec `q`, `tier`, `subscription`, `status`, `verification`, `sort`, `page`, `incomplete` et parsing via `parseStringParam`.
+- Construit un `whereClause` Prisma combiné via un tableau `andConditions` et `AND` pour éviter la collision de deux clés `OR` lorsque `q` et `incomplete=1` sont actifs simultanément.
+- Implémenté la recherche nom OU email (`mode: insensitive`), les filtres tier / statut compte / statut vérification, et le filtre abonnement via relation `subscriptions: { some: { status } }`.
+- Ajouté la pagination avec `PAGE_SIZE = 25`, `prisma.user.count`, `skip` / `take`, et navigation `Link` conservant les filtres.
+- Préservé et combiné le filtre `?incomplete=1` existant avec tous les nouveaux filtres en AND logique.
+- Créé `AdminMemberSearchInput` (debounce 300 ms, conserve les filtres, réinitialise la page) et `AdminMemberFilterSelect` (dropdown client pour éviter les mutations côté serveur).
+- Ajouté l'empty state différencié : message générique sans filtres, "Aucun membre ne correspond à vos critères" + bouton de réinitialisation avec filtres actifs.
+- Étendu les tests unitaires de 6 à 21 cas couvrant chaque filtre, les combinaisons, la pagination, l'empty state, les paramètres invalides et la coexistence avec `incomplete=1`.
+- Exécuté `npm run build` et `npx vitest run` avec succès (159 fichiers, 1116 tests).
+
 ### File List
+
+- `src/app/(admin)/admin/members/page.tsx`
+- `src/app/(admin)/admin/members/page.test.tsx`
+- `src/app/(admin)/admin/members/_components/admin-member-search-input.tsx`
+- `src/app/(admin)/admin/members/_components/admin-member-filter-select.tsx`
+- `src/app/accessibility.test.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

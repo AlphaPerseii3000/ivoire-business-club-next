@@ -6,6 +6,7 @@ import AdminMembersPage from "./page";
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockUserFindMany = vi.hoisted(() => vi.fn());
+const mockUserCount = vi.hoisted(() => vi.fn());
 const mockRedirect = vi.hoisted(() => vi.fn((url: string) => {
   throw new Error(`redirect:${url}`);
 }));
@@ -13,16 +14,26 @@ const mockRedirect = vi.hoisted(() => vi.fn((url: string) => {
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    user: { findUnique: mockUserFindUnique, findMany: mockUserFindMany },
+    user: { findUnique: mockUserFindUnique, findMany: mockUserFindMany, count: mockUserCount },
   },
 }));
 vi.mock("next/navigation", () => ({
   redirect: mockRedirect,
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("@/components/features/admin/admin-member-actions", () => ({
   AdminMemberActions: ({ status, isCurrentAdmin }: { status: string; isCurrentAdmin: boolean }) => (
     <div data-testid="member-actions">{status}:{isCurrentAdmin ? "self" : "other"}</div>
+  ),
+}));
+vi.mock("./_components/admin-member-search-input", () => ({
+  AdminMemberSearchInput: ({ defaultValue }: { defaultValue?: string }) => (
+    <input type="search" defaultValue={defaultValue ?? ""} data-testid="admin-member-search-input" />
+  ),
+}));
+vi.mock("./_components/admin-member-filter-select", () => ({
+  AdminMemberFilterSelect: ({ placeholder }: { placeholder?: string }) => (
+    <select data-testid="admin-member-filter-select" data-placeholder={placeholder}></select>
   ),
 }));
 
@@ -64,6 +75,10 @@ function baseMember(): MemberFixture {
     createdAt: new Date("2026-05-10T10:00:00Z"),
     subscriptions: [{ id: "sub-1", status: "ACTIVE", tier: "GRAND_FRERE", providerRef: "IBC-1", createdAt: new Date() }],
   };
+}
+
+function makeSearchParams(params: Record<string, string | string[]>) {
+  return { searchParams: Promise.resolve(params) };
 }
 
 describe("AdminMembersPage", () => {
@@ -117,6 +132,7 @@ describe("AdminMembersPage", () => {
         country: null,
       }),
     ]);
+    mockUserCount.mockResolvedValue(4);
   });
 
   it("redirects unauthenticated visitors to sign-in", async () => {
@@ -137,6 +153,7 @@ describe("AdminMembersPage", () => {
       buildMember({ id: "member-active", name: "Awa Koné", email: "awa@example.com", tier: "BOSS" }),
       memberWithSuspended,
     ]);
+    mockUserCount.mockResolvedValueOnce(2);
 
     render(await AdminMembersPage({ searchParams: Promise.resolve({}) }));
 
@@ -150,8 +167,16 @@ describe("AdminMembersPage", () => {
     expect(screen.getAllByTestId("member-actions")).toHaveLength(2);
   });
 
-  it("renders a French empty state when no users exist", async () => {
+  it("renders search input and filter selects", async () => {
+    render(await AdminMembersPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByTestId("admin-member-search-input")).toBeInTheDocument();
+    expect(screen.getAllByTestId("admin-member-filter-select")).toHaveLength(5);
+  });
+
+  it("renders a generic empty state when no users exist", async () => {
     mockUserFindMany.mockResolvedValueOnce([]);
+    mockUserCount.mockResolvedValueOnce(0);
 
     render(await AdminMembersPage({ searchParams: Promise.resolve({}) }));
 
@@ -203,6 +228,7 @@ describe("AdminMembersPage", () => {
         country: null,
       }),
     ]);
+    mockUserCount.mockResolvedValueOnce(3);
 
     render(await AdminMembersPage({ searchParams: Promise.resolve({ incomplete: "1" }) }));
 
@@ -218,5 +244,197 @@ describe("AdminMembersPage", () => {
     render(await AdminMembersPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("Afficher les incomplèts")).toBeInTheDocument();
+  });
+
+  it("filters by name or email via ?q=", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "result", name: "Awa Koné", email: "awa@example.com" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ q: "awa" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            {
+              OR: [
+                { name: { contains: "awa", mode: "insensitive" } },
+                { email: { contains: "awa", mode: "insensitive" } },
+              ],
+            },
+          ],
+        }),
+      })
+    );
+  });
+
+  it("filters by tier via ?tier=", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "boss", name: "Boss User", tier: "BOSS" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ tier: "BOSS" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ tier: "BOSS" }],
+        }),
+      })
+    );
+  });
+
+  it("filters by subscription status via ?subscription=", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "active-sub", name: "Sub User" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ subscription: "ACTIVE" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ subscriptions: { some: { status: "ACTIVE" } } }],
+        }),
+      })
+    );
+  });
+
+  it("filters by account status via ?status=", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "suspended", name: "Suspended User", status: "SUSPENDED" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ status: "SUSPENDED" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ status: "SUSPENDED" }],
+        }),
+      })
+    );
+  });
+
+  it("filters by verification status via ?verification=", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "verified", name: "Verified User", verificationStatus: "VERIFIED" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ verification: "VERIFIED" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ verificationStatus: "VERIFIED" }],
+        }),
+      })
+    );
+  });
+
+  it("orders by name ascending via ?sort=name_asc", async () => {
+    render(await AdminMembersPage(makeSearchParams({ sort: "name_asc" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { name: "asc" },
+      })
+    );
+  });
+
+  it("paginates results via ?page=", async () => {
+    mockUserFindMany.mockResolvedValueOnce(Array.from({ length: 25 }, (_, i) => buildMember({ id: `member-${i}`, name: `Member ${i}` })));
+    mockUserCount.mockResolvedValueOnce(60);
+
+    render(await AdminMembersPage(makeSearchParams({ page: "2" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 25,
+        take: 25,
+      })
+    );
+    expect(screen.getByText("Page 2 / 3")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Page précédente" })).toHaveAttribute("href", "/admin/members?page=1");
+    expect(screen.getByRole("link", { name: "Page suivante" })).toHaveAttribute("href", "/admin/members?page=3");
+  });
+
+  it("ignores invalid params", async () => {
+    render(await AdminMembersPage(makeSearchParams({ tier: "INVALID", subscription: "FAKE", status: "BAN", verification: "UNKNOWN", sort: "bad", page: "abc" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+        orderBy: { createdAt: "desc" },
+        skip: 0,
+        take: 25,
+      })
+    );
+  });
+
+  it("combines incomplete=1 with tier", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "incomplete-boss", name: "Incomplete Boss", tier: "BOSS", emailVerified: false })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ incomplete: "1", tier: "BOSS" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            { OR: [{ emailVerified: false }, { onboardingCompletedAt: null }] },
+            { tier: "BOSS" },
+          ],
+        }),
+      })
+    );
+  });
+
+  it("combines q, subscription and status", async () => {
+    mockUserFindMany.mockResolvedValueOnce([buildMember({ id: "combo", name: "Combo User" })]);
+    mockUserCount.mockResolvedValueOnce(1);
+
+    render(await AdminMembersPage(makeSearchParams({ q: "awa", subscription: "ACTIVE", status: "ACTIVE" })));
+
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({ subscriptions: { some: { status: "ACTIVE" } } }),
+            expect.objectContaining({ status: "ACTIVE" }),
+            expect.objectContaining({
+              OR: [
+                { name: { contains: "awa", mode: "insensitive" } },
+                { email: { contains: "awa", mode: "insensitive" } },
+              ],
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
+  it("renders reset empty state when filters match nothing", async () => {
+    mockUserFindMany.mockResolvedValueOnce([]);
+    mockUserCount.mockResolvedValueOnce(0);
+
+    render(await AdminMembersPage(makeSearchParams({ q: "xyzinconnu" })));
+
+    expect(screen.getByText("Aucun membre ne correspond à vos critères")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Réinitialiser les filtres" })).toHaveAttribute("href", "/admin/members");
+  });
+
+  it("keeps incomplete=1 link when other filters are active", async () => {
+    mockUserFindMany.mockResolvedValueOnce([]);
+    mockUserCount.mockResolvedValueOnce(0);
+
+    render(await AdminMembersPage(makeSearchParams({ tier: "BOSS" })));
+
+    expect(screen.getByText("Afficher les incomplèts")).toHaveAttribute("href", "/admin/members?tier=BOSS&incomplete=1");
+  });
+
+  it("shows Voir tous link preserving filters without incomplete", async () => {
+    mockUserFindMany.mockResolvedValueOnce([]);
+    mockUserCount.mockResolvedValueOnce(0);
+
+    render(await AdminMembersPage(makeSearchParams({ incomplete: "1", tier: "BOSS" })));
+
+    expect(screen.getByText("Voir tous")).toHaveAttribute("href", "/admin/members?tier=BOSS");
   });
 });
