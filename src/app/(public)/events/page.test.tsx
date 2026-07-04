@@ -25,7 +25,7 @@ const mockEvents = [
     startDate: new Date("2026-07-15T10:00:00Z"),
     endDate: null,
     location: "Abidjan, Cocody",
-    imageUrl: "https://example.com/event1.jpg",
+    coverImagePath: "https://example.com/event1.jpg",
   },
   {
     id: "evt-2",
@@ -34,7 +34,7 @@ const mockEvents = [
     startDate: new Date("2026-07-20T18:00:00Z"),
     endDate: null,
     location: "Abidjan, Plateau",
-    imageUrl: null,
+    coverImagePath: null,
   },
   {
     id: "evt-3",
@@ -43,7 +43,7 @@ const mockEvents = [
     startDate: new Date("2026-06-25T09:00:00Z"),
     endDate: null,
     location: "Grand-Bassam",
-    imageUrl: null,
+    coverImagePath: null,
   },
 ];
 

@@ -9,8 +9,8 @@ export interface NextEventCardEvent {
   title: string;
   startDate: Date;
   endDate?: Date | null;
-  location: string;
-  imageUrl?: string | null;
+  location?: string | null;
+  coverImagePath?: string | null;
 }
 
 export interface NextEventCardProps {
@@ -24,7 +24,7 @@ export function NextEventCard({ event }: NextEventCardProps) {
     year: "numeric",
   });
 
-  const hasImage = event.imageUrl ? event.imageUrl !== "" : false;
+  const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
 
   return (
     <section className="w-full bg-[#090D16] py-16 md:py-20">
@@ -41,7 +41,7 @@ export function NextEventCard({ event }: NextEventCardProps) {
             {hasImage ? (
               <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden md:aspect-auto md:w-2/5">
                 <Image
-                  src={event.imageUrl as string}
+                  src={event.coverImagePath as string}
                   alt={event.title}
                   fill
                   unoptimized
@@ -67,7 +67,7 @@ export function NextEventCard({ event }: NextEventCardProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="size-4 shrink-0 text-[#D4A847]" aria-hidden="true" />
-                    <span className="line-clamp-1">{event.location}</span>
+                    <span className="line-clamp-1">{event.location ? event.location : "En ligne"}</span>
                   </div>
                 </div>
               </div>

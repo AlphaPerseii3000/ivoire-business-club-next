@@ -112,6 +112,8 @@ model User {
   auditLogs          AuditLog[] @relation("AuditLogActor")
   articles           Article[]
   events             Event[]
+  eventRegistrations EventRegistration[]
+  galleryPhotos      EventGalleryPhoto[]
   reactions          ArticleReaction[]
   comments           Comment[]
   documentAccessRequests DocumentAccessRequest[] @relation("DocumentAccessRequester")
@@ -404,6 +406,23 @@ enum EventStatus {
   CANCELLED
 }
 
+enum EventType {
+  ONLINE
+  IN_PERSON
+}
+
+enum EventVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  ATTENDED
+  CANCELLED
+  NO_SHOW
+}
+
 enum ChatMessageStatus {
   PENDING
   ACKNOWLEDGED
@@ -516,23 +535,64 @@ model LeadMagnet {
 }
 
 model Event {
-  id          String     @id @default(cuid())
-  title       String
-  slug        String     @unique
-  description String
-  startDate   DateTime
-  endDate     DateTime?
-  location    String
-  imageUrl    String?
-  status      EventStatus @default(DRAFT)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  authorId    String
-  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id             String          @id @default(cuid())
+  title          String
+  slug           String          @unique
+  description    String
+  startDate      DateTime
+  endDate        DateTime?
+  eventType      EventType       @default(IN_PERSON)
+  visibility     EventVisibility @default(PUBLIC)
+  location       String?         // requis si IN_PERSON
+  onlineUrl      String?         // requis si ONLINE
+  coverImagePath String?         // remplace imageUrl
+  maxCapacity    Int?
+  pricing        Json?           // { visitor?, affranchi?, grand_frere?, boss? }
+  status         EventStatus     @default(DRAFT)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  authorId       String
+  author         User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  registrations  EventRegistration[]
+  galleryPhotos  EventGalleryPhoto[]
 
   @@index([startDate])
   @@index([status, startDate])
+  @@index([visibility, status, startDate])
   @@map("events")
+}
+
+model EventRegistration {
+  id           String             @id @default(cuid())
+  eventId      String
+  userId       String?
+  email        String
+  tierSnapshot Tier               @default(AFFRANCHI)
+  amountPaid   Int?
+  payOnSite    Boolean            @default(false)
+  status       RegistrationStatus @default(REGISTERED)
+  createdAt    DateTime           @default(now())
+  event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, userId])
+  @@unique([eventId, email])
+  @@index([eventId, status])
+  @@map("event_registrations")
+}
+
+model EventGalleryPhoto {
+  id           String   @id @default(cuid())
+  eventId      String
+  uploadedById String
+  filePath     String
+  caption      String?
+  createdAt    DateTime @default(now())
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  uploader     User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@map("event_gallery_photos")
 }
 
 model Expert {

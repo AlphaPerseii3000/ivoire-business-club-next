@@ -10,7 +10,7 @@ const baseEvent = {
   startDate: new Date("2026-07-15T10:00:00Z"),
   endDate: null,
   location: "Abidjan, Cocody",
-  imageUrl: null,
+  coverImagePath: null,
 };
 
 describe("NextEventCard", () => {
@@ -32,7 +32,7 @@ describe("NextEventCard", () => {
     expect(links[0]).toHaveAttribute("href", "/events/lancement-reseau-ibc");
   });
 
-  it("renders fallback gradient when imageUrl is absent", () => {
+  it("renders fallback gradient when coverImagePath is absent", () => {
     render(<NextEventCard event={baseEvent} />);
 
     expect(screen.getByText("IBC")).toBeInTheDocument();
@@ -40,10 +40,10 @@ describe("NextEventCard", () => {
     expect(images.length).toBe(0);
   });
 
-  it("renders image when imageUrl is provided", () => {
+  it("renders image when coverImagePath is provided", () => {
     const eventWithImage = {
       ...baseEvent,
-      imageUrl: "https://example.com/event.jpg",
+      coverImagePath: "https://example.com/event.jpg",
     };
 
     render(<NextEventCard event={eventWithImage} />);
@@ -52,10 +52,10 @@ describe("NextEventCard", () => {
     expect(image).toBeInTheDocument();
   });
 
-  it("renders fallback gradient when imageUrl is empty string", () => {
+  it("renders fallback gradient when coverImagePath is empty string", () => {
     const eventWithEmptyImage = {
       ...baseEvent,
-      imageUrl: "",
+      coverImagePath: "",
     };
 
     render(<NextEventCard event={eventWithEmptyImage} />);

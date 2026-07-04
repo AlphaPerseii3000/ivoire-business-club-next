@@ -37,8 +37,8 @@ type Event = {
   description: string;
   startDate: string | Date;
   endDate: string | Date | null;
-  location: string;
-  imageUrl?: string | null;
+  location?: string | null;
+  coverImagePath?: string | null;
   status: string;
   author?: {
     name: string | null;
@@ -181,8 +181,8 @@ export default function EventsListTable({ events }: EventsListTableProps) {
                     {event.title}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{formattedDate}</TableCell>
-                  <TableCell className="max-w-xs truncate text-xs" title={event.location}>
-                    {event.location}
+                  <TableCell className="max-w-xs truncate text-xs" title={event.location || undefined}>
+                    {event.location ? event.location : "—"}
                   </TableCell>
                   <TableCell>{renderStatusBadge(event.status)}</TableCell>
                   <TableCell className="text-right">

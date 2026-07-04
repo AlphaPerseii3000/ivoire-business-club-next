@@ -29,7 +29,7 @@ const mockEvent = {
   startDate: new Date("2026-07-15T10:00:00Z"),
   endDate: new Date("2026-07-15T14:00:00Z"),
   location: "Abidjan, Cocody",
-  imageUrl: "https://example.com/event.jpg",
+  coverImagePath: "https://example.com/event.jpg",
   status: "PUBLISHED",
 };
 

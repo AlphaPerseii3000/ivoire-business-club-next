@@ -34,8 +34,8 @@ export default async function EventsPage() {
     title: string;
     startDate: Date;
     endDate: Date | null;
-    location: string;
-    imageUrl: string | null;
+    location: string | null;
+    coverImagePath: string | null;
   }[] = [];
 
   try {
@@ -56,7 +56,7 @@ export default async function EventsPage() {
         startDate: true,
         endDate: true,
         location: true,
-        imageUrl: true,
+        coverImagePath: true,
       },
     });
   } catch (error) {

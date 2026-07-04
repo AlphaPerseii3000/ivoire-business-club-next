@@ -26,7 +26,7 @@ describe("GET /api/events/next", () => {
       startDate: new Date("2026-07-15T18:00:00Z"),
       endDate: null,
       location: "Abidjan",
-      imageUrl: null,
+      coverImagePath: null,
       status: "PUBLISHED",
       authorId: "admin-1",
       createdAt: new Date(),

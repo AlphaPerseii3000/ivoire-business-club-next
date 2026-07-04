@@ -82,7 +82,7 @@ export function EventPopup({ event, enabled }: EventPopupProps) {
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="size-4 shrink-0 text-[#D4A847]" aria-hidden="true" />
-              <span className="line-clamp-2">{event.location}</span>
+              <span className="line-clamp-2">{event.location ? event.location : "En ligne"}</span>
             </div>
           </div>
         </div>

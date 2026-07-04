@@ -34,7 +34,12 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     startDate: event.startDate.toISOString(),
     endDate: event.endDate ? event.endDate.toISOString() : null,
     location: event.location,
-    imageUrl: event.imageUrl,
+    eventType: event.eventType,
+    visibility: event.visibility,
+    onlineUrl: event.onlineUrl,
+    maxCapacity: event.maxCapacity,
+    coverImagePath: event.coverImagePath,
+    pricing: event.pricing as Record<string, number | null> | null,
     status: event.status,
   };
 

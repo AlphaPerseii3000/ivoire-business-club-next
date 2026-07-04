@@ -57,7 +57,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, description, startDate, endDate, location, imageUrl } = parsed.data;
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      location,
+      coverImagePath,
+      eventType,
+      visibility,
+      onlineUrl,
+      maxCapacity,
+      pricing,
+    } = parsed.data;
 
     let slug;
     try {
@@ -74,8 +86,13 @@ export async function POST(req: Request) {
           description,
           startDate: new Date(startDate),
           endDate: endDate ? new Date(endDate) : null,
+          eventType,
+          visibility,
           location,
-          imageUrl,
+          onlineUrl,
+          coverImagePath,
+          maxCapacity,
+          pricing,
           status: "DRAFT",
           authorId: session.user.id,
         },

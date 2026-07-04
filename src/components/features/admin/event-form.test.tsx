@@ -71,7 +71,7 @@ describe("EventForm Component", () => {
       startDate: "2026-07-15T18:00:00.000Z",
       endDate: "2026-07-15T22:00:00.000Z",
       location: "Abidjan",
-      imageUrl: null,
+      coverImagePath: null,
       status: "DRAFT",
     };
 
@@ -110,12 +110,13 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-title-input"), "ab");
     await user.type(screen.getByTestId("event-description-input"), "short");
     await user.clear(screen.getByTestId("event-location-input"));
+    await user.type(screen.getByTestId("event-start-date-input"), "bad-date");
 
     await user.click(screen.getByTestId("event-submit-button"));
 
     expect(await screen.findByText("Le titre doit contenir au moins 3 caractères")).toBeInTheDocument();
     expect(await screen.findByText("La description doit contenir au moins 10 caractères")).toBeInTheDocument();
-    expect(await screen.findByText("Le lieu est requis")).toBeInTheDocument();
+    expect(await screen.findByText("Le lieu est requis pour un événement en présentiel")).toBeInTheDocument();
     expect(await screen.findByText("Date de début invalide")).toBeInTheDocument();
   });
 
@@ -127,7 +128,7 @@ describe("EventForm Component", () => {
       startDate: "2026-07-15T18:00:00Z",
       endDate: null,
       location: "Abidjan",
-      imageUrl: null,
+      coverImagePath: null,
       status: "PUBLISHED",
     };
 

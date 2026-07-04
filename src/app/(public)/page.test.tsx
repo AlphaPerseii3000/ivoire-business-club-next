@@ -89,7 +89,7 @@ describe('HomePage SEO & Rendering', () => {
       startDate: new Date('2026-07-15T10:00:00Z'),
       endDate: null,
       location: 'Abidjan, Cocody',
-      imageUrl: null,
+      coverImagePath: null,
     });
 
     const resolvedJSX = await HomePage();

@@ -537,20 +537,30 @@ export const leadMagnetSchema = z.object({
 
 export type LeadMagnetInput = z.infer<typeof leadMagnetSchema>;
 
-export const eventImageUrlSchema = z
+export const eventImagePathSchema = z
   .string()
   .trim()
   .refine(
     (val) => val === "" || val.startsWith("/") || z.string().url().safeParse(val).success,
-    { message: "L'URL de l'image doit être valide ou être un chemin relatif local (ex: /uploads/...)" }
+    { message: "Le chemin de couverture doit être une URL valide ou un chemin local" }
   )
   .transform((val) => (val === "" ? null : val))
   .optional()
   .nullable();
 
+export const eventPricingSchema = z
+  .object({
+    visitor: z.number().int().nonnegative().nullable().optional(),
+    affranchi: z.number().int().nonnegative().nullable().optional(),
+    grand_frere: z.number().int().nonnegative().nullable().optional(),
+    boss: z.number().int().nonnegative().nullable().optional(),
+  })
+  .optional()
+  .nullable();
+
 const baseEventSchema = z.object({
-  title: z.string().trim().min(3, "Le titre doit contenir au moins 3 caractères").max(200, "Le titre ne doit pas dépasser 200 caractères"),
-  description: z.string().trim().min(10, "La description doit contenir au moins 10 caractères").max(5000, "La description ne doit pas dépasser 5000 caractères"),
+  title: z.string().trim().min(3).max(200),
+  description: z.string().trim().min(10).max(5000),
   startDate: z.string().datetime("Date de début invalide"),
   endDate: z
     .string()
@@ -558,31 +568,56 @@ const baseEventSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
-  location: z.string().trim().min(1, "Le lieu est requis").max(200, "Le lieu ne doit pas dépasser 200 caractères"),
-  imageUrl: eventImageUrlSchema,
+  eventType: z.enum(["ONLINE", "IN_PERSON"]).default("IN_PERSON"),
+  visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
+  location: z.string().trim().max(200).optional().nullable().or(z.literal("")),
+  onlineUrl: z
+    .string()
+    .trim()
+    .url("URL de visioconférence invalide")
+    .max(500)
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  maxCapacity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
+    z.number().int().positive("La capacité doit être un nombre entier positif").nullable().optional()
+  ),
+  pricing: eventPricingSchema,
+  coverImagePath: eventImagePathSchema,
 });
 
-export const eventCreateSchema = baseEventSchema.refine(
-  (data) => {
-    if (!data.endDate) return true;
-    const start = new Date(data.startDate).getTime();
-    const end = new Date(data.endDate).getTime();
-    return end >= start;
-  },
-  { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
-);
+export const eventCreateSchema = baseEventSchema
+  .refine(
+    (data) => data.eventType !== "IN_PERSON" || (data.location && data.location.trim().length > 0),
+    { message: "Le lieu est requis pour un événement en présentiel", path: ["location"] }
+  )
+  .refine(
+    (data) => data.eventType !== "ONLINE" || (data.onlineUrl && data.onlineUrl.trim().length > 0),
+    { message: "Le lien visio est requis pour un événement en ligne", path: ["onlineUrl"] }
+  )
+  .refine(
+    (data) => !data.endDate || new Date(data.endDate).getTime() >= new Date(data.startDate).getTime(),
+    { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
+  );
 
-export const eventUpdateSchema = baseEventSchema.partial().extend({
-  status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"], { message: "Statut d'événement invalide" }).optional(),
-}).refine(
-  (data) => {
-    if (!data.endDate || !data.startDate) return true;
-    const start = new Date(data.startDate).getTime();
-    const end = new Date(data.endDate).getTime();
-    return end >= start;
-  },
-  { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
-);
+export const eventUpdateSchema = baseEventSchema
+  .partial()
+  .extend({
+    status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"], { message: "Statut invalide" }).optional(),
+  })
+  .refine(
+    (data) => !data.endDate || !data.startDate || new Date(data.endDate).getTime() >= new Date(data.startDate).getTime(),
+    { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
+  )
+  .refine(
+    (data) => data.eventType !== "IN_PERSON" || (data.location && data.location.trim().length > 0),
+    { message: "Le lieu est requis pour un événement en présentiel", path: ["location"] }
+  )
+  .refine(
+    (data) => data.eventType !== "ONLINE" || (data.onlineUrl && data.onlineUrl.trim().length > 0),
+    { message: "Le lien visio est requis pour un événement en ligne", path: ["onlineUrl"] }
+  );
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;

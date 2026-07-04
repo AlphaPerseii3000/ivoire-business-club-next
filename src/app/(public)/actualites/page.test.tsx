@@ -46,7 +46,7 @@ const mockEvents = [
     startDate: new Date("2026-07-15T18:00:00Z"),
     endDate: null,
     location: "Abidjan, Plateau",
-    imageUrl: null,
+    coverImagePath: null,
   },
 ];
 

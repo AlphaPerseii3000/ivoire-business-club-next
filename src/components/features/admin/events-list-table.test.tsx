@@ -30,7 +30,7 @@ const mockEvents = [
     startDate: "2026-07-15T18:00:00.000Z",
     endDate: null,
     location: "Abidjan",
-    imageUrl: null,
+    coverImagePath: null,
     status: "DRAFT",
   },
   {
@@ -41,7 +41,7 @@ const mockEvents = [
     startDate: "2026-06-12T18:00:00.000Z",
     endDate: null,
     location: "Bouaké",
-    imageUrl: null,
+    coverImagePath: null,
     status: "PUBLISHED",
   },
   {
@@ -52,7 +52,7 @@ const mockEvents = [
     startDate: "2026-08-01T18:00:00.000Z",
     endDate: null,
     location: "San Pedro",
-    imageUrl: null,
+    coverImagePath: null,
     status: "CANCELLED",
   },
 ];

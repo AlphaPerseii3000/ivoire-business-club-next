@@ -37,7 +37,12 @@ const mockEvent = {
   startDate: new Date("2026-07-15T18:00:00Z"),
   endDate: new Date("2026-07-15T22:00:00Z"),
   location: "Abidjan",
-  imageUrl: null,
+  coverImagePath: null,
+  eventType: "IN_PERSON",
+  visibility: "PUBLIC",
+  onlineUrl: null,
+  maxCapacity: null,
+  pricing: null,
   status: "DRAFT",
   authorId: "admin-1",
 };
@@ -113,7 +118,11 @@ describe("PUT /api/events/[id]", () => {
       slug: "titre-mis-a-jour",
     });
 
-    const response = await PUT(makeRequest("PUT", { title: "Titre mis à jour" }), {
+    const response = await PUT(makeRequest("PUT", {
+      title: "Titre mis à jour",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-1" }),
     });
 
@@ -139,7 +148,11 @@ describe("PUT /api/events/[id]", () => {
       status: "PUBLISHED",
     });
 
-    const response = await PUT(makeRequest("PUT", { status: "PUBLISHED" }), {
+    const response = await PUT(makeRequest("PUT", {
+      status: "PUBLISHED",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-1" }),
     });
 
@@ -170,7 +183,11 @@ describe("PUT /api/events/[id]", () => {
       status: "CANCELLED",
     });
 
-    const response = await PUT(makeRequest("PUT", { status: "CANCELLED" }), {
+    const response = await PUT(makeRequest("PUT", {
+      status: "CANCELLED",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-1" }),
     });
 
@@ -202,7 +219,11 @@ describe("PUT /api/events/[id]", () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
     mockEventFindFirst.mockResolvedValue(null);
 
-    const response = await PUT(makeRequest("PUT", { title: "Nouveau titre" }), {
+    const response = await PUT(makeRequest("PUT", {
+      title: "Nouveau titre",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-unknown" }),
     });
 
@@ -216,7 +237,11 @@ describe("PUT /api/events/[id]", () => {
       status: "CANCELLED",
     });
 
-    const response = await PUT(makeRequest("PUT", { status: "PUBLISHED" }), {
+    const response = await PUT(makeRequest("PUT", {
+      status: "PUBLISHED",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-cancelled" }),
     });
 
@@ -230,7 +255,11 @@ describe("PUT /api/events/[id]", () => {
     mockEventFindFirst.mockResolvedValueOnce(mockEvent);
     mockEventUpdate.mockResolvedValue(mockEvent);
 
-    const response = await PUT(makeRequest("PUT", { status: "DRAFT" }), {
+    const response = await PUT(makeRequest("PUT", {
+      status: "DRAFT",
+      location: "Abidjan",
+      eventType: "IN_PERSON",
+    }), {
       params: Promise.resolve({ id: "evt-1" }),
     });
 

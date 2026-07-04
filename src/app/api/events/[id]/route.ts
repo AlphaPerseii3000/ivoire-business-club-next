@@ -78,6 +78,23 @@ export async function PUT(
 
     const data: any = { ...parsed.data };
 
+    // Convertir les champs optionnels vides en null AVANT la validation conditionnelle
+    if (data.location === "") {
+      data.location = null;
+    }
+    if (data.onlineUrl === "") {
+      data.onlineUrl = null;
+    }
+    if (data.coverImagePath === "") {
+      data.coverImagePath = null;
+    }
+    if (data.pricing === "") {
+      data.pricing = null;
+    }
+    if (data.maxCapacity === "") {
+      data.maxCapacity = null;
+    }
+
     // Enforce the documented DRAFT → PUBLISHED → CANCELLED lifecycle. Once
     // CANCELLED, an event can no longer change status through this endpoint.
     if (data.status) {
@@ -101,10 +118,12 @@ export async function PUT(
       }
     }
 
-    // Normalize optional endDate: empty string is treated as null
     if (data.endDate === "") {
       data.endDate = null;
     }
+
+    // Nettoyer les champs non présents dans le schéma Prisma
+    const prismaData: any = { ...data };
 
     // Compute effective dates to enforce the invariant even on partial updates
     const effectiveStart = data.startDate
@@ -121,15 +140,15 @@ export async function PUT(
     }
 
     if (data.startDate) {
-      data.startDate = effectiveStart;
+      prismaData.startDate = effectiveStart;
     }
     if (data.endDate !== undefined) {
-      data.endDate = effectiveEnd;
+      prismaData.endDate = effectiveEnd;
     }
 
     if (parsed.data.title && parsed.data.title !== event.title) {
       try {
-        data.slug = await generateUniqueSlug(parsed.data.title, event.id);
+        prismaData.slug = await generateUniqueSlug(parsed.data.title, event.id);
       } catch (slugError: any) {
         return NextResponse.json({ error: slugError.message }, { status: 400 });
       }
@@ -138,7 +157,7 @@ export async function PUT(
     try {
       const updatedEvent = await prisma.event.update({
         where: { id: event.id },
-        data,
+        data: prismaData,
       });
 
       await safeCreateAuditLog({

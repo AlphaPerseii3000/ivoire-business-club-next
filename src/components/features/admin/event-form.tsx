@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { eventImageUrlSchema } from "@/lib/validations";
+import { eventImagePathSchema, eventPricingSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,8 +41,23 @@ const eventFormSchema = z.object({
   description: z.string().trim().min(10, "La description doit contenir au moins 10 caractères").max(5000, "La description ne doit pas dépasser 5000 caractères"),
   startDate: z.preprocess(toISOdatetime, z.string().datetime("Date de début invalide")),
   endDate: z.preprocess(toISOdatetime, z.string().datetime("Date de fin invalide").optional().nullable().or(z.literal(""))),
-  location: z.string().trim().min(1, "Le lieu est requis").max(200, "Le lieu ne doit pas dépasser 200 caractères"),
-  imageUrl: eventImageUrlSchema,
+  eventType: z.enum(["ONLINE", "IN_PERSON"]).default("IN_PERSON"),
+  visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
+  location: z.string().trim().max(200, "Le lieu ne doit pas dépasser 200 caractères").optional().nullable().or(z.literal("")),
+  onlineUrl: z
+    .string()
+    .trim()
+    .url("URL de visioconférence invalide")
+    .max(500)
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  maxCapacity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
+    z.number().int().positive("La capacité doit être un nombre entier positif").nullable().optional()
+  ),
+  coverImagePath: eventImagePathSchema,
+  pricing: eventPricingSchema,
   status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"]).optional(),
 }).refine(
   (data) => {
@@ -52,6 +67,12 @@ const eventFormSchema = z.object({
     return end >= start;
   },
   { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
+).refine(
+  (data) => data.eventType !== "IN_PERSON" || (data.location && data.location.trim().length > 0),
+  { message: "Le lieu est requis pour un événement en présentiel", path: ["location"] }
+).refine(
+  (data) => data.eventType !== "ONLINE" || (data.onlineUrl && data.onlineUrl.trim().length > 0),
+  { message: "Le lien visio est requis pour un événement en ligne", path: ["onlineUrl"] }
 );
 
 type FormValues = z.infer<typeof eventFormSchema>;
@@ -63,8 +84,13 @@ type EventFormProps = {
     description: string;
     startDate: string;
     endDate: string | null;
-    location: string;
-    imageUrl?: string | null;
+    location?: string | null;
+    coverImagePath?: string | null;
+    eventType?: string;
+    visibility?: string;
+    onlineUrl?: string | null;
+    maxCapacity?: number | null;
+    pricing?: Record<string, number | null> | null;
     status?: string;
   } | null;
 };
@@ -80,6 +106,8 @@ export default function EventForm({ initialData }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [eventTypeValue, setEventTypeValue] = useState(initialData?.eventType ?? "IN_PERSON");
+  const [visibilityValue, setVisibilityValue] = useState(initialData?.visibility ?? "PUBLIC");
   const [statusValue, setStatusValue] = useState(initialData?.status ?? "DRAFT");
 
   const {
@@ -94,18 +122,31 @@ export default function EventForm({ initialData }: EventFormProps) {
       description: initialData?.description ?? "",
       startDate: formatDateTimeLocalInput(initialData?.startDate ?? null),
       endDate: formatDateTimeLocalInput(initialData?.endDate ?? null),
+      eventType: (initialData?.eventType as any) ?? "IN_PERSON",
+      visibility: (initialData?.visibility as any) ?? "PUBLIC",
       location: initialData?.location ?? "",
-      imageUrl: initialData?.imageUrl ?? "",
+      onlineUrl: initialData?.onlineUrl ?? "",
+      maxCapacity: initialData?.maxCapacity ?? null,
+      coverImagePath: initialData?.coverImagePath ?? "",
+      pricing: initialData?.pricing ?? null,
       status: (initialData?.status as any) ?? "DRAFT",
     },
   });
 
   useEffect(() => {
+    if (initialData?.eventType) {
+      setEventTypeValue(initialData.eventType);
+      setValue("eventType", initialData.eventType as any, { shouldValidate: true });
+    }
+    if (initialData?.visibility) {
+      setVisibilityValue(initialData.visibility);
+      setValue("visibility", initialData.visibility as any, { shouldValidate: true });
+    }
     if (initialData?.status) {
       setStatusValue(initialData.status);
       setValue("status", initialData.status as any, { shouldValidate: true });
     }
-  }, [initialData?.status, setValue]);
+  }, [initialData?.eventType, initialData?.visibility, initialData?.status, setValue]);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
@@ -118,8 +159,13 @@ export default function EventForm({ initialData }: EventFormProps) {
         description: data.description,
         startDate: data.startDate,
         endDate: data.endDate || null,
-        location: data.location,
-        imageUrl: data.imageUrl || null,
+        eventType: data.eventType,
+        visibility: data.visibility,
+        location: data.location || null,
+        onlineUrl: data.onlineUrl || null,
+        maxCapacity: data.maxCapacity ?? null,
+        coverImagePath: data.coverImagePath || null,
+        pricing: data.pricing ?? null,
         ...(isEdit ? { status: data.status ?? statusValue } : {}),
       };
 
@@ -238,6 +284,56 @@ export default function EventForm({ initialData }: EventFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
+          <Label htmlFor="eventType">Type d'événement</Label>
+          <Select
+            value={eventTypeValue}
+            onValueChange={(val) => {
+              if (val) {
+                setValue("eventType", val as any, { shouldValidate: true });
+                setEventTypeValue(val);
+              }
+            }}
+          >
+            <SelectTrigger id="eventType" data-testid="event-type-trigger">
+              <SelectValue placeholder="Choisir un type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="IN_PERSON">En présentiel</SelectItem>
+              <SelectItem value="ONLINE">En ligne</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.eventType ? (
+            <p className="text-sm text-destructive">{errors.eventType.message}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="visibility">Visibilité</Label>
+          <Select
+            value={visibilityValue}
+            onValueChange={(val) => {
+              if (val) {
+                setValue("visibility", val as any, { shouldValidate: true });
+                setVisibilityValue(val);
+              }
+            }}
+          >
+            <SelectTrigger id="visibility" data-testid="event-visibility-trigger">
+              <SelectValue placeholder="Choisir une visibilité" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PUBLIC">Public</SelectItem>
+              <SelectItem value="PRIVATE">Privé (membres)</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.visibility ? (
+            <p className="text-sm text-destructive">{errors.visibility.message}</p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
           <Label htmlFor="location">Lieu</Label>
           <Input
             id="location"
@@ -251,15 +347,44 @@ export default function EventForm({ initialData }: EventFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="imageUrl">URL de l'image (optionnel)</Label>
+          <Label htmlFor="onlineUrl">Lien visioconférence</Label>
           <Input
-            id="imageUrl"
-            data-testid="event-image-url-input"
-            placeholder="https://exemple.com/image.jpg ou /uploads/image.jpg"
-            {...register("imageUrl")}
+            id="onlineUrl"
+            data-testid="event-online-url-input"
+            placeholder="https://meet.exemple.com/..."
+            {...register("onlineUrl")}
           />
-          {errors.imageUrl ? (
-            <p className="text-sm text-destructive">{errors.imageUrl.message}</p>
+          {errors.onlineUrl ? (
+            <p className="text-sm text-destructive">{errors.onlineUrl.message}</p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="maxCapacity">Capacité maximale</Label>
+          <Input
+            id="maxCapacity"
+            type="number"
+            data-testid="event-max-capacity-input"
+            placeholder="Ex: 100"
+            {...register("maxCapacity")}
+          />
+          {errors.maxCapacity ? (
+            <p className="text-sm text-destructive">{errors.maxCapacity.message}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="coverImagePath">Chemin de l'image de couverture (optionnel)</Label>
+          <Input
+            id="coverImagePath"
+            data-testid="event-cover-image-path-input"
+            placeholder="https://exemple.com/image.jpg ou /uploads/image.jpg"
+            {...register("coverImagePath")}
+          />
+          {errors.coverImagePath ? (
+            <p className="text-sm text-destructive">{errors.coverImagePath.message}</p>
           ) : null}
         </div>
       </div>

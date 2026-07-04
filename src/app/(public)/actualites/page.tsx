@@ -59,8 +59,8 @@ export default async function ActualitesPage() {
     title: string;
     startDate: Date;
     endDate: Date | null;
-    location: string;
-    imageUrl: string | null;
+    location: string | null;
+    coverImagePath: string | null;
   }[] = [];
 
   try {
@@ -71,7 +71,7 @@ export default async function ActualitesPage() {
       },
       orderBy: { startDate: "asc" },
       take: 3,
-      select: { id: true, slug: true, title: true, startDate: true, endDate: true, location: true, imageUrl: true },
+      select: { id: true, slug: true, title: true, startDate: true, endDate: true, location: true, coverImagePath: true },
     });
   } catch (error) {
     console.error("Failed to fetch upcoming events for /actualites:", sanitizeError(error));

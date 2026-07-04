@@ -123,7 +123,7 @@ export default async function HomePage() {
         startDate: fetchedEvent.startDate,
         endDate: fetchedEvent.endDate,
         location: fetchedEvent.location,
-        imageUrl: fetchedEvent.imageUrl,
+        coverImagePath: fetchedEvent.coverImagePath,
       };
     }
   } catch (err) {

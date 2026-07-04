@@ -10,8 +10,8 @@ export interface EventCardEvent {
   title: string;
   startDate: Date;
   endDate?: Date | null;
-  location: string;
-  imageUrl?: string | null;
+  location?: string | null;
+  coverImagePath?: string | null;
 }
 
 export interface EventCardProps {
@@ -25,7 +25,7 @@ export function EventCard({ event }: EventCardProps) {
     year: "numeric",
   });
 
-  const hasImage = event.imageUrl ? event.imageUrl !== "" : false;
+  const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
 
   return (
     <Link href={`/events/${event.slug}`} className="group block h-full">
@@ -33,7 +33,7 @@ export function EventCard({ event }: EventCardProps) {
         {hasImage ? (
           <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-border/10">
             <Image
-              src={event.imageUrl as string}
+              src={event.coverImagePath as string}
               alt={event.title}
               fill
               unoptimized
@@ -60,7 +60,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
           <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
-            <span className="line-clamp-1">{event.location}</span>
+            <span className="line-clamp-1">{event.location ? event.location : "En ligne"}</span>
           </div>
         </CardContent>
       </Card>

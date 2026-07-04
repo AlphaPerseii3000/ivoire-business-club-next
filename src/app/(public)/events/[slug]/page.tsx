@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 
     const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com";
     const pageUrl = `${siteUrl}/events/${slug}`;
-    const imageUrl = event.imageUrl || `${siteUrl}/logo-ibc.webp`;
+    const imageUrl = event.coverImagePath || `${siteUrl}/logo-ibc.webp`;
 
     return {
       title: {
@@ -97,7 +97,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       })
     : "";
 
-  const hasImage = event.imageUrl ? event.imageUrl !== "" : false;
+  const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
   const isCancelled = event.status === EventStatus.CANCELLED;
 
   if (isCancelled) {
@@ -224,7 +224,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <div className="flex items-center gap-2">
               <span className="text-white/20">•</span>
               <MapPin className="size-4" aria-hidden="true" />
-              <span>{event.location}</span>
+              <span>{event.location ? event.location : "En ligne"}</span>
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         {hasImage ? (
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl mb-8 border border-white/5">
             <Image
-              src={event.imageUrl as string}
+              src={event.coverImagePath as string}
               alt={event.title}
               fill
               priority
