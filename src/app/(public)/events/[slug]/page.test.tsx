@@ -82,10 +82,10 @@ describe("Event Detail Page", () => {
     expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();
     expect(screen.getByText("Une soirée de networking pour les membres et investisseurs du réseau IBC.")).toBeInTheDocument();
     expect(screen.getByText("15 juillet 2026")).toBeInTheDocument();
-    expect(screen.getByText("Jusqu'au 15 juillet 2026")).toBeInTheDocument();
+    expect(screen.getByText("Jusqu\u2019au 15 juillet 2026")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
     expect(screen.getByText("100 places restantes")).toBeInTheDocument();
-    expect(screen.getByText("S'inscrire")).toBeInTheDocument();
+    expect(screen.getByText("S\u2019inscrire")).toBeInTheDocument();
 
     const image = screen.getByRole("img", { name: "Lancement Réseau IBC" });
     expect(image).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("Event Detail Page", () => {
     expect(blurredDescription).toHaveClass("blur-md");
     expect(screen.queryByText("Abidjan, Cocody")).not.toBeInTheDocument();
     expect(screen.queryByText("100 places restantes")).not.toBeInTheDocument();
-    expect(screen.queryByText("S'inscrire")).not.toBeInTheDocument();
+    expect(screen.queryByText("S\u2019inscrire")).not.toBeInTheDocument();
   });
 
   it("renders full content for private event and authenticated member", async () => {
@@ -183,7 +183,7 @@ describe("Event Detail Page", () => {
 
     expect(screen.getByText("Une soirée de networking pour les membres et investisseurs du réseau IBC.")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
-    expect(screen.getByText("S'inscrire")).toBeInTheDocument();
+    expect(screen.getByText("S\u2019inscrire")).toBeInTheDocument();
   });
 
   it("displays remaining spots counter", async () => {

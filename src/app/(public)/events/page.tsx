@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export default async function EventsPage() {
   const session = await auth();
   const isAuthenticated = Boolean(session?.user?.id);
-  const userTier = (session?.user as any)?.tier ?? null;
+  const userTier = (session?.user as Record<string, unknown>)?.tier as string | null ?? null;
   const now = new Date();
 
   let events: Array<{
@@ -117,7 +117,7 @@ export default async function EventsPage() {
             Événements, Conférences & Networking
           </h1>
           <p className="mt-4 text-base text-slate-400 leading-relaxed">
-            Rejoignez-nous lors de nos prochaines rencontres, conférences et sessions de networking en Côte d'Ivoire.
+            Rejoignez-nous lors de nos prochaines rencontres, conférences et sessions de networking en Côte d&rsquo;Ivoire.
           </p>
         </div>
 

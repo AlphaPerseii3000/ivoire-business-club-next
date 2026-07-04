@@ -7,7 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { Footer } from "@/components/landing/footer";
 import LandingMobileNav from "@/components/landing/mobile-nav";
 import { sanitizeError } from "@/lib/sanitize-log";
-import { notFound, type Metadata } from "next/navigation";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import {
   formatEventDate,
   formatEventPricing,
@@ -19,7 +20,7 @@ import {
   normalizePricing,
 } from "@/lib/event-utils";
 import { Button } from "@/components/ui/button";
-import { EventStatus, EventVisibility } from "@/generated/prisma/client";
+import { EventStatus } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -116,7 +117,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const { slug } = await params;
   const session = await auth();
   const isAuthenticated = Boolean(session?.user?.id);
-  const userTier = (session?.user as any)?.tier ?? null;
+  const userTier = (session?.user as Record<string, unknown>)?.tier as string | null ?? null;
 
   let event: EventDetailWithRegistrations | null = null;
   try {
@@ -232,7 +233,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             {hasEndDate ? (
               <div className="flex items-center gap-2">
                 <span className="text-white/20">•</span>
-                <span>Jusqu'au {endDateFormatted}</span>
+                <span>Jusqu&rsquo;au {endDateFormatted}</span>
               </div>
             ) : null}
             {!isPrivateVisitor ? (
@@ -273,7 +274,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-6 text-center">
               <p className="mb-4 text-amber-200">
-                Ce contenu est réservé aux membres de l'Ivoire Business Club.
+                Ce contenu est réservé aux membres de l&rsquo;Ivoire Business Club.
               </p>
               <Link
                 href="/signup"
@@ -339,7 +340,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
             <div className="flex items-center gap-4">
               <Button className="bg-[#D4A847] text-black hover:bg-[#D4A847]/90">
-                S'inscrire
+                S&rsquo;inscrire
               </Button>
             </div>
           </div>

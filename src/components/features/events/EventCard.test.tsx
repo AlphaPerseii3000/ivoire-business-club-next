@@ -5,11 +5,11 @@ import { EventCard } from "./EventCard";
 
 vi.mock("@/lib/event-utils", () => ({
   formatEventDate: (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
-  formatEventPricing: (pricing: any) => {
+  formatEventPricing: (pricing: Record<string, number | null> | null) => {
     if (!pricing) return { visitor: null, memberMin: null, isFree: true };
-    const values = [pricing.affranchi, pricing.grand_frere, pricing.boss].filter((v: any) => typeof v === "number" && v > 0);
+    const values = [pricing.affranchi, pricing.grand_frere, pricing.boss].filter((v: number | null | undefined): v is number => typeof v === "number" && v > 0);
     const memberMin = values.length > 0 ? Math.min(...values) : null;
-    const isFree = !pricing || [pricing.visitor, pricing.affranchi, pricing.grand_frere, pricing.boss].every((v: any) => v === null || v === undefined || v === 0);
+    const isFree = !pricing || [pricing.visitor, pricing.affranchi, pricing.grand_frere, pricing.boss].every((v: number | null | undefined) => v === null || v === undefined || v === 0);
     return { visitor: pricing.visitor ?? null, memberMin, isFree };
   },
   formatPrice: (price: number | null) => (price && price > 0 ? `${price.toLocaleString("fr-FR")} FCFA` : "Gratuit"),
@@ -18,9 +18,9 @@ vi.mock("@/lib/event-utils", () => ({
   normalizePricing: (pricing: unknown) => {
     if (!pricing || typeof pricing !== "object" || Array.isArray(pricing)) return null;
     const p = pricing as Record<string, unknown>;
-    const out: any = {};
+    const out: Record<string, number | null> = {};
     for (const key of ["visitor", "affranchi", "grand_frere", "boss"]) {
-      out[key] = typeof p[key] === "number" && (p[key] as number) > 0 ? p[key] : null;
+      out[key] = typeof p[key] === "number" && (p[key] as number) > 0 ? (p[key] as number) : null;
     }
     return out;
   },

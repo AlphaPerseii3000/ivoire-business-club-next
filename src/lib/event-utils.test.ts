@@ -51,7 +51,7 @@ describe("event-utils", () => {
     });
 
     it("appends counter when slug exists and skips current id", async () => {
-      mockFindFirst.mockImplementation(({ where }: any) => {
+      mockFindFirst.mockImplementation(({ where }: { where: { slug: string; id?: { not: string } } }) => {
         if (where.slug === "conference-ibc" || where.slug === "conference-ibc-1") {
           return { id: "other-id", slug: where.slug };
         }
