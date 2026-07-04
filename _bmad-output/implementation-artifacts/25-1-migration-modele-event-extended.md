@@ -2,14 +2,14 @@
 story_key: 25-1-migration-modele-event-extended
 epic: epic-25
 title: Migration modèle Event + pricing + visibility + eventType
-status: review
+status: done
 created_at: 2026-07-04
 baseline_commit: 0ced548afdca7ca1ee4d48fce7191f82190ca534
 ---
 
 # Story 25-1 : Migration modèle Event + pricing + visibility + eventType
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -389,5 +389,5 @@ Derniers commits pertinents :
 
 ## Story Completion Status
 
-- Status: **review**
+- Status: **done**
 - Note: Ultimate context engine analysis completed — comprehensive developer guide created.
