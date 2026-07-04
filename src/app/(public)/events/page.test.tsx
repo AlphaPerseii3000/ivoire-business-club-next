@@ -17,44 +17,59 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-const mockEvents = [
-  {
-    id: "evt-1",
-    title: "Lancement Réseau IBC",
-    slug: "lancement-reseau-ibc",
-    startDate: new Date("2026-07-15T10:00:00Z"),
-    endDate: null,
-    location: "Abidjan, Cocody",
-    coverImagePath: "https://example.com/event1.jpg",
-  },
-  {
-    id: "evt-2",
-    title: "Afterwork Investisseurs",
-    slug: "afterwork-investisseurs",
-    startDate: new Date("2026-07-20T18:00:00Z"),
-    endDate: null,
-    location: "Abidjan, Plateau",
-    coverImagePath: null,
-  },
-  {
-    id: "evt-3",
-    title: "Conférence Annuelle",
-    slug: "conference-annuelle",
-    startDate: new Date("2026-06-25T09:00:00Z"),
-    endDate: null,
-    location: "Grand-Bassam",
-    coverImagePath: null,
-  },
-];
+const publicEvent = {
+  id: "evt-1",
+  title: "Lancement Réseau IBC",
+  slug: "lancement-reseau-ibc",
+  startDate: new Date("2026-07-15T10:00:00Z"),
+  endDate: null,
+  location: "Abidjan, Cocody",
+  onlineUrl: null,
+  coverImagePath: "https://example.com/event1.jpg",
+  eventType: "IN_PERSON",
+  visibility: "PUBLIC",
+  maxCapacity: 100,
+  pricing: { visitor: 10000, affranchi: 5000, grand_frere: 3000, boss: 0 },
+};
+
+const privateEvent = {
+  id: "evt-2",
+  title: "Afterwork Investisseurs",
+  slug: "afterwork-investisseurs",
+  startDate: new Date("2026-07-20T18:00:00Z"),
+  endDate: null,
+  location: "Abidjan, Plateau",
+  onlineUrl: null,
+  coverImagePath: null,
+  eventType: "IN_PERSON",
+  visibility: "PRIVATE",
+  maxCapacity: 50,
+  pricing: { visitor: 15000, affranchi: 7000, grand_frere: 5000, boss: 0 },
+};
+
+const freeEvent = {
+  id: "evt-3",
+  title: "Conférence Annuelle",
+  slug: "conference-annuelle",
+  startDate: new Date("2026-06-25T09:00:00Z"),
+  endDate: null,
+  location: "Grand-Bassam",
+  onlineUrl: null,
+  coverImagePath: null,
+  eventType: "IN_PERSON",
+  visibility: "PUBLIC",
+  maxCapacity: null,
+  pricing: null,
+};
 
 describe("Events Catalogue Page", () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it("renders published upcoming events as sorted cards", async () => {
+  it("renders published upcoming events as sorted cards for visitor", async () => {
     mockAuth.mockResolvedValue(null);
-    mockFindMany.mockResolvedValue(mockEvents);
+    mockFindMany.mockResolvedValue([publicEvent, freeEvent]);
 
     const page = await EventsPage();
     render(page);
@@ -63,13 +78,14 @@ describe("Events Catalogue Page", () => {
     expect(screen.getByTestId("events-grid")).toBeInTheDocument();
 
     expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();
-    expect(screen.getByText("Afterwork Investisseurs")).toBeInTheDocument();
     expect(screen.getByText("Conférence Annuelle")).toBeInTheDocument();
+    expect(screen.queryByText("Afterwork Investisseurs")).not.toBeInTheDocument();
 
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           status: "PUBLISHED",
+          visibility: "PUBLIC",
           startDate: expect.objectContaining({
             gte: expect.any(Date),
           }),
@@ -77,6 +93,42 @@ describe("Events Catalogue Page", () => {
         orderBy: { startDate: "asc" },
       })
     );
+  });
+
+  it("shows private events to authenticated members", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", tier: "AFFRANCHI" },
+    });
+    mockFindMany.mockResolvedValue([publicEvent, privateEvent]);
+
+    const page = await EventsPage();
+    render(page);
+
+    expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();
+    expect(screen.getByText("Afterwork Investisseurs")).toBeInTheDocument();
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "PUBLISHED",
+          visibility: { in: ["PUBLIC", "PRIVATE"] },
+        }),
+      })
+    );
+  });
+
+  it("teases private event for visitor with blur and membership CTA", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindMany.mockResolvedValue([privateEvent]);
+
+    const page = await EventsPage();
+    render(page);
+
+    expect(screen.getByText("Afterwork Investisseurs")).toBeInTheDocument();
+    expect(screen.getByText("Devenir membre pour réserver")).toBeInTheDocument();
+
+    const blurredLocation = screen.getByText("Abidjan, Plateau").closest("div");
+    expect(blurredLocation).toHaveClass("blur-md");
   });
 
   it("displays empty state when no upcoming published events exist", async () => {
@@ -93,7 +145,7 @@ describe("Events Catalogue Page", () => {
 
   it("links each card to the event detail page", async () => {
     mockAuth.mockResolvedValue(null);
-    mockFindMany.mockResolvedValue(mockEvents);
+    mockFindMany.mockResolvedValue([publicEvent]);
 
     const page = await EventsPage();
     render(page);
@@ -106,11 +158,21 @@ describe("Events Catalogue Page", () => {
 
   it("formats dates in French", async () => {
     mockAuth.mockResolvedValue(null);
-    mockFindMany.mockResolvedValue([mockEvents[0]]);
+    mockFindMany.mockResolvedValue([publicEvent]);
 
     const page = await EventsPage();
     render(page);
 
     expect(screen.getByText("15 juillet 2026")).toBeInTheDocument();
+  });
+
+  it("shows 'Gratuit' for free public event", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindMany.mockResolvedValue([freeEvent]);
+
+    const page = await EventsPage();
+    render(page);
+
+    expect(screen.getByText("Gratuit")).toBeInTheDocument();
   });
 });

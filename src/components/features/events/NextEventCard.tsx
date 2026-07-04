@@ -11,13 +11,19 @@ export interface NextEventCardEvent {
   endDate?: Date | null;
   location?: string | null;
   coverImagePath?: string | null;
+  eventType?: string | null;
+  visibility?: string | null;
+  pricing?: unknown;
+  maxCapacity?: number | null;
 }
 
 export interface NextEventCardProps {
   event: NextEventCardEvent;
+  isAuthenticated?: boolean;
+  userTier?: string | null;
 }
 
-export function NextEventCard({ event }: NextEventCardProps) {
+export function NextEventCard({ event, isAuthenticated = false, userTier = null }: NextEventCardProps) {
   const formattedDate = event.startDate.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",

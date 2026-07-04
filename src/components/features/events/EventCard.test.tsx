@@ -1,65 +1,101 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EventCard } from "./EventCard";
+
+vi.mock("@/lib/event-utils", () => ({
+  formatEventDate: (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+  formatEventPricing: (pricing: any) => {
+    if (!pricing) return { visitor: null, memberMin: null, isFree: true };
+    const values = [pricing.affranchi, pricing.grand_frere, pricing.boss].filter((v: any) => typeof v === "number" && v > 0);
+    const memberMin = values.length > 0 ? Math.min(...values) : null;
+    const isFree = !pricing || [pricing.visitor, pricing.affranchi, pricing.grand_frere, pricing.boss].every((v: any) => v === null || v === undefined || v === 0);
+    return { visitor: pricing.visitor ?? null, memberMin, isFree };
+  },
+  formatPrice: (price: number | null) => (price && price > 0 ? `${price.toLocaleString("fr-FR")} FCFA` : "Gratuit"),
+  getEventTypeLabel: (eventType?: string | null) => (eventType === "ONLINE" ? "En ligne" : "En présentiel"),
+  isPrivateEventForVisitor: (visibility?: string | null, isAuthenticated?: boolean) => visibility === "PRIVATE" && !isAuthenticated,
+  normalizePricing: (pricing: unknown) => {
+    if (!pricing || typeof pricing !== "object" || Array.isArray(pricing)) return null;
+    const p = pricing as Record<string, unknown>;
+    const out: any = {};
+    for (const key of ["visitor", "affranchi", "grand_frere", "boss"]) {
+      out[key] = typeof p[key] === "number" && (p[key] as number) > 0 ? p[key] : null;
+    }
+    return out;
+  },
+}));
 
 const baseEvent = {
   id: "evt-1",
-  slug: "lancement-reseau-ibc",
-  title: "Lancement Réseau IBC",
+  slug: "conference-ibc",
+  title: "Conférence IBC",
   startDate: new Date("2026-07-15T10:00:00Z"),
   endDate: null,
   location: "Abidjan, Cocody",
-  coverImagePath: null,
+  onlineUrl: null,
+  coverImagePath: "https://example.com/cover.jpg",
+  eventType: "IN_PERSON",
+  visibility: "PUBLIC",
+  maxCapacity: 100,
+  pricing: { visitor: 10000, affranchi: 5000, grand_frere: 3000, boss: 0 },
 };
 
 describe("EventCard", () => {
-  it("renders event title, date and location", () => {
-    render(<EventCard event={baseEvent} />);
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
 
-    expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();
+  it("renders public event with type badge, date, location and CTA", () => {
+    render(<EventCard event={baseEvent} isAuthenticated={false} />);
+
+    expect(screen.getByText("Conférence IBC")).toBeInTheDocument();
+    expect(screen.getByText("En présentiel")).toBeInTheDocument();
     expect(screen.getByText("15 juillet 2026")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
+    expect(screen.getByText("À partir de 3 000 FCFA")).toBeInTheDocument();
+    expect(screen.getByText("S'inscrire")).toBeInTheDocument();
   });
 
-  it("renders a single root link with no nested anchors", () => {
-    render(<EventCard event={baseEvent} />);
-
-    const links = screen.getAllByRole("link");
-    expect(links.length).toBe(1);
-    expect(links[0]).toHaveAttribute("href", "/events/lancement-reseau-ibc");
+  it("renders online event label", () => {
+    render(
+      <EventCard event={{ ...baseEvent, eventType: "ONLINE", location: null }} />
+    );
+    expect(screen.getAllByText("En ligne").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders fallback gradient when coverImagePath is absent", () => {
-    render(<EventCard event={baseEvent} />);
-
-    expect(screen.getByText("IBC")).toBeInTheDocument();
-    const images = screen.queryAllByRole("img");
-    expect(images.length).toBe(0);
+  it("displays 'Gratuit' when pricing is null", () => {
+    render(<EventCard event={{ ...baseEvent, pricing: null }} />);
+    expect(screen.getByText("Gratuit")).toBeInTheDocument();
   });
 
-  it("renders image when coverImagePath is provided", () => {
-    const eventWithImage = {
-      ...baseEvent,
-      coverImagePath: "https://example.com/event.jpg",
-    };
+  it("blurs private event for visitors and shows membership CTA", () => {
+    render(<EventCard event={{ ...baseEvent, visibility: "PRIVATE" }} isAuthenticated={false} />);
 
-    render(<EventCard event={eventWithImage} />);
+    expect(screen.getByText("Conférence IBC")).toBeInTheDocument();
+    expect(screen.getAllByText(/Privé/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Devenir membre pour réserver")).toBeInTheDocument();
 
-    const image = screen.getByRole("img", { name: "Lancement Réseau IBC" });
-    expect(image).toBeInTheDocument();
+    const blurredLocation = screen.getByText("Abidjan, Cocody").closest("div");
+    expect(blurredLocation).toHaveClass("blur-md");
+
+    const coverImage = screen.getByRole("img", { name: "Conférence IBC" });
+    expect(coverImage).toHaveClass("blur-md");
   });
 
-  it("renders fallback gradient when coverImagePath is empty string", () => {
-    const eventWithEmptyImage = {
-      ...baseEvent,
-      coverImagePath: "",
-    };
+  it("does not blur private event for authenticated members", () => {
+    render(<EventCard event={{ ...baseEvent, visibility: "PRIVATE" }} isAuthenticated={true} userTier="AFFRANCHI" />);
 
-    render(<EventCard event={eventWithEmptyImage} />);
+    expect(screen.getByText("S'inscrire")).toBeInTheDocument();
 
-    expect(screen.getByText("IBC")).toBeInTheDocument();
-    const images = screen.queryAllByRole("img");
-    expect(images.length).toBe(0);
+    const coverImage = screen.getByRole("img", { name: "Conférence IBC" });
+    expect(coverImage).not.toHaveClass("blur-md");
+  });
+
+  it("renders strikethrough price for private visitor card", () => {
+    render(<EventCard event={{ ...baseEvent, visibility: "PRIVATE" }} isAuthenticated={false} />);
+
+    const priceElement = screen.getByText(/3[\s\u202f]000\sFCFA/);
+    expect(priceElement).toHaveClass("line-through");
   });
 });

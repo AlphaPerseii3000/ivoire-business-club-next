@@ -20,9 +20,11 @@ const POPUP_CLOSED_KEY = "ibc-event-popup-closed";
 export interface EventPopupProps {
   event: NextEventCardEvent | null;
   enabled: boolean;
+  isAuthenticated?: boolean;
+  userTier?: string | null;
 }
 
-export function EventPopup({ event, enabled }: EventPopupProps) {
+export function EventPopup({ event, enabled, isAuthenticated = false, userTier = null }: EventPopupProps) {
   const [mounted, setMounted] = useState(false);
   const [hasClosedBefore, setHasClosedBefore] = useState(false);
 
