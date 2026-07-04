@@ -2,14 +2,14 @@
 story_key: 25-2-upload-couverture-vps-form-admin
 epic: epic-25
 title: Upload couverture VPS + refactor form admin
-status: review
+status: done
 created_at: 2026-07-04
 baseline_commit: 1740f46d6c4df6f710e0a6a98f1b6c15a0c882b6
 ---
 
 # Story 25-2 : Upload couverture VPS + refactor form admin
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -331,5 +331,5 @@ Derniers commits pertinents :
 
 ## Story Completion Status
 
-- Status: **review**
-- Note: DS complete — build + 1154 tests pass. Committed as 3ce3db9.
+- Status: **done**
+- Note: CR PASS (cycle 2) — all 5 blockers resolved. Build + 1160 tests pass. Committed as dc631a1.
