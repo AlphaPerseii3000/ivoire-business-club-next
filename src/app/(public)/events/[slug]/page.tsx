@@ -36,7 +36,9 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 
     const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com";
     const pageUrl = `${siteUrl}/events/${slug}`;
-    const imageUrl = event.coverImagePath || `${siteUrl}/logo-ibc.webp`;
+    const imageUrl = event.coverImagePath
+      ? `${siteUrl}/api/media/events/${event.id}/cover`
+      : `${siteUrl}/logo-ibc.webp`;
 
     return {
       title: {
@@ -97,7 +99,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       })
     : "";
 
-  const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
+  const coverUrl = event.coverImagePath
+    ? `/api/media/events/${event.id}/cover`
+    : null;
   const isCancelled = event.status === EventStatus.CANCELLED;
 
   if (isCancelled) {
@@ -230,10 +234,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         </div>
 
         {/* Banner Image */}
-        {hasImage ? (
+        {coverUrl ? (
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl mb-8 border border-white/5">
             <Image
-              src={event.coverImagePath as string}
+              src={coverUrl}
               alt={event.title}
               fill
               priority

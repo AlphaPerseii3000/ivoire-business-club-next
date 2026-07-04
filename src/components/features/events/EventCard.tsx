@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,14 +28,15 @@ export function EventCard({ event }: EventCardProps) {
   });
 
   const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
+  const coverUrl = hasImage ? `/api/media/events/${event.id}/cover` : null;
 
   return (
     <Link href={`/events/${event.slug}`} className="group block h-full">
       <Card className="h-full flex flex-col justify-between overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/5 hover:border-teal-500/20">
-        {hasImage ? (
+        {coverUrl ? (
           <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-border/10">
             <Image
-              src={event.coverImagePath as string}
+              src={coverUrl}
               alt={event.title}
               fill
               unoptimized

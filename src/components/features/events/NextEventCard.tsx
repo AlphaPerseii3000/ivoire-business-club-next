@@ -25,6 +25,7 @@ export function NextEventCard({ event }: NextEventCardProps) {
   });
 
   const hasImage = event.coverImagePath ? event.coverImagePath !== "" : false;
+  const coverUrl = hasImage ? `/api/media/events/${event.id}/cover` : null;
 
   return (
     <section className="w-full bg-[#090D16] py-16 md:py-20">
@@ -38,10 +39,10 @@ export function NextEventCard({ event }: NextEventCardProps) {
           className="group block overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-[#D4A847]/30 hover:bg-white/[0.07]"
         >
           <div className="flex flex-col md:flex-row">
-            {hasImage ? (
+            {coverUrl ? (
               <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden md:aspect-auto md:w-2/5">
                 <Image
-                  src={event.coverImagePath as string}
+                  src={coverUrl}
                   alt={event.title}
                   fill
                   unoptimized

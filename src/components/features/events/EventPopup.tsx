@@ -49,6 +49,8 @@ export function EventPopup({ event, enabled }: EventPopupProps) {
     }
   };
 
+  const coverUrl = event?.coverImagePath ? `/api/media/events/${event.id}/cover` : null;
+
   if (!hasEvent) {
     return null;
   }
@@ -67,6 +69,15 @@ export function EventPopup({ event, enabled }: EventPopupProps) {
     }}>
       <DialogContent showCloseButton={false} className="sm:max-w-md border-white/10 bg-[#090D16] text-white">
         <DialogHeader>
+          {coverUrl ? (
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg mb-3">
+              <img
+                src={coverUrl}
+                alt={event.title}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ) : null}
           <DialogTitle className="text-xl font-bold text-white">Prochain événement IBC</DialogTitle>
           <DialogDescription className="text-slate-300">
             Rejoignez-nous pour notre prochaine rencontre.
