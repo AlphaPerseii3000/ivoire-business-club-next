@@ -37,7 +37,7 @@ generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-06-29T19:30:00+02:00
 # last_updated: 2026-07-02T17:28:40+02:00
 # last_updated: 2026-07-03T12:00:00+02:00
-last_updated: 2026-07-03T22:45:00+02:00
+last_updated: 2026-07-04T10:00:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -185,8 +185,8 @@ development_status:
   24-2-filtres-admin-members: done
   epic-24-retrospective: optional
 
-  epic-25: backlog
-  25-1-migration-modele-event-extended: backlog
+  epic-25: in-progress
+  25-1-migration-modele-event-extended: ready-for-dev
   25-2-upload-couverture-vps-form-admin: backlog
   25-3-page-event-publique-teaser-prive-places: backlog
   25-4-inscription-paiement-event: backlog
