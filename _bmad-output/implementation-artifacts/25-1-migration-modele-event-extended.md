@@ -4,7 +4,7 @@ epic: epic-25
 title: Migration modèle Event + pricing + visibility + eventType
 status: ready-for-dev
 created_at: 2026-07-04
-baseline_commit: 0ced548f7a9c9c9c9c9c9c9c9c9c9c9c9c9c9c9
+baseline_commit: 0ced548afdca7ca1ee4d48fce7191f82190ca534
 ---
 
 # Story 25-1 : Migration modèle Event + pricing + visibility + eventType
