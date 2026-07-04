@@ -4,7 +4,7 @@ epic: epic-25
 title: Page event publique avec teaser privé + compteur places + grille tarifaire
 status: ready-for-dev
 created_at: 2026-07-04
-baseline_commit: f6e1013d8f4a0d0c0f0e4d8f0e4d8f0e4d8f0e4d
+baseline_commit: f6e10130e2cc4cd21dfd51f813fca8fa3383faea
 ---
 
 # Story 25.3 : Page event publique avec teaser privé + compteur places + grille tarifaire
