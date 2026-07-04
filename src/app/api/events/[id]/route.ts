@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/generated/prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { eventUpdateSchema } from "@/lib/validations";
 import { generateUniqueSlug } from "@/lib/event-utils";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
+
+function isEventCancelled(event: { status: string }) {
+  return event.status === "CANCELLED";
+}
 
 export async function GET(
   req: Request,
@@ -76,6 +81,13 @@ export async function PUT(
       return NextResponse.json({ error: "Événement non trouvé" }, { status: 404 });
     }
 
+    if (isEventCancelled(event)) {
+      return NextResponse.json(
+        { error: "Transition de statut invalide : un événement annulé ne peut pas être modifié." },
+        { status: 400 }
+      );
+    }
+
     const data: any = { ...parsed.data };
 
     // Convertir les champs optionnels vides en null AVANT la validation conditionnelle
@@ -93,6 +105,11 @@ export async function PUT(
     }
     if (data.maxCapacity === "") {
       data.maxCapacity = null;
+    }
+
+    // Normaliser le champ JSON tarifaire pour Prisma
+    if (data.pricing !== undefined) {
+      data.pricing = data.pricing === null ? Prisma.JsonNull : (data.pricing as Prisma.InputJsonValue);
     }
 
     // Enforce the documented DRAFT → PUBLISHED → CANCELLED lifecycle. Once

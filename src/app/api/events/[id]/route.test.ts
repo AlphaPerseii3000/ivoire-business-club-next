@@ -50,6 +50,7 @@ const mockEvent = {
 describe("GET /api/events/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuth.mockReset();
   });
 
   it("returns 404 if event is not found", async () => {
@@ -95,6 +96,9 @@ describe("GET /api/events/[id]", () => {
 describe("PUT /api/events/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuth.mockReset();
+    mockEventFindFirst.mockReset();
+    mockEventUpdate.mockReset();
   });
 
   it("rejects non-admin", async () => {
@@ -230,17 +234,95 @@ describe("PUT /api/events/[id]", () => {
     expect(response.status).toBe(404);
   });
 
-  it("prevents republishing a cancelled event via PUT (idempotent lifecycle)", async () => {
+  it("allows publishing an in-person event without re-providing location (partial PATCH)", async () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockEventFindFirst.mockResolvedValueOnce({
+    mockEventFindFirst.mockResolvedValueOnce(mockEvent);
+    mockEventUpdate.mockResolvedValue({
       ...mockEvent,
-      status: "CANCELLED",
+      status: "PUBLISHED",
     });
 
     const response = await PUT(makeRequest("PUT", {
       status: "PUBLISHED",
-      location: "Abidjan",
-      eventType: "IN_PERSON",
+    }), {
+      params: Promise.resolve({ id: "evt-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload.status).toBe("PUBLISHED");
+    expect(mockEventUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "PUBLISHED",
+        }),
+      })
+    );
+  });
+
+  it("returns 400 when PATCH changes eventType to ONLINE without onlineUrl", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockEventFindFirst.mockResolvedValueOnce(mockEvent);
+
+    const response = await PUT(makeRequest("PUT", {
+      eventType: "ONLINE",
+    }), {
+      params: Promise.resolve({ id: "evt-1" }),
+    });
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload.error).toMatch(/lien de visioconférence est requis/i);
+  });
+
+  it("updates pricing on PATCH", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockEventFindFirst.mockResolvedValueOnce(mockEvent);
+    const pricing = { visitor: 10000, affranchi: 5000, grand_frere: 3000, boss: 0 };
+    mockEventUpdate.mockResolvedValue({
+      ...mockEvent,
+      pricing,
+    });
+
+    const response = await PUT(makeRequest("PUT", {
+      pricing,
+    }), {
+      params: Promise.resolve({ id: "evt-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockEventUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          pricing,
+        }),
+      })
+    );
+  });
+
+  it("returns 400 when PATCH provides invalid pricing structure", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockEventFindFirst.mockResolvedValueOnce(mockEvent);
+
+    const response = await PUT(makeRequest("PUT", {
+      pricing: { visitor: "gratuit" },
+    }), {
+      params: Promise.resolve({ id: "evt-1" }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("prevents republishing a cancelled event via PUT (idempotent lifecycle)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    const cancelledEvent = {
+      ...mockEvent,
+      status: "CANCELLED",
+    };
+    mockEventFindFirst.mockResolvedValueOnce(cancelledEvent);
+
+    const response = await PUT(makeRequest("PUT", {
+      status: "PUBLISHED",
     }), {
       params: Promise.resolve({ id: "evt-cancelled" }),
     });
@@ -257,8 +339,6 @@ describe("PUT /api/events/[id]", () => {
 
     const response = await PUT(makeRequest("PUT", {
       status: "DRAFT",
-      location: "Abidjan",
-      eventType: "IN_PERSON",
     }), {
       params: Promise.resolve({ id: "evt-1" }),
     });
@@ -270,6 +350,7 @@ describe("PUT /api/events/[id]", () => {
 describe("DELETE /api/events/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuth.mockReset();
   });
 
   it("rejects non-admin", async () => {

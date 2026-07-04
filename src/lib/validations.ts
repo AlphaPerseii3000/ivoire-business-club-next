@@ -568,7 +568,7 @@ const baseEventSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
-  eventType: z.enum(["ONLINE", "IN_PERSON"]).default("IN_PERSON"),
+  eventType: z.enum(["ONLINE", "IN_PERSON"]),
   visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
   location: z.string().trim().max(200).optional().nullable().or(z.literal("")),
   onlineUrl: z
@@ -588,6 +588,9 @@ const baseEventSchema = z.object({
 });
 
 export const eventCreateSchema = baseEventSchema
+  .extend({
+    eventType: z.enum(["ONLINE", "IN_PERSON"]).default("IN_PERSON"),
+  })
   .refine(
     (data) => data.eventType !== "IN_PERSON" || (data.location && data.location.trim().length > 0),
     { message: "Le lieu est requis pour un événement en présentiel", path: ["location"] }
@@ -606,17 +609,28 @@ export const eventUpdateSchema = baseEventSchema
   .extend({
     status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"], { message: "Statut invalide" }).optional(),
   })
+  .superRefine((data, ctx) => {
+    // Ne valider location/onlineUrl que si eventType est explicitement fourni
+    if (data.eventType !== undefined) {
+      if (data.eventType === "IN_PERSON" && (!data.location || data.location.trim() === "")) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Le lieu est requis pour un événement en présentiel",
+          path: ["location"],
+        });
+      }
+      if (data.eventType === "ONLINE" && (!data.onlineUrl || data.onlineUrl.trim() === "")) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Le lien de visioconférence est requis pour un événement en ligne",
+          path: ["onlineUrl"],
+        });
+      }
+    }
+  })
   .refine(
     (data) => !data.endDate || !data.startDate || new Date(data.endDate).getTime() >= new Date(data.startDate).getTime(),
     { message: "La date de fin doit être postérieure ou égale à la date de début", path: ["endDate"] }
-  )
-  .refine(
-    (data) => data.eventType !== "IN_PERSON" || (data.location && data.location.trim().length > 0),
-    { message: "Le lieu est requis pour un événement en présentiel", path: ["location"] }
-  )
-  .refine(
-    (data) => data.eventType !== "ONLINE" || (data.onlineUrl && data.onlineUrl.trim().length > 0),
-    { message: "Le lien visio est requis pour un événement en ligne", path: ["onlineUrl"] }
   );
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;

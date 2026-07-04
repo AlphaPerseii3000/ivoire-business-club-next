@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/generated/prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { eventCreateSchema } from "@/lib/validations";
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
           onlineUrl,
           coverImagePath,
           maxCapacity,
-          pricing,
+          pricing: pricing !== undefined ? (pricing === null ? Prisma.JsonNull : (pricing as Prisma.InputJsonValue)) : undefined,
           status: "DRAFT",
           authorId: session.user.id,
         },
