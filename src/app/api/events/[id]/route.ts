@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { eventUpdateSchema } from "@/lib/validations";
-import { generateUniqueSlug } from "@/lib/event-utils";
+import { generateUniqueSlug } from "@/lib/event-server-utils";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 

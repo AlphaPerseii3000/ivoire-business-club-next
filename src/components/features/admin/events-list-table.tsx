@@ -205,6 +205,18 @@ export default function EventsListTable({ events }: EventsListTableProps) {
                         size="sm"
                         nativeButton={false}
                         render={
+                          <Link href={`/admin/events/${event.id}/registrations`} />
+                        }
+                        data-testid={`registrations-btn-${event.id}`}
+                      >
+                        Inscriptions
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        nativeButton={false}
+                        render={
                           <Link href={`/admin/events/${event.id}/edit`} />
                         }
                         data-testid={`edit-btn-${event.id}`}

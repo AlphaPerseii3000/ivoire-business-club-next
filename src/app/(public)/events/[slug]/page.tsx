@@ -20,6 +20,7 @@ import {
   normalizePricing,
 } from "@/lib/event-utils";
 import { Button } from "@/components/ui/button";
+import { EventRegisterButton } from "@/components/features/events/EventRegisterButton";
 import { EventStatus } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -339,9 +340,17 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             ) : null}
 
             <div className="flex items-center gap-4">
-              <Button className="bg-[#D4A847] text-black hover:bg-[#D4A847]/90">
-                S&rsquo;inscrire
-              </Button>
+              <EventRegisterButton
+                eventId={event.id}
+                eventTitle={event.title}
+                eventDate={startDateFormatted}
+                userTier={userTier}
+                userEmail={session?.user?.email}
+                userName={session?.user?.name}
+                pricing={pricing}
+                remainingSpots={remainingSpots}
+                isAlreadyRegistered={isAlreadyRegistered}
+              />
             </div>
           </div>
         )}

@@ -16,7 +16,7 @@ import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
 import { LatestArticles } from '@/components/landing/latest-articles';
 import { NextEventCard, type NextEventCardEvent } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
-import { getNextPublishedEvent } from '@/lib/event-utils';
+import { getNextPublishedEvent } from '@/lib/event-server-utils';
 import LandingMobileNav from '@/components/landing/mobile-nav';
 
 // Le rendu dynamique évite d'accéder à la base de données lors du build statique.

@@ -3,7 +3,7 @@ import { GET } from "./route";
 
 const mockGetNextPublishedEvent = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/event-utils", () => ({
+vi.mock("@/lib/event-server-utils", () => ({
   getNextPublishedEvent: mockGetNextPublishedEvent,
 }));
 

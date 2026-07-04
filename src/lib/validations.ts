@@ -636,6 +636,15 @@ export const eventUpdateSchema = baseEventSchema
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;
 
+export const eventRegistrationSchema = z.object({
+  email: z.string().trim().email("Adresse email invalide").optional().or(z.literal("")),
+  payOnSite: z.boolean().default(false),
+  provider: z.enum(["BANK_TRANSFER", "WAVE", "ORANGE_MONEY"]).optional().nullable(),
+  providerPhone: z.string().trim().optional().nullable(),
+});
+
+export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
+
 export const expertCreateSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères"),
   title: z.string().trim().min(2, "Le titre doit contenir au moins 2 caractères"),

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import HomePage, { metadata } from './page';
-import { getNextPublishedEvent } from '@/lib/event-utils';
+import { getNextPublishedEvent } from '@/lib/event-server-utils';
 
 const mockGetNextPublishedEvent = getNextPublishedEvent as ReturnType<typeof vi.fn>;
 
@@ -34,7 +34,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-vi.mock('@/lib/event-utils', () => ({
+vi.mock('@/lib/event-server-utils', () => ({
   getNextPublishedEvent: vi.fn(),
 }));
 

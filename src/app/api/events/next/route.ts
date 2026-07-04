@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getNextPublishedEvent } from "@/lib/event-utils";
+import { getNextPublishedEvent } from "@/lib/event-server-utils";
 import { sanitizeError } from "@/lib/sanitize-log";
 
 export async function GET() {
