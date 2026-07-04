@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
-import { getEventCoverFilePath, getEventCoverDir } from "@/lib/media-path";
+import { getEventCoverFilePath } from "@/lib/media-path";
 import fs from "fs/promises";
 import path from "path";
 
@@ -29,6 +30,13 @@ export async function GET(
       return NextResponse.json({ error: "Couverture introuvable." }, { status: 404 });
     }
 
+    if (event.visibility === "PRIVATE") {
+      const session = await auth();
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Couverture introuvable." }, { status: 404 });
+      }
+    }
+
     if (!event.coverImagePath) {
       return NextResponse.json({ error: "Couverture introuvable." }, { status: 404 });
     }
@@ -51,5 +59,3 @@ export async function GET(
     return NextResponse.json({ error: "Couverture introuvable." }, { status: 404 });
   }
 }
-
-export { MIME_BY_EXTENSION };

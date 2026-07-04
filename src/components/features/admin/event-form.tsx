@@ -20,13 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { eventImagePathSchema, eventPricingSchema } from "@/lib/validations";
-
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Brouillon",
-  PUBLISHED: "Publié",
-  CANCELLED: "Annulé",
-};
+import { eventImagePathSchema, eventPricingSchema, eventCreateSchema } from "@/lib/validations";
 
 const toISOdatetime = (val: unknown) => {
   if (typeof val !== "string") return val;
@@ -34,6 +28,12 @@ const toISOdatetime = (val: unknown) => {
   if (val.endsWith("Z") || val.includes("+")) return val;
   const d = new Date(val);
   return isNaN(d.getTime()) ? val : d.toISOString();
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Brouillon",
+  PUBLISHED: "Publié",
+  CANCELLED: "Annulé",
 };
 
 const eventFormSchema = z.object({
@@ -353,7 +353,10 @@ export default function EventForm({ initialData }: EventFormProps) {
 
   const coverUrl = isEdit && coverPath
     ? `/api/media/events/${initialData?.id}/cover`
-    : null;
+    : undefined;
+
+  const showCurrentCover = coverUrl ? !coverPreview : false;
+  const showNoCoverPlaceholder = !coverPreview ? !Boolean(coverUrl) : false;
 
   return (
     <form
@@ -561,7 +564,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             </div>
           ) : null}
 
-          {coverUrl && !coverPreview ? (
+          {showCurrentCover ? (
             <div className="relative aspect-[16/9] w-full max-w-md overflow-hidden rounded-xl border border-border/40">
               <img
                 src={coverUrl}
@@ -571,7 +574,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             </div>
           ) : null}
 
-          {!coverPreview && !coverUrl ? (
+          {showNoCoverPlaceholder ? (
             <div className="flex items-center gap-3 rounded-xl border border-dashed border-border/60 bg-muted/30 p-6 text-muted-foreground">
               <ImageIcon className="size-5" />
               <span className="text-sm">Aucune couverture sélectionnée.</span>
