@@ -2,14 +2,14 @@
 story_key: 25-3-page-event-publique-teaser-prive-places
 epic: epic-25
 title: Page event publique avec teaser privé + compteur places + grille tarifaire
-status: ready-for-dev
+status: review
 created_at: 2026-07-04
-baseline_commit: f6e10130e2cc4cd21dfd51f813fca8fa3383faea
+baseline_commit: 597eee88850df2b2b48daa3c1b0b4f4627cf3761
 ---
 
 # Story 25.3 : Page event publique avec teaser privé + compteur places + grille tarifaire
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -382,5 +382,5 @@ Derniers commits pertinents :
 
 ## Story Completion Status
 
-- Status: **ready-for-dev**
+- Status: **review**
 - Note: Ultimate context engine analysis completed — comprehensive developer guide created.
