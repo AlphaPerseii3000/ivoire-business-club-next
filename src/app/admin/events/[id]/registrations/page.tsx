@@ -26,6 +26,7 @@ export default async function AdminEventRegistrationsPage({ params }: AdminEvent
     select: {
       id: true,
       title: true,
+      slug: true,
       startDate: true,
       maxCapacity: true,
     },
@@ -53,6 +54,7 @@ export default async function AdminEventRegistrationsPage({ params }: AdminEvent
   const totalCount = registrations.length;
   const attendedCount = registrations.filter((r) => r.status === "ATTENDED").length;
   const registeredCount = registrations.filter((r) => r.status === "REGISTERED").length;
+  const activeCount = registeredCount + attendedCount;
   const payOnSiteCount = registrations.filter((r) => r.payOnSite).length;
 
   const eventDateFormatted = new Date(event.startDate).toLocaleDateString("fr-FR", {
@@ -77,12 +79,14 @@ export default async function AdminEventRegistrationsPage({ params }: AdminEvent
             Inscriptions : {event.title}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {eventDateFormatted} • Capacity : {event.maxCapacity !== null ? `${totalCount} / ${event.maxCapacity}` : `${totalCount} inscrits (Places illimitées)`}
+            {eventDateFormatted} • Capacity : {event.maxCapacity !== null ? `${activeCount} / ${event.maxCapacity}` : `${totalCount} inscrits (Places illimitées)`}
           </p>
         </div>
 
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/events/${event.id}`} target="_blank" />}>
-          Voir la page publique
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/events/${event.slug}`} target="_blank">
+            Voir la page publique
+          </Link>
         </Button>
       </div>
 

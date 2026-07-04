@@ -570,6 +570,7 @@ model EventRegistration {
   tierSnapshot Tier               @default(AFFRANCHI)
   amountPaid   Int?
   payOnSite    Boolean            @default(false)
+  paymentMethod String?
   status       RegistrationStatus @default(REGISTERED)
   createdAt    DateTime           @default(now())
   event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)

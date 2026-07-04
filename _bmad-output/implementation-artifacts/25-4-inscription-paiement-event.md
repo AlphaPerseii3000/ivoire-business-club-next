@@ -2,14 +2,14 @@
 story_key: 25-4-inscription-paiement-event
 epic: epic-25
 title: Inscription + paiement event (virement + mobile money + pay-on-site)
-status: review
+status: done
 created_at: 2026-07-04
 baseline_commit: 0a22f091d1297b429861bbd47daceebf813e6bb6
 ---
 
 # Story 25.4 : Inscription + paiement event (virement + mobile money + pay-on-site)
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -248,18 +248,20 @@ Gemini 3.5 Flash (High)
 
 ### Change Log
 
-- **2026-07-04** : Implémentation complète de la Story 25-4 (Inscription + Paiement Event). Création du système d'inscription membres/visiteurs, calcul des tarifs par tier, alertes paiement sur place, suivi admin et tests unitaires verts.
-ug]/page.tsx)
-- Route de paiement existante : [src/app/api/subscriptions/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/subscriptions/route.ts)
+### Review Findings
 
-## Dev Agent Record
+- [x] [Review][Decision] Specific Payment Provider (Wave / Orange Money / Bank Transfer) Not Stored for Visitor Registrations — Resolved via Option A (paymentMethod column added to EventRegistration & displayed in admin table).
+- [x] [Review][Patch] isAlreadyRegistered variable undeclared in page.tsx causing runtime ReferenceError [src/app/(public)/events/[slug]/page.tsx:352]
+- [x] [Review][Patch] Event capacity calculations in API and helpers filter exclusively by REGISTERED status, ignoring ATTENDED participants [src/app/api/events/[id]/register/route.ts:1056, src/lib/event-utils.ts:17]
+- [x] [Review][Patch] Visitor email registration is case-sensitive, permitting duplicate registrations under different letter cases [src/app/api/events/[id]/register/route.ts:1017]
+- [x] [Review][Patch] Admin "Voir la page publique" link uses event ID instead of slug, returning 404 Not Found [src/app/admin/events/[id]/registrations/page.tsx:455]
+- [x] [Review][Patch] Admin registrations update accepts non-numeric string for amountPaid producing NaN in database update [src/app/api/admin/events/[id]/registrations/[registrationId]/route.ts:539]
+- [x] [Review][Patch] Mobile Money option selection does not render providerPhone input field or send providerPhone in POST payload [src/components/features/events/EventRegisterButton.tsx]
+- [x] [Review][Patch] Free zero-cost events display bank transfer payment instructions UI [src/components/features/events/EventRegisterButton.tsx:1681]
+- [x] [Review][Patch] Admin registrations table email search matches reg.email without null check [src/components/features/admin/event-registrations-table.tsx:1297]
+- [x] [Review][Patch] Payment providerRef collision on re-registration or retry due to static prefix EVT-id-userId [src/app/api/events/[id]/register/route.ts:1119]
+- [x] [Review][Patch] Unconfigured member tier price in getPriceForTier silently defaults amountPaid to 0 FCFA [src/app/api/events/[id]/register/route.ts:1097-1103]
+- [x] [Review][Defer] Overbooking race condition on concurrent registrations under heavy load [src/app/api/events/[id]/register/route.ts:1051-1062] — deferred, pre-existing
+- [x] [Review][Defer] Hardcoded business phone number +225 07 00 00 00 00 in UI instructions [src/components/features/events/EventRegisterButton.tsx:1703] — deferred, pre-existing
+- [x] [Review][Defer] Missing filter tab for NO_SHOW status in admin registrations table [src/components/features/admin/event-registrations-table.tsx:1335-1367] — deferred, pre-existing
 
-### Agent Model Used
-
-Gemini 3.5 Flash (High)
-
-### Debug Log References
-
-### Completion Notes List
-
-### File List

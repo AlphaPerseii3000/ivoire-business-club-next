@@ -51,13 +51,13 @@ export default async function EventsPage() {
 
   try {
     const visibilityWhere = isAuthenticated
-      ? { in: [EventVisibility.PUBLIC, EventVisibility.PRIVATE] }
-      : EventVisibility.PUBLIC;
+      ? { in: ["PUBLIC", "PRIVATE"] }
+      : "PUBLIC";
 
     events = await prisma.event.findMany({
       where: {
-        status: EventStatus.PUBLISHED,
-        visibility: visibilityWhere,
+        status: (EventStatus?.PUBLISHED || "PUBLISHED") as EventStatus,
+        visibility: visibilityWhere as any,
         startDate: {
           gte: now,
         },

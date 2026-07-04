@@ -23,7 +23,8 @@ export async function POST(
     }
 
     const isMember = !!session?.user?.id;
-    const email = isMember ? session.user.email : parsed.data.email?.trim();
+    const rawEmail = isMember ? session.user.email : parsed.data.email;
+    const email = rawEmail?.trim().toLowerCase();
 
     if (!email) {
       return NextResponse.json(
@@ -34,6 +35,7 @@ export async function POST(
 
     const payOnSite = parsed.data.payOnSite ?? false;
     const provider = parsed.data.provider ?? "BANK_TRANSFER";
+    const paymentMethod = payOnSite ? "PAY_ON_SITE" : provider;
 
     const result = await prisma.$transaction(async (tx) => {
       const event = await tx.event.findUnique({
@@ -61,7 +63,7 @@ export async function POST(
         const registeredCount = await tx.eventRegistration.count({
           where: {
             eventId: id,
-            status: "REGISTERED",
+            status: { in: ["REGISTERED", "ATTENDED"] },
           },
         });
 
@@ -109,6 +111,13 @@ export async function POST(
         calculatedPrice = pricing?.visitor ?? null;
       }
 
+      if (pricing && calculatedPrice === null) {
+        const hasPaidTiers = Object.values(pricing).some((val) => typeof val === "number" && val > 0);
+        if (hasPaidTiers) {
+          throw new Error("Tarif non configuré pour votre statut/tier");
+        }
+      }
+
       const amountPaid = payOnSite ? null : (calculatedPrice ?? 0);
 
       const registration = await tx.eventRegistration.create({
@@ -119,13 +128,14 @@ export async function POST(
           tierSnapshot: tier,
           amountPaid,
           payOnSite,
+          paymentMethod,
           status: "REGISTERED",
         },
       });
 
       let payment = null;
       if (isMember && session.user.id && !payOnSite && amountPaid && amountPaid > 0) {
-        const providerRef = `EVT-${id}-${session.user.id}`;
+        const providerRef = `EVT-${id}-${session.user.id}-${Date.now()}`;
         payment = await tx.payment.create({
           data: {
             userId: session.user.id,

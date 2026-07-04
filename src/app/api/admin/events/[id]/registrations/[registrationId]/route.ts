@@ -26,6 +26,19 @@ export async function PUT(
       return NextResponse.json({ error: "Statut d'inscription invalide" }, { status: 400 });
     }
 
+    let parsedAmountPaid: number | null | undefined = undefined;
+    if (amountPaid !== undefined) {
+      if (amountPaid === null || amountPaid === "") {
+        parsedAmountPaid = null;
+      } else {
+        const num = Number(amountPaid);
+        if (isNaN(num) || num < 0) {
+          return NextResponse.json({ error: "Le montant payé doit être un nombre valide et positif" }, { status: 400 });
+        }
+        parsedAmountPaid = Math.floor(num);
+      }
+    }
+
     const existing = await prisma.eventRegistration.findFirst({
       where: { id: registrationId, eventId: id },
     });
@@ -39,7 +52,7 @@ export async function PUT(
       data: {
         ...(status ? { status: status as RegistrationStatus } : {}),
         ...(payOnSite !== undefined ? { payOnSite: Boolean(payOnSite) } : {}),
-        ...(amountPaid !== undefined ? { amountPaid: amountPaid !== null ? Number(amountPaid) : null } : {}),
+        ...(parsedAmountPaid !== undefined ? { amountPaid: parsedAmountPaid } : {}),
       },
       include: {
         user: {

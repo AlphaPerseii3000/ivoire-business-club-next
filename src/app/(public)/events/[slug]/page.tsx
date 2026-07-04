@@ -56,7 +56,7 @@ async function getEventBySlug(slug: string): Promise<EventDetailWithRegistration
     include: {
       registrations: {
         where: {
-          status: "REGISTERED",
+          status: { in: ["REGISTERED", "ATTENDED"] },
         },
         select: {
           status: true,
@@ -130,6 +130,27 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   if (!event) {
     notFound();
+  }
+
+  let isAlreadyRegistered = false;
+  if (session?.user?.id && prisma.eventRegistration?.findFirst) {
+    const reg = await prisma.eventRegistration.findFirst({
+      where: {
+        eventId: event.id,
+        userId: session.user.id,
+        status: { in: ["REGISTERED", "ATTENDED"] },
+      },
+    });
+    isAlreadyRegistered = Boolean(reg);
+  } else if (session?.user?.email && prisma.eventRegistration?.findFirst) {
+    const reg = await prisma.eventRegistration.findFirst({
+      where: {
+        eventId: event.id,
+        email: session.user.email.toLowerCase(),
+        status: { in: ["REGISTERED", "ATTENDED"] },
+      },
+    });
+    isAlreadyRegistered = Boolean(reg);
   }
 
   const isCancelled = event.status === EventStatus.CANCELLED;

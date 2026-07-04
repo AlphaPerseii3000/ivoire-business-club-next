@@ -189,10 +189,10 @@ development_status:
   25-1-migration-modele-event-extended: done
   25-2-upload-couverture-vps-form-admin: done
   25-3-page-event-publique-teaser-prive-places: done
-  25-4-inscription-paiement-event: review
-  25-5-galerie-collaborative-post-event: backlog
+  25-4-inscription-paiement-event: done
+  25-5-galerie-collaborative-post-event: ready-for-dev
   25-6-moments-ibc-landing-dashboard: backlog
   epic-25-retrospective: optional
 
-# updated story 25-4 to ready-for-dev on 2026-07-04
+# updated story 25-4 to done on 2026-07-04 after CR pass
 

@@ -25,6 +25,7 @@ export type EventRegistrationItem = {
   tierSnapshot: string;
   amountPaid: number | null;
   payOnSite: boolean;
+  paymentMethod?: string | null;
   status: "REGISTERED" | "ATTENDED" | "CANCELLED" | "NO_SHOW";
   createdAt: string | Date;
   user?: {
@@ -77,7 +78,7 @@ export default function EventRegistrationsTable({
 
     const query = search.toLowerCase().trim();
     const nameMatch = reg.user?.name?.toLowerCase().includes(query) ?? false;
-    const emailMatch = reg.email.toLowerCase().includes(query);
+    const emailMatch = reg.email?.toLowerCase().includes(query) ?? false;
     const matchesSearch = !query || nameMatch || emailMatch;
 
     return matchesStatus && matchesSearch;
@@ -208,7 +209,15 @@ export default function EventRegistrationsTable({
                           <CreditCard className="h-3 w-3" /> Sur place
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">Préalable</span>
+                        <span className="text-muted-foreground font-medium">
+                          {reg.paymentMethod === "BANK_TRANSFER"
+                            ? "Virement"
+                            : reg.paymentMethod === "WAVE"
+                            ? "Wave"
+                            : reg.paymentMethod === "ORANGE_MONEY"
+                            ? "Orange Money"
+                            : "Préalable"}
+                        </span>
                       )}
                     </div>
                   </TableCell>

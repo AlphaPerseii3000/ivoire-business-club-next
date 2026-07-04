@@ -14,7 +14,7 @@ export function getRemainingSpots(
   registrations: EventRegistrationStub[]
 ): number | null {
   if (maxCapacity === null || maxCapacity === undefined) return null;
-  const registered = registrations.filter((r) => r.status === "REGISTERED").length;
+  const registered = registrations.filter((r) => r.status === "REGISTERED" || r.status === "ATTENDED").length;
   return Math.max(0, maxCapacity - registered);
 }
 

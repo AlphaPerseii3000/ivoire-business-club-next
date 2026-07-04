@@ -14,15 +14,19 @@ vi.mock("@/lib/prisma", () => ({
     event: {
       findFirst: mockFindFirst,
     },
+    eventRegistration: {
+      findFirst: vi.fn(),
+    },
   },
 }));
 
-// Mock next/navigation notFound
+// Mock next/navigation notFound & useRouter
 const mockNotFound = vi.hoisted(() => vi.fn(() => {
   throw new Error("NOT_FOUND");
 }));
 vi.mock("next/navigation", () => ({
   notFound: mockNotFound,
+  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: vi.fn() })),
 }));
 
 const baseEvent = {
@@ -85,7 +89,7 @@ describe("Event Detail Page", () => {
     expect(screen.getByText("Jusqu\u2019au 15 juillet 2026")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
     expect(screen.getByText("100 places restantes")).toBeInTheDocument();
-    expect(screen.getByText("S\u2019inscrire")).toBeInTheDocument();
+    expect(screen.getByText(/S'inscrire/i)).toBeInTheDocument();
 
     const image = screen.getByRole("img", { name: "Lancement Réseau IBC" });
     expect(image).toBeInTheDocument();
@@ -164,7 +168,7 @@ describe("Event Detail Page", () => {
     expect(blurredDescription).toHaveClass("blur-md");
     expect(screen.queryByText("Abidjan, Cocody")).not.toBeInTheDocument();
     expect(screen.queryByText("100 places restantes")).not.toBeInTheDocument();
-    expect(screen.queryByText("S\u2019inscrire")).not.toBeInTheDocument();
+    expect(screen.queryByText(/S'inscrire/i)).not.toBeInTheDocument();
   });
 
   it("renders full content for private event and authenticated member", async () => {
@@ -183,7 +187,7 @@ describe("Event Detail Page", () => {
 
     expect(screen.getByText("Une soirée de networking pour les membres et investisseurs du réseau IBC.")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
-    expect(screen.getByText("S\u2019inscrire")).toBeInTheDocument();
+    expect(screen.getByText(/S'inscrire/i)).toBeInTheDocument();
   });
 
   it("displays remaining spots counter", async () => {

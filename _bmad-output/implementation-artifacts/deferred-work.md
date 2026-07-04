@@ -108,3 +108,10 @@
 - Absence de cooldown sur le bouton d'invitation pour empêcher le spam d'e-mails.
 - Validation initiale du token au chargement de la page de réinitialisation avant soumission du formulaire.
 
+## Deferred from: code review of 25-4-inscription-paiement-event.md (2026-07-04)
+
+- Overbooking race condition on concurrent registrations under heavy load [src/app/api/events/[id]/register/route.ts:1051-1062]
+- Hardcoded business phone number +225 07 00 00 00 00 in UI instructions [src/components/features/events/EventRegisterButton.tsx:1703]
+- Missing filter tab for NO_SHOW status in admin registrations table [src/components/features/admin/event-registrations-table.tsx:1335-1367]
+
+

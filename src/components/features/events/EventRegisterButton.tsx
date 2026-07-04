@@ -48,6 +48,7 @@ export function EventRegisterButton({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [emailInput, setEmailInput] = useState("");
+  const [providerPhone, setProviderPhone] = useState("");
   const [paymentOption, setPaymentOption] = useState<PaymentOption>("BANK_TRANSFER");
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState<{
@@ -93,6 +94,7 @@ export function EventRegisterButton({
           email: targetEmail,
           payOnSite,
           provider,
+          providerPhone: (paymentOption === "WAVE" || paymentOption === "ORANGE_MONEY") ? providerPhone : undefined,
         }),
       });
 
@@ -155,34 +157,38 @@ export function EventRegisterButton({
                 </p>
               </div>
 
-              {successData.payOnSite ? (
-                <div className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                  <p className="font-medium">Information paiement sur place :</p>
-                  <p className="mt-1 text-xs">
-                    Présentez-vous à l'accueil de l'événement pour vous acquitter du tarif d'entrée ({formattedPrice}). Notez que la priorité est donnée aux règlements préalables.
-                  </p>
-                </div>
-              ) : successData.provider === "BANK_TRANSFER" ? (
-                <div className="rounded-md bg-muted p-4 text-sm space-y-2 border">
-                  <p className="font-semibold flex items-center gap-2">
-                    <Landmark className="h-4 w-4 text-primary" />
-                    Instructions pour le Virement Bancaire :
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Merci d'effectuer votre virement du montant de <strong>{formattedPrice}</strong> vers le compte IBC avec la référence de paiement <code>EVT-{eventId}</code>.
-                  </p>
-                </div>
-              ) : successData.provider === "WAVE" || successData.provider === "ORANGE_MONEY" ? (
-                <div className="rounded-md bg-muted p-4 text-sm space-y-2 border">
-                  <p className="font-semibold flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-primary" />
-                    Instructions Mobile Money ({successData.provider === "WAVE" ? "Wave" : "Orange Money"}) :
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Effectuez le transfert de <strong>{formattedPrice}</strong> vers le numéro officiel IBC <strong>+225 07 00 00 00 00</strong> avec pour motif <code>EVT-{eventId}</code>.
-                  </p>
-                </div>
-              ) : null}
+              {calculatedPrice !== 0 && (
+                <>
+                  {successData.payOnSite ? (
+                    <div className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      <p className="font-medium">Information paiement sur place :</p>
+                      <p className="mt-1 text-xs">
+                        Présentez-vous à l'accueil de l'événement pour vous acquitter du tarif d'entrée ({formattedPrice}). Notez que la priorité est donnée aux règlements préalables.
+                      </p>
+                    </div>
+                  ) : successData.provider === "BANK_TRANSFER" ? (
+                    <div className="rounded-md bg-muted p-4 text-sm space-y-2 border">
+                      <p className="font-semibold flex items-center gap-2">
+                        <Landmark className="h-4 w-4 text-primary" />
+                        Instructions pour le Virement Bancaire :
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Merci d'effectuer votre virement du montant de <strong>{formattedPrice}</strong> vers le compte IBC avec la référence de paiement <code>EVT-{eventId}</code>.
+                      </p>
+                    </div>
+                  ) : successData.provider === "WAVE" || successData.provider === "ORANGE_MONEY" ? (
+                    <div className="rounded-md bg-muted p-4 text-sm space-y-2 border">
+                      <p className="font-semibold flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-primary" />
+                        Instructions Mobile Money ({successData.provider === "WAVE" ? "Wave" : "Orange Money"}) :
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Effectuez le transfert de <strong>{formattedPrice}</strong> vers le numéro officiel IBC <strong>+225 07 00 00 00 00</strong> avec pour motif <code>EVT-{eventId}</code>.
+                      </p>
+                    </div>
+                  ) : null}
+                </>
+              )}
 
               <DialogFooter className="mt-4">
                 <Button onClick={() => setIsOpen(false)} variant="default">
@@ -287,6 +293,20 @@ export function EventRegisterButton({
                   </button>
                 </div>
               </div>
+
+              {(paymentOption === "WAVE" || paymentOption === "ORANGE_MONEY") && (
+                <div className="space-y-1.5 pt-1">
+                  <Label htmlFor="provider-phone">Numéro de téléphone Mobile Money *</Label>
+                  <Input
+                    id="provider-phone"
+                    type="tel"
+                    required
+                    placeholder="+225 07 00 00 00 00"
+                    value={providerPhone}
+                    onChange={(e) => setProviderPhone(e.target.value)}
+                  />
+                </div>
+              )}
 
               {/* Message d'avertissement Pay On Site (AC3) */}
               {paymentOption === "PAY_ON_SITE" && (

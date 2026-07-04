@@ -126,7 +126,7 @@ describe("POST /api/events/[id]/register", () => {
     expect(data.registration.amountPaid).toBe(10000);
     expect(paymentCreated).toBe(true);
     expect(data.payment.provider).toBe("WAVE");
-    expect(data.payment.providerRef).toBe("EVT-evt-1-user-123");
+    expect(data.payment.providerRef).toMatch(/^EVT-evt-1-user-123/);
   });
 
   it("fails with 400 when event is full", async () => {
