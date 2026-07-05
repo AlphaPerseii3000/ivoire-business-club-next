@@ -2,14 +2,14 @@
 story_key: 25-5-galerie-collaborative-post-event
 epic: epic-25
 title: Galerie collaborative post-event
-status: ready-for-dev
+status: review
 created_at: 2026-07-04
 baseline_commit: 0ee1d79
 ---
 
 # Story 25-5 : Galerie collaborative post-event
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -83,51 +83,51 @@ Elle permet aux membres et aux administrateurs de faire vivre la communauté pos
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Extensions Helpers Chemins Média (`src/lib/media-path.ts`) (AC2)**
-  - [ ] 1.1 Ajouter `getEventGalleryDir(eventId: string): string` -> `path.join(getMediaStoragePath(), "events", eventId, "gallery")`
-  - [ ] 1.2 Ajouter `getEventGalleryFilePath(eventId: string, filename: string): string` -> `path.join(getEventGalleryDir(eventId), filename)`
-  - [ ] 1.3 Ajouter `getEventGalleryRelativePath(eventId: string, filename: string): string` -> `/events/${eventId}/gallery/${filename}`
+- [x] **Task 1 — Extensions Helpers Chemins Média (`src/lib/media-path.ts`) (AC2)**
+  - [x] 1.1 Ajouter `getEventGalleryDir(eventId: string): string` -> `path.join(getMediaStoragePath(), "events", eventId, "gallery")`
+  - [x] 1.2 Ajouter `getEventGalleryFilePath(eventId: string, filename: string): string` -> `path.join(getEventGalleryDir(eventId), filename)`
+  - [x] 1.3 Ajouter `getEventGalleryRelativePath(eventId: string, filename: string): string` -> `/events/${eventId}/gallery/${filename}`
 
-- [ ] **Task 2 — Route de Servie Média Galerie (`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts`) (AC2, AC5)**
-  - [ ] 2.1 Vérifier la présence de l'événement et son statut de visibilité (`PUBLIC` accessible à tous, `PRIVATE` nécessite session utilisateur actif).
-  - [ ] 2.2 Servir l'image depuis `getEventGalleryFilePath(eventId, filename)` avec Content-Type approprié (`image/jpeg`, `image/png`, `image/webp`) et header `Cache-Control: public, max-age=31536000, immutable`.
-  - [ ] 2.3 Retourner 404 si le fichier ou l'événement n'existe pas.
+- [x] **Task 2 — Route de Servie Média Galerie (`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts`) (AC2, AC5)**
+  - [x] 2.1 Vérifier la présence de l'événement et son statut de visibilité (`PUBLIC` accessible à tous, `PRIVATE` nécessite session utilisateur actif).
+  - [x] 2.2 Servir l'image depuis `getEventGalleryFilePath(eventId, filename)` avec Content-Type approprié (`image/jpeg`, `image/png`, `image/webp`) et header `Cache-Control: public, max-age=31536000, immutable`.
+  - [x] 2.3 Retourner 404 si le fichier ou l'événement n'existe pas.
 
-- [ ] **Task 3 — Route API Galerie (`src/app/api/events/[id]/gallery/route.ts`) (AC1, AC2)**
-  - [ ] 3.1 `GET /api/events/[id]/gallery` : Récupérer les photos de l'événement triées par `createdAt desc` avec `uploader: { select: { id: true, name: true, image: true } }`. Vérifier l'accès selon la visibilité de l'événement.
-  - [ ] 3.2 `POST /api/events/[id]/gallery` : Authentification requise. Recevoir FormData (`file`, `caption?`).
-  - [ ] 3.3 Valider la taille (<= 10 Mo) et le type MIME (jpeg, png, webp).
-  - [ ] 3.4 Générer un identifiant unique / UUID pour le fichier (`{uuid}.{ext}`).
-  - [ ] 3.5 Traiter l'image avec `sharp` (max 1200x800px) et sauvegarder sur disque via `ensureMediaDir` et `toFile`.
-  - [ ] 3.6 Insérer `EventGalleryPhoto` dans Prisma et générer un log d'audit `EVENT_GALLERY_PHOTO_UPLOAD`.
+- [x] **Task 3 — Route API Galerie (`src/app/api/events/[id]/gallery/route.ts`) (AC1, AC2)**
+  - [x] 3.1 `GET /api/events/[id]/gallery` : Récupérer les photos de l'événement triées par `createdAt desc` avec `uploader: { select: { id: true, name: true, image: true } }`. Vérifier l'accès selon la visibilité de l'événement.
+  - [x] 3.2 `POST /api/events/[id]/gallery` : Authentification requise. Recevoir FormData (`file`, `caption?`).
+  - [x] 3.3 Valider la taille (<= 10 Mo) et le type MIME (jpeg, png, webp).
+  - [x] 3.4 Générer un identifiant unique / UUID pour le fichier (`{uuid}.{ext}`).
+  - [x] 3.5 Traiter l'image avec `sharp` (max 1200x800px) et sauvegarder sur disque via `ensureMediaDir` et `toFile`.
+  - [x] 3.6 Insérer `EventGalleryPhoto` dans Prisma et générer un log d'audit `EVENT_GALLERY_PHOTO_UPLOAD`.
 
-- [ ] **Task 4 — Route API Suppression Photo (`src/app/api/events/[id]/gallery/[photoId]/route.ts`) (AC3, AC4)**
-  - [ ] 4.1 `DELETE /api/events/[id]/gallery/[photoId]` : Authentification requise.
-  - [ ] 4.2 Charger la photo et vérifier qu'elle appartient à l'événement `id`.
-  - [ ] 4.3 Vérifier les permissions : `session.user.role === "ADMIN"` OU `photo.uploadedById === session.user.id`. Si non respecté -> HTTP 403.
-  - [ ] 4.4 Supprimer le fichier physique avec `fs.unlink(filePath)` (ignorer silencieusement si déjà supprimé).
-  - [ ] 4.5 Supprimer la ligne dans Prisma `prisma.eventGalleryPhoto.delete({ where: { id: photoId } })`.
-  - [ ] 4.6 Logger l'audit log `EVENT_GALLERY_PHOTO_DELETE`.
+- [x] **Task 4 — Route API Suppression Photo (`src/app/api/events/[id]/gallery/[photoId]/route.ts`) (AC3, AC4)**
+  - [x] 4.1 `DELETE /api/events/[id]/gallery/[photoId]` : Authentification requise.
+  - [x] 4.2 Charger la photo et vérifier qu'elle appartient à l'événement `id`.
+  - [x] 4.3 Vérifier les permissions : `session.user.role === "ADMIN"` OU `photo.uploadedById === session.user.id`. Si non respecté -> HTTP 403.
+  - [x] 4.4 Supprimer le fichier physique avec `fs.unlink(filePath)` (ignorer silencieusement si déjà supprimé).
+  - [x] 4.5 Supprimer la ligne dans Prisma `prisma.eventGalleryPhoto.delete({ where: { id: photoId } })`.
+  - [x] 4.6 Logger l'audit log `EVENT_GALLERY_PHOTO_DELETE`.
 
-- [ ] **Task 5 — Composants UI Galerie (`src/components/features/events/`) (AC1, AC2, AC3, AC4, AC5)**
-  - [ ] 5.1 Créer `EventGallery.tsx` : Grille responsive de photos (lightbox simple au clic, informations uploader, date d'ajout, bouton supprimer conditionnel).
-  - [ ] 5.2 Créer `EventGalleryUploadModal.tsx` : Dialogue d'upload drag-and-drop / sélection avec prévisualisation, champ caption optionnel, jauge de progression / loader et gestion d'erreurs en français.
-  - [ ] 5.3 Gérer les états vides ("Aucune photo partagée pour le moment"), chargement (skeletons) et notifications toast / alertes.
+- [x] **Task 5 — Composants UI Galerie (`src/components/features/events/`) (AC1, AC2, AC3, AC4, AC5)**
+  - [x] 5.1 Créer `EventGallery.tsx` : Grille responsive de photos (lightbox simple au clic, informations uploader, date d'ajout, bouton supprimer conditionnel).
+  - [x] 5.2 Créer `EventGalleryUploadModal.tsx` : Dialogue d'upload drag-and-drop / sélection avec prévisualisation, champ caption optionnel, jauge de progression / loader et gestion d'erreurs en français.
+  - [x] 5.3 Gérer les états vides ("Aucune photo partagée pour le moment"), chargement (skeletons) et notifications toast / alertes.
 
-- [ ] **Task 6 — Page Dashboard Galerie (`src/app/(dashboard)/dashboard/events/[slug]/gallery/page.tsx`) (AC1)**
-  - [ ] 6.1 Charger l'événement par son `slug` (ou `id`).
-  - [ ] 6.2 Vérifier si `startDate < now`. Si oui, afficher le header de l'événement, le composant `EventGallery` et le bouton "Ajouter des photos".
-  - [ ] 6.3 Si `startDate >= now`, afficher une bannière "Événement à venir : la galerie sera ouverte dès le début de l'événement."
+- [x] **Task 6 — Page Dashboard Galerie (`src/app/(dashboard)/dashboard/events/[slug]/gallery/page.tsx`) (AC1)**
+  - [x] 6.1 Charger l'événement par son `slug` (ou `id`).
+  - [x] 6.2 Vérifier si `startDate < now`. Si oui, afficher le header de l'événement, le composant `EventGallery` et le bouton "Ajouter des photos".
+  - [x] 6.3 Si `startDate >= now`, afficher une bannière "Événement à venir : la galerie sera ouverte dès le début de l'événement."
 
-- [ ] **Task 7 — Intégration sur la Page Publique `/events/[slug]/page.tsx` (AC5)**
-  - [ ] 7.1 Charger les photos de la galerie dans la page de détail d'événement.
-  - [ ] 7.2 Si l'événement a des photos et n'est pas en teaser flouté privé, afficher une section "Galerie photos" en bas de page avant le Footer.
+- [x] **Task 7 — Intégration sur la Page Publique `/events/[slug]/page.tsx` (AC5)**
+  - [x] 7.1 Charger les photos de la galerie dans la page de détail d'événement.
+  - [x] 7.2 Si l'événement a des photos et n'est pas en teaser flouté privé, afficher une section "Galerie photos" en bas de page avant le Footer.
 
-- [ ] **Task 8 — Tests Unitaires et d'Intégration (AC6)**
-  - [ ] 8.1 Écrire `src/app/api/events/[id]/gallery/route.test.ts` : test GET, test POST (succès, format invalide, taille max dépassée, non authentifié).
-  - [ ] 8.2 Écrire `src/app/api/events/[id]/gallery/[photoId]/route.test.ts` : test DELETE par Admin (succès), test DELETE par propriétaire (succès), test DELETE par un autre membre (rejet 403).
-  - [ ] 8.3 Écrire `src/components/features/events/EventGallery.test.tsx` : tests de rendu, clic image, affichage du bouton supprimer.
-  - [ ] 8.4 Exécuter `npm run build` et `npx vitest run` pour valider l'absence de régressions.
+- [x] **Task 8 — Tests Unitaires et d'Intégration (AC6)**
+  - [x] 8.1 Écrire `src/app/api/events/[id]/gallery/route.test.ts` : test GET, test POST (succès, format invalide, taille max dépassée, non authentifié).
+  - [x] 8.2 Écrire `src/app/api/events/[id]/gallery/[photoId]/route.test.ts` : test DELETE par Admin (succès), test DELETE par propriétaire (succès), test DELETE par un autre membre (rejet 403).
+  - [x] 8.3 Écrire `src/components/features/events/EventGallery.test.tsx` : tests de rendu, clic image, affichage du bouton supprimer.
+  - [x] 8.4 Exécuter `npm run build` et `npx vitest run` pour valider l'absence de régressions.
 
 ---
 
@@ -149,32 +149,6 @@ Elle permet aux membres et aux administrateurs de faire vivre la communauté pos
   - Emplacement relatif stocké dans DB (`filePath`) : `/events/<eventId>/gallery/<filename>`
   - Route d'accès médias : `/api/media/events/<eventId>/gallery/<filename>`
 
-### Existing Code Analysis & Files to Touch
-
-#### Files to UPDATE:
-1. `src/lib/media-path.ts`:
-   - Ajouter helpers pour le sous-dossier `gallery`.
-2. `src/app/(public)/events/[slug]/page.tsx`:
-   - Inclure le composant `EventGallery` en mode lecture seule publique pour les événements qui ont des photos.
-
-#### Files to CREATE:
-1. `src/app/api/media/events/[eventId]/gallery/[filename]/route.ts`:
-   - Endpoint de livraison de fichiers images statiques.
-2. `src/app/api/events/[id]/gallery/route.ts`:
-   - GET (liste des photos) et POST (upload nouvelle photo).
-3. `src/app/api/events/[id]/gallery/[photoId]/route.ts`:
-   - DELETE (suppression avec modération / droits d'auteur).
-4. `src/components/features/events/EventGallery.tsx`:
-   - Composant grille + lightbox.
-5. `src/components/features/events/EventGalleryUploadModal.tsx`:
-   - Modal d'upload de photo.
-6. `src/app/(dashboard)/dashboard/events/[slug]/gallery/page.tsx`:
-   - Page d'administration / contribution galerie pour les membres & admins.
-7. Test files:
-   - `src/app/api/events/[id]/gallery/route.test.ts`
-   - `src/app/api/events/[id]/gallery/[photoId]/route.test.ts`
-   - `src/components/features/events/EventGallery.test.tsx`
-
 ---
 
 ## Dev Agent Record
@@ -185,13 +159,39 @@ Gemini 3.5 Flash (High) / Antigravity Agent
 
 ### Debug Log References
 
-N/A (Nouvelle story créée)
+- Mock `req.formData` via `vi.spyOn(req, "formData").mockResolvedValue(formData)` in route unit tests to avoid Undici FormData serialization size truncation in Node NextRequest environment.
 
 ### Completion Notes List
 
-- Story 25-5 générée avec l'ensemble des critères d'acceptation BDD, dev notes, architecture VPS/sharp, et plan de tests complet.
+- Implemented media-path helper functions for gallery photo directories and relative paths.
+- Built static media server endpoint `/api/media/events/[eventId]/gallery/[filename]/route.ts` with public/private event access check and immutable caching headers.
+- Created `/api/events/[id]/gallery/route.ts` supporting GET (sorted by `createdAt desc` with uploader info) and POST (upload validation, sharp resize 1200x800, disk save, Prisma record creation, and `EVENT_GALLERY_PHOTO_UPLOAD` audit log).
+- Created `/api/events/[id]/gallery/[photoId]/route.ts` for DELETE with strict authorization checks (ADMIN or photo owner only, HTTP 403 for unauthorized users), physical file cleanup (`fs.unlink`), Prisma row deletion, and `EVENT_GALLERY_PHOTO_DELETE` audit log.
+- Created `EventGalleryUploadModal.tsx` drag-and-drop upload modal with preview, caption, loader and validation errors in French.
+- Created `EventGallery.tsx` responsive grid component with lightbox preview modal and conditional delete actions.
+- Created Dashboard gallery page `/dashboard/events/[slug]/gallery/page.tsx` with upcoming event banner gating (`startDate >= now`).
+- Integrated `EventGallery` in read-only mode into public event detail page `/events/[slug]/page.tsx`.
+- Wrote unit test suites covering `media-path`, media serving route, gallery GET/POST API, photo DELETE authorization, and `EventGallery` UI component (27 tests passing).
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/25-5-galerie-collaborative-post-event.md` (nouveau)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour : `25-5-galerie-collaborative-post-event: ready-for-dev`)
+- `src/lib/media-path.ts` (mis à jour)
+- `src/lib/media-path.test.ts` (nouveau)
+- `src/app/api/media/events/[eventId]/gallery/[filename]/route.ts` (nouveau)
+- `src/app/api/media/events/[eventId]/gallery/[filename]/route.test.ts` (nouveau)
+- `src/app/api/events/[id]/gallery/route.ts` (nouveau)
+- `src/app/api/events/[id]/gallery/route.test.ts` (nouveau)
+- `src/app/api/events/[id]/gallery/[photoId]/route.ts` (nouveau)
+- `src/app/api/events/[id]/gallery/[photoId]/route.test.ts` (nouveau)
+- `src/components/features/events/EventGalleryUploadModal.tsx` (nouveau)
+- `src/components/features/events/EventGallery.tsx` (nouveau)
+- `src/components/features/events/EventGallery.test.tsx` (nouveau)
+- `src/app/(dashboard)/dashboard/events/[slug]/gallery/EventGalleryClient.tsx` (nouveau)
+- `src/app/(dashboard)/dashboard/events/[slug]/gallery/page.tsx` (nouveau)
+- `src/app/(public)/events/[slug]/page.tsx` (mis à jour)
+- `_bmad-output/implementation-artifacts/25-5-galerie-collaborative-post-event.md` (mis à jour)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour)
+
+### Change Log
+
+- Implementation completed for Story 25-5 (Galerie collaborative post-event) satisfying all Acceptance Criteria AC1-AC6.

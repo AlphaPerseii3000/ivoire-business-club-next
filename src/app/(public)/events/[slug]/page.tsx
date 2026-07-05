@@ -21,6 +21,7 @@ import {
 } from "@/lib/event-utils";
 import { Button } from "@/components/ui/button";
 import { EventRegisterButton } from "@/components/features/events/EventRegisterButton";
+import { EventGallery } from "@/components/features/events/EventGallery";
 import { EventStatus } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -373,6 +374,32 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 isAlreadyRegistered={isAlreadyRegistered}
               />
             </div>
+
+            {/* Galerie photo collaborative */}
+            {await (async () => {
+              const galleryPhotos = await prisma.eventGalleryPhoto.findMany({
+                where: { eventId: event.id },
+                orderBy: { createdAt: "desc" },
+                include: {
+                  uploader: {
+                    select: { id: true, name: true, image: true },
+                  },
+                },
+              });
+
+              if (galleryPhotos.length === 0) return null;
+
+              return (
+                <div className="pt-8 border-t border-white/10">
+                  <EventGallery
+                    eventId={event.id}
+                    photos={galleryPhotos}
+                    readOnly={true}
+                    isPastEvent={new Date(event.startDate) < new Date()}
+                  />
+                </div>
+              );
+            })()}
           </div>
         )}
       </main>

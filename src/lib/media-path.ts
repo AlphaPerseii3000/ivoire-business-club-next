@@ -35,3 +35,26 @@ export function getEventCoverRelativePath(eventId: string, extension: string): s
   const ext = extension.startsWith(".") ? extension : `.${extension}`;
   return `/events/${eventId}/cover${ext}`;
 }
+
+/**
+ * Résout le dossier de stockage de la galerie d'un événement.
+ */
+export function getEventGalleryDir(eventId: string): string {
+  return path.join(getMediaStoragePath(), "events", eventId, "gallery");
+}
+
+/**
+ * Construit le chemin disque absolu d'une photo de galerie d'un événement.
+ */
+export function getEventGalleryFilePath(eventId: string, filename: string): string {
+  return path.join(getEventGalleryDir(eventId), filename);
+}
+
+/**
+ * Chemin relatif au volume de stockage, persisté en base dans filePath.
+ * Exemple : /events/{eventId}/gallery/{filename}
+ */
+export function getEventGalleryRelativePath(eventId: string, filename: string): string {
+  return `/events/${eventId}/gallery/${filename}`;
+}
+
