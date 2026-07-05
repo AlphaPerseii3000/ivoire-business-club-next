@@ -36,6 +36,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/event-server-utils', () => ({
   getNextPublishedEvent: vi.fn(),
+  getMomentsIbcPhotos: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('@/components/features/events/NextEventCard', () => ({

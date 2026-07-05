@@ -40,3 +40,65 @@ export async function getNextPublishedEvent() {
 
   return event;
 }
+
+export async function getMomentsIbcPhotos(limit = 12) {
+  try {
+    const now = new Date();
+    const photos = await prisma.eventGalleryPhoto.findMany({
+      where: {
+        event: {
+          status: "PUBLISHED",
+          visibility: "PUBLIC",
+          startDate: { lt: now },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        event: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            startDate: true,
+          },
+        },
+      },
+    });
+    return photos;
+  } catch (error) {
+    console.error("Error fetching Moments IBC photos:", error);
+    return [];
+  }
+}
+
+export async function getPastEventsWithGalleryPreview(limit = 20) {
+  try {
+    const now = new Date();
+    const pastEvents = await prisma.event.findMany({
+      where: {
+        startDate: { lt: now },
+        status: "PUBLISHED",
+      },
+      orderBy: { startDate: "desc" },
+      take: limit,
+      include: {
+        galleryPhotos: {
+          take: 4,
+          orderBy: { createdAt: "desc" },
+        },
+        _count: {
+          select: {
+            galleryPhotos: true,
+            registrations: true,
+          },
+        },
+      },
+    });
+    return pastEvents;
+  } catch (error) {
+    console.error("Error fetching past events with gallery preview:", error);
+    return [];
+  }
+}
+

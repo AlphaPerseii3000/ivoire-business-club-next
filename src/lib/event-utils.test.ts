@@ -3,14 +3,13 @@ import {
   formatEventDate,
   formatEventPricing,
   formatPrice,
-  generateUniqueSlug,
   getEventTypeLabel,
-  getNextPublishedEvent,
   getPriceForTier,
   getRemainingSpots,
   isPrivateEventForVisitor,
   normalizePricing,
 } from "./event-utils";
+import { generateUniqueSlug, getNextPublishedEvent } from "./event-server-utils";
 
 // Mock prisma singleton used by generateUniqueSlug and getNextPublishedEvent
 const mockFindFirst = vi.hoisted(() => vi.fn());

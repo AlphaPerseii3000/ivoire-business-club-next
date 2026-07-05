@@ -14,9 +14,10 @@ import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
 import { LatestArticles } from '@/components/landing/latest-articles';
+import { MomentsIbc } from '@/components/landing/moments-ibc';
 import { NextEventCard, type NextEventCardEvent } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
-import { getNextPublishedEvent } from '@/lib/event-server-utils';
+import { getNextPublishedEvent, getMomentsIbcPhotos } from '@/lib/event-server-utils';
 import LandingMobileNav from '@/components/landing/mobile-nav';
 
 // Le rendu dynamique évite d'accéder à la base de données lors du build statique.
@@ -64,6 +65,7 @@ export default async function HomePage() {
     publishedAt: Date | null;
   }[] = [];
   let nextEvent: NextEventCardEvent | null = null;
+  let momentsPhotos: Awaited<ReturnType<typeof getMomentsIbcPhotos>> = [];
 
   try {
     const opportunities = await prisma.opportunity.findMany({
@@ -130,6 +132,12 @@ export default async function HomePage() {
     console.error('Error fetching next event for landing page:', err);
   }
 
+  try {
+    momentsPhotos = await getMomentsIbcPhotos(12);
+  } catch (err) {
+    console.error('Error fetching moments photos for landing page:', err);
+  }
+
   const showEventPopup = process.env.NEXT_PUBLIC_SHOW_EVENT_POPUP === 'true';
   const hasNextEvent = nextEvent !== null;
 
@@ -193,6 +201,7 @@ export default async function HomePage() {
         {nextEvent ? <NextEventCard event={nextEvent} /> : null}
         <OpportunityTeasers opportunities={teasers} />
         <LatestArticles articles={latestArticles.map((a) => ({ ...a, publishedAt: a.publishedAt?.toISOString() ?? null }))} />
+        <MomentsIbc photos={momentsPhotos} />
         <Pricing />
         <LeadMagnet />
       </main>
