@@ -45,9 +45,12 @@ export function MomentsIbc({ photos }: MomentsIbcProps) {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {photos.map((photo, i) => {
-            const mediaUrl = photo.filePath.startsWith('/api/media')
-              ? photo.filePath
-              : `/api/media${photo.filePath}`;
+            const mediaUrl =
+              photo.filePath.startsWith('http://') ||
+              photo.filePath.startsWith('https://') ||
+              photo.filePath.startsWith('/api/media')
+                ? photo.filePath
+                : `/api/media${photo.filePath}`;
 
             const formattedDate = photo.event.startDate
               ? formatEventDate(new Date(photo.event.startDate))

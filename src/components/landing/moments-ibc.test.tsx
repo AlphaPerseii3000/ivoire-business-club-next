@@ -7,7 +7,6 @@ describe("MomentsIbc component", () => {
     const { container: container1 } = render(<MomentsIbc photos={[]} />);
     expect(container1.firstChild).toBeNull();
 
-    // @ts-expect-error testing undefined input
     const { container: container2 } = render(<MomentsIbc photos={undefined} />);
     expect(container2.firstChild).toBeNull();
   });

@@ -2,14 +2,14 @@
 story_key: 25-6-moments-ibc-landing-dashboard
 epic: epic-25
 title: Section « Moments IBC » sur landing + page dashboard events passés
-status: review
+status: done
 created_at: 2026-07-05
 baseline_commit: 1052b67
 ---
 
 # Story 25.6 : Section « Moments IBC » sur landing + page dashboard events passés
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -105,6 +105,12 @@ Cette story est la 6ème et dernière story de l'**Epic 25 : Plateforme d'Évén
   - [x] 6.2 Écrire `src/components/landing/moments-ibc.test.tsx` : vérifier le rendu du composant avec des photos mockées et le retour `null` si aucune photo.
   - [x] 6.3 Écrire `src/app/(dashboard)/dashboard/events/page.test.tsx` : tester le rendu de la page dashboard et l'affichage des événements passés.
   - [x] 6.4 Lancer `npm run build` et `npx vitest run` pour s'assurer que zéro régression n'est introduite.
+
+### Review Findings
+
+- [x] [Review][Patch] Gestion des URLs absolues/externes (http:// ou https://) dans le composant MomentsIbc et les cartes PastEventCard [src/components/landing/moments-ibc.tsx:48-50, src/components/features/events/PastEventCard.tsx:34-38, 109-113]
+- [x] [Review][Patch] Amélioration du tri et de la diversité des photos sur Moments IBC [src/lib/event-server-utils.ts:44-67]
+- [x] [Review][Patch] Vérification défensive contre les photos à relation event nulle [src/lib/event-server-utils.ts:44-67]
 
 ---
 

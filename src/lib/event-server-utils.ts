@@ -65,7 +65,7 @@ export async function getMomentsIbcPhotos(limit = 12) {
         },
       },
     });
-    return photos;
+    return photos.filter((photo: { event?: unknown }) => photo.event != null);
   } catch (error) {
     console.error("Error fetching Moments IBC photos:", error);
     return [];

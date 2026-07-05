@@ -32,7 +32,9 @@ export function PastEventCard({ event }: PastEventCardProps) {
   const isPrivate = event.visibility === 'PRIVATE';
   const totalPhotos = event._count?.galleryPhotos ?? event.galleryPhotos?.length ?? 0;
   const coverUrl = event.coverImagePath
-    ? event.coverImagePath.startsWith('/api/media')
+    ? event.coverImagePath.startsWith('http://') ||
+      event.coverImagePath.startsWith('https://') ||
+      event.coverImagePath.startsWith('/api/media')
       ? event.coverImagePath
       : `/api/media${event.coverImagePath}`
     : null;
@@ -107,9 +109,12 @@ export function PastEventCard({ event }: PastEventCardProps) {
             </span>
             <div className="grid grid-cols-4 gap-2">
               {event.galleryPhotos.slice(0, 4).map((photo) => {
-                const photoUrl = photo.filePath.startsWith('/api/media')
-                  ? photo.filePath
-                  : `/api/media${photo.filePath}`;
+                const photoUrl =
+                  photo.filePath.startsWith('http://') ||
+                  photo.filePath.startsWith('https://') ||
+                  photo.filePath.startsWith('/api/media')
+                    ? photo.filePath
+                    : `/api/media${photo.filePath}`;
 
                 return (
                   <div key={photo.id} className="relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-slate-800">
