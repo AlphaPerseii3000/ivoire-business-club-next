@@ -53,11 +53,15 @@ export async function GET(
     }
 
     const contentType = getContentType(filePath);
+    const cacheControl =
+      event.visibility === "PRIVATE"
+        ? "private, max-age=3600"
+        : "public, max-age=31536000, immutable";
 
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": cacheControl,
       },
     });
   } catch (error) {

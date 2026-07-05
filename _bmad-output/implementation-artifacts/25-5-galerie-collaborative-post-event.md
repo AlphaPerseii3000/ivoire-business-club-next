@@ -2,14 +2,14 @@
 story_key: 25-5-galerie-collaborative-post-event
 epic: epic-25
 title: Galerie collaborative post-event
-status: review
+status: done
 created_at: 2026-07-04
 baseline_commit: 0ee1d79
 ---
 
 # Story 25-5 : Galerie collaborative post-event
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -128,6 +128,19 @@ Elle permet aux membres et aux administrateurs de faire vivre la communauté pos
   - [x] 8.2 Écrire `src/app/api/events/[id]/gallery/[photoId]/route.test.ts` : test DELETE par Admin (succès), test DELETE par propriétaire (succès), test DELETE par un autre membre (rejet 403).
   - [x] 8.3 Écrire `src/components/features/events/EventGallery.test.tsx` : tests de rendu, clic image, affichage du bouton supprimer.
   - [x] 8.4 Exécuter `npm run build` et `npx vitest run` pour valider l'absence de régressions.
+
+### Review Findings
+
+- [x] [Review][Patch] API validation manquante pour les événements futurs (`startDate >= now`) [`src/app/api/events/[id]/gallery/route.ts:77`]
+- [x] [Review][Patch] Inversion de séquence fs.rename et DB create risquant des enregistrements orphelins en base [`src/app/api/events/[id]/gallery/route.ts:139`]
+- [x] [Review][Patch] Suppression physique fs.unlink exécutée avant la suppression Prisma dans la route DELETE [`src/app/api/events/[id]/gallery/[photoId]/route.ts:39`]
+- [x] [Review][Patch] Contournement des helpers media-path et manque de sanitisation de path dans la route DELETE [`src/app/api/events/[id]/gallery/[photoId]/route.ts:41`]
+- [x] [Review][Patch] Validation de longueur de la légende (caption) manquante dans la route POST [`src/app/api/events/[id]/gallery/route.ts:100`]
+- [x] [Review][Patch] Header Cache-Control public sur médias privés dans la route de servie média [`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts:60`]
+- [x] [Review][Patch] Fuite de mémoire dans le composant d'upload (URL.revokeObjectURL non invoqué sur les prévisualisations) [`src/components/features/events/EventGalleryUploadModal.tsx:44`]
+- [x] [Review][Patch] Standardisation des imports `fs` et sécurisation du format d'image de sortie avec Sharp [`src/app/api/events/[id]/gallery/route.ts:12,130`]
+- [x] [Review][Defer] Absence de pagination des photos dans l'API GET galerie [`src/app/api/events/[id]/gallery/route.ts:43`] — deferred, pre-existing
+- [x] [Review][Defer] Absence de vérification DB de l'existence du fichier dans la route de servie média [`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts:46`] — deferred, pre-existing
 
 ---
 

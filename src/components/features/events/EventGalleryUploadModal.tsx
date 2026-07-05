@@ -25,6 +25,14 @@ export function EventGalleryUploadModal({
 
   if (!isOpen) return null;
 
+  const updatePreview = (selected: File) => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setFile(selected);
+    setPreviewUrl(URL.createObjectURL(selected));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     setError(null);
@@ -40,8 +48,7 @@ export function EventGalleryUploadModal({
       return;
     }
 
-    setFile(selected);
-    setPreviewUrl(URL.createObjectURL(selected));
+    updatePreview(selected);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -60,8 +67,17 @@ export function EventGalleryUploadModal({
       return;
     }
 
-    setFile(selected);
-    setPreviewUrl(URL.createObjectURL(selected));
+    updatePreview(selected);
+  };
+
+  const resetForm = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setFile(null);
+    setPreviewUrl(null);
+    setCaption("");
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,10 +108,7 @@ export function EventGalleryUploadModal({
         throw new Error(data.error || "Erreur lors de l'upload de la photo.");
       }
 
-      // Re-initialiser le formulaire
-      setFile(null);
-      setPreviewUrl(null);
-      setCaption("");
+      resetForm();
       onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -107,10 +120,7 @@ export function EventGalleryUploadModal({
 
   const handleClose = () => {
     if (loading) return;
-    setFile(null);
-    setPreviewUrl(null);
-    setCaption("");
-    setError(null);
+    resetForm();
     onClose();
   };
 

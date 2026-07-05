@@ -114,4 +114,10 @@
 - Hardcoded business phone number +225 07 00 00 00 00 in UI instructions [src/components/features/events/EventRegisterButton.tsx:1703]
 - Missing filter tab for NO_SHOW status in admin registrations table [src/components/features/admin/event-registrations-table.tsx:1335-1367]
 
+## Deferred from: code review of 25-5-galerie-collaborative-post-event.md (2026-07-05)
+
+- Absence de pagination des photos dans l'API GET galerie [`src/app/api/events/[id]/gallery/route.ts:43`] — pre-existing pattern / low volume per event
+- Absence de vérification DB de l'existence du fichier dans la route de servie média [`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts:46`] — pre-existing static media route pattern
+
+
 

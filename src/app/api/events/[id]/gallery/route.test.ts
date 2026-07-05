@@ -16,7 +16,16 @@ const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 const mockToFile = vi.hoisted(() => vi.fn().mockImplementation(async (dest: string) => {
   await fs.writeFile(dest, Buffer.from("fake-resized-image"));
 }));
-const mockResize = vi.hoisted(() => vi.fn(() => ({ toFile: mockToFile })));
+const mockSharpChain = vi.hoisted(() => {
+  const chain: Record<string, any> = {
+    toFile: mockToFile,
+  };
+  chain.png = vi.fn(() => chain);
+  chain.jpeg = vi.fn(() => chain);
+  chain.webp = vi.fn(() => chain);
+  return chain;
+});
+const mockResize = vi.hoisted(() => vi.fn(() => mockSharpChain));
 const mockSharp = vi.hoisted(() => {
   const fn = vi.fn(() => ({ resize: mockResize }));
   (fn as { fit?: { inside: string } }).fit = { inside: "inside" };
@@ -136,9 +145,26 @@ describe("POST /api/events/[id]/gallery", () => {
     expect(res.status).toBe(404);
   });
 
+  it("returns 400 when event is upcoming (startDate >= now)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockEventFindUnique.mockResolvedValue({
+      id: "evt-1",
+      startDate: new Date(Date.now() + 86400000),
+    });
+    const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+
+    const res = await runPost("evt-1", createFormData(file));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("pas encore ouverte");
+  });
+
   it("returns 400 when file format is invalid", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockEventFindUnique.mockResolvedValue({ id: "evt-1" });
+    mockEventFindUnique.mockResolvedValue({
+      id: "evt-1",
+      startDate: new Date(Date.now() - 86400000),
+    });
     const file = new File(["dummy"], "doc.pdf", { type: "application/pdf" });
 
     const res = await runPost("evt-1", createFormData(file));
@@ -149,7 +175,10 @@ describe("POST /api/events/[id]/gallery", () => {
 
   it("returns 400 when file size exceeds 10MB", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockEventFindUnique.mockResolvedValue({ id: "evt-1" });
+    mockEventFindUnique.mockResolvedValue({
+      id: "evt-1",
+      startDate: new Date(Date.now() - 86400000),
+    });
     const file = new File(["dummy"], "big.jpg", { type: "image/jpeg" });
     Object.defineProperty(file, "size", { value: 11 * 1024 * 1024 });
 
@@ -161,7 +190,10 @@ describe("POST /api/events/[id]/gallery", () => {
 
   it("successfully uploads image, resizes with sharp and creates record", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockEventFindUnique.mockResolvedValue({ id: "evt-1" });
+    mockEventFindUnique.mockResolvedValue({
+      id: "evt-1",
+      startDate: new Date(Date.now() - 86400000),
+    });
     const createdPhoto = {
       id: "photo-123",
       eventId: "evt-1",

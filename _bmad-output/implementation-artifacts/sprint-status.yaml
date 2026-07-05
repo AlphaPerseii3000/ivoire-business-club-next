@@ -36,8 +36,8 @@
 generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-06-29T19:30:00+02:00
 # last_updated: 2026-07-02T17:28:40+02:00
-# last_updated: 2026-07-03T12:00:00+02:00
-last_updated: 2026-07-04T22:28:00+02:00
+# last_updated: 2026-07-05T11:07:00+02:00
+last_updated: 2026-07-05T11:12:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -190,9 +190,9 @@ development_status:
   25-2-upload-couverture-vps-form-admin: done
   25-3-page-event-publique-teaser-prive-places: done
   25-4-inscription-paiement-event: done
-  25-5-galerie-collaborative-post-event: review
-  25-6-moments-ibc-landing-dashboard: backlog
+  25-5-galerie-collaborative-post-event: done
+  25-6-moments-ibc-landing-dashboard: ready-for-dev
   epic-25-retrospective: optional
 
-# updated story 25-4 to done on 2026-07-04 after CR pass
+# updated story 25-6 to ready-for-dev on 2026-07-05
 

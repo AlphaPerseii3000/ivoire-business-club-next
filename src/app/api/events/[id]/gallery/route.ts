@@ -11,6 +11,7 @@ import {
 import { ensureMediaDir } from "@/lib/ensure-media-dir";
 import sharp from "sharp";
 import crypto from "crypto";
+import fs from "fs/promises";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
@@ -79,6 +80,13 @@ export async function POST(
       return NextResponse.json({ error: "Événement introuvable." }, { status: 404 });
     }
 
+    if (new Date(event.startDate) >= new Date()) {
+      return NextResponse.json(
+        { error: "La galerie n'est pas encore ouverte pour cet événement." },
+        { status: 400 }
+      );
+    }
+
     let formData: FormData;
     try {
       formData = await req.formData();
@@ -97,7 +105,14 @@ export async function POST(
       );
     }
 
-    const caption = formData.get("caption")?.toString() || null;
+    const rawCaption = formData.get("caption")?.toString()?.trim() || null;
+    if (rawCaption && rawCaption.length > 500) {
+      return NextResponse.json(
+        { error: "La légende ne doit pas dépasser 500 caractères." },
+        { status: 400 }
+      );
+    }
+    const caption = rawCaption;
     const fileBlob = file as File;
 
     if (!ALLOWED_MIME_TYPES.includes(fileBlob.type)) {
@@ -116,7 +131,7 @@ export async function POST(
       );
     }
 
-    const ext = EXTENSION_BY_MIME[file.type] || "jpg";
+    const ext = EXTENSION_BY_MIME[fileBlob.type] || "jpg";
     const filename = `${crypto.randomUUID()}.${ext}`;
 
     const dir = getEventGalleryDir(id);
@@ -127,32 +142,51 @@ export async function POST(
 
     const inputBuffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
-    await sharp(inputBuffer)
-      .resize(1200, 800, {
-        fit: sharp.fit.inside,
-        withoutEnlargement: true,
-      })
-      .toFile(tmpPath);
+    let sharpInstance = sharp(inputBuffer).resize(1200, 800, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    });
+
+    if (ext === "png") {
+      sharpInstance = sharpInstance.png({ compressionLevel: 8 });
+    } else if (ext === "webp") {
+      sharpInstance = sharpInstance.webp({ quality: 85 });
+    } else {
+      sharpInstance = sharpInstance.jpeg({ quality: 85 });
+    }
+
+    await sharpInstance.toFile(tmpPath);
 
     const relativePath = getEventGalleryRelativePath(id, filename);
 
-    const photo = await prisma.eventGalleryPhoto.create({
-      data: {
-        eventId: id,
-        uploadedById: session.user.id,
-        filePath: relativePath,
-        caption,
-      },
-      include: {
-        uploader: {
-          select: { id: true, name: true, image: true },
-        },
-      },
-    });
-
-    const fs = await import("fs/promises");
+    // Renommer le fichier temporaire avant d'insérer en base de données
     await fs.rename(tmpPath, filePathAbs);
     tmpPath = null;
+
+    let photo;
+    try {
+      photo = await prisma.eventGalleryPhoto.create({
+        data: {
+          eventId: id,
+          uploadedById: session.user.id,
+          filePath: relativePath,
+          caption,
+        },
+        include: {
+          uploader: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+      });
+    } catch (dbError) {
+      // Nettoyer le fichier physique si la création en base échoue
+      try {
+        await fs.unlink(filePathAbs);
+      } catch {
+        // Ignorer l'erreur de nettoyage
+      }
+      throw dbError;
+    }
 
     await safeCreateAuditLog({
       actorId: session.user.id,
@@ -166,7 +200,6 @@ export async function POST(
   } catch (error) {
     if (tmpPath) {
       try {
-        const fs = await import("fs/promises");
         await fs.unlink(tmpPath);
       } catch {
         // Ignorer les erreurs d'invalidation temporaire

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
-import { getMediaStoragePath } from "@/lib/media-path";
+import { getEventGalleryFilePath } from "@/lib/media-path";
 import fs from "fs/promises";
 import path from "path";
 
@@ -35,19 +35,21 @@ export async function DELETE(
       return NextResponse.json({ error: "Action non autorisée." }, { status: 403 });
     }
 
-    // Supprimer le fichier physique s'il existe
-    if (photo.filePath) {
-      try {
-        const absolutePath = path.join(getMediaStoragePath(), photo.filePath.replace(/^\//, ""));
-        await fs.unlink(absolutePath);
-      } catch {
-        // Ignorer silencieusement si le fichier n'existe plus sur disque
-      }
-    }
-
+    // Supprimer l'enregistrement en base de données en premier
     await prisma.eventGalleryPhoto.delete({
       where: { id: photoId },
     });
+
+    // Supprimer le fichier physique s'il existe sur disque
+    if (photo.filePath) {
+      try {
+        const safeFilename = path.basename(photo.filePath);
+        const absolutePath = getEventGalleryFilePath(id, safeFilename);
+        await fs.unlink(absolutePath);
+      } catch {
+        // Ignorer silencieusement si le fichier physique a déjà été nettoyé
+      }
+    }
 
     await safeCreateAuditLog({
       actorId: session.user.id,

@@ -377,7 +377,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
             {/* Galerie photo collaborative */}
             {await (async () => {
-              const galleryPhotos = await prisma.eventGalleryPhoto.findMany({
+              const galleryPhotos = await (prisma.eventGalleryPhoto?.findMany({
                 where: { eventId: event.id },
                 orderBy: { createdAt: "desc" },
                 include: {
@@ -385,9 +385,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                     select: { id: true, name: true, image: true },
                   },
                 },
-              });
+              }) ?? Promise.resolve([]));
 
-              if (galleryPhotos.length === 0) return null;
+              if (!galleryPhotos || galleryPhotos.length === 0) return null;
 
               return (
                 <div className="pt-8 border-t border-white/10">
