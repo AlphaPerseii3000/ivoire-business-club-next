@@ -4,6 +4,8 @@ import {
   SquareMousePointer,
   UsersRound,
   UserRoundPen,
+  CalendarDays,
+  Building2,
   Lock,
 } from "lucide-react";
 
@@ -174,6 +176,20 @@ export default async function DashboardPage({
             </p>
             <p className="mt-1 text-sm text-muted-foreground">Découvrir les opportunités business</p>
           </Link>
+          <Link href="/events" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Événements</span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Calendrier et inscriptions</p>
+          </Link>
+          <Link href="/partners" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
+            <p className="text-lg font-semibold flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Partenaires</span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Entreprises partenaires de confiance</p>
+          </Link>
           <Link href="/members" className="rounded-xl border bg-card p-6 hover:shadow-lg transition-shadow group">
             <p className="text-lg font-semibold flex items-center gap-2">
               <UsersRound className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -192,4 +208,4 @@ export default async function DashboardPage({
       )}
     </div>
   );
-}
+}

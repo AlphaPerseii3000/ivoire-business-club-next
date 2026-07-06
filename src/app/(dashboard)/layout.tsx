@@ -6,6 +6,8 @@ const MOBILE_NAV_ITEMS = [
   { href: "/dashboard", label: "Tableau de bord" },
   { href: "/articles", label: "Articles" },
   { href: "/dashboard/opportunities", label: "Opportunités" },
+  { href: "/events", label: "Événements" },
+  { href: "/partners", label: "Partenaires" },
   { href: "/members", label: "Membres" },
 ];
 
