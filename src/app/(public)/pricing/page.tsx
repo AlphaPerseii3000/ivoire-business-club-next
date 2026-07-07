@@ -1,8 +1,25 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { PricingTierSelection } from "@/components/pricing-tier-selection";
 import { auth } from "@/lib/auth";
 import LandingMobileNav from "@/components/landing/mobile-nav";
+
+export const metadata: Metadata = {
+  title: "Adhésion IBC — Tarifs & formules",
+  description:
+    "Découvrez les 3 formules d'adhésion IBC : Affranchis (29€/mois), Grands Frères (59€/mois) et Boss (129€/mois). Accès aux opportunités, networking et experts.",
+  alternates: {
+    canonical: '/pricing',
+  },
+  openGraph: {
+    title: "Adhésion IBC — Tarifs & formules",
+    description:
+      "3 formules d'adhésion à l'Ivoire Business Club : Affranchis, Grands Frères et Boss. Networking, investissements et opportunités business en Côte d'Ivoire.",
+    type: "website",
+    locale: "fr_FR",
+  },
+};
 
 export default async function PricingPage() {
   const session = await auth();

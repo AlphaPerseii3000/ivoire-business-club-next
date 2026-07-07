@@ -23,17 +23,20 @@ import LandingMobileNav from '@/components/landing/mobile-nav';
 // Le rendu dynamique évite d'accéder à la base de données lors du build statique.
 export const dynamic = 'force-dynamic';
 
-const homeTitle = 'Ivoire Business Club | Club business à Abidjan \u0026 en Europe';
+const homeTitle = 'Ivoire Business Club — Club business & investissement Côte d\u2019Ivoire';
 const homeDescription =
-  'Rejoins le club business IBC à Abidjan : opportunités d\u2019investissement, networking et deals exclusifs pour entrepreneurs en Côte d\u2019Ivoire.';
+  'Rejoins l\u2019Ivoire Business Club : opportunités d\u2019investissement, networking exclusif et deals business à Abidjan et en Europe. Entrepreneurs et investisseurs africains.';
 
 export const metadata: Metadata = {
   title: homeTitle,
   description: homeDescription,
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: homeTitle,
     description: homeDescription,
-    url: 'https://www.ivoire-business-club.com',
+    url: 'https://ivoire-business-club.com',
     siteName: 'Ivoire Business Club',
     images: [
       {

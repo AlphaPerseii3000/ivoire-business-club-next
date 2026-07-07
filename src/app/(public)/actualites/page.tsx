@@ -12,13 +12,16 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export const revalidate = 3600;
 
-const title = "Actualités, Articles & Événements | Ivoire Business Club";
+const title = "Actualités business Côte d'Ivoire | IBC";
 const description =
-  "Retrouvez les actualités de l'Ivoire Business Club : articles, analyses et événements business pour investir et entreprendre en Côte d'Ivoire.";
+  "Retrouvez les actualités business de l'Ivoire Business Club : articles, analyses et événements pour investir et entreprendre en Côte d'Ivoire et en Afrique.";
 
 export const metadata: Metadata = {
   title,
   description,
+  alternates: {
+    canonical: '/actualites',
+  },
   openGraph: {
     title,
     description,

@@ -16,7 +16,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.ivoire-business-club.com'),
+  metadataBase: new URL('https://ivoire-business-club.com'),
   title: {
     default: "Ivoire Business Club — Bâtir son futur en Afrique",
     template: "%s | Ivoire Business Club",

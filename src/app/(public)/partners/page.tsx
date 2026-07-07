@@ -12,13 +12,16 @@ import { sanitizeError } from "@/lib/sanitize-log";
 
 export const dynamic = "force-dynamic";
 
-const title = "Partenaires Agréés & Entreprises | Ivoire Business Club";
+const title = "Partenaires & entreprises agréées Côte d'Ivoire | IBC";
 const description =
-  "Découvrez les entreprises partenaires de confiance de l'Ivoire Business Club pour vos projets en Côte d'Ivoire. BTP, services, communication et plus encore.";
+  "Découvrez les entreprises partenaires de l'Ivoire Business Club : BTP, services, communication et plus. Des partenaires de confiance en Côte d'Ivoire.";
 
 export const metadata: Metadata = {
   title,
   description,
+  alternates: {
+    canonical: '/partners',
+  },
   openGraph: {
     title,
     description,
