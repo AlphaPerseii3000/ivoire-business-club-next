@@ -211,7 +211,7 @@ development_status:
 
   epic-26: in-progress
   26-1-creation-des-pages-legales-et-footer: done
-  26-2-registre-de-consentement-apdp-rgpd-a-linscription: in-progress
+  26-2-registre-de-consentement-apdp-rgpd-a-linscription: review
   26-3-upload-de-preuve-de-virement-et-validation-admin: backlog
   26-4-route-de-tracking-et-redirection-whatsapp-centif-ci: backlog
   26-5-dashboard-de-statistiques-dattractivite-koffi: backlog
