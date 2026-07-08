@@ -189,13 +189,34 @@ IBC ne touche pas aux flux d'investissement. Les transactions financières reste
 ### 5.3 Conformité réglementaire CI/UEMOA
 
 - **BCEAO** : Réglementation UEMOA sur l'émission de monnaie électronique (Instruction 008-05-2015)
-- **CENTIF-CI** : Anti-blanchiment / lutte contre le financement du terrorisme — piste d'audit sur toutes les transactions d'abonnement
-- **APDP** : Protection des données personnelles (Loi 2013-450) — consentement explicite requis
+- **CENTIF-CI** : Anti-blanchiment / lutte contre le financement du terrorisme — piste d'audit sur toutes les transactions d'abonnement et clics de contact WhatsApp (obligation de conservation de 5 ans)
+- **APDP** : Protection des données personnelles (Loi 2013-450) — consentement explicite requis à l'inscription (case à cocher obligatoire avec traçabilité de version)
 - **ARTCI** : Enregistrement SIM / télécoms
 
 ### 5.4 Playbook de vérification documenté
 
 Un playbook public détaille les critères de vérification par catégorie de deal (immobilier vs business vs partenariat), assurant la transparence totale sur les critères et renforçant la confiance.
+
+### 5.5 Spécifications de contenu des pages légales
+
+La plateforme propose trois pages d'information légale distinctes, accessibles depuis le footer et rédigées en français :
+
+1. **Mentions Légales (`/mentions-legales`)**
+   - **Éditeur :** KS Investment, Société Anonyme au capital de [Montant à confirmer], dont le siège social est à Abidjan, Côte d'Ivoire.
+   - **Hébergeur :** Cloud VPS Infomaniak (Suisse).
+   - **Directeur de la Publication :** Directeur de KS Investment.
+
+2. **Politique de Confidentialité (`/politique-confidentialite`)**
+   - **Données collectées :** Nom, email, téléphone, pays, justificatif de paiement d'abonnement et pièces d'identité / documents de KYC (pour les porteurs de projet).
+   - **Finalités du traitement :** Gestion du club d'affaires privé, intermédiation et mise en relation sur les opportunités.
+   - **Rétention des données :** Conservation des données du profil jusqu'à la suppression du compte par l'utilisateur. Conservation des logs de paiement et de transactions (y compris la journalisation des contacts WhatsApp) pendant 5 ans pour se conformer aux obligations légales de la CENTIF-CI.
+   - **Cadre réglementaire :** Conformité stricte avec la loi ivoirienne n° 2013-450 (APDP) et respect des principes du RGPD pour les membres résidant dans l'Union Européenne.
+
+3. **Conditions Générales de Vente — CGV (`/cgv`)**
+   - **Structure des Tiers :** Rappel des formules d'abonnement (Affranchis à 29 €/mois, Grands Frères à [Tarif à confirmer] €/mois, Boss à 99 €/mois).
+   - **Moyens de paiement :** Virement bancaire uniquement vers le compte de KS Investment, ou Mobile Money (Orange Money, Wave) pour les transactions réalisées depuis la Côte d'Ivoire.
+   - **Processus de validation :** Validation manuelle de la souscription par l'administrateur sous 48 heures ouvrées après réception effective du justificatif de virement.
+   - **Politique de remboursement :** Aucun remboursement partiel ou au prorata. La résiliation peut s'effectuer à tout moment, le service restant accessible jusqu'à la fin de la période de facturation en cours.
 
 ---
 
@@ -227,20 +248,22 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 
 ### 7.1 IN (Phase 1 — M1–M3)
 
-- Authentification dual (Google OAuth + credentials)
-- Paiement par virement bancaire KS Investment avec validation manuelle admin
+- Authentification dual (Google OAuth + credentials) avec consentement explicite obligatoire aux conditions légales
+- Paiement par virement bancaire KS Investment avec upload de justificatif (PDF/image) et validation manuelle admin
 - Marketplace d'opportunités avec workflow de vérification (PENDING → VERIFIED → REJECTED)
 - Système de tiers (Affranchis / Grands Frères / Boss)
-- Deep links WhatsApp sur profils et deals
-- Landing page avec deals teaser publics
-- Dashboard admin minimal (kanban vérification, métriques MRR)
-- CGV avec clause d'intermédiaire non-financier
+- Tracking et redirection WhatsApp via route API dédiée (ContactLog)
+- Landing page avec deals teaser publics et Footer contenant les pages légales
+- Dashboard admin minimal (kanban de vérification avec consultation des justificatifs de virement, métriques MRR)
+- Pages légales conformes (Mentions Légales, Politique de Confidentialité, CGV)
 - Niveaux de confiance gradués (bronze/argent/or)
 - Upload de dossiers juridiques par deal
 - Système de reviews mutuelles post-deal
 - Onboarding guidé 3 clics
 - Matching basique par tags (secteur, montant, localisation)
 - Mur des succès (page statique)
+- Dashboard de statistiques d'attractivité pour les porteurs de projet (clics WhatsApp + favoris)
+- Protection par Rate-Limiting (Upstash Redis) et scan antivirus sur les justificatifs importés
 
 ### 7.2 OUT (Phase 1)
 
@@ -268,6 +291,8 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR77** : Un utilisateur peut demander un email de réinitialisation de mot de passe en saisissant son adresse email
 - **FR78** : Un utilisateur connecté peut modifier son mot de passe depuis son profil (ancien mot de passe requis)
 - **FR79** : Un utilisateur créé sans mot de passe connu (via WhatsApp/admin) peut définir son mot de passe via un lien d'invitation email
+- **FR80** : L'inscription d'un utilisateur requiert le consentement explicite obligatoire aux CGV et à la Politique de Confidentialité via une case à cocher. Le bouton de soumission reste désactivé ou l'API rejette la demande tant que la case n'est pas cochée.
+- **FR81** : À l'inscription réussie, le système enregistre en base de données la date et l'heure du consentement (`acceptedTermsAt`) et la version des conditions acceptées (`termsVersion`, ex: `"1.0"`).
 
 ### 8.2 Tiers & Abonnements
 
@@ -278,18 +303,21 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR12** : L'admin peut refuser ou suspendre un abonnement avec justification
 - **FR13** : Le membre reçoit un email de confirmation une fois son abonnement activé
 - **FR14** : Le système bloque l'accès aux contenus premium si l'abonnement est CANCELLED ou PAST_DUE
+- **FR82** : Lors de la sélection d'un tier payant par virement, l'utilisateur peut téléverser un justificatif de paiement (PDF ou image JPEG/PNG, max 5 Mo).
+- **FR83** : Le justificatif téléversé est stocké de manière sécurisée (Cloudflare R2, préfixe `subscriptions/{subscriptionId}/receipts/`) et lié à sa souscription active en base de données.
 
 ### 8.3 Marketplace d'Opportunités
 
 - **FR15** : Un porteur de projet (membre ou admin) peut soumettre une opportunité (titre, description, catégorie, montant, documents)
 - **FR16** : Le système attribue un statut de vérification PENDING par défaut à chaque nouvelle opportunité
 - **FR17** : L'admin peut modifier le statut d'une opportunité (PENDING → VERIFIED → REJECTED) via un workflow kanban
-- **FR18** : Une opportunité REJECTED est visible uniquement par son auteur et les admins
+- **FR18** : Une opportunité REJECTED is visible uniquement par son auteur et les admins
 - **FR19** : Une opportunité VERIFIED est visible par les membres selon leur tier (filtrage par visibilité)
 - **FR20** : Les opportunités teaser (titre + localisation) sont publiquement visibles sans connexion
 - **FR21** : Le système affiche le niveau de confiance IBC (bronze/argent/or) sur chaque deal
 - **FR22** : Le système exige une double-vérification admin pour les deals > 50 000 €
 - **FR23** : Un membre peut consulter le dossier juridique attaché à une opportunité (titre foncier, KYC promoteur)
+- **FR84** : Un porteur de projet connecté dispose sur ses opportunités d'un tableau de bord d'attractivité épuré affichant le nombre de clics WhatsApp uniques enregistrés et le nombre de membres ayant manifesté leur intérêt (favoris).
 
 ### 8.4 Networking & Matching
 
@@ -300,6 +328,8 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR28** : Le système propose un matching basique entre profils et opportunités basé sur les tags communs
 - **FR29** : Un membre peut marquer son intérêt (soft commitment) sur un deal
 - **FR30** : Le système notifie l'auteur d'une opportunité lorsqu'un membre manifeste son intérêt
+- **FR85** : Les boutons de contact WhatsApp n'appellent pas directement l'API externe `wa.me`, mais pointent vers une route interne de tracking (`/api/opportunities/[id]/contact`).
+- **FR86** : La route interne de tracking valide la session utilisateur, enregistre un log d'audit (`ContactLog` contenant `userId`, `opportunityId`, `createdAt`), puis redirige l'utilisateur vers le WhatsApp du porteur de projet.
 
 ### 8.5 Reviews & Réputation
 
@@ -316,6 +346,7 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR38** : L'admin peut éditer ou supprimer une opportunité publiée
 - **FR39** : Le système logue toutes les actions d'admin (piste d'audit pour compliance)
 - **FR40** : L'admin peut envoyer un email de confirmation de virement à un membre
+- **FR87** : L'administrateur peut visualiser et ouvrir le justificatif de paiement téléversé directement depuis la fiche de l'abonnement dans son tableau de bord d'approbation (Kanban).
 
 ### 8.7 Landing & Contenu Éditorial
 
@@ -349,6 +380,11 @@ Newsletter hebdomadaire, rappel des opportunités matchées, renouvellement auto
 - **FR74** : Un membre connecté peut soumettre un message via le chat de support (bug technique, problème d'accessibilité, demande d'intégration). Le système envoie un auto-acknowledgement immédiat confirmant la réception.
 - **FR75** : Les messages de chat sont stockés en base de données et accessibles via une API authentifiée. Un agent externe (Hermes) peut lire les messages non traités et y répondre via une API sécurisée par token.
 - **FR76** : Chaque message de chat reçu est automatiquement ajouté à la to-do liste permanente du système de support (Hermes), permettant le suivi et la traitement des demandes.
+
+### 8.10 Sécurité & Contrôles Applicatifs
+
+- **FR88** : Le système applique un rate-limiting sur l'API de chat (10 messages/minute/IP) et l'API de création d'opportunité (2 opportunités/minute/IP) avec retour d'erreur `429 Too Many Requests`.
+- **FR89** : Tout fichier de justificatif téléversé fait l'objet d'un contrôle strict d'extension (MIME type) et d'un scan de sécurité antivirus côté serveur (via une API de scan) avant d'être accepté et écrit en base de données.
 
 ---
 
@@ -496,4 +532,4 @@ Enums : `Tier` (AFFRANCHI, GRAND_FRERE, BOSS), `UserRole` (MEMBER, ADMIN), `Subs
 
 ---
 
-*Document de Spécifications Produit IBC v1.1 — Mis à jour le 2026-06-28 avec Epic 18 (Support Chat Beta) et Epic 19 (PostHog Analytics).*
+*Document de Spécifications Produit IBC v1.2 — Mis à jour le 2026-07-08 avec Epic 26 (Sécurité, Conformité Légale & Consolidation UX).*

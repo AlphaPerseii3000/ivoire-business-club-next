@@ -106,6 +106,28 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 - **FR75** : Les messages de chat sont stockés en base de données et accessibles via une API authentifiée. Un agent externe (Hermes) peut lire les messages non traités et y répondre via une API sécurisée par token.
 - **FR76** : Chaque message de chat reçu est automatiquement ajouté à la to-do liste permanente du système de support (Hermes), permettant le suivi et la traitement des demandes.
 
+**Gestion des Mots de Passe & Consentement**
+- **FR77** : Un utilisateur peut demander un email de réinitialisation de mot de passe en saisissant son adresse email
+- **FR78** : Un utilisateur connecté peut modifier son mot de passe depuis son profil (ancien mot de passe requis)
+- **FR79** : Un utilisateur créé sans mot de passe connu (via WhatsApp/admin) peut définir son mot de passe via un lien d'invitation email
+- **FR80** : L'inscription d'un utilisateur requiert le consentement explicite obligatoire aux CGV et à la Politique de Confidentialité via une case à cocher. Le bouton de soumission reste désactivé ou l'API rejette la demande tant que la case n'est pas cochée.
+- **FR81** : À l'inscription réussie, le système enregistre en base de données la date et l'heure du consentement (`acceptedTermsAt`) et la version des conditions acceptées (`termsVersion`, ex: `"1.0"`).
+
+**Justificatifs de paiement & Validation**
+- **FR82** : Lors de la sélection d'un tier payant par virement, l'utilisateur peut téléverser un justificatif de paiement (PDF ou image JPEG/PNG, max 5 Mo).
+- **FR83** : Le justificatif téléversé est stocké de manière sécurisée (Cloudflare R2, préfixe `subscriptions/{subscriptionId}/receipts/`) et lié à sa souscription active en base de données.
+- **FR87** : L'administrateur peut visualiser et ouvrir le justificatif de paiement téléversé directement depuis la fiche de l'abonnement dans son tableau de bord d'approbation (Kanban).
+
+**Tracking & Statistiques d'Attractivité**
+- **FR84** : Un porteur de projet connecté dispose sur ses opportunités d'un tableau de bord d'attractivité épuré affichant le nombre de clics WhatsApp uniques enregistrés et le nombre de membres ayant manifesté leur intérêt (favoris).
+- **FR85** : Les boutons de contact WhatsApp n'appellent pas directement l'API externe `wa.me`, mais pointent vers une route interne de tracking (`/api/opportunities/[id]/contact`).
+- **FR86** : La route interne de tracking valide la session utilisateur, enregistre un log d'audit (`ContactLog` contenant `userId`, `opportunityId`, `createdAt`), puis redirige l'utilisateur vers le WhatsApp du porteur de projet.
+
+**Sécurité & Contrôles**
+- **FR88** : Le système applique un rate-limiting sur l'API de chat (10 messages/minute/IP) et l'API de création d'opportunité (2 opportunités/minute/IP) avec retour d'erreur `429 Too Many Requests`.
+- **FR89** : Tout fichier de justificatif téléversé fait l'objet d'un contrôle strict d'extension (MIME type) et d'un scan de sécurité antivirus côté serveur (via une API de scan) avant d'être accepté et écrit en base de données.
+
+
 ### Non-Functional Requirements (NFR)
 
 **Performance**
@@ -124,6 +146,10 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 - **NFR-S7** : Headers de sécurité : Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
 - **NFR-S8** : Pas de données sensibles en clair dans les logs
 - **NFR-S9** : Piste d'audit sur toutes les transactions d'abonnement et mises en relation
+- **NFR-S10** : Rate limiting sur `/api/auth/forgot-password` : 3 demandes/minute/IP
+- **NFR-S11** : Tokens de reset password expirent après 1 heure (set-password : 7 jours)
+- **NFR-S12** : Ancien mot de passe requis pour changement dans le profil (vérification bcrypt)
+
 
 **Scalabilité**
 - **NFR-SC1** : Support de 500 membres actifs simultanés en Phase 1
@@ -284,6 +310,19 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 | FR74 | Epic 18 | 18-1 / 18-2 | Soumission message chat + auto-acknowledgement immédiat |
 | FR75 | Epic 18 | 18-1 | Messages stockés en base et API authentifiée pour Hermes |
 | FR76 | Epic 18 | 18-3 | Hermes récupère les messages et les ajoute à sa to-do list |
+| FR77 | Epic 21 | 21-1 | Mot de passe oublié |
+| FR78 | Epic 21 | 21-2 | Changement de mot de passe dans le profil |
+| FR79 | Epic 21 | 21-3 | Set-Password Flow pour Utilisateurs Créés via WhatsApp |
+| FR80 | Epic 26 | 26.2 | Case de consentement obligatoire aux CGV / Confidentialité |
+| FR81 | Epic 26 | 26.2 | Enregistrement date et version consentement en base |
+| FR82 | Epic 26 | 26.3 | Upload du justificatif de virement |
+| FR83 | Epic 26 | 26.3 | Stockage R2 et association DB du justificatif de virement |
+| FR84 | Epic 26 | 26.5 | Dashboard attractivité opportunité (clics WhatsApp + favoris) |
+| FR85 | Epic 26 | 26.4 | Lien WhatsApp redirigeant vers route de tracking |
+| FR86 | Epic 26 | 26.4 | Session validation, audit log ContactLog et redirection wa.me |
+| FR87 | Epic 26 | 26.3 | Visualisation admin du justificatif de virement dans Kanban |
+| FR88 | Epic 26 | 26.7 | Rate-limiting API chat (10/min) et creation deal (2/min) |
+| FR89 | Epic 26 | 26.7 | Validation MIME type et scan antivirus justificatif |
 
 ---
 
@@ -2456,6 +2495,184 @@ Cette story affiche les photos des derniers événements sur la landing page et 
 
 ---
 
+## Epic 26: Sécurité, Conformité Légale & Consolidation UX
+
+Sécuriser la plateforme IBC (antivirus, rate-limiting), assurer sa conformité réglementaire (APDP, CENTIF-CI, pages légales) et éliminer les frictions d'usage majeures (suivi des virements, stats porteurs de projet, suivi WhatsApp).
+
 ---
 
-*Fin du document Epic Breakdown — IBC v1.7. Épiques 8, 10-17, 20, 22-25 ajoutés via Sprint Change Propals. Stories 9-9, 9-10, 19-2b ajoutées. Audit BMAD 2026-07-08.*
+### Story 26.1: Création des Pages Légales & Footer
+
+**En tant que** visiteur ou membre,  
+**Je veux** pouvoir accéder aux Mentions Légales, aux CGV et à la Politique de Confidentialité d'IBC depuis le footer de l'application,  
+**Afin de** m'informer sur les aspects légaux, les conditions d'utilisation et le traitement de mes données personnelles.
+
+**Acceptance Criteria :**
+
+**Given** un utilisateur (connecté ou non) sur n'importe quelle page de la plateforme  
+**When** il fait défiler la page jusqu'au footer  
+**Then** il voit des liens cliquables pour "Mentions Légales", "CGV" et "Politique de Confidentialité" rédigés en français  
+
+**Given** un utilisateur sur la page d'accueil d'IBC  
+**When** il clique sur "Mentions Légales"  
+**Then** il est redirigé vers la route `/mentions-legales` qui présente les informations de l'éditeur (KS Investment, Abidjan), de l'hébergeur (Cloud VPS Infomaniak) et du directeur de publication  
+
+**Given** un utilisateur sur la page d'accueil d'IBC  
+**When** il clique sur "Politique de Confidentialité"  
+**Then** il est redirigé vers la route `/politique-confidentialite` détaillant les données collectées (nom, email, téléphone, pays, justificatif de paiement et pièces d'identité), leur conservation (5 ans pour se conformer aux exigences de la CENTIF-CI), la conformité APDP (Loi n° 2013-450) et RGPD  
+
+**Given** un utilisateur sur la page d'accueil d'IBC  
+**When** il clique sur "CGV"  
+**Then** il est redirigé vers la route `/cgv` décrivant la grille des tiers (Affranchis 29€/mois, Grands Frères, Boss 99€/mois), le paiement par virement uniquement, la validation sous 48h, et l'absence de remboursement partiel  
+
+**Given** un écran mobile (largeur < 768px)  
+**When** il accède à l'une de ces pages légales  
+**Then** le contenu textuel s'adapte de manière fluide et reste lisible (Tailwind v4 typographie, taille tactile du footer conforme à UX-DR25)
+
+---
+
+### Story 26.2: Registre de Consentement APDP / RGPD à l'Inscription
+
+**En tant que** visiteur,  
+**Je veux** donner mon consentement explicite aux CGV et à la Politique de Confidentialité lors de mon inscription,  
+**Afin de** valider mon compte conformément à la réglementation APDP et au RGPD.
+
+**Acceptance Criteria :**
+
+**Given** un visiteur sur le formulaire d'inscription `/auth/signup`  
+**When** il remplit les champs d'informations personnelles mais ne coche pas la case "J'accepte les CGV et la Politique de Confidentialité d'IBC."  
+**Then** le bouton "S'inscrire" reste visuellement désactivé et non cliquable, ou une erreur de validation claire s'affiche si soumis  
+
+**Given** la case à cocher de consentement légal  
+**When** le visiteur clique sur les mots "CGV" ou "Politique de Confidentialité"  
+**Then** les pages correspondantes s'ouvrent dans un nouvel onglet sans réinitialiser le formulaire d'inscription en cours  
+
+**Given** un visiteur qui coche la case et soumet le formulaire d'inscription avec succès  
+**When** le compte est créé en base de données  
+**Then** l'enregistrement de l'utilisateur contient le timestamp précis du consentement (`acceptedTermsAt`) et la version active des termes (`termsVersion = "1.0"`)  
+
+**Given** une tentative de contournement de la case à cocher via un appel direct à l'API de signup  
+**When** la requête ne contient pas l'affirmation du consentement  
+**Then** la route API `/api/auth/signup` renvoie une erreur HTTP 400 avec un message de validation obligatoire
+
+---
+
+### Story 26.3: Upload de Preuve de Virement & Validation Admin
+
+**En tant que** nouveau membre ayant choisi le virement bancaire,  
+**Je veux** téléverser mon attestation de virement lors de ma souscription,  
+**Afin que** l'administrateur puisse valider rapidement mon paiement et activer mon abonnement.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté en cours d'onboarding sur l'écran de paiement  
+**When** il sélectionne le virement bancaire comme moyen de paiement  
+**Then** le formulaire affiche un champ de téléversement (Drag & Drop ou sélection de fichier) acceptant les formats PDF, JPEG, et PNG jusqu'à 5 Mo  
+
+**Given** un fichier de justificatif valide sélectionné par le membre  
+**When** il valide sa demande d'abonnement  
+**Then** le fichier est téléversé de manière sécurisée sur Cloudflare R2 sous le chemin `subscriptions/{subscriptionId}/receipts/[uuid].[ext]`  
+**And** la souscription est enregistrée en DB avec `paymentReceiptUrl` pointant vers le fichier et `paymentReceiptKey` contenant sa clé R2  
+**And** le statut de la souscription passe à `PENDING` (ou reste `TRIAL` selon le flux d'attente)  
+
+**Given** un administrateur connecté sur `/admin/dashboard` ou Kanban d'approbation  
+**When** il consulte la fiche de souscription en attente  
+**Then** il voit un lien ou un bouton d'aperçu pour ouvrir l'attestation de virement téléversée par le membre  
+
+**Given** un administrateur qui clique sur le justificatif de virement d'une souscription  
+**When** il clique sur "Approuver"  
+**Then** la souscription passe au statut `ACTIVE` en DB, et le tier de l'utilisateur est synchronisé avec celui de la souscription en une seule transaction Prisma (Règle d'Or d'abonnement)
+
+---
+
+### Story 26.4: Route de Tracking & Redirection WhatsApp (CENTIF-CI)
+
+**En tant que** membre voulant entrer en contact avec un porteur de projet,  
+**Je veux** que mon clic sur le bouton WhatsApp soit tracé en interne avant d'être redirigé vers l'application WhatsApp,  
+**Afin de** respecter les obligations d'audit réglementaire de la CENTIF-CI.
+
+**Acceptance Criteria :**
+
+**Given** un membre connecté sur la page de détail d'une opportunité  
+**When** il clique sur le bouton "Contacter le porteur sur WhatsApp"  
+**Then** le lien n'appelle pas directement `wa.me` mais pointe vers la route interne `/api/opportunities/[id]/contact`  
+
+**Given** un appel à `/api/opportunities/[id]/contact`  
+**When** l'utilisateur n'est pas authentifié ou n'a pas un abonnement valide requis pour voir cette opportunité  
+**Then** l'API renvoie une redirection vers `/auth/signin` ou une erreur HTTP 403  
+
+**Given** un membre authentifié avec un abonnement valide appelant `/api/opportunities/[id]/contact`  
+**When** la route API est déclenchée  
+**Then** le système insère une ligne dans la table `ContactLog` en DB contenant le `userId`, `opportunityId` et le timestamp `createdAt`  
+**And** le système redirige instantanément l'utilisateur vers le lien WhatsApp du porteur de projet (`https://wa.me/[numéro]?text=...`) via un statut HTTP 302
+
+---
+
+### Story 26.5: Dashboard de Statistiques d'Attractivité (Koffi)
+
+**En tant que** porteur de projet (Koffi),  
+**Je veux** visualiser les statistiques d'attractivité de mes opportunités soumises (nombre de clics WhatsApp et nombre d'investisseurs intéressés),  
+**Afin d'** évaluer l'intérêt de la communauté pour mes projets.
+
+**Acceptance Criteria :**
+
+**Given** un porteur de projet (Koffi) connecté sur son tableau de bord `/dashboard/opportunities` (ou équivalent)  
+**When** il consulte la liste des opportunités qu'il a créées  
+**Then** chaque opportunité affiche un panneau de statistiques d'attractivité épuré  
+
+**Given** le panneau de statistiques d'attractivité d'un deal  
+**When** le système charge la page  
+**Then** il affiche le nombre total de clics uniques sur le CTA WhatsApp (compte des entrées distinctes de `ContactLog` pour ce deal)  
+**And** il affiche le nombre d'investisseurs ayant marqué le deal en favori / manifesté leur intérêt (compte des entrées de `OpportunityInterest`)  
+
+**Given** un nouveau membre qui clique sur le bouton WhatsApp ou marque le deal en favori  
+**When** le porteur de projet rafraîchit son tableau de bord  
+**Then** les compteurs s'incrémentent pour refléter les nouvelles interactions
+
+---
+
+### Story 26.6: Notifications Email Automatiques (Resend)
+
+**En tant qu'** utilisateur de la plateforme IBC,  
+**Je veux** recevoir des notifications par email claires lors du changement de statut de ma souscription ou de mon opportunité,  
+**Afin d'** être informé en temps réel des actions de l'administration.
+
+**Acceptance Criteria :**
+
+**Given** un administrateur qui approuve la souscription d'un utilisateur  
+**When** le changement de statut est écrit en DB  
+**Then** le système déclenche l'envoi asynchrone d'un email de bienvenue et de confirmation via Resend en français  
+**And** le log de livraison de l'email est enregistré sans bloquer la requête d'approbation de l'admin (fire-and-forget)
+
+**Given** un porteur de projet ayant soumis une opportunité  
+**When** l'administrateur valide l'opportunité (statut passe à `VERIFIED`) ou la rejette (statut passe à `REJECTED`)  
+**Then** le porteur de projet reçoit automatiquement un email l'informant du statut de validation avec des instructions claires sur les étapes suivantes
+
+---
+
+### Story 26.7: Sécurité (Rate-Limiting & Scan Antivirus)
+
+**En tant qu'** administrateur de la plateforme,  
+**Je veux** que les routes sensibles soient protégées contre les abus par rate-limiting et que les fichiers téléversés soient analysés contre les virus,  
+**Afin de** garantir la sécurité et la disponibilité du service.
+
+**Acceptance Criteria :**
+
+**Given** un utilisateur envoyant des messages sur le chat de support  
+**When** il dépasse la limite de 10 messages en une minute depuis la même adresse IP  
+**Then** le système bloque les messages suivants et renvoie une erreur HTTP 429 "Too Many Requests"  
+
+**Given** un porteur de projet créant des opportunités  
+**When** il dépasse la limite de 2 soumissions en une minute depuis la même adresse IP  
+**Then** le système bloque la création et renvoie une erreur HTTP 429  
+
+**Given** un membre téléversant un justificatif de paiement  
+**When** il sélectionne un fichier  
+**Then** le serveur valide le Content-Type MIME (uniquement `application/pdf`, `image/jpeg`, `image/png`)  
+**And** le serveur soumet le fichier à un scan de sécurité antivirus (via une API de scan) avant d'autoriser l'écriture sur R2 et en DB  
+**And** si le scan détecte une menace, le fichier est rejeté et l'utilisateur reçoit une alerte de sécurité.
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.8. Épiques 8, 10-17, 20, 22-26 ajoutés via Sprint Change Propals. Stories 9-9, 9-10, 19-2b, 26.1-26.7 ajoutées. Audit BMAD 2026-07-08.*
+

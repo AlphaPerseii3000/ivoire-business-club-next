@@ -309,10 +309,12 @@ IBC replaces the distant cousin with a structured verification system:
 
 **Subscription Activation Flow:**
 
-1. **Initiation:** User selects tier on `/pricing` → modal opens with RIB, amount, reference code.
-2. **Interaction:** User copies RIB/reference, switches to banking app, makes transfer. Returns to IBC, clicks "J'ai effectué le virement".
-3. **Feedback:** Status changes to TRIAL → PENDING. Toast: "Merci ! Nous validons sous 24h."
-4. **Completion:** Admin marks subscription ACTIVE; user receives email + in-app notification. Status pill turns green.
+1. **Initiation:** User selects tier on `/pricing` → modal/page opens with RIB details, amount, and unique reference code.
+2. **Interaction:** User copies RIB/reference, switches to banking app, and makes the bank transfer.
+3. **Document Upload:** User returns to the payment page, drags & drops or selects their transfer receipt (PDF, JPG, PNG; max 5MB). The client uploads it to Cloudflare R2 (`subscriptions/{subscriptionId}/receipts/`) via `/api/subscriptions/upload-receipt` with antivirus check and type validation.
+4. **Confirmation:** Once uploaded, the "Confirmer le virement" button becomes active. The user clicks it.
+5. **Feedback:** Status changes to TRIAL → PENDING. Toast: "Merci ! Justificatif reçu. Nous validons sous 48h ouvrées."
+6. **Completion:** Admin reviews the receipt in the Admin Kanban and validates the payment; user's subscription becomes ACTIVE, and their tier upgrades automatically in a single DB transaction.
 
 \---
 
@@ -602,7 +604,7 @@ flowchart TD
 * **Teaser deals feed** — 3–5 deal cards showing title + location ONLY (no amount, no contact). Each card has "Devenez membre pour voir les détails" overlay.
 * **Tier comparison** — 3 vertical cards: Affranchis (€29), Grand Frère (€49), Boss (€99). Feature checklist + "Choisir" button.
 * **Trust signals** — Partner logos (if any), "Intermédiaire non-financier" compliance note, FAQ accordion
-* **Footer** — CGV link, contact WhatsApp, newsletter email input
+* **Footer** — Links to Legal Pages (Mentions Légales, Politique de Confidentialité, CGV), contact WhatsApp, newsletter email input. Centered list on mobile, horizontal row on desktop. Legal disclaimer text (Compliance note).
 
 **Layout (desktop ≥1024px):**
 
@@ -673,13 +675,16 @@ flowchart TD
 * **Selected state:** Card border thickens, checkmark appears, button becomes "Continuer"
 * **Payment instructions page:**
 
-  * Beneficiary: KS Investment
-  * IBAN/RIB field with copy button
-  * Amount field (auto-filled from tier)
-  * Reference field (auto-generated: `IBC-{userId}-{tier}`)
-  * "Copier tout" button
-  * "J'ai effectué le virement" primary button
-  * FAQ: "Combien de temps pour la validation ?" → "Sous 24h ouvrées"
+    * Beneficiary: KS Investment
+    * IBAN/RIB field with copy button
+    * Amount field (auto-filled from tier)
+    * Reference field (auto-generated: `IBC-{userId}-{tier}`)
+    * "Copier tout" button
+    * **File Upload Dropzone:** Drag & drop area for transfer receipt.
+      * Label: "Déposez votre attestation de virement (PDF, JPEG, PNG - Max 5 Mo)"
+      * Visual States: Default (dashed border, upload icon), Dragover (highlighted border, upload animation), Uploading (progress bar, cancel button), Success (file name, green check, trash icon to remove), Error (red border, explicit error text e.g., "Format non supporté" ou "Fichier trop volumineux").
+    * "Confirmer le paiement" primary button (disabled until file is successfully uploaded).
+    * FAQ: "Combien de temps pour la validation ?" → "Sous 48h ouvrées après réception des fonds"
 
 ### 10.5 Profile Page
 
@@ -733,9 +738,55 @@ flowchart TD
   * "S'inscrire avec Google" primary button
   * Divider "ou"
   * Name input + Email input + Password input (with strength indicator)
-  * "S'inscrire" submit button
+  * Mandatory consent checkbox: "J'accepte les CGV et la Politique de Confidentialité d'IBC." (with active links to `/cgv` and `/politique-confidentialite` opening in new tabs).
+  * "S'inscrire" submit button (disabled until checkbox is ticked).
   * Footer: "Déjà membre ? Se connecter"
 * **Error states:** Inline validation below each field. Toast for server errors (rate limit, duplicate email).
+
+### 10.8 Project Owner Dashboard (`/dashboard/opportunities`)
+
+**Purpose:** Provide project owners (like Koffi) with a clear view of their submitted deals, their verification status, and attractiveness statistics.
+
+**Layout (mobile):**
+* **Sticky header:** Back arrow + Title "Mes Opportunités".
+* **Top action:** Prominent "+ Soumettre une opportunité" outline button at the top of the feed.
+* **Opportunity card list:** Vertical scroll, each opportunity card contains:
+  * Title, Category, and Date submitted.
+  * Status pill (PENDING = yellow, VERIFIED = green, REJECTED = red).
+  * **Attractiveness Stats segment (two columns):**
+    * WhatsApp Clicks card: Green WhatsApp icon + number of clicks.
+    * Interests card: Gold Star icon + number of soft commitments.
+  * *If status is REJECTED:* A warning card showing the admin's justification note with an "Modifier & soumettre à nouveau" CTA.
+  * *If status is VERIFIED:* A link to view the public deal detail page.
+
+**Layout (desktop):**
+* Left sidebar for dashboard navigation (Deals, Profile, Subscriptions).
+* Right main section: 2-column grid of opportunity cards with full-width header for quick actions and global metrics summary (total clicks, total interests).
+
+### 10.9 Legal Pages (`/mentions-legales`, `/politique-confidentialite`, `/cgv`)
+
+**Purpose:** Provide static legal copy in French compliant with APDP (Loi 2013-450 de Côte d'Ivoire) and CENTIF-CI.
+
+**Layout (mobile & desktop):**
+* Max-width container (`max-w-3xl mx-auto`) for readability.
+* Clean typographical hierarchy using Tailwind's prose styles:
+  * Title: Single `h1` (e.g., "Mentions Légales").
+  * Sections: `h2` and `h3` for headers.
+  * Unordered lists for bulleted legal details.
+* Breadcrumbs or "Retour à l'accueil" link at the top.
+* **Mentions Légales (`/mentions-legales`) Copy Details:**
+  * Éditeur: KS Investment SA, capital to confirm, Abidjan, Côte d'Ivoire.
+  * Hébergeur: Cloud VPS Infomaniak (Suisse).
+  * Directeur de la Publication: Directeur de KS Investment.
+* **Politique de Confidentialité (`/politique-confidentialite`) Copy Details:**
+  * Data collected: Name, email, phone, country, payment receipt, and KYC identity documents.
+  * Retention: Profile data retained until account deletion; payment logs/transactions stored for 5 years (CENTIF-CI legal compliance).
+  * Regulation: Conforme APDP (Côte d'Ivoire) and RGPD (for EU residents).
+* **Conditions Générales de Vente — CGV (`/cgv`) Copy Details:**
+  * Membership Tiers: Affranchis (29 €/month), Grands Frères (price TBD), Boss (99 €/month).
+  * Payment: Bank transfer to KS Investment, or Mobile Money (Wave, Orange Money) for Côte d'Ivoire.
+  * Verification: Manual admin validation within 48 business hours of receiving funds.
+  * Cancellation: No partial refunds/prorata; termination takes effect at the end of the current billing cycle.
 
 \---
 
@@ -822,6 +873,18 @@ flowchart TD
 * **Purpose:** Visualize bank-transfer subscription lifecycle
 * **Props:** `status: SubscriptionStatus`, `submittedAt: Date`, `validatedAt?: Date`
 * **Anatomy:** Vertical stepper: TRIAL → PENDING → ACTIVE, with timestamps and human-friendly labels
+
+**ReceiptUploader**
+
+* **Purpose:** Handle bank transfer receipt uploads with drag-and-drop support, progress tracking, and validation feedback.
+* **Props:** `subscriptionId: string`, `onUploadSuccess: (url: string) => void`, `onUploadError: (err: string) => void`
+* **States:** Idle, Dragging, Uploading (percentage progress bar), Uploaded (success state with file name and delete button), Error (error message with retry option).
+
+**DealStats**
+
+* **Purpose:** Display attractiveness metrics (WhatsApp contact clicks and soft commitments) for a project owner's opportunity.
+* **Props:** `opportunityId: string`, `whatsappClicks: number`, `interestsCount: number`
+* **Anatomy:** 2-column micro-dashboard cards (WhatsApp Clicks in green accent, Manifestations d'intérêt in gold accent) with clean typography, tooltips explaining what each metric tracks.
 
 ### 11.3 Component Implementation Roadmap
 
@@ -1273,15 +1336,22 @@ See §12.6 for detailed empty state patterns.
 ### 15.3 Key Files to Create / Modify
 
 * `src/app/globals.css` — Design tokens (CSS variables for colors, typography)
-* `src/components/ibc/` — Custom components: DealCard, TrustBadge, WhatsAppCTA, TierCard, etc.
+* `src/components/ibc/` — Custom components: DealCard, TrustBadge, WhatsAppCTA, TierCard, ReceiptUploader, DealStats, etc.
 * `src/components/ui/` — shadcn/ui primitives (install via CLI)
 * `src/app/(public)/page.tsx` — Landing page
+* `src/components/landing/footer.tsx` — Global footer with legal links
+* `src/app/(public)/mentions-legales/page.tsx` [NEW] — Mentions Légales page
+* `src/app/(public)/politique-confidentialite/page.tsx` [NEW] — Politique de Confidentialité page
+* `src/app/(public)/cgv/page.tsx` [NEW] — Conditions Générales de Vente page
 * `src/app/(member)/deals/page.tsx` — Deal feed
 * `src/app/(member)/deals/\\\[id]/page.tsx` — Deal detail
 * `src/app/(member)/profile/page.tsx` — Profile
+* `src/app/(dashboard)/dashboard/opportunities/page.tsx` — Project Owner Dashboard
 * `src/app/(admin)/dashboard/page.tsx` — Admin kanban
 * `src/app/auth/signin/page.tsx` — Sign in
-* `src/app/auth/signup/page.tsx` — Sign up
+* `src/app/auth/signup/page.tsx` — Sign up with mandatory consent checkbox
+* `src/app/api/subscriptions/upload-receipt/route.ts` [NEW] — Upload receipt endpoint
+* `src/app/api/opportunities/[id]/contact/route.ts` [NEW] — WhatsApp contact tracking endpoint
 
 ### 15.4 PWA Readiness (Future Phase)
 

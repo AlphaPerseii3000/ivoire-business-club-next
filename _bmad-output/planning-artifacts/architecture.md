@@ -155,10 +155,11 @@ The codebase uses:
 **Database:** PostgreSQL in production (migrate from SQLite). Prisma 7 with `prisma-client` generator outputting to `src/generated/prisma`.
 
 **Key Data Models (from schema):**
-- `User` — auth identity, profile, tier, role, verification status, country field (UEMOA expansion ready)
+- `User` — auth identity, profile, tier, role, verification status, country field (UEMOA expansion ready), GDPR/APDP consent fields (`acceptedTermsAt`, `termsVersion`)
 - `Account` / `Session` / `VerificationToken` — Auth.js required adapters
-- `Subscription` — tier, period, provider (will become `BANK_TRANSFER`), status lifecycle
+- `Subscription` — tier, period, provider (`BANK_TRANSFER`), status lifecycle, bank transfer proof fields (`paymentReceiptUrl`, `paymentReceiptKey` for Cloudflare R2 storage)
 - `Opportunity` — deal postings with verification status, author, verifier
+- `ContactLog` — WhatsApp click tracking logs for AML / CENTIF-CI audit trail mapping users to opportunities
 - `Payment` — legacy Stripe/CinetPay records; to be repurposed or replaced for bank-transfer tracking
 - `ChatMessage` — support chat messages (bug, access, request) with enums `ChatMessageStatus` (PENDING, ACKNOWLEDGED, REPLIED, CLOSED) and `ChatMessageAuthor` (MEMBER, HERMES, SYSTEM), structured for threading and agent interaction
 
@@ -204,8 +205,11 @@ src/app/api/
 ├── auth/signup/route.ts          # Credential registration (rate limited)
 ├── admin/
 │   ├── opportunities/[id]/verify/route.ts  # Status transitions
+│   ├── subscriptions/[id]/route.ts  # Subscription validation (approve/reject)
 │   └── users/[id]/tier/route.ts            # Tier management
 ├── opportunities/route.ts        # CRUD + listing
+├── opportunities/[id]/contact/route.ts  # Redirection + tracking WhatsApp
+├── subscriptions/upload-receipt/route.ts # R2 file upload for bank transfers
 ├── user/profile/route.ts         # Profile updates
 ├── chat/
 │   ├── messages/route.ts         # Post and fetch user messages
@@ -214,10 +218,9 @@ src/app/api/
 │   ├── read/route.ts             # Hermes polling for PENDING messages
 │   ├── reply/route.ts            # Hermes reply submission
 │   └── close/route.ts            # Hermes closing conversations
-└── (future) subscriptions/       # Bank-transfer submission
 ```
 
-**Support Chat API Reference:**
+**API Reference Table:**
 
 | Route | Méthode | Auth | Description |
 |-------|---------|------|-------------|
@@ -227,6 +230,8 @@ src/app/api/
 | `/api/chat/agent/read` | `GET` | Bearer token (CRON_SECRET) | Hermes lit les messages PENDING (tous users) |
 | `/api/chat/agent/reply` | `POST` | Bearer token (CRON_SECRET) | Hermes répond à un message |
 | `/api/chat/agent/close` | `POST` | Bearer token (CRON_SECRET) | Hermes ferme une conversation |
+| `/api/opportunities/[id]/contact` | `GET` | Session (membre) | Écrit un `ContactLog` (suivi WhatsApp) et redirige sur WhatsApp |
+| `/api/subscriptions/upload-receipt` | `POST` | Session (membre) | Scan antivirus + téléversement du reçu de virement sur R2 |
 
 **Webhook Temps Réel (Story 18-4) :**
 
@@ -427,11 +432,19 @@ type ApiError = { error: string; code?: string; details?: Record<string, string[
 - Reference pattern: `if (newStatus === "VERIFIED" && currentStatus !== "VERIFIED") { ... }`.
 - Admin endpoints must remain idempotent: re-verifying or re-submitting the same status must not spam notifications, emails, or webhooks.
 
-### Upload Security Patterns
+### Upload Security & Antivirus Scan Patterns
 
 - Presigned URL completion endpoints MUST validate the R2 key server-side before persisting document metadata:
   - Regex: `^opportunities/[a-zA-Z0-9-]+/documents/[a-zA-Z0-9-]+\.[a-zA-Z0-9]+$`
   - Scope check: `key.startsWith('opportunities/{opportunityId}/documents/')`
+- **Receipts Upload constraints (Story 26.3):**
+  - Prefix pattern: `subscriptions/{subscriptionId}/receipts/`
+  - Max file size: 5MB
+  - Permitted Mime Types: `application/pdf`, `image/jpeg`, `image/png`
+- **Antivirus Scan Infrastructure (Story 26.7):**
+  - All uploads (project documents and payment receipts) must undergo an antivirus scan in the backend before the metadata or database associations are saved.
+  - The scan must verify the file stream or the uploaded buffer using an integrated antivirus validation client/service (e.g., ClamAV Cloud API or equivalent file validation microservice).
+  - If the scan fails or detects a threat, the API route must discard the file, delete the temporary object/key from R2 (if uploaded), and return a generic error (e.g., `420 Unprocessable Entity` or `400 Bad Request`) without persisting any data to the database.
 - Conditional metadata: never serialize full `initialDocuments` metadata to non-authors/non-admins.
   - `documentCount` may be visible broadly.
   - `initialDocuments` must be returned only to authorized authors/admins.
@@ -481,10 +494,13 @@ ibc/
 │   │   │   ├── auth/signup/route.ts
 │   │   │   ├── opportunities/route.ts
 │   │   │   ├── opportunities/[id]/route.ts
+│   │   │   ├── opportunities/[id]/contact/route.ts
+│   │   │   ├── subscriptions/upload-receipt/route.ts
 │   │   │   ├── user/profile/route.ts
 │   │   │   ├── admin/
 │   │   │   │   ├── users/[id]/tier/route.ts
 │   │   │   │   ├── users/[id]/verify/route.ts
+│   │   │   │   ├── subscriptions/[id]/route.ts
 │   │   │   │   └── opportunities/[id]/verify/route.ts
 │   │   │   ├── chat/
 │   │   │   │   ├── messages/route.ts
@@ -493,7 +509,6 @@ ibc/
 │   │   │   │       ├── read/route.ts
 │   │   │   │       ├── reply/route.ts
 │   │   │   │       └── close/route.ts
-│   │   │   └── (future) subscriptions/
 │   │   ├── auth/
 │   │   │   ├── signin/page.tsx
 │   │   │   ├── signup/page.tsx
@@ -800,4 +815,4 @@ CRON_SECRET=
 
 ---
 
-*Architecture document for IBC — updated on 2026-06-28 with PostHog analytics and support chat integration decisions.*
+*Architecture document for IBC — updated on 2026-07-08 with Epic 26 database modifications, WhatsApp contact tracking endpoint, and R2 antivirus scanning infrastructure decisions.*
