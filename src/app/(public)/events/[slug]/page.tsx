@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Calendar, MapPin, Lock, Ticket, Users } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Lock, Ticket, Users, ExternalLink } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Footer } from "@/components/landing/footer";
@@ -263,7 +263,21 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <div className="flex items-center gap-2">
                 <span className="text-white/20">•</span>
                 <MapPin className="size-4" aria-hidden="true" />
-                <span>{event.eventType === "ONLINE" ? (event.onlineUrl ? "Visio" : "En ligne") : (event.location ? event.location : "Lieu à confirmer")}</span>
+                {event.eventType === "ONLINE" ? (
+                  event.onlineUrl ? (
+                    <a
+                      href={event.onlineUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-400 hover:text-teal-300 underline underline-offset-2 inline-flex items-center gap-1"
+                    >
+                      <span className="line-clamp-1">{event.onlineUrl}</span>
+                      <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                    </a>
+                  ) : "En ligne"
+                ) : (
+                  <span>{event.location ? event.location : "Lieu à confirmer"}</span>
+                )}
               </div>
             ) : null}
           </div>

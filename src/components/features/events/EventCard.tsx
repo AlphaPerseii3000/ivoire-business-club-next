@@ -101,7 +101,9 @@ export function EventCard({ event, isAuthenticated = false, userTier = null }: E
           <div className={`mt-2 flex items-center gap-2 text-sm text-muted-foreground ${isPrivateVisitor ? "blur-md select-none" : ""}`}>
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
             <span className="line-clamp-1">
-              {event.eventType === "ONLINE" ? "En ligne" : (event.location ? event.location : "Lieu à confirmer")}
+              {event.eventType === "ONLINE"
+                ? (event.onlineUrl ? `En ligne — ${event.onlineUrl.replace(/^https?:\/\//, "").split("/")[0]}` : "En ligne")
+                : (event.location ? event.location : "Lieu à confirmer")}
             </span>
           </div>
 
