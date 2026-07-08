@@ -157,7 +157,7 @@ export function EventRegisterButton({
                 </p>
               </div>
 
-              {calculatedPrice !== 0 && (
+              {calculatedPrice !== null && calculatedPrice > 0 && (
                 <>
                   {successData.payOnSite ? (
                     <div className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 border border-amber-500/20">
@@ -236,86 +236,90 @@ export function EventRegisterButton({
                 </div>
               </div>
 
-              {/* Mode de paiement */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Mode de règlement</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption("BANK_TRANSFER")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
-                      paymentOption === "BANK_TRANSFER"
-                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
-                        : "border-input bg-background hover:bg-accent"
-                    }`}
-                  >
-                    <Landmark className="h-5 w-5 mb-1" />
-                    Virement Bancaire
-                  </button>
+              {calculatedPrice !== null && calculatedPrice > 0 && (
+                <>
+                  {/* Mode de paiement */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Mode de règlement</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption("BANK_TRANSFER")}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
+                          paymentOption === "BANK_TRANSFER"
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                            : "border-input bg-background hover:bg-accent"
+                        }`}
+                      >
+                        <Landmark className="h-5 w-5 mb-1" />
+                        Virement Bancaire
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption("WAVE")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
-                      paymentOption === "WAVE"
-                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
-                        : "border-input bg-background hover:bg-accent"
-                    }`}
-                  >
-                    <Wallet className="h-5 w-5 mb-1" />
-                    Wave
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption("WAVE")}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
+                          paymentOption === "WAVE"
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                            : "border-input bg-background hover:bg-accent"
+                        }`}
+                      >
+                        <Wallet className="h-5 w-5 mb-1" />
+                        Wave
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption("ORANGE_MONEY")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
-                      paymentOption === "ORANGE_MONEY"
-                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
-                        : "border-input bg-background hover:bg-accent"
-                    }`}
-                  >
-                    <Phone className="h-5 w-5 mb-1" />
-                    Orange Money
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption("ORANGE_MONEY")}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
+                          paymentOption === "ORANGE_MONEY"
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                            : "border-input bg-background hover:bg-accent"
+                        }`}
+                      >
+                        <Phone className="h-5 w-5 mb-1" />
+                        Orange Money
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption("PAY_ON_SITE")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
-                      paymentOption === "PAY_ON_SITE"
-                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
-                        : "border-input bg-background hover:bg-accent"
-                    }`}
-                  >
-                    <CreditCard className="h-5 w-5 mb-1" />
-                    Payer sur place
-                  </button>
-                </div>
-              </div>
-
-              {(paymentOption === "WAVE" || paymentOption === "ORANGE_MONEY") && (
-                <div className="space-y-1.5 pt-1">
-                  <Label htmlFor="provider-phone">Numéro de téléphone Mobile Money *</Label>
-                  <Input
-                    id="provider-phone"
-                    type="tel"
-                    required
-                    placeholder="+225 07 00 00 00 00"
-                    value={providerPhone}
-                    onChange={(e) => setProviderPhone(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {/* Message d'avertissement Pay On Site (AC3) */}
-              {paymentOption === "PAY_ON_SITE" && (
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong>Attention :</strong> Les places ne sont pas garanties pour le paiement sur place. Pré-inscrivez-vous et réglez au préalable pour garantir votre réservation.
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption("PAY_ON_SITE")}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-medium transition-all ${
+                          paymentOption === "PAY_ON_SITE"
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                            : "border-input bg-background hover:bg-accent"
+                        }`}
+                      >
+                        <CreditCard className="h-5 w-5 mb-1" />
+                        Payer sur place
+                      </button>
+                    </div>
                   </div>
-                </div>
+
+                  {(paymentOption === "WAVE" || paymentOption === "ORANGE_MONEY") && (
+                    <div className="space-y-1.5 pt-1">
+                      <Label htmlFor="provider-phone">Numéro de téléphone Mobile Money *</Label>
+                      <Input
+                        id="provider-phone"
+                        type="tel"
+                        required
+                        placeholder="+225 07 00 00 00 00"
+                        value={providerPhone}
+                        onChange={(e) => setProviderPhone(e.target.value)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Message d'avertissement Pay On Site (AC3) */}
+                  {paymentOption === "PAY_ON_SITE" && (
+                    <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Attention :</strong> Les places ne sont pas garanties pour le paiement sur place. Pré-inscrivez-vous et réglez au préalable pour garantir votre réservation.
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <DialogFooter className="pt-2">
@@ -328,7 +332,7 @@ export function EventRegisterButton({
                   Annuler
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Inscription..." : "Confirmer l'inscription"}
+                  {loading ? "Inscription..." : (calculatedPrice !== null && calculatedPrice > 0 ? "Confirmer l'inscription" : "S'inscrire")}
                 </Button>
               </DialogFooter>
             </form>

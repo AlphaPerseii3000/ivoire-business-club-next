@@ -47,7 +47,7 @@ export async function PUT(
       return NextResponse.json({ error: "Inscription introuvable" }, { status: 404 });
     }
 
-    const updated = await prisma.eventRegistration.update({
+    const updatedData = await prisma.eventRegistration.update({
       where: { id: registrationId },
       data: {
         ...(status ? { status: status as RegistrationStatus } : {}),
@@ -60,11 +60,25 @@ export async function PUT(
             id: true,
             name: true,
             email: true,
-            avatarUrl: true,
+            image: true,
           },
         },
       },
     });
+
+    const updated = {
+      ...updatedData,
+    } as any;
+    if (updatedData.user !== undefined) {
+      updated.user = updatedData.user
+        ? {
+            id: updatedData.user.id,
+            name: updatedData.user.name,
+            email: updatedData.user.email,
+            avatarUrl: updatedData.user.image,
+          }
+        : null;
+    }
 
     await safeCreateAuditLog({
       actorId: session.user.id,

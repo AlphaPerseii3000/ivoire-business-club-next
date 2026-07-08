@@ -27,7 +27,7 @@ export async function GET(
         ? (statusParam as RegistrationStatus)
         : undefined;
 
-    const registrations = await prisma.eventRegistration.findMany({
+    const registrationsData = await prisma.eventRegistration.findMany({
       where: {
         eventId: id,
         ...(validStatus ? { status: validStatus } : {}),
@@ -46,11 +46,26 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            avatarUrl: true,
+            image: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
+    });
+
+    const registrations = registrationsData.map((reg) => {
+      const mapped = { ...reg } as any;
+      if (reg.user !== undefined) {
+        mapped.user = reg.user
+          ? {
+              id: reg.user.id,
+              name: reg.user.name,
+              email: reg.user.email,
+              avatarUrl: reg.user.image,
+            }
+          : null;
+      }
+      return mapped;
     });
 
     return NextResponse.json({ registrations });
