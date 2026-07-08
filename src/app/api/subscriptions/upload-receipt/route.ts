@@ -86,7 +86,6 @@ export async function POST(req: Request) {
         data: {
           subscriptionId: updated.id,
           paymentReceiptUrl: updated.paymentReceiptUrl,
-          paymentReceiptKey: updated.paymentReceiptKey,
         },
       },
       { status: 201 }
