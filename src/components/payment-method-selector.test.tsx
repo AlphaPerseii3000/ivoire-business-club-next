@@ -58,7 +58,7 @@ describe("PaymentMethodSelector", () => {
     expect(onSubmit).toHaveBeenCalledWith("ORANGE_MONEY", "+221771234567");
   });
 
-  it("calls onSubmit with only provider for bank transfer", async () => {
+  it("calls onSubmit with only provider for bank transfer without requiring a receipt file", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<PaymentMethodSelector onSubmit={onSubmit} />);
@@ -66,6 +66,31 @@ describe("PaymentMethodSelector", () => {
     await user.click(screen.getByTestId("payment-method-submit"));
 
     expect(onSubmit).toHaveBeenCalledWith("BANK_TRANSFER");
+  });
+
+  it("calls onFileChange when a receipt file is selected", async () => {
+    const user = userEvent.setup();
+    const onFileChange = vi.fn();
+    render(<PaymentMethodSelector onSubmit={vi.fn()} onFileChange={onFileChange} />);
+
+    const file = new File(["receipt"], "receipt.pdf", { type: "application/pdf" });
+    const input = screen.getByTestId("receipt-file-input");
+    await user.upload(input, file);
+
+    expect(onFileChange).toHaveBeenCalledWith(expect.any(File));
+  });
+
+  it("rejects an oversized receipt file and calls onFileChange with null", async () => {
+    const user = userEvent.setup();
+    const onFileChange = vi.fn();
+    render(<PaymentMethodSelector onSubmit={vi.fn()} onFileChange={onFileChange} />);
+
+    const file = new File([new Uint8Array(6 * 1024 * 1024).fill(1)], "receipt.pdf", { type: "application/pdf" });
+    const input = screen.getByTestId("receipt-file-input");
+    await user.upload(input, file);
+
+    expect(onFileChange).toHaveBeenCalledWith(null);
+    expect(screen.getByRole("alert")).toHaveTextContent("taille maximale");
   });
 
   it("does not submit Wave without a phone number", async () => {

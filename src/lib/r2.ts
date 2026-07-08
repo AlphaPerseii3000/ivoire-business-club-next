@@ -12,6 +12,14 @@ export const DOCUMENT_ALLOWED_MIME_TYPES = [
 
 export const DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
+export const RECEIPT_ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+] as const;
+
+export const RECEIPT_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
 const REQUIRED_AWS_ENV = [
   "AWS_ACCESS_KEY_ID",
   "AWS_SECRET_ACCESS_KEY",
@@ -132,6 +140,12 @@ export function createDocumentR2Key(opportunityId: string, fileName: string, mim
   const extension = getDocumentExtension(fileName, mimeType);
   const randomId = crypto.randomUUID();
   return `opportunities/${opportunityId}/documents/${randomId}.${extension}`;
+}
+
+export function createSubscriptionReceiptR2Key(subscriptionId: string, fileName: string, mimeType: string) {
+  const extension = getDocumentExtension(fileName, mimeType);
+  const randomId = crypto.randomUUID();
+  return `subscriptions/${subscriptionId}/receipts/${randomId}.${extension}`;
 }
 
 export function createPublicDocumentUrl(r2Key: string) {

@@ -19,8 +19,7 @@ export const signupSchema = z.object({
   email: z.string().email("Email invalide"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
   acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Vous devez accepter les conditions pour continuer." }),
-    message: "Vous devez accepter les conditions pour continuer."
+    message: "Vous devez accepter les conditions pour continuer.",
   }),
 });
 
@@ -255,6 +254,17 @@ export type VerificationStatusInput = z.infer<typeof verificationStatusSchema>;
 
 export const DOCUMENT_ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 export const DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const RECEIPT_ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
+export const RECEIPT_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+export const receiptUploadSchema = z.object({
+  fileName: z.string().min(1, "Le nom du fichier est requis").max(255, "Le nom du fichier est trop long"),
+  mimeType: z.enum(RECEIPT_ALLOWED_MIME_TYPES, {
+    message: "Type de fichier non supporté. Utilisez PDF, JPEG ou PNG.",
+  }),
+  size: z.number().int().positive("La taille du fichier est invalide").max(RECEIPT_MAX_SIZE_BYTES, "Le fichier dépasse la taille maximale de 5 Mo."),
+});
 
 export const documentPresignSchema = z.object({
   fileName: z.string().min(1, "Le nom du fichier est requis").max(255, "Le nom du fichier est trop long"),

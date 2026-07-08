@@ -6,14 +6,16 @@ import { BankTransferInstructions } from "./bank-transfer-instructions";
 import { getBankTransferDetails } from "@/lib/bank-transfer-config";
 
 const mockToastSuccess = vi.hoisted(() => vi.fn());
+const mockToastWarning = vi.hoisted(() => vi.fn());
 const mockToastError = vi.hoisted(() => vi.fn());
 const mockClipboardWriteText = vi.hoisted(() => vi.fn());
 
 vi.mock("sonner", () => ({
-  toast: {
-    success: mockToastSuccess,
-    error: mockToastError,
-  },
+toast: {
+  success: mockToastSuccess,
+  warning: mockToastWarning,
+  error: mockToastError,
+},
 }));
 
 const defaultProps = {
@@ -45,6 +47,10 @@ describe("BankTransferInstructions", () => {
     });
     global.fetch = vi.fn();
   });
+
+  function createFile(name: string, type: string, size = 1024): File {
+    return new File([new Uint8Array(size).fill(1)], name, { type });
+  }
 
   it("renders complete bank-transfer details and allows toggling between EUR and XOF using fallback props", async () => {
     render(<BankTransferInstructions {...defaultPropsPeriodMonthly} />);
@@ -138,23 +144,36 @@ describe("BankTransferInstructions", () => {
 
   it("confirms transfer, shows exact toast copy, and renders pending tracker", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          data: {
-            subscription: {
-              id: "sub-1",
-              status: "TRIAL",
-              tier: "GRAND_FRERE",
-              provider: "BANK_TRANSFER",
-              providerRef: "IBC-user-123-GRAND_FRERE",
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              subscription: {
+                id: "sub-1",
+                status: "TRIAL",
+                tier: "GRAND_FRERE",
+                provider: "BANK_TRANSFER",
+                providerRef: "IBC-user-123-GRAND_FRERE",
+              },
+              payment: { amount: 59, status: "pending" },
             },
-            payment: { amount: 59, status: "pending" },
-          },
-        }),
-        { status: 201, headers: { "Content-Type": "application/json" } }
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
       )
-    );
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              subscriptionId: "sub-1",
+              paymentReceiptUrl: "https://cdn.example.com/sub-1/receipt.pdf",
+              paymentReceiptKey: "subscriptions/sub-1/receipts/uuid.pdf",
+            },
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
 
     render(<BankTransferInstructions {...defaultPropsPeriodMonthly} />);
     await user.click(screen.getByRole("button", { name: "J'ai effectué le virement" }));
@@ -168,11 +187,93 @@ describe("BankTransferInstructions", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tier: "GRAND_FRERE", period: "MONTHLY" }),
     });
+
+    const uploadCall = vi.mocked(fetch).mock.calls[1];
+    expect(uploadCall).toBeUndefined();
+
     expect(screen.getByTestId("transfer-confirmation")).toBeInTheDocument();
     expect(screen.getByText("Essai")).toBeInTheDocument();
     expect(screen.getByText("En attente")).toBeInTheDocument();
     expect(screen.getByText("Actif")).toBeInTheDocument();
     expect(screen.getByText("Paiement par virement en cours")).toBeInTheDocument();
+  });
+
+  it("uploads a selected receipt file after confirming the transfer", async () => {
+    const user = userEvent.setup();
+    const receiptFile = createFile("receipt.pdf", "application/pdf");
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              subscription: { id: "sub-with-receipt", status: "PENDING" },
+              payment: { amount: 59, status: "pending" },
+            },
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              subscriptionId: "sub-with-receipt",
+              paymentReceiptUrl: "https://cdn.example.com/sub-with-receipt/receipt.pdf",
+              paymentReceiptKey: "subscriptions/sub-with-receipt/receipts/uuid.pdf",
+            },
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
+
+    render(<BankTransferInstructions {...defaultPropsPeriodMonthly} receiptFile={receiptFile} />);
+
+    await user.click(screen.getByRole("button", { name: "J'ai effectué le virement" }));
+
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith("Merci ! Nous validons sous 24h.");
+    });
+
+    const uploadCall = vi.mocked(fetch).mock.calls[1];
+    expect(uploadCall[0]).toBe("/api/subscriptions/upload-receipt");
+    const body = uploadCall[1]?.body as FormData;
+    expect(body.get("subscriptionId")).toBe("sub-with-receipt");
+    expect(body.get("file")).toBe(receiptFile);
+  });
+
+  it("shows a warning toast when receipt upload fails but still confirms the subscription", async () => {
+    const user = userEvent.setup();
+    const receiptFile = createFile("receipt.pdf", "application/pdf");
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              subscription: { id: "sub-upload-fails", status: "PENDING" },
+              payment: { amount: 59, status: "pending" },
+            },
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "Fichier invalide" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+
+    render(<BankTransferInstructions {...defaultPropsPeriodMonthly} receiptFile={receiptFile} />);
+
+    await user.click(screen.getByRole("button", { name: "J'ai effectué le virement" }));
+
+    await waitFor(() => {
+      expect(mockToastWarning).toHaveBeenCalledWith("Fichier invalide");
+    });
+    expect(mockToastSuccess).toHaveBeenCalledWith("Merci ! Nous validons sous 24h.");
+    expect(screen.getByTestId("transfer-confirmation")).toBeInTheDocument();
   });
 });
 

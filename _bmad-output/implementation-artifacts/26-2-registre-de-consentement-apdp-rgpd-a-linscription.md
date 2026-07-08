@@ -4,7 +4,7 @@ baseline_commit: 4a35f44a44367aec8a63d118f83f301b52fb5be5
 
 # Story 26.2: Registre de Consentement APDP / RGPD à l'Inscription
 
-Status: review
+Status: done
 
 ## Story
 
