@@ -1334,6 +1334,30 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 ---
 
+## Epic 8: Tests E2E Playwright — Couverture complète du site en conditions réelles
+
+Mettre en place une suite de tests E2E Playwright couvrant tous les parcours critiques du site en conditions réelles, afin de détecter automatiquement les régressions sur l'environnement de production VPS.
+
+### Story 8.1: Tests E2E Playwright — Couverture complète du site en conditions réelles
+
+Cette story met en place une suite de tests E2E Playwright ciblant le site IBC déployé sur `https://ivoire-business-club.com`, avec des helpers d'authentification et des sélecteurs stables. Elle couvre l'ensemble des parcours critiques : authentification, tiers, opportunités, documents, gâtes premium, matching, reviews, admin, landing, navigation, profil, suppression de compte et notifications.
+
+**Acceptance Criteria:**
+- La configuration Playwright cible la production VPS avec un `baseURL` configurable via `BASE_URL`, supporte Chromium/Firefox/WebKit, et fournit les scripts `test:e2e` et `test:e2e:local`
+- Les tests d'inscription et de connexion valident les champs requis, les messages d'erreur, la création de compte et le refus des identifiants invalides sans fuite d'information
+- Les tests de tiers et abonnements vérifient l'affichage des trois tiers, les instructions de virement, le statut TRIAL/PENDING et la validation admin TRIAL → ACTIVE
+- Les tests d'opportunités couvrent la création, la vérification, le rejet et la visibilité publique des teasers
+- Les tests de documents vérifient l'upload, les permissions et la gestion admin
+- Les tests de gâtes premium bloquent un membre AFFRANCHI sur un deal BOSS et montrent le CTA d'upgrade
+- Les tests de matching et tags vérifient l'affichage priorisé et la manifestation d'intérêt
+- Les tests de reviews vérifient l'enregistrement d'une review et le recalcul du score de fiabilité
+- Les tests admin couvrent le kanban, la gestion des membres et les logs d'audit
+- Les tests de landing et navigation vérifient les contenus publics, la responsive, les routes protégées et la redirection des utilisateurs authentifiés
+- Les tests de profil et de suppression de compte vérifient la modification, la persistance et l'anonymisation RGPD
+- Les tests de notifications vérifient l'affichage et le marquage comme lu
+
+---
+
 ## Epic 9 : Contenu Éditorial & Ressources Membres
 
 **Objectif** : Ajouter un système d'articles éditoriaux avec visibilité par tier, offrant aux visiteurs et membres du contenu gratuit (levier de conversion) et aux abonnés un accès progressif selon leur tier.
@@ -1571,7 +1595,317 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 **When** il consulte la page détail de l'article  
 **Then** la section des commentaires est remplacée par un encart d'incitation : "Devenez membre actif pour consulter et participer aux discussions."  
   
+### Story 9.9: Lead Magnet — Envoi automatique du guide gratuit
+
+Cette story transforme le formulaire lead magnet de la landing page en un backend fonctionnel qui persiste les emails et envoie le guide PDF gratuit « Investir en Côte d'Ivoire 2026 » par email.
+
+**Acceptance Criteria:**
+- L'endpoint `POST /api/lead-magnet` valide l'email, persiste l'entrée dans la table `lead_magnets` et envoie un email avec le lien de téléchargement du guide PDF
+- Le modèle Prisma `LeadMagnet` est créé avec un index unique sur `email`
+- La déduplication est idempotente : un email déjà présent retourne un message « déjà reçu » sans renvoyer l'email
+- Le composant `LeadMagnet` gère les états loading, success et error
+- Les requêtes malformées retournent 400 sans divulguer d'information sensible
+
+### Story 9.10: Éditeur d'articles TipTap (WYSIWYG Markdown)
+
+Cette story remplace le textarea Markdown de l'article-form admin par un éditeur WYSIWYG TipTap, tout en conservant le stockage Markdown en base de données et la compatibilité du rendu public.
+
+**Acceptance Criteria:**
+- L'éditeur TipTap remplace le textarea dans `/admin/articles/new` et `/admin/articles/[id]/edit`
+- La barre d'outils propose : titres H1-H4, gras, italique, listes, citation, lien, code inline, séparateur horizontal
+- Le contenu est sérialisé en Markdown valide avant soumission à l'API
+- Le contenu Markdown existant est correctement chargé dans l'éditeur
+- L'upload d'images en ligne est préservé et inséré comme `![alt](url)`
+- Le rendu public via `ArticleContent.tsx` reste inchangé et compatible
+- Les tests unitaires interagissent avec l'éditeur TipTap et vérifient la sérialisation Markdown
+
 ---  
+
+## Epic 10: Vérification des Membres & Data Room Sécurisée
+
+Ajouter un workflow de vérification des membres basé sur des prérequis automatiques et une validation admin, puis sécuriser l'accès aux documents juridiques sensibles par demande explicite et validation manuelle.
+
+### Story 10.1: Vérification des membres — prérequis automatiques et validation admin
+
+Cette story introduit une logique centralisée de vérification des membres. Un membre doit avoir son email vérifié, une bio, une localisation, un pays et un compte actif pour devenir éligible. La transition automatique PENDING → EN_COURS se déclenche lorsque tous les prérequis sont remplis, et l'admin valide manuellement le passage à VERIFIED.
+
+**Acceptance Criteria:**
+- Le flux d'envoi et de vérification d'email est fonctionnel, avec token sécurisé expirant après 24h, suppression des anciens tokens et email en français
+- `isEligibleForVerification()` retourne l'éligibilité et les critères manquants ; `autoTransitionVerificationStatus()` passe PENDING → EN_COURS sans jamais rétrograder VERIFIED ou REJECTED
+- La route admin `/api/admin/users/[id]/verify` refuse la vérification si les prérequis sont manquants et crée un audit log uniquement en cas de changement réel
+- La page `/admin/members` affiche les indicateurs de prérequis et désactive le bouton « Vérifier ✓ » avec une infobulle si le membre n'est pas éligible
+- La page `/settings` affiche le statut de vérification exact, les prérequis manquants et un bouton de renvoi d'email de vérification si nécessaire
+- La mise à jour du profil et la vérification d'email déclenchent `autoTransitionVerificationStatus()`
+- Les tests couvrent tous les cas de succès, d'erreur, de guards admin, de suspension et de non-rétrogradation
+
+### Story 10.2: Data Room sécurisée — accès conditionnel aux documents juridiques sensibles
+
+Cette story protège l'accès aux documents juridiques sensibles attachés aux opportunités. Un membre doit demander l'accès pour chaque document, et le porteur de projet ou un admin doit approuver la demande. Les consultations et téléchargements sont journalisés via audit log.
+
+**Acceptance Criteria:**
+- Le modèle `DocumentAccessRequest` est créé avec les statuts PENDING, APPROVED, DENIED et une contrainte unique `[requesterId, documentId]`
+- Un membre authentifié avec abonnement actif peut créer une demande d'accès ; un doublon retourne 409, l'auteur/admin n'a pas besoin de demander
+- L'auteur de l'opportunité ou un admin peut approuver/refuser les demandes en lot, avec audit log idempotent et vérification du statut non suspendu
+- L'accès aux routes de consultation/téléchargement est conditionné à une demande APPROVED, sauf pour l'auteur/admin
+- L'UI affiche « Demander l'accès », « En attente de validation », « Accès refusé » ou les boutons de preview/download selon le statut
+- Une section « Demandes d'accès » apparaît pour l'auteur/admin avec les actions approuver/refuser
+- Les tests couvrent les succès, erreurs, doublons, idempotence, audit logs et non-régression des accès existants
+
+---
+
+## Epic 11: Onboarding & Paiement Mobile Money
+
+Automatiser l'accueil des nouveaux adhérents par un email d'accueil et un formulaire de complétion, et étendre les moyens de paiement aux solutions mobile money africaines (Wave, Orange Money).
+
+### Story 11.1: Email d'accueil automatique post-inscription
+
+Cette story envoie automatiquement un email d'accueil au nouveau membre après son inscription, avec les prochaines étapes, le lien vers le formulaire de complétion, les informations de paiement et le contrat d'adhésion.
+
+**Acceptance Criteria:**
+- Un email d'accueil est envoyé automatiquement via Resend ou SMTP après la création du compte
+- L'email contient : confirmation d'inscription, tier choisi, lien vers `/onboarding/complete-profile`, instructions de paiement et lien vers le contrat d'adhésion
+- Le template HTML est responsive, en français et avec le branding IBC
+- Un échec d'envoi est loggué sans bloquer l'inscription
+
+### Story 11.2: Formulaire de complétion de profil post-inscription
+
+Cette story fournit un formulaire de complétion du profil accessible aux nouveaux membres authentifiés, pré-rempli avec les données existantes et persistant dans `onboardingForm` (JSON).
+
+**Acceptance Criteria:**
+- Les champs existants du profil sont pré-remplis dans le formulaire `/onboarding/complete-profile`
+- Les données sont sauvegardées dans `onboardingForm` (JSON) et `onboardingCompletedAt` est renseigné
+- Un visiteur non authentifié est redirigé vers `/auth/signin`
+- Un membre ayant déjà complété le formulaire peut revenir le modifier
+
+### Story 11.3: Modèle de paiement mobile money — extension PaymentProvider
+
+Cette story étend l'enum `PaymentProvider` pour supporter Wave et Orange Money, et ajoute le champ `providerPhone` dans `Subscription` pour stocker le numéro mobile money.
+
+**Acceptance Criteria:**
+- L'enum `PaymentProvider` inclut `WAVE` et `ORANGE_MONEY` après migration
+- Le champ `providerPhone` stocke le numéro de téléphone mobile money
+- Un champ de numéro de téléphone apparaît sur la page de sélection de tier lorsque Wave ou Orange Money est choisi
+
+### Story 11.4: UI sélection paiement — page tier avec choix multi-provider
+
+Cette story permet au membre de choisir son moyen de paiement (virement, Wave ou Orange Money) et affiche les instructions correspondantes avec création d'un abonnement en statut TRIAL.
+
+**Acceptance Criteria:**
+- Trois options de paiement s'affichent : virement bancaire (par défaut), Wave, Orange Money
+- Le virement affiche le RIB KS Investment, le montant et la référence
+- Wave affiche le numéro à appeler, le montant et la référence, et crée un abonnement TRIAL avec `provider = WAVE`
+- Orange Money affiche le code USSD ou le numéro, le montant et la référence, et crée un abonnement TRIAL avec `provider = ORANGE_MONEY`
+
+### Story 11.5: Validation admin des paiements mobile money
+
+Cette story permet à l'admin de valider manuellement un paiement Wave ou Orange Money, en utilisant le même workflow TRIAL → ACTIVE que pour le virement bancaire.
+
+**Acceptance Criteria:**
+- Les abonnements TRIAL avec `provider = WAVE` ou `ORANGE_MONEY` sont affichés dans le tableau de bord admin avec une icône distinctive
+- La validation admin passe l'abonnement de TRIAL à ACTIVE
+
+---
+
+## Epic 12: Événements & Calendrier
+
+Permettre à l'admin de publier des événements de networking et au public de consulter le calendrier, avec mise en avant du prochain événement sur la landing page.
+
+### Story 12.1: Modèle Event + CRUD admin
+
+Cette story crée le modèle `Event` et l'interface admin de CRUD pour créer, publier, annuler et gérer les événements.
+
+**Acceptance Criteria:**
+- L'admin peut créer un événement avec titre, description, date, date de fin, lieu, image et statut
+- L'événement est créé en statut DRAFT par défaut avec un slug auto-généré
+- La publication passe l'événement à PUBLISHED et le rend visible publiquement
+- L'annulation passe l'événement à CANCELLED et le retire du composant « prochain événement »
+- La liste admin trie les événements par date décroissante avec actions Modifier/Supprimer/Changer statut
+
+### Story 12.2: Page calendrier d'événements publique
+
+Cette story affiche la page publique `/events` avec le calendrier des événements publiés et la page de détail `/events/[slug]`.
+
+**Acceptance Criteria:**
+- La page `/events` affiche les événements publiés triés par date croissante avec une carte par événement
+- La page `/events/[slug]` affiche tous les détails de l'événement
+- Un `EmptyState` s'affiche si aucun événement n'est à venir
+
+### Story 12.3: Composant « prochain événement » sur landing + pop-up
+
+Cette story met en avant le prochain événement sur la landing page, soit dans le flux de la page, soit en pop-up configurable par l'admin.
+
+**Acceptance Criteria:**
+- Le composant `NextEventCard` s'affiche sur la landing page avec titre, date, lieu et bouton « En savoir plus »
+- Si la configuration pop-up est activée, un Dialog s'affiche pour les nouveaux visiteurs avec un mécanisme de fermeture persistant
+- Le composant ne s'affiche pas si aucun événement à venir n'existe
+
+---
+
+## Epic 13: Annuaire Experts & Entreprises Agréées
+
+Créer deux annuaires publics : un annuaire des experts (consultants directs du club) et un annuaire des entreprises agréées (partenaires engageables).
+
+### Story 13.1: Modèle Expert + CRUD admin
+
+Cette story crée le modèle `Expert` et l'interface admin de CRUD pour gérer les fiches expert.
+
+**Acceptance Criteria:**
+- L'admin peut créer une fiche expert avec nom, titre/fonction, bio, photo, téléphone, email, WhatsApp, spécialités et statut publication
+- La fiche est créée en base avec un slug auto-généré et `isPublished = false`
+- La publication rend la fiche visible sur `/experts`
+- La liste admin affiche les experts avec actions Modifier/Supprimer/Changer statut
+
+### Story 13.2: Page publique liste des experts
+
+Cette story affiche la page publique `/experts` avec les experts publiés et leurs filtres par spécialité.
+
+**Acceptance Criteria:**
+- La page `/experts` affiche les experts publiés en cartes avec photo, nom, titre et spécialités
+- Des filter chips permettent de filtrer par spécialité
+- La page `/experts/[slug]` affiche le profil complet avec boutons de contact
+- Un `EmptyState` s'affiche si aucun expert n'est publié
+
+### Story 13.3: Modèle Company + CRUD admin
+
+Cette story crée le modèle `Company` et l'interface admin de CRUD pour gérer les fiches entreprise agréée.
+
+**Acceptance Criteria:**
+- L'admin peut créer une fiche entreprise avec nom, description, logo, contact, téléphone, email, site web, localisation, certifications, secteurs et statut publication
+- La fiche est créée en base avec un slug auto-généré et `isPublished = false`
+- La publication rend la fiche visible sur `/partners`
+- La liste admin affiche les entreprises avec actions Modifier/Supprimer/Changer statut
+
+### Story 13.4: Page publique liste des entreprises agréées
+
+Cette story affiche la page publique `/partners` avec les entreprises agréées publiées et leurs filtres par secteur.
+
+**Acceptance Criteria:**
+- La page `/partners` affiche les entreprises publiées en cartes avec logo, nom, description courte et secteurs
+- Des filter chips permettent de filtrer par secteur
+- La page `/partners/[slug]` affiche le profil complet avec certifications et informations de contact
+- Un `EmptyState` s'affiche si aucune entreprise n'est publiée
+
+---
+
+## Epic 14: SEO & Indexation
+
+Corriger les problèmes SEO techniques bloquants et créer des pages de contenu pour capturer le trafic non-brand.
+
+### Story 14.1: Infrastructure SEO technique
+
+Cette story met en place les fondations SEO techniques : canonicalisation www, balises canonical, robots.txt, sitemap XML complet et meta tags optimisés sur la homepage.
+
+**Acceptance Criteria:**
+- Une redirection 301 permanente redirige `ivoire-business-club.com` (sans www) vers `www.ivoire-business-club.com`
+- Chaque page inclut une balise `<link rel="canonical">` pointant vers sa version www
+- Le fichier `robots.txt` expose `Allow: /`, référence le sitemap et disallow les routes privées
+- Le `sitemap.xml` couvre toutes les routes publiques statiques et dynamiques avec l'URL de base correcte, sans `force-dynamic`
+- La homepage a un `<title>` de 50-60 caractères mentionnant « business club » et « Abidjan », et une `<meta description>` de 140-160 caractères
+- La configuration serveur Infomaniak est documentée pour la redirection 301
+
+### Story 14.2: Pages de contenu SEO quick wins
+
+Cette story crée les pages `/business-abidjan` et `/actualites` pour capturer le trafic sur les requêtes ciblées.
+
+**Acceptance Criteria:**
+- La page `/business-abidjan` a un `<h1>` et un `<title>` contenant « Business à Abidjan », une meta description ciblant « business abidjan » et « opportunités », au moins 300 mots de contenu, et une balise canonical
+- La page `/actualites` a un `<h1>` et un `<title>` contenant « Actualités » et « Ivoire Business Club », agrège les derniers articles publiés et les prochains événements
+- La homepage contient au moins un lien vers chaque nouvelle page avec des ancres descriptives
+- Les pages `/articles`, `/events`, `/experts`, `/partners`, `/opportunities` ont des title et meta description optimisés
+
+---
+
+## Epic 15: Onboarding Enforcement & Relances Automatiques
+
+Forcer la complétion de l'onboarding (vérification email + profil) en bloquant l'accès aux features premium et en envoyant des relances automatiques.
+
+### Story 15.1: Widget de progression + soft-gate sur features premium
+
+Cette story remplace la bannière passive du dashboard par un widget de progression interactif et bloque l'accès aux routes premium tant que l'onboarding n'est pas complet.
+
+**Acceptance Criteria:**
+- Le `OnboardingProgressWidget` affiche les deux étapes « Vérifier mon email » et « Compléter mon profil » avec pourcentage et CTAs
+- Les routes `/dashboard/opportunities`, `/members`, `/dashboard/matching`, `/articles` redirigent les membres incomplets vers `/dashboard?incomplete=1`
+- L'email de vérification est renvoyé automatiquement à la connexion si le dernier envoi date de plus de 24h
+- Les champs `emailVerified` et `onboardingCompleted` sont embarqués dans le JWT pour le middleware Edge Runtime
+
+### Story 15.2: Relances automatiques par email (cron)
+
+Cette story met en place une route cron quotidienne qui envoie des relances automatiques aux membres incomplets à J+1, J+3 et J+7.
+
+**Acceptance Criteria:**
+- La route `POST /api/cron/remind-incomplete-users` est protégée par `CRON_SECRET`
+- Les relances sont envoyées à J+1 (vérification email), J+3 (complétion profil) et J+7 (dernier rappel)
+- Un log de relance évite les doublons et garantit l'idempotence
+- Les emails sont en français, responsive, avec CTA clair et branding IBC
+- Le crontab VPS Hetzner est documenté
+
+### Story 15.3: Indicateur admin de complétion onboarding
+
+Cette story ajoute des badges de complétion onboarding dans la liste admin des membres et permet de relancer manuellement.
+
+**Acceptance Criteria:**
+- La liste `/admin/members` affiche les badges « Email ✓/✗ » et « Profil ✓/✗ » pour chaque membre
+- Un filtre rapide permet d'afficher uniquement les membres incomplets
+- L'admin peut envoyer manuellement une relance depuis le détail d'un membre incomplet
+
+---
+
+## Epic 16: Synchronisation Onboarding → Profil & Migration Rétroactive
+
+Éliminer l'incohérence entre le formulaire d'onboarding, le widget de progression et les prérequis de vérification admin. Un seul formulaire remplit tous les champs User nécessaires.
+
+### Story 16.1: Synchronisation des champs onboarding → User
+
+Cette story étend l'API `PUT /api/user/onboarding` pour synchroniser les champs `name`, `phone`, `location`, `country`, `bio` et `tier` dans le modèle User, et déclenche l'auto-transition du `verificationStatus`.
+
+**Acceptance Criteria:**
+- La soumission du formulaire d'onboarding sauvegarde le JSON `onboardingForm` et synchronise les colonnes User correspondantes
+- Le champ « Pays » est ajouté au formulaire d'onboarding
+- `autoTransitionVerificationStatus` est appelée dans la même transaction Prisma
+- La réponse API ne contient pas `passwordHash`
+- Les tests vérifient la synchronisation des champs et l'auto-transition
+
+### Story 16.2: Migration rétroactive — synchroniser les membres existants
+
+Cette story fournit un script one-shot pour synchroniser rétroactivement les membres ayant un `onboardingForm` rempli mais des champs User vides.
+
+**Acceptance Criteria:**
+- Le script `scripts/sync-onboarding-to-profile.ts` parcourt les utilisateurs avec `onboardingCompletedAt !== null`
+- Il synchronise uniquement les champs User vides sans écraser les données existantes
+- Il appelle `autoTransitionVerificationStatus` pour chaque utilisateur synchronisé
+- Le script supporte `--dry-run` et est idempotent
+- Un audit log est créé pour chaque synchronisation
+
+### Story 16.3: Email d'accueil dynamique selon le mode de paiement
+
+Cette story adapte l'email d'accueil pour refléter le mode de paiement et le tier choisis par le membre après la sélection de l'abonnement.
+
+**Acceptance Criteria:**
+- L'email envoyé après la sélection du tier/paiement contient les instructions correspondant au provider choisi (virement, Wave, Orange Money)
+- L'email post-inscription reste générique sans instructions de paiement et invite à choisir sur `/pricing`
+- Le membre ne reçoit pas l'email de bienvenue post-inscription une deuxième fois après la sélection du paiement
+- Les tests vérifient les trois providers et le cas sans provider
+
+---
+
+## Epic 17: Bannière d'abonnement en attente d'activation
+
+Afficher une bannière discrète sur le dashboard principal quand un membre a complété son onboarding mais n'a pas encore d'abonnement actif, pour l'inciter à finaliser son paiement.
+
+### Story 17.1: Bannière dashboard — abonnement en attente d'activation
+
+Cette story crée le composant `PendingSubscriptionBanner` et l'intègre dans la page dashboard pour rappeler aux membres de finaliser leur paiement.
+
+**Acceptance Criteria:**
+- Le composant server-side `PendingSubscriptionBanner` affiche le titre, le texte explicatif et un CTA vers `/pricing/virement?tier=[tier]`
+- Le tier label utilise la même map que le dashboard (« Les Affranchis », « Les Grands Frères », « Les Boss »)
+- Le style est cohérent avec `PremiumAccessBlockedPanel` (bordure et fond ambre)
+- La bannière s'affiche uniquement si `onboardingCompletedAt !== null`, `role !== ADMIN` et `hasActiveSubscription(user.id) === false`
+- La bannière s'affiche avant la section « Mon abonnement »
+- Les tests unitaires couvrent les cas admin, abonnement actif, onboarding incomplet et tiers sans abonnement actif
+
+---
 
 ## Epic 18: Chat de Support Bêta & Feedback Membres
 
@@ -1751,6 +2085,18 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 **When** elles s'exécutent  
 **Then** le SDK `posthog-node` est utilisé pour logger l'événement métier côté serveur avec le `distinctId` de l'utilisateur  
 
+### Story 19.2b: PostHog Identification Gaps
+
+Cette story comble les gaps d'identification PostHog restants : `posthog.identify()` après chaque connexion (credentials et OAuth), envoi des propriétés `tier` et `role`, et événement `tier_selected` sur la page `/pricing`.
+
+**Acceptance Criteria:**
+- `posthog.identify(userId, { email, name, tier, role })` est appelé automatiquement côté client dès qu'une session authentifiée est établie
+- Les utilisateurs OAuth et les visiteurs de retour ne restent pas anonymes dans PostHog
+- Le hook d'identification est idempotent et intégré dans le provider PostHog sans casser le SSR
+- L'appel manuel `posthog.identify` sur la page signup est retiré ou aligné
+- `posthog.capture('tier_selected', { tier, source: 'pricing_page' })` est déclenché lors de la sélection d'un tier dans `PricingTierSelection`
+- Le `posthog.reset()` au logout reste intact
+
 ---
 
 ### Story 19-3: Configuration des Tableaux de Bord et Funnels PostHog
@@ -1774,6 +2120,24 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 **Then** je peux rejouer sa session de manière anonymisée pour comprendre son parcours d'onboarding  
 
 ---
+
+---
+
+## Epic 20: Fix connexion comptes non vérifiés
+
+Corriger l'expérience de connexion pour les utilisateurs credentials dont l'email n'est pas encore vérifié, en affichant un message clair et en bloquant la session.
+
+### Story 20.1: Fix connexion comptes non vérifiés
+
+Cette story modifie le callback `signIn` d'Auth.js et les pages signin/signup pour afficher un message explicite quand un compte credentials n'est pas vérifié, tout en continuant à renvoyer l'email de vérification à chaque tentative.
+
+**Acceptance Criteria:**
+- Un utilisateur non vérifié voit le message « Vérifie ton email pour te connecter. Un lien de vérification t'a été envoyé. » au lieu de « Email ou mot de passe incorrect. »
+- Aucun cookie de session JWT n'est créé pour un compte non vérifié
+- L'email de vérification est renvoyé automatiquement à chaque tentative de connexion
+- Les comptes vérifiés se connectent normalement vers `/dashboard`
+- Le flux Google OAuth non vérifié reste redirigé vers `/dashboard?resend=1`
+- Après un signup credentials, la page signup redirige vers `/auth/signin?error=unverified`
 
 ---
 
@@ -1898,7 +2262,44 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 ---
 
-### Epic 24: Filtrage et Recherche des Membres
+## Epic 22: Fix UX post-signup — page de confirmation
+
+Améliorer l'expérience post-inscription en affichant une page de confirmation claire au lieu de rediriger vers la page de connexion quand l'auto-login échoue à cause d'un email non vérifié.
+
+### Story 22.1: Fix UX post-signup — page de confirmation au lieu de redirection vers signin
+
+Cette story crée une page `/auth/signup-success` et supprime l'auto-login post-signup dans la page signup.
+
+**Acceptance Criteria:**
+- Après un signup réussi, l'utilisateur est redirigé vers `/auth/signup-success`
+- La page affiche un message de succès, des instructions de vérification email, un bouton « Se connecter » et un lien de renvoi d'email
+- Le client ne tente plus `signIn("credentials")` après le signup
+- Le tracking PostHog `user_signed_up` est conservé
+- Le flux Google OAuth reste inchangé
+- Les tests existants sont mis à jour pour refléter la nouvelle redirection
+
+---
+
+## Epic 23: Durée d'abonnement et tarification périodique
+
+Permettre aux membres de choisir la durée de leur abonnement (mensuel, semestriel, annuel) avec des tarifs adaptés par tier.
+
+### Story 23.1: Durée d'abonnement et tarification périodique
+
+Cette story étend la tarification et l'UI de sélection de tier pour supporter trois durées d'abonnement avec des montants distincts par tier.
+
+**Acceptance Criteria:**
+- La structure tarifaire `bank-transfer-config.ts` supporte les périodes MONTHLY, SEMESTERIAL et ANNUAL avec les montants corrects par tier
+- Le schéma de validation inclut SEMESTERIAL comme valeur valide
+- Un sélecteur de durée apparaît dans l'UI après le choix du tier et avant le choix du moyen de paiement
+- Le montant affiché se met à jour selon la durée sélectionnée
+- La route API `/api/subscriptions` calcule et stocke `endDate` selon la période
+- Le tableau admin affiche les colonnes « Durée » et « Échéance »
+- La validation admin recalcule `endDate` si manquant
+
+---
+
+## Epic 24: Filtrage et Recherche des Membres
 
 Permettre aux membres et aux admins de rechercher et filtrer la liste des membres par nom, tier, statut d'abonnement, statut de compte, statut de vérification et date d'inscription, avec tri et pagination. Active le requirement UX-DR18 ("Recherche et filtrage — search debounced 300ms, filter chips horizontaux scrollables, tri dropdown") qui n'avait jamais été implémenté pour la liste des membres.
 
@@ -1986,6 +2387,75 @@ Permettre aux membres et aux admins de rechercher et filtrer la liste des membre
 **When** les tests sont exécutés
 **Then** les tests unitaires vérifient le `whereClause` selon les paramètres
 
+## Epic 25: Plateforme d'Événements — Couverture, Visibilité, Tarification & Galerie
+
+Transformer le MVP événements en une plateforme complète générant des revenus et servant de levier de conversion d'abonnement.
+
+### Story 25.1: Migration modèle Event + pricing + visibility + eventType
+
+Cette story étend le modèle Event avec type d'événement, visibilité, capacité, tarification par tier, couverture sur VPS et ajoute les modèles `EventRegistration` et `EventGalleryPhoto`.
+
+**Acceptance Criteria:**
+- Le modèle Event inclut `eventType`, `visibility`, `location` optionnel, `onlineUrl`, `coverImagePath`, `maxCapacity`, `pricing` JSON et les nouveaux enums
+- Les modèles `EventRegistration` et `EventGalleryPhoto` sont créés avec leurs relations
+- Le champ `imageUrl` existant est supprimé/renommé
+- Les types TypeScript sont générés et disponibles
+- Les schémas Zod incluent les nouveaux champs et validations conditionnelles
+- Le build et les tests restent verts
+
+### Story 25.2: Upload couverture VPS + refactor form admin
+
+Cette story permet à l'admin d'uploader une image de couverture sur le VPS et refond le formulaire admin en sections.
+
+**Acceptance Criteria:**
+- Le formulaire admin est organisé en 5 sections : infos générales, logistique, couverture, tarification, publication
+- L'upload d'image (jpeg/png/webp, max 5MB) redimensionne avec `sharp` et stocke dans `/var/www/ibc-media/events/{eventId}/cover.{ext}`
+- Les champs requis sont adaptés au type d'événement (`location` pour IN_PERSON, `onlineUrl` pour ONLINE)
+- La grille tarifaire par tier accepte des montants entiers positifs, null ou 0 pour gratuit
+
+### Story 25.3: Page event publique avec teaser privé + compteur places + grille tarifaire
+
+Cette story affiche la page publique des événements avec distinctions public/privé, compteur de places et grille tarifaire.
+
+**Acceptance Criteria:**
+- Les événements PUBLIC s'affichent normalement pour tous les visiteurs
+- Les événements PRIVÉ affichent une card floutée avec CTA « Devenir membre pour réserver » pour les visiteurs non connectés
+- Les membres connectés voient les événements PRIVÉ sans flou avec bouton « S'inscrire »
+- Le compteur de places affiche « X places restantes » ou « Places illimitées »
+- La grille tarifaire affiche les prix par tier et met en avant le tarif du membre connecté
+
+### Story 25.4: Inscription + paiement event (virement + mobile money + pay-on-site)
+
+Cette story permet aux utilisateurs de s'inscrire à un événement et de payer selon le mode choisi.
+
+**Acceptance Criteria:**
+- Le membre connecté voit un formulaire d'inscription avec choix du moyen de paiement et montant basé sur son tier
+- Le visiteur non connecté pour un event PUBLIC saisit son email et choisit son paiement au tarif visiteur
+- L'option « payer sur place » affiche un avertissement et crée une inscription avec `payOnSite: true`
+- Le virement/mobile money crée un enregistrement `Payment` et une `EventRegistration`
+- Le bouton « S'inscrire » est désactivé quand la capacité est atteinte
+- L'admin consulte la liste des inscrits avec tier, mode de paiement et statut
+
+### Story 25.5: Galerie collaborative post-event
+
+Cette story permet aux membres et à l'admin d'uploader des photos dans une galerie collaborative après un événement.
+
+**Acceptance Criteria:**
+- Les membres et l'admin peuvent uploader des photos (jpeg/png/webp, max 10MB) redimensionnées avec `sharp` dans `/var/www/ibc-media/events/{eventId}/gallery/{uuid}.{ext}`
+- L'admin peut modérer et supprimer toutes les photos ; le membre ne peut supprimer que les siennes
+- La galerie publique s'affiche en bas de la page de l'événement
+
+### Story 25.6: Section « Moments IBC » sur landing + page dashboard events passés
+
+Cette story affiche les photos des derniers événements sur la landing page et crée une page dashboard des événements passés.
+
+**Acceptance Criteria:**
+- La landing page affiche une section « Moments IBC » avec un carousel/grid de photos récentes d'événements passés PUBLISHED
+- Cliquer sur une photo redirige vers la page de l'événement (PUBLIC) ou un teaser (PRIVÉ)
+- Le dashboard `/dashboard/events` affiche une section « Événements passés » avec aperçu des galeries
+
 ---
 
-*Fin du document Epic Breakdown — IBC v1.6. Epic 24 ajouté via Sprint Change Proposal le 2026-07-03 (member filtering).*
+---
+
+*Fin du document Epic Breakdown — IBC v1.7. Épiques 8, 10-17, 20, 22-25 ajoutés via Sprint Change Propals. Stories 9-9, 9-10, 19-2b ajoutées. Audit BMAD 2026-07-08.*
