@@ -74,6 +74,18 @@ describe("GET /api/opportunities/[id]/contact", () => {
     expect(mockContactLogCreate).not.toHaveBeenCalled();
   });
 
+  it("returns 409 when the user is the author of the opportunity", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "author-1" } });
+    mockUserFindUnique.mockResolvedValue({ id: "author-1", role: "MEMBER", tier: "AFFRANCHI" });
+
+    const response = await GET(request(), context());
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.error).toBe("Vous ne pouvez pas contacter le porteur de votre propre opportunité.");
+    expect(mockContactLogCreate).not.toHaveBeenCalled();
+  });
+
   it("returns 403 when premium access is missing", async () => {
     mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: false });
 

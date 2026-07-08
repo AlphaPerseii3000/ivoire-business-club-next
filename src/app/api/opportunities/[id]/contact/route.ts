@@ -49,6 +49,13 @@ export async function GET(_req: Request, { params }: RouteContext) {
     const isAdmin = currentUser.role === "ADMIN";
     const isPublishedToMember = opportunity.verificationStatus === "VERIFIED";
 
+    if (isAuthor) {
+      return NextResponse.json(
+        { error: "Vous ne pouvez pas contacter le porteur de votre propre opportunité." },
+        { status: 409 },
+      );
+    }
+
     if (!isAdmin && !isPublishedToMember) {
       return NextResponse.json({ error: "Opportunité introuvable." }, { status: 404 });
     }
