@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Mail, Phone } from 'lucide-react';
 
 export function Footer() {
@@ -36,19 +37,19 @@ export function Footer() {
             <h4 className="font-semibold text-white mb-3">Légal</h4>
             <ul className="text-sm space-y-2">
               <li>
-                <a href="/mentions-legales" className="hover:text-white transition-colors">
+                <Link href="/mentions-legales" className="hover:text-white transition-colors">
                   Mentions légales
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/politique-de-confidentialite" className="hover:text-white transition-colors">
+                <Link href="/politique-confidentialite" className="hover:text-white transition-colors">
                   Politique de confidentialité
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/cgv" className="hover:text-white transition-colors">
+                <Link href="/cgv" className="hover:text-white transition-colors">
                   CGV
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -70,7 +71,7 @@ export function Footer() {
                 className="min-h-11 rounded-md bg-[#D4A847] text-black font-semibold text-sm px-4 py-2 hover:bg-[#D4A847]/90 transition-colors cursor-pointer"
                 aria-label="S'abonner à la newsletter"
               >
-                S'abonner
+                S&apos;abonner
               </button>
             </form>
           </div>

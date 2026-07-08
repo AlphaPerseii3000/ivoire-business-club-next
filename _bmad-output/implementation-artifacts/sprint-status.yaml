@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-07-08T12:00:00+02:00
+last_updated: 2026-07-08T16:46:29+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -209,8 +209,8 @@ development_status:
   25-6-moments-ibc-landing-dashboard: done
   epic-25-retrospective: optional
 
-  epic-26: backlog
-  26-1-creation-des-pages-legales-et-footer: backlog
+  epic-26: in-progress
+  26-1-creation-des-pages-legales-et-footer: review
   26-2-registre-de-consentement-apdp-rgpd-a-linscription: backlog
   26-3-upload-de-preuve-de-virement-et-validation-admin: backlog
   26-4-route-de-tracking-et-redirection-whatsapp-centif-ci: backlog

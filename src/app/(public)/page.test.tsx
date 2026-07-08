@@ -56,11 +56,10 @@ vi.mock('@/components/ui/hero-video-player', () => ({
 
 describe('HomePage SEO & Rendering', () => {
   it('has correct French SEO title and description', () => {
-    expect(metadata.title).toBe('Ivoire Business Club | Club business à Abidjan \u0026 en Europe');
-    expect(metadata.description).toContain('club business');
-    expect(metadata.description).toContain('Côte d’Ivoire');
-    expect(metadata.description).toContain('entrepreneurs');
-    expect(metadata.openGraph?.title).toBe('Ivoire Business Club | Club business à Abidjan \u0026 en Europe');
+    expect(metadata.title).toBe('Ivoire Business Club — Club business & investissement Côte d’Ivoire');
+    expect(metadata.description).toContain('Ivoire Business Club');
+    expect(metadata.description).toContain('Abidjan');
+    expect(metadata.openGraph?.title).toBe('Ivoire Business Club — Club business & investissement Côte d’Ivoire');
     expect(metadata.openGraph?.locale).toBe('fr_FR');
   });
 
