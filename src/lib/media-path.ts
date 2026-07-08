@@ -8,7 +8,7 @@ export function getMediaStoragePath(): string {
   const envPath = process.env.MEDIA_STORAGE_PATH;
   if (envPath) return path.resolve(envPath);
   return process.env.NODE_ENV === "production"
-    ? "/var/www/ibc-media"
+    ? "/var/www/ibc/shared/ibc-media"
     : path.resolve("./public/ibc-media");
 }
 

@@ -313,7 +313,13 @@ export default function EventForm({ initialData }: EventFormProps) {
       const savedId = saved?.id ?? initialData?.id;
 
       if (coverFile && savedId) {
-        await uploadCover(savedId, coverFile);
+        const uploadPath = await uploadCover(savedId, coverFile);
+        if (!uploadPath) {
+          if (!isEdit) {
+            router.push(`/admin/events/${savedId}/edit`);
+          }
+          return;
+        }
       }
 
       toast.success(

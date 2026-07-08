@@ -263,6 +263,91 @@ describe("EventForm Component", () => {
     expect(mockPush).toHaveBeenCalledWith("/admin/events");
   });
 
+  it("redirects new events to edit page if cover upload fails", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: "new-evt-1" }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({ error: "Une erreur est survenue lors de l'upload." }),
+      });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<EventForm initialData={null} />);
+
+    await user.type(screen.getByTestId("event-title-input"), "Événement avec couverture");
+    await user.type(screen.getByTestId("event-description-input"), "Description complète de l'événement");
+    await user.type(screen.getByTestId("event-location-input"), "Abidjan");
+
+    const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
+    await userEvent.clear(startInput);
+    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+
+    const coverInput = screen.getByTestId("event-cover-file-input") as HTMLInputElement;
+    const file = createValidFile();
+    await user.upload(coverInput, file);
+
+    await user.click(screen.getByTestId("event-submit-button"));
+
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls;
+      const uploadCall = calls.find((call) => call[0] === "/api/admin/events/new-evt-1/cover");
+      expect(uploadCall).toBeDefined();
+    }, { timeout: 3000 });
+
+    expect(mockToastError).toHaveBeenCalledWith("Une erreur est survenue lors de l'upload.");
+    expect(mockPush).toHaveBeenCalledWith("/admin/events/new-evt-1/edit");
+  });
+
+  it("does not redirect existing events if cover upload fails", async () => {
+    const user = userEvent.setup();
+    const initialData = {
+      id: "evt-existing",
+      title: "Événement",
+      description: "Description longue",
+      startDate: "2026-07-15T18:00:00Z",
+      endDate: null,
+      location: "Abidjan",
+      coverImagePath: null,
+      status: "DRAFT",
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: "evt-existing" }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({ error: "Une erreur est survenue lors de l'upload." }),
+      });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<EventForm initialData={initialData} />);
+
+    const coverInput = screen.getByTestId("event-cover-file-input") as HTMLInputElement;
+    const file = createValidFile();
+    await user.upload(coverInput, file);
+
+    await user.click(screen.getByTestId("event-submit-button"));
+
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls;
+      const uploadCall = calls.find((call) => call[0] === "/api/admin/events/evt-existing/cover");
+      expect(uploadCall).toBeDefined();
+    }, { timeout: 3000 });
+
+    expect(mockToastError).toHaveBeenCalledWith("Une erreur est survenue lors de l'upload.");
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it("submits normalized pricing values", async () => {
     const user = userEvent.setup();
     render(<EventForm initialData={null} />);
