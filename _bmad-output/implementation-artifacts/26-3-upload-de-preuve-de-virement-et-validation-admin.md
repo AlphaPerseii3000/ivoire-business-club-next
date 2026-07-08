@@ -4,7 +4,7 @@ baseline_commit: 1929073ea9075ca7549cb863bd7a6aae6e63921e
 
 # Story 26.3: Upload de Preuve de Virement & Validation Admin
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -117,13 +117,18 @@ Status: ready-for-dev
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code (2 batches)
 
 ### Debug Log References
 
 ### Completion Notes List
 
-- *À remplir par le développeur après implémentation.*
+- Intégration de l’upload du justificatif dans `BankTransferInstructions` : après création de la souscription via `POST /api/subscriptions`, appel `POST /api/subscriptions/upload-receipt` en FormData avec `subscriptionId` et `file`. Échec d’upload traité en warning toast sans bloquer la confirmation.
+- Ajout d’un champ fichier inline sur la page `/pricing/virement` via `BankTransferInstructions` (state local `localReceiptFile`), avec validation PDF/JPEG/PNG ≤ 5 Mo, aperçu du fichier sélectionné et bouton de retrait.
+- Colonne "Justificatif" ajoutée dans le tableau admin `/admin/subscriptions` : lien "Voir le reçu" ouvrant l’URL publique R2 dans un nouvel onglet quand `paymentReceiptUrl` est présent, sinon tiret. `paymentReceiptUrl` inclus dans les 3 requêtes Prisma.
+- Vérification de l’idempotence de la route admin `PATCH /api/admin/subscriptions/[id]/validate` : transition guard renvoie 409 sur statut déjà ACTIVE confirmé.
+- Tests mis à jour / ajoutés : `bank-transfer-instructions.test.tsx`, `payment-method-selector.test.tsx`, `page.test.tsx` admin.
+- Validation globale : `npm run build` passe, `npx vitest run` → 179 fichiers, 1261 tests passent, grep `&&` JSX vide.
 
 ### File List
 
