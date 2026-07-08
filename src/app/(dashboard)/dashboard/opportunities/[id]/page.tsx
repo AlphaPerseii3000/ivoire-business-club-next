@@ -427,6 +427,7 @@ export default async function OpportunityDetailPage({
                   phoneNumber={opportunity.author.phone}
                   prefilledMessage={`Bonjour, je suis intéressé(e) par votre deal ${opportunity.title} sur IBC.`}
                   label="Contacter le porteur sur WhatsApp"
+                  trackingHref={`/api/opportunities/${opportunity.id}/contact`}
                 />
                 <InterestButton
                   opportunityId={opportunity.id}

@@ -112,6 +112,7 @@ model User {
   reviewsWritten     Review[] @relation("ReviewsWritten")
   reviewsReceived    Review[] @relation("ReviewsReceived")
   auditLogs          AuditLog[] @relation("AuditLogActor")
+  contactLogs        ContactLog[]
   articles           Article[]
   events             Event[]
   eventRegistrations EventRegistration[]
@@ -223,6 +224,7 @@ model Opportunity {
   verificationApprovals OpportunityVerificationApproval[]
   tags       OpportunityTag[]
   interests  OpportunityInterest[]
+  contactLogs ContactLog[]
   reviews    Review[]
   articles   Article[]
 
@@ -380,6 +382,20 @@ model Payment {
 
   @@map("payments")
 }
+model ContactLog {
+  id            String      @id @default(cuid())
+  userId        String
+  opportunityId String
+  createdAt     DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId, createdAt])
+  @@index([userId, createdAt])
+  @@map("contact_logs")
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String?

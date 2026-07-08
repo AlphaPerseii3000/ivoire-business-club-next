@@ -14,12 +14,22 @@ type WhatsAppCTAProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
   label?: string;
+  trackingHref?: string;
 };
 
 const NO_PHONE_TOOLTIP = "Le numéro WhatsApp n'est pas renseigné.";
 
-export function WhatsAppCTA({ phoneNumber, prefilledMessage, className, size = "md", label = "Contacter sur WhatsApp" }: WhatsAppCTAProps) {
+export function WhatsAppCTA({
+  phoneNumber,
+  prefilledMessage,
+  className,
+  size = "md",
+  label = "Contacter sur WhatsApp",
+  trackingHref,
+}: WhatsAppCTAProps) {
   const href = buildWhatsAppSupportLink({ phoneNumber, message: prefilledMessage });
+  const isTrackingEnabled = Boolean(trackingHref);
+  const linkHref = isTrackingEnabled ? trackingHref : href;
   const sizeClass = size === "lg" ? "min-h-11 px-4 py-3" : size === "sm" ? "min-h-10 px-3 py-2 text-xs" : "min-h-11 px-4 py-2";
   const baseClassName = cn(
     "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] text-sm font-semibold text-white transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2",
@@ -27,7 +37,7 @@ export function WhatsAppCTA({ phoneNumber, prefilledMessage, className, size = "
     className,
   );
 
-  if (!href) {
+  if (!linkHref) {
     return (
       <Tooltip>
         <TooltipTrigger className={cn(baseClassName, "cursor-not-allowed opacity-60 hover:brightness-100")}>
@@ -43,7 +53,7 @@ export function WhatsAppCTA({ phoneNumber, prefilledMessage, className, size = "
 
   return (
     <Link
-      href={href}
+      href={linkHref}
       target="_blank"
       rel="noopener noreferrer"
       className={baseClassName}
