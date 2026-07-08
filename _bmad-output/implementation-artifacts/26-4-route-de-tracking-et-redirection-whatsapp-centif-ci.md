@@ -4,7 +4,7 @@ baseline_commit: a8e30a3303aa46f4fe1d4e3046017a1024827e30
 
 # Story 26.4: Route de Tracking & Redirection WhatsApp (CENTIF-CI)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -110,7 +110,7 @@ Status: ready-for-dev
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code
 
 ### Debug Log References
 
