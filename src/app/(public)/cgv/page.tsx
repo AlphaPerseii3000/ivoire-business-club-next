@@ -68,7 +68,7 @@ export default function CgvPage() {
           </h1>
           
           <p className="text-slate-400 text-sm mb-8">
-            En vigueur au {new Date().toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}.
+            En vigueur au 8 juillet 2026.
           </p>
 
           <p>
@@ -131,7 +131,7 @@ export default function CgvPage() {
               Une fois le virement bancaire effectué ou le transfert Mobile Money réalisé, le membre doit soumettre sa preuve de virement (reçu ou capture d’écran) directement via son interface d’onboarding ou de profil.
             </p>
             <p className="mt-2 text-[#D4A847] font-semibold">
-              ⚠️ Délai de traitement : L’activation de l’abonnement fait l’objet d’une validation manuelle par l’équipe administrative de KS Investment sous un délai maximal de 48 heures ouvrées à compter de la réception de la preuve de paiement.
+              <span role="img" aria-label="Avertissement">⚠️</span> Délai de traitement : L’activation de l’abonnement fait l’objet d’une validation manuelle par l’équipe administrative de KS Investment sous un délai maximal de 48 heures ouvrées à compter de la réception de la preuve de paiement.
             </p>
           </section>
 

@@ -68,7 +68,7 @@ export default function PolitiqueConfidentialitePage() {
           </h1>
           
           <p className="text-slate-400 text-sm mb-8">
-            Dernière mise à jour : {new Date().toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}.
+            Dernière mise à jour : 8 juillet 2026.
           </p>
 
           <p>

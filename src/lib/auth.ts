@@ -25,6 +25,8 @@ function patchPrismaAdapter(adapter: Adapter): Adapter {
       if (typeof patched["email"] === "string") {
         patched["role"] = roleForEmail(patched["email"]);
       }
+      patched["acceptedTermsAt"] = new Date();
+      patched["termsVersion"] = "1.0";
       return originalCreateUser(patched as unknown as Awaited<ReturnType<NonNullable<Adapter["createUser"]>>>);
     };
   }

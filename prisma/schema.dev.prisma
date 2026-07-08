@@ -90,6 +90,8 @@ model User {
   platinumUpdatedAt DateTime?
   onboardingForm      Json?
   onboardingCompletedAt DateTime?
+  acceptedTermsAt DateTime?
+  termsVersion    String?
   lastReminderSentAt  DateTime?
   reminderCount       Int       @default(0)
   createdAt     DateTime  @default(now())

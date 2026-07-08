@@ -4,7 +4,7 @@ baseline_commit: c3cdb0451cfe0566e92a7a0acb6bf0a51254d528
 
 # Story 26.1: Création des Pages Légales & Footer
 
-Status: review
+Status: done
 
 ## Story
 
@@ -103,3 +103,9 @@ Gemini 3.5 Flash
 - `src/app/(public)/cgv/page.test.tsx`
 - `src/app/(public)/page.test.tsx`
 - `src/app/(public)/actualites/page.test.tsx`
+
+### Review Findings
+
+- [x] [Review][Patch] Risque d'erreur de réhydratation Next.js (Hydration Mismatch) & Date d'effet dynamique [src/app/(public)/cgv/page.tsx:73]
+- [x] [Review][Patch] Accessibilité de l'émoji d'avertissement dans les CGV [src/app/(public)/cgv/page.tsx:124]
+- [x] [Review][Defer] Duplication de code de layout [src/app/(public)/cgv/page.tsx:1] — deferred, pre-existing

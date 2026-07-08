@@ -132,6 +132,31 @@ export default function SignUpPage() {
               <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
             ) : null}
           </div>
+          <div className="space-y-1">
+            <div className="flex items-start gap-2">
+              <input
+                id="acceptTerms"
+                data-testid="accept-terms-checkbox"
+                type="checkbox"
+                {...register("acceptTerms")}
+                className="mt-1 h-4 w-4 rounded border bg-background text-primary accent-primary focus:ring-2 focus:ring-primary/25"
+              />
+              <label htmlFor="acceptTerms" className="text-xs text-muted-foreground select-none leading-relaxed">
+                {"J'accepte les "}
+                <a href="/cgv" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  CGV
+                </a>
+                {" et la "}
+                <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  Politique de Confidentialité
+                </a>
+                {" d'IBC."}
+              </label>
+            </div>
+            {errors.acceptTerms ? (
+              <p className="text-xs text-destructive">{errors.acceptTerms.message}</p>
+            ) : null}
+          </div>
           <button
             type="submit"
             data-testid="signup-button"
@@ -147,14 +172,27 @@ export default function SignUpPage() {
             <span className="bg-card px-2 text-muted-foreground">ou</span>
           </div>
         </div>
-        <button
-          data-testid="google-oauth-button"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-          className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
-        >
-          {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
-        </button>
+        <div className="space-y-2">
+          <button
+            data-testid="google-oauth-button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full rounded-md border py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 min-h-11"
+          >
+            {googleLoading ? "Connexion en cours..." : "Continuer avec Google"}
+          </button>
+          <p className="text-center text-[10px] text-muted-foreground leading-relaxed px-2">
+            {"En continuant avec Google, vous acceptez également les "}
+            <a href="/cgv" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              CGV
+            </a>
+            {" et la "}
+            <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              Politique de Confidentialité
+            </a>
+            {" d'IBC."}
+          </p>
+        </div>
         <p className="text-center text-sm text-muted-foreground">
           Déjà membre ?{" "}
           <a href="/auth/signin" className="text-primary hover:underline">Se connecter</a>

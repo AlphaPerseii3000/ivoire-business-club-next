@@ -111,6 +111,9 @@ describe("SignUpPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    
+    const checkbox = screen.getByTestId("accept-terms-checkbox");
+    fireEvent.click(checkbox);
 
     const submitBtn = screen.getByText("Créer mon compte");
     fireEvent.click(submitBtn);
@@ -118,7 +121,7 @@ describe("SignUpPage", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/auth/signup", expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ name: "Jean", email: "test@example.com", password: "securePass123!" }),
+        body: JSON.stringify({ name: "Jean", email: "test@example.com", password: "securePass123!", acceptTerms: true }),
       }));
     });
 
@@ -142,6 +145,9 @@ describe("SignUpPage", () => {
     fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "dup@example.com" } });
     fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
 
+    const checkbox = screen.getByTestId("accept-terms-checkbox");
+    fireEvent.click(checkbox);
+
     fireEvent.click(screen.getByText("Créer mon compte"));
 
     await waitFor(() => {
@@ -149,5 +155,24 @@ describe("SignUpPage", () => {
         screen.getByText("Cet email est déjà associé à un compte.")
       ).toBeInTheDocument();
     });
+  });
+
+  it("prevents submission and displays validation error if acceptTerms checkbox is not checked", async () => {
+    const mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+
+    render(<SignUpPage />);
+    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
+    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+
+    // Do NOT check the checkbox
+    fireEvent.click(screen.getByText("Créer mon compte"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Vous devez accepter les conditions pour continuer.")).toBeInTheDocument();
+    });
+
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

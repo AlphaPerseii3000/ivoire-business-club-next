@@ -68,7 +68,7 @@ export default function MentionsLegalesPage() {
           </h1>
           
           <p className="text-slate-400 text-sm mb-8">
-            En vigueur au {new Date().toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}.
+            En vigueur au 8 juillet 2026.
           </p>
 
           <section className="mb-8">

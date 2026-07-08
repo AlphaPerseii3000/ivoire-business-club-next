@@ -327,6 +327,8 @@ describe("auth.ts exports", () => {
       name: "Awa",
       image: "https://example.com/avatar.png",
       role: "MEMBER",
+      acceptedTermsAt: expect.any(Date),
+      termsVersion: "1.0",
     });
     expect(result).toMatchObject({ emailVerified: false });
   });
@@ -347,6 +349,8 @@ describe("auth.ts exports", () => {
       name: "Jonathan",
       image: null,
       role: "ADMIN",
+      acceptedTermsAt: expect.any(Date),
+      termsVersion: "1.0",
     });
     expect(result).toMatchObject({ role: "ADMIN" });
   });

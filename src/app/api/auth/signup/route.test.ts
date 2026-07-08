@@ -71,14 +71,26 @@ describe("POST /api/auth/signup", () => {
       name: "Jean Dupont",
     });
 
-    const req = makeRequest({ name: "Jean Dupont", email: "test@example.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jean Dupont",
+      email: "test@example.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
     const json = await res.json();
 
     expect(res.status).toBe(201);
     expect(json).toEqual({ id: "user-123", email: "test@example.com", name: "Jean Dupont" });
     expect(mockUserCreate).toHaveBeenCalledWith({
-      data: { name: "Jean Dupont", email: "test@example.com", passwordHash: "hashed-password", role: "MEMBER" },
+      data: {
+        name: "Jean Dupont",
+        email: "test@example.com",
+        passwordHash: "hashed-password",
+        role: "MEMBER",
+        acceptedTermsAt: expect.any(Date),
+        termsVersion: "1.0",
+      },
     });
     expect(mockSubscriptionCreate).not.toHaveBeenCalled();
 
@@ -99,19 +111,36 @@ describe("POST /api/auth/signup", () => {
       name: "Jonathan",
     });
 
-    const req = makeRequest({ name: "Jonathan", email: "BERSETH.J@gmail.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jonathan",
+      email: "BERSETH.J@gmail.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
 
     expect(res.status).toBe(201);
     expect(mockUserCreate).toHaveBeenCalledWith({
-      data: { name: "Jonathan", email: "BERSETH.J@gmail.com", passwordHash: "hashed-password", role: "ADMIN" },
+      data: {
+        name: "Jonathan",
+        email: "BERSETH.J@gmail.com",
+        passwordHash: "hashed-password",
+        role: "ADMIN",
+        acceptedTermsAt: expect.any(Date),
+        termsVersion: "1.0",
+      },
     });
   });
 
   it("returns 409 with exact French message for duplicate email", async () => {
     mockUserFindUnique.mockResolvedValue({ id: "existing-1", email: "dup@example.com" });
 
-    const req = makeRequest({ name: "Jean", email: "dup@example.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jean",
+      email: "dup@example.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
     const json = await res.json();
 
@@ -121,12 +150,23 @@ describe("POST /api/auth/signup", () => {
   });
 
   it("returns 400 for invalid input (Zod validation fail)", async () => {
-    const req = makeRequest({ name: "J", email: "not-an-email", password: "123" });
+    const req = makeRequest({ name: "J", email: "not-an-email", password: "123", acceptTerms: true });
     const res = await POST(req);
     const json = await res.json();
 
     expect(res.status).toBe(400);
     expect(json.error).toBeDefined();
+  });
+
+  it("returns 400 when acceptTerms is missing or false", async () => {
+    const req = makeRequest({ name: "Jean Dupont", email: "test@example.com", password: "securePass123!" });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBeDefined();
+    expect(json.error.acceptTerms).toBeDefined();
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 
   it("returns 429 when rate limit is exceeded", async () => {
@@ -138,7 +178,12 @@ describe("POST /api/auth/signup", () => {
       reset: 12345,
     });
 
-    const req = makeRequest({ name: "Jean", email: "rate@example.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jean",
+      email: "rate@example.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
     const json = await res.json();
 
@@ -150,7 +195,12 @@ describe("POST /api/auth/signup", () => {
   it("returns 500 on unexpected error", async () => {
     mockUserFindUnique.mockRejectedValue(new Error("DB down"));
 
-    const req = makeRequest({ name: "Jean", email: "err@example.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jean",
+      email: "err@example.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
     const json = await res.json();
 
@@ -169,7 +219,12 @@ describe("POST /api/auth/signup", () => {
     const { sendWelcomeEmail } = await import("@/lib/email");
     (sendWelcomeEmail as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("SMTP down"));
 
-    const req = makeRequest({ name: "Jean Dupont", email: "test@example.com", password: "securePass123!" });
+    const req = makeRequest({
+      name: "Jean Dupont",
+      email: "test@example.com",
+      password: "securePass123!",
+      acceptTerms: true,
+    });
     const res = await POST(req);
     const json = await res.json();
 

@@ -119,5 +119,9 @@
 - Absence de pagination des photos dans l'API GET galerie [`src/app/api/events/[id]/gallery/route.ts:43`] — pre-existing pattern / low volume per event
 - Absence de vérification DB de l'existence du fichier dans la route de servie média [`src/app/api/media/events/[eventId]/gallery/[filename]/route.ts:46`] — pre-existing static media route pattern
 
+## Deferred from: code review of 26-1-creation-des-pages-legales-et-footer.md (2026-07-08)
+
+- Duplication de code de layout [src/app/(public)/cgv/page.tsx:1] — Duplication de la structure générale, de l'en-tête et du footer entre les trois pages légales créées.
+
 
 
