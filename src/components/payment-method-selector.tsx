@@ -14,6 +14,7 @@ export type PaymentProvider = "BANK_TRANSFER" | MobileMoneyProvider;
 export interface PaymentMethodSelectorProps {
   defaultProvider?: PaymentProvider;
   onSubmit?: (provider: PaymentProvider, phone?: string) => void;
+  onFileChange?: (file: File | null) => void;
   onCancel?: () => void;
   isLoading?: boolean;
   error?: string | null;
@@ -47,19 +48,26 @@ export function formatPhoneForInput(phone: string): string {
 export function PaymentMethodSelector({
   defaultProvider = "BANK_TRANSFER",
   onSubmit,
+  onFileChange,
   onCancel,
   isLoading = false,
   error = null,
 }: PaymentMethodSelectorProps) {
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(defaultProvider);
   const [phone, setPhone] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const isMobileMoney = selectedProvider === "WAVE" || selectedProvider === "ORANGE_MONEY";
   const showPhoneField = isMobileMoney;
   const isPhoneRequired = isMobileMoney;
   const isPhoneLengthValid = phone.length >= 8 && phone.startsWith("+");
   const isPhonePrefixSupported = !isMobileMoney || isSupportedMobileMoneyPrefix(phone);
-  const canSubmit = !isMobileMoney || (isPhoneLengthValid && isPhonePrefixSupported);
+  const hasSelectedFile = selectedFile !== null;
+  const hasFileError = fileError !== null;
+  const showReceiptUpload = selectedProvider === "BANK_TRANSFER";
+  const isFileValid = true;
+  const canSubmit = (!isMobileMoney || (isPhoneLengthValid && isPhonePrefixSupported)) && isFileValid;
   const showPrefixError = isMobileMoney && phone.length > 0 && isPhoneLengthValid && !isPhonePrefixSupported;
 
   const providerColors = useMemo(() => {
@@ -68,6 +76,37 @@ export function PaymentMethodSelector({
     }
     return null;
   }, [selectedProvider]);
+
+  function formatFileSize(size: number) {
+    if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo`;
+    }
+    return `${Math.max(1, Math.round(size / 1024))} Ko`;
+  }
+
+  function validateReceiptFile(file: File): string | null {
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      return "Type de fichier non supporté. Utilisez PDF, JPEG ou PNG.";
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return "Le fichier dépasse la taille maximale de 5 Mo.";
+    }
+    return null;
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+    if (file) {
+      const validationError = validateReceiptFile(file);
+      setFileError(validationError);
+      onFileChange?.(validationError ? null : file);
+    } else {
+      setFileError(null);
+      onFileChange?.(null);
+    }
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -159,6 +198,43 @@ export function PaymentMethodSelector({
               {showPrefixError ? (
                 <p className="text-xs text-destructive">
                   Indicatif non supporté. Utilise un numéro mobile money des pays listés ci-dessus.
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {showReceiptUpload ? (
+        <Card className="rounded-xl border bg-card p-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Justificatif de virement</CardTitle>
+            <CardDescription className="text-xs">
+              Téléverse ton reçu de virement (PDF, JPEG ou PNG, max 5 Mo).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="receipt-file">Fichier justificatif</Label>
+              <Input
+                id="receipt-file"
+                data-testid="receipt-file-input"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleFileChange}
+                aria-describedby="receipt-file-help receipt-file-error"
+              />
+              <p id="receipt-file-help" className="text-xs text-muted-foreground">
+                Formats acceptés : PDF, JPEG, PNG — 5 Mo maximum.
+              </p>
+              {hasFileError ? (
+                <p id="receipt-file-error" role="alert" className="text-xs text-destructive">
+                  {fileError}
+                </p>
+              ) : null}
+              {hasSelectedFile ? (
+                <p className="text-xs text-muted-foreground">
+                  Fichier sélectionné : {selectedFile.name} ({formatFileSize(selectedFile.size)})
                 </p>
               ) : null}
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Copy, Loader2, Landmark, Globe } from "lucide-react";
+import { CheckCircle2, Copy, Loader2, Landmark, Globe, Upload, File, X } from "lucide-react";
 import { toast } from "sonner";
 
 import SubscriptionStatusTracker from "@/components/subscription-status-tracker";
@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { getTierConfig, type MembershipTier } from "@/lib/tier-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type BankAccountXOF, type BankAccountEUR, XOF_ROUNDED_AMOUNTS, formatNumber } from "@/lib/bank-transfer-config";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface BankTransferInstructionsProps {
   tier: MembershipTier;
@@ -25,6 +27,7 @@ interface BankTransferInstructionsProps {
   reference: string;
   xofDetails?: BankAccountXOF;
   eurDetails?: BankAccountEUR;
+  receiptFile?: File | null;
 }
 
 type ConfirmationState =
@@ -44,10 +47,52 @@ export function BankTransferInstructions({
   reference,
   xofDetails,
   eurDetails,
+  receiptFile,
 }: BankTransferInstructionsProps) {
   const [confirmation, setConfirmation] = useState<ConfirmationState>({ status: "idle" });
   const [activeTab, setActiveTab] = useState<string>(currency.toLowerCase() === "xof" ? "xof" : "eur");
+  const [localReceiptFile, setLocalReceiptFile] = useState<File | null>(null);
+  const [receiptFileError, setReceiptFileError] = useState<string | null>(null);
   const config = getTierConfig(tier);
+
+  const effectiveReceiptFile = localReceiptFile ?? receiptFile ?? null;
+  const hasReceiptFile = effectiveReceiptFile !== null;
+  const hasReceiptFileError = receiptFileError !== null;
+
+  function validateReceiptFile(file: File): string | null {
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      return "Type de fichier non supporté. Utilisez PDF, JPEG ou PNG.";
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return "Le fichier dépasse la taille maximale de 5 Mo.";
+    }
+    return null;
+  }
+
+  function formatFileSize(size: number) {
+    if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo`;
+    }
+    return `${Math.max(1, Math.round(size / 1024))} Ko`;
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    if (file) {
+      const validationError = validateReceiptFile(file);
+      setReceiptFileError(validationError);
+      setLocalReceiptFile(validationError ? null : file);
+    } else {
+      setReceiptFileError(null);
+      setLocalReceiptFile(null);
+    }
+  }
+
+  function clearReceiptFile() {
+    setLocalReceiptFile(null);
+    setReceiptFileError(null);
+  }
 
   const xofAmounts = useMemo(() => {
     // Parité fixe officielle : 1 EUR = 655.957 XOF
@@ -168,6 +213,29 @@ export function BankTransferInstructions({
         setConfirmation({ status: "idle", message });
         toast.error(message);
         return;
+      }
+
+      const subscriptionId = payload.data?.subscription?.id;
+
+      if (effectiveReceiptFile && subscriptionId) {
+        const formData = new FormData();
+        formData.append("subscriptionId", subscriptionId);
+        formData.append("file", effectiveReceiptFile);
+
+        try {
+          const uploadResponse = await fetch("/api/subscriptions/upload-receipt", {
+            method: "POST",
+            body: formData,
+          });
+          const uploadPayload = await uploadResponse.json().catch(() => ({}));
+
+          if (!uploadResponse.ok) {
+            const uploadMessage = typeof uploadPayload?.error === "string" ? uploadPayload.error : "Le justificatif n'a pas pu être envoyé.";
+            toast.warning(uploadMessage);
+          }
+        } catch {
+          toast.warning("Le justificatif n'a pas pu être envoyé. Ta souscription est bien enregistrée.");
+        }
       }
 
       setConfirmation({ status: "confirmed" });
@@ -459,6 +527,53 @@ export function BankTransferInstructions({
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="rounded-xl border bg-card p-4 space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="transfer-receipt-file" className="flex items-center gap-2 text-sm font-semibold">
+                    <Upload className="size-4" aria-hidden="true" />
+                    Justificatif de virement
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Téléverse ton reçu de virement (PDF, JPEG ou PNG, max 5 Mo). Optionnel mais recommandé pour accélérer la validation.
+                  </p>
+                  <Input
+                    id="transfer-receipt-file"
+                    data-testid="transfer-receipt-file-input"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    aria-describedby="transfer-receipt-help transfer-receipt-error"
+                  />
+                  <p id="transfer-receipt-help" className="text-xs text-muted-foreground">
+                    Formats acceptés : PDF, JPEG, PNG — 5 Mo maximum.
+                  </p>
+                  {hasReceiptFileError ? (
+                    <p id="transfer-receipt-error" role="alert" className="text-xs text-destructive">
+                      {receiptFileError}
+                    </p>
+                  ) : null}
+                  {hasReceiptFile ? (
+                    <div className="flex items-center justify-between rounded-lg border bg-muted/40 p-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <File className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <p className="text-xs truncate">
+                          {effectiveReceiptFile.name} ({formatFileSize(effectiveReceiptFile.size)})
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 shrink-0"
+                        onClick={clearReceiptFile}
+                        aria-label="Retirer le justificatif"
+                      >
+                        <X className="size-3.5" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Clique uniquement après avoir lancé le virement depuis ta banque avec la référence indiquée.
               </p>

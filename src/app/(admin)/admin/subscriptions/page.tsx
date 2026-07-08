@@ -19,6 +19,7 @@ type AdminSubscription = {
   createdAt: Date;
   startDate: Date;
   endDate: Date | null;
+  paymentReceiptUrl: string | null;
   user: { name: string | null; email: string };
 };
 
@@ -72,7 +73,7 @@ function SubscriptionTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border bg-card">
-      <table className="w-full min-w-[820px] text-sm">
+      <table className="w-full min-w-[880px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left">
             <th className="px-4 py-3 font-medium">Membre</th>
@@ -83,6 +84,7 @@ function SubscriptionTable({
             <th className="px-4 py-3 font-medium">Date de soumission</th>
             <th className="px-4 py-3 font-medium">Échéance</th>
             <th className="px-4 py-3 font-medium">Moyen de paiement</th>
+            <th className="px-4 py-3 font-medium">Justificatif</th>
             <th className="px-4 py-3 font-medium">Référence virement</th>
             <th className="px-4 py-3 font-medium">Actions</th>
           </tr>
@@ -92,6 +94,7 @@ function SubscriptionTable({
             const payment = getPaymentForSubscription(subscription, payments);
             const amount = payment?.amount ?? getAmountForTier(subscription.tier, subscription.period);
             const tier = getTierBadgeConfig(subscription.tier);
+            const hasReceipt = Boolean(subscription.paymentReceiptUrl);
             return (
               <tr key={subscription.id} className="border-b last:border-b-0 hover:bg-muted/30">
                 <td className="px-4 py-4 font-medium">{subscription.user.name || "Membre IBC"}</td>
@@ -107,6 +110,20 @@ function SubscriptionTable({
                     providerPhone={showProviderPhone ? subscription.providerPhone : null}
                     showPhone={showProviderPhone}
                   />
+                </td>
+                <td className="px-4 py-4">
+                  {hasReceipt ? (
+                    <a
+                      href={subscription.paymentReceiptUrl ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
+                    >
+                      Voir le reçu
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-4 font-mono text-xs">
                   {subscription.providerRef || "Référence absente"}
@@ -134,17 +151,17 @@ export default async function AdminSubscriptionsPage() {
     prisma.subscription.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
     }),
     prisma.subscription.findMany({
       where: { status: "ACTIVE" },
       orderBy: { createdAt: "desc" },
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
     }),
     prisma.subscription.findMany({
       where: { status: "TRIAL" },
       orderBy: { createdAt: "asc" },
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
     }),
   ]);
 

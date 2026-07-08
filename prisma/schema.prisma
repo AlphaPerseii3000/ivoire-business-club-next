@@ -178,18 +178,20 @@ model VerificationToken {
 }
 
 model Subscription {
-  id            String             @id @default(cuid())
-  userId        String
-  tier          Tier
-  period        String             // MONTHLY | ANNUAL
-  provider      PaymentProvider    @default(BANK_TRANSFER)
-  providerPhone String?            // Numéro mobile money (WAVE / ORANGE_MONEY)
-  providerRef   String?            // External reference from the payment provider (nullable at TRIAL creation)
-  status        SubscriptionStatus @default(TRIAL)
-  startDate     DateTime
-  endDate       DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  userId             String
+  tier               Tier
+  period             String             // MONTHLY | ANNUAL
+  provider           PaymentProvider    @default(BANK_TRANSFER)
+  providerPhone      String?            // Numéro mobile money (WAVE / ORANGE_MONEY)
+  providerRef        String?            // External reference from the payment provider (nullable at TRIAL creation)
+  paymentReceiptUrl  String?            // URL publique du justificatif de virement sur R2
+  paymentReceiptKey  String?            // Clé R2 du justificatif de virement
+  status             SubscriptionStatus @default(TRIAL)
+  startDate          DateTime
+  endDate            DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

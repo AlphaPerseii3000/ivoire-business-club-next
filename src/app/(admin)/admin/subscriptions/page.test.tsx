@@ -51,6 +51,7 @@ const pending = {
   endDate: null,
   createdAt: new Date("2026-05-13T00:00:00.000Z"),
   updatedAt: new Date("2026-05-13T00:00:00.000Z"),
+  paymentReceiptUrl: null,
   user: { name: "Awa Traoré", email: "awa@example.com" },
 };
 
@@ -115,9 +116,29 @@ describe("AdminSubscriptionsPage", () => {
     expect(within(row).getByText("Mensuel")).toBeInTheDocument();
     expect(within(row).getByText("59,00 €")).toBeInTheDocument();
     expect(within(row).getByText("13/05/2026")).toBeInTheDocument();
-    expect(within(row).getByText("—")).toBeInTheDocument();
+    expect(within(row).getAllByText("—").length).toBeGreaterThanOrEqual(2);
     expect(within(pendingSection).getByText("IBC-member-1-GRAND_FRERE")).toBeInTheDocument();
     expect(within(pendingSection).getByText(/Valider Refuser/)).toBeInTheDocument();
+  });
+
+  it("renders a receipt link when paymentReceiptUrl is present", async () => {
+    const pendingWithReceipt = {
+      ...pending,
+      id: "sub-pending-receipt",
+      paymentReceiptUrl: "https://cdn.example.com/sub-pending-receipt/receipt.pdf",
+    };
+    mockSubscriptionFindMany
+      .mockResolvedValueOnce([pendingWithReceipt])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    render(await AdminSubscriptionsPage());
+
+    const pendingSection = screen.getByRole("region", { name: "Abonnements à valider" });
+    const receiptLink = within(pendingSection).getByRole("link", { name: "Voir le reçu" });
+    expect(receiptLink).toHaveAttribute("href", "https://cdn.example.com/sub-pending-receipt/receipt.pdf");
+    expect(receiptLink).toHaveAttribute("target", "_blank");
+    expect(receiptLink).toHaveAttribute("rel", "noopener noreferrer");
   });
 
   it("renders active subscriptions and suspend action, plus empty states", async () => {
