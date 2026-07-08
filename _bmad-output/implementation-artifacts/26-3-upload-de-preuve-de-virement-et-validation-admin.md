@@ -4,7 +4,7 @@ baseline_commit: 1929073ea9075ca7549cb863bd7a6aae6e63921e
 
 # Story 26.3: Upload de Preuve de Virement & Validation Admin
 
-Status: review
+Status: done
 
 ## Story
 
