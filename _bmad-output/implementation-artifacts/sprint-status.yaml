@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-07-09T07:10:00+02:00
+last_updated: 2026-07-09T17:30:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -222,7 +222,7 @@ development_status:
   epic-27: in-progress
   27-1-infrastructure-geo-technique: done
   27-2-schema-geo-articles: done
-  27-3-schema-geo-evenements: backlog
+  27-3-schema-geo-evenements: ready-for-dev
   epic-27-retrospective: optional
 
 # updated: epic-21, epic-23, epic-24, epic-25 → done, added epic-26 as backlog — 2026-07-08
