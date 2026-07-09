@@ -58,3 +58,8 @@ export const signinRateLimiter = createRateLimiter({ requests: 10, windowSeconds
 export const accountDeleteRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
 export const chatMessageRateLimiter = createRateLimiter({ requests: 1, windowSeconds: 30 });
 export const verificationSendRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
+
+// IP-based public rate limiters used by story 26.7 to mitigate spam/abuse across accounts
+export const chatMessagePublicRateLimiter = createRateLimiter({ requests: 10, windowSeconds: 60 });
+export const opportunityCreateRateLimiter = createRateLimiter({ requests: 2, windowSeconds: 60 });
+export const receiptUploadRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });

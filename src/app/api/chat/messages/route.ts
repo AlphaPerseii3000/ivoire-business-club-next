@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { chatMessageCreateSchema } from "@/lib/validations";
-import { chatMessageRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
+import { chatMessagePublicRateLimiter, chatMessageRateLimiter, getClientIdentifier, getClientIp } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -12,6 +12,13 @@ const MAX_PAGE_LIMIT = 50;
 const ACKNOWLEDGEMENT_CONTENT =
   "Merci, votre message a été reçu. L'équipe vous répondra sous peu. 🚧 Plateforme en phase bêta.";
 
+function makeRateLimitResponse(retryAfter: number) {
+  return NextResponse.json(
+    { error: "Trop de messages envoyés. Veuillez patienter.", code: "RATE_LIMITED" },
+    { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } }
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -20,13 +27,21 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
+
+    // Story 26.7: IP-based public rate limit first (10/min/IP)
+    const ipIdentifier = `ip:${getClientIp(req)}`;
+    const publicRateLimit = await chatMessagePublicRateLimiter.limit(ipIdentifier);
+    if (!publicRateLimit.success) {
+      const retryAfter = Math.ceil((publicRateLimit.reset - Date.now()) / 1000);
+      return makeRateLimitResponse(retryAfter);
+    }
+
+    // Existing per-user rate limit (1/30s/user) kept for anti-spam continuity
     const identifier = getClientIdentifier(req, userId);
     const rateLimit = await chatMessageRateLimiter.limit(identifier);
     if (!rateLimit.success) {
-      return NextResponse.json(
-        { error: "Trop de messages envoyés. Veuillez patienter 30 secondes.", code: "RATE_LIMITED" },
-        { status: 429 }
-      );
+      const retryAfter = Math.ceil((rateLimit.reset - Date.now()) / 1000);
+      return makeRateLimitResponse(retryAfter);
     }
 
     const body = await req.json();

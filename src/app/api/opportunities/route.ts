@@ -4,7 +4,15 @@ import { auth } from "@/lib/auth";
 import { buildOpportunityVisibilityWhere } from "@/lib/opportunity-visibility";
 import { prisma } from "@/lib/prisma";
 import { dedupeTags, isTagCategory, isValidTagOption } from "@/lib/tags";
+import { opportunityCreateRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { opportunityCreateSchema } from "@/lib/validations";
+
+function makeRateLimitResponse(retryAfter: number) {
+  return NextResponse.json(
+    { error: "Trop d'opportunités créées. Veuillez patienter.", code: "RATE_LIMITED" },
+    { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } }
+  );
+}
 
 export async function GET(req: Request) {
   try {
@@ -121,6 +129,14 @@ export async function POST(req: Request) {
         { error: firstError?.message ?? "Données invalides" },
         { status: 400 },
       );
+    }
+
+    // Story 26.7: rate limit by IP (2/min/IP) to resist account-rotation spam
+    const ipIdentifier = `ip:${getClientIp(req)}`;
+    const publicRateLimit = await opportunityCreateRateLimiter.limit(ipIdentifier);
+    if (!publicRateLimit.success) {
+      const retryAfter = Math.ceil((publicRateLimit.reset - Date.now()) / 1000);
+      return makeRateLimitResponse(retryAfter);
     }
 
     const { title, description, category, amount, currency, requiredTier } = parsed.data;

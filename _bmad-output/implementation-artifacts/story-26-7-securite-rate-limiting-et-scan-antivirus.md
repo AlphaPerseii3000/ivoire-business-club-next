@@ -4,7 +4,7 @@ baseline_commit: bfc61ea8731cc6d4a2d053efc0bae243316503f4
 
 # Story 26.7 : Sécurité (Rate-Limiting & Scan Antivirus)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -48,44 +48,44 @@ so that **la plateforme résiste aux abus de spam (chat, deals) et qu'aucun fich
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Auditer et décider de la stratégie chat** (AC: #1)
-  - [ ] T1.1 Lire `src/lib/rate-limit.ts` : le limiter existant `chatMessageRateLimiter` est configuré à 1 req/30 s et identifie par `user:${userId}` (pas par IP).
-  - [ ] T1.2 Décider : ajuster `chatMessageRateLimiter` à 10 req/60 s par IP (breaking change pour le test existant) ou créer un nouveau `chatMessagePublicRateLimiter` à 10 req/60 s par IP.
-  - [ ] T1.3 Recommandation PO/CS : créer un **nouveau** limiter `chatMessagePublicRateLimiter` (10 req/60 s, `getClientIp`) et le conserver en parallèle de l'existant `chatMessageRateLimiter` (1 req/30 s, `getClientIdentifier`) pour éviter la régression de tests. L'utiliser dans `route.ts` pour la story 26.7.
-  - [ ] T1.4 Implémenter le rate-limiting **avant** l'appel à Prisma et renvoyer 429 avec `Retry-After: Math.ceil((rateLimit.reset - Date.now()) / 1000)`.
+- [x] **T1 — Auditer et décider de la stratégie chat** (AC: #1)
+  - [x] T1.1 Lire `src/lib/rate-limit.ts` : le limiter existant `chatMessageRateLimiter` est configuré à 1 req/30 s et identifie par `user:${userId}` (pas par IP).
+  - [x] T1.2 Décider : ajuster `chatMessageRateLimiter` à 10 req/60 s par IP (breaking change pour le test existant) ou créer un nouveau `chatMessagePublicRateLimiter` à 10 req/60 s par IP.
+  - [x] T1.3 Recommandation PO/CS : créer un **nouveau** limiter `chatMessagePublicRateLimiter` (10 req/60 s, `getClientIp`) et le conserver en parallèle de l'existant `chatMessageRateLimiter` (1 req/30 s, `getClientIdentifier`) pour éviter la régression de tests. L'utiliser dans `route.ts` pour la story 26.7.
+  - [x] T1.4 Implémenter le rate-limiting **avant** l'appel à Prisma et renvoyer 429 avec `Retry-After: Math.ceil((rateLimit.reset - Date.now()) / 1000)`.
 
-- [ ] **T2 — Ajouter le rate-limiting sur `POST /api/opportunities`** (AC: #2)
-  - [ ] T2.1 Créer un limiter `opportunityCreateRateLimiter` dans `src/lib/rate-limit.ts` : 2 req/60 s.
-  - [ ] T2.2 L'appliquer dans `src/app/api/opportunities/route.ts` (handler POST uniquement) avec `getClientIp(req)` car l'identification par `userId` est insuffisante face à une attaque par rotation de comptes.
-  - [ ] T2.3 Renvoyer 429 avec `Retry-After` et un message en français.
+- [x] **T2 — Ajouter le rate-limiting sur `POST /api/opportunities`** (AC: #2)
+  - [x] T2.1 Créer un limiter `opportunityCreateRateLimiter` dans `src/lib/rate-limit.ts` : 2 req/60 s.
+  - [x] T2.2 L'appliquer dans `src/app/api/opportunities/route.ts` (handler POST uniquement) avec `getClientIp(req)` car l'identification par `userId` est insuffisante face à une attaque par rotation de comptes.
+  - [x] T2.3 Renvoyer 429 avec `Retry-After` et un message en français.
 
-- [ ] **T3 — Ajouter le rate-limiting sur `POST /api/subscriptions/upload-receipt`** (AC: #3)
-  - [ ] T3.1 Créer un limiter `receiptUploadRateLimiter` dans `src/lib/rate-limit.ts` : 3 req/60 s.
-  - [ ] T3.2 L'appliquer dans `src/app/api/subscriptions/upload-receipt/route.ts` avec `getClientIp(req)`.
-  - [ ] T3.3 Renvoyer 429 avec `Retry-After` avant tout traitement de fichier.
+- [x] **T3 — Ajouter le rate-limiting sur `POST /api/subscriptions/upload-receipt`** (AC: #3)
+  - [x] T3.1 Créer un limiter `receiptUploadRateLimiter` dans `src/lib/rate-limit.ts` : 3 req/60 s.
+  - [x] T3.2 L'appliquer dans `src/app/api/subscriptions/upload-receipt/route.ts` avec `getClientIp(req)`.
+  - [x] T3.3 Renvoyer 429 avec `Retry-After` avant tout traitement de fichier.
 
-- [ ] **T4 — Implémenter le scan antivirus côté serveur** (AC: #4)
-  - [ ] T4.1 Choisir et installer un service d'antivirus cloud (recommandation : `clamscan` local n'est pas viable sur Vercel/Infomaniak standalone ; privilégier une API cloud comme **VirusTotal**, **ClamAV Cloud API**, **Cloudmersive** ou **Arcjet**).
-  - [ ] T4.2 Créer un module `src/lib/file-scan.ts` avec une fonction `scanFile(buffer: Buffer): Promise<{ isSafe: boolean; reason?: string }>`.
-  - [ ] T4.3 Si le scan échoue ou détecte une menace : ne **jamais** appeler `prisma.subscription.update`, supprimer la clé R2 temporaire via `deleteR2Object` si un upload a eu lieu, retourner 400 avec un message générique du type : *"Le fichier n'a pas pu être accepté. Veuillez vérifier le document et réessayer."*
-  - [ ] T4.4 Ajouter les variables d'environnement nécessaires dans `.env.example` (ex: `ANTIVIRUS_API_KEY`, `ANTIVIRUS_API_URL`) sans jamais logger la clé API.
-  - [ ] T4.5 En environnement de test / si la clé API est absente, le scanner doit retourner `isSafe: true` avec un warning logué, afin de ne pas bloquer les tests locaux.
+- [x] **T4 — Implémenter le scan antivirus côté serveur** (AC: #4)
+  - [x] T4.1 Choisir et installer un service d'antivirus cloud (recommandation : `clamscan` local n'est pas viable sur Vercel/Infomaniak standalone ; privilégier une API cloud comme **VirusTotal**, **ClamAV Cloud API**, **Cloudmersive** ou **Arcjet**).
+  - [x] T4.2 Créer un module `src/lib/file-scan.ts` avec une fonction `scanFile(buffer: Buffer): Promise<{ isSafe: boolean; reason?: string }>`.
+  - [x] T4.3 Si le scan échoue ou détecte une menace : ne **jamais** appeler `prisma.subscription.update`, supprimer la clé R2 temporaire via `deleteR2Object` si un upload a eu lieu, retourner 400 avec un message générique du type : *"Le fichier n'a pas pu être accepté. Veuillez vérifier le document et réessayer."*
+  - [x] T4.4 Ajouter les variables d'environnement nécessaires dans `.env.example` (ex: `ANTIVIRUS_API_KEY`, `ANTIVIRUS_API_URL`) sans jamais logger la clé API.
+  - [x] T4.5 En environnement de test / si la clé API est absente, le scanner doit retourner `isSafe: true` avec un warning logué, afin de ne pas bloquer les tests locaux.
 
-- [ ] **T5 — Adapter `src/app/api/subscriptions/upload-receipt/route.ts`** (AC: #4, #5)
-  - [ ] T5.1 Réorganiser l'ordre : validation MIME (Zod) → rate-limiting → scan antivirus → upload R2 → audit log → mise à jour DB.
-  - [ ] T5.2 Appeler `safeCreateAuditLog` avec `action: "DOCUMENT_UPLOAD"` (si pertinent, sinon utiliser une action existante) **avant** l'écriture DB.
-  - [ ] T5.3 Si le scan échoue, supprimer l'objet R2 temporaire avant de retourner l'erreur.
+- [x] **T5 — Adapter `src/app/api/subscriptions/upload-receipt/route.ts`** (AC: #4, #5)
+  - [x] T5.1 Réorganiser l'ordre : validation MIME (Zod) → rate-limiting → scan antivirus → upload R2 → audit log → mise à jour DB.
+  - [x] T5.2 Appeler `safeCreateAuditLog` avec `action: "DOCUMENT_UPLOAD"` (si pertinent, sinon utiliser une action existante) **avant** l'écriture DB.
+  - [x] T5.3 Si le scan échoue, supprimer l'objet R2 temporaire avant de retourner l'erreur.
 
-- [ ] **T6 — Mettre à jour les tests** (AC: #7)
-  - [ ] T6.1 `src/app/api/chat/messages/route.test.ts` : ajouter un mock pour le nouveau limiter public et un test 429.
-  - [ ] T6.2 `src/app/api/opportunities/route.test.ts` : ajouter un mock pour `opportunityCreateRateLimiter` et un test 429 sur POST.
-  - [ ] T6.3 `src/app/api/subscriptions/upload-receipt/route.test.ts` : ajouter un mock pour `receiptUploadRateLimiter` et un test 429, et optionnellement pour le scanner.
-  - [ ] T6.4 Lancer `npx vitest run src/app/api/chat/messages/route.test.ts src/app/api/opportunities/route.test.ts src/app/api/subscriptions/upload-receipt/route.test.ts`.
+- [x] **T6 — Mettre à jour les tests** (AC: #7)
+  - [x] T6.1 `src/app/api/chat/messages/route.test.ts` : ajouter un mock pour le nouveau limiter public et un test 429.
+  - [x] T6.2 `src/app/api/opportunities/route.test.ts` : ajouter un mock pour `opportunityCreateRateLimiter` et un test 429 sur POST.
+  - [x] T6.3 `src/app/api/subscriptions/upload-receipt/route.test.ts` : ajouter un mock pour `receiptUploadRateLimiter` et un test 429, et optionnellement pour le scanner.
+  - [x] T6.4 Lancer `npx vitest run src/app/api/chat/messages/route.test.ts src/app/api/opportunities/route.test.ts src/app/api/subscriptions/upload-receipt/route.test.ts`.
 
-- [ ] **T7 — Build et validation** (AC: #6, #7)
-  - [ ] T7.1 Lancer `npm run build`.
-  - [ ] T7.2 Lancer la suite Vitest concernée.
-  - [ ] T7.3 Vérifier qu'aucune référence à des clés secrètes d'antivirus n'est logguée en clair.
+- [x] **T7 — Build et validation** (AC: #6, #7)
+  - [x] T7.1 Lancer `npm run build`.
+  - [x] T7.2 Lancer la suite Vitest concernée.
+  - [x] T7.3 Vérifier qu'aucune référence à des clés secrètes d'antivirus n'est logguée en clair.
 
 ## Dev Notes
 

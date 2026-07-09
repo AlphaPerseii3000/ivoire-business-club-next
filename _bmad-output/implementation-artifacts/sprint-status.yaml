@@ -35,8 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-07-09T17:30:00+02:00
-project: ibc
+# last_updated: 2026-07-09T20:35:00+02:00
+last_updated: 2026-07-09T20:40:00+02:00
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -216,7 +216,7 @@ development_status:
   26-4-route-de-tracking-et-redirection-whatsapp-centif-ci: done
   26-5-dashboard-de-statistiques-dattractivite-koffi: done
   26-6-notifications-email-automatiques-resend: done
-  26-7-securite-rate-limiting-et-scan-antivirus: ready-for-dev
+  26-7-securite-rate-limiting-et-scan-antivirus: review
   epic-26-retrospective: optional
 
   epic-27: in-progress

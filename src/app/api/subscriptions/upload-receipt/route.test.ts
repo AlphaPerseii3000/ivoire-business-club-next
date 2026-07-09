@@ -7,9 +7,13 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockSubscriptionFindFirst = vi.hoisted(() => vi.fn());
 const mockSubscriptionUpdate = vi.hoisted(() => vi.fn());
 const mockUploadObjectToS3 = vi.hoisted(() => vi.fn());
+const mockDeleteR2Object = vi.hoisted(() => vi.fn());
 const mockCreateSubscriptionReceiptR2Key = vi.hoisted(() => vi.fn(() => "subscriptions/sub-1/receipts/uuid.pdf"));
 const mockCreatePublicDocumentUrl = vi.hoisted(() => vi.fn(() => "https://public.example.com/subscriptions/sub-1/receipts/uuid.pdf"));
 const mockGetMissingR2Env = vi.hoisted(() => vi.fn(() => []));
+const mockRateLimit = vi.hoisted(() => vi.fn());
+const mockScanFile = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
@@ -22,9 +26,20 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("@/lib/r2", () => ({
   uploadObjectToS3: mockUploadObjectToS3,
+  deleteR2Object: mockDeleteR2Object,
   createSubscriptionReceiptR2Key: mockCreateSubscriptionReceiptR2Key,
   createPublicDocumentUrl: mockCreatePublicDocumentUrl,
   getMissingR2Env: mockGetMissingR2Env,
+}));
+vi.mock("@/lib/rate-limit", () => ({
+  receiptUploadRateLimiter: { limit: mockRateLimit },
+  getClientIp: () => "127.0.0.1",
+}));
+vi.mock("@/lib/file-scan", () => ({
+  scanFile: mockScanFile,
+}));
+vi.mock("@/lib/audit-log", () => ({
+  safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 
 const makeFile = (overrides: { name?: string; type?: string } = {}) =>
@@ -52,6 +67,8 @@ describe("POST /api/subscriptions/upload-receipt", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRateLimit.mockResolvedValue({ success: true, limit: 3, remaining: 2, reset: 0 });
+    mockScanFile.mockResolvedValue({ isSafe: true });
   });
 
   it("returns 401 when user is not authenticated", async () => {
@@ -126,7 +143,7 @@ describe("POST /api/subscriptions/upload-receipt", () => {
     expect(payload.code).toBe("SUBSCRIPTION_NOT_FOUND");
   });
 
-  it("uploads the receipt and updates the subscription", async () => {
+  it("uploads the receipt, scans, audits and updates the subscription", async () => {
     mockSubscriptionFindFirst.mockResolvedValue({ id: "sub-1", userId: "user-1", status: "PENDING" });
     mockSubscriptionUpdate.mockResolvedValue({
       id: "sub-1",
@@ -152,5 +169,40 @@ describe("POST /api/subscriptions/upload-receipt", () => {
     });
     expect(payload.data.subscriptionId).toBe("sub-1");
     expect(payload.data.paymentReceiptUrl).toBe("https://public.example.com/subscriptions/sub-1/receipts/uuid.pdf");
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+      action: "DOCUMENT_UPLOAD",
+      entityType: "subscription_receipt",
+      entityId: "sub-1",
+    }));
+  });
+
+  it("returns 429 when IP-based rate limit is exceeded", async () => {
+    mockRateLimit.mockResolvedValue({ success: false, limit: 3, remaining: 0, reset: 1234567890 });
+
+    const response = await POST(makeRequest(makeFormData("sub-1", makeFile())));
+    const payload = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(payload.code).toBe("RATE_LIMITED");
+    expect(response.headers.get("Retry-After")).toBeDefined();
+    expect(mockUploadObjectToS3).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 and audits scan rejection without persisting the file", async () => {
+    mockSubscriptionFindFirst.mockResolvedValue({ id: "sub-1", userId: "user-1", status: "PENDING" });
+    mockScanFile.mockResolvedValue({ isSafe: false, reason: "Threat detected" });
+
+    const response = await POST(makeRequest(makeFormData("sub-1", makeFile())));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.code).toBe("FILE_SCAN_REJECTED");
+    expect(mockUploadObjectToS3).not.toHaveBeenCalled();
+    expect(mockSubscriptionUpdate).not.toHaveBeenCalled();
+    expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+      action: "FILE_SCAN_REJECTED",
+      entityType: "subscription_receipt",
+      entityId: "sub-1",
+    }));
   });
 });

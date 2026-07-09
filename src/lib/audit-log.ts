@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError, sanitizeForLog } from "@/lib/sanitize-log";
 
-export const AUDIT_ACTIONS = {
+export const OPPORTUNITY_AUDIT_ACTIONS = {
   SUBSCRIPTION_VALIDATE: "SUBSCRIPTION_VALIDATE",
   SUBSCRIPTION_REJECT: "SUBSCRIPTION_REJECT",
   SUBSCRIPTION_SUSPEND: "SUBSCRIPTION_SUSPEND",
@@ -49,6 +49,12 @@ export const AUDIT_ACTIONS = {
   COMPANY_PUBLISH: "COMPANY_PUBLISH",
   COMPANY_UNPUBLISH: "COMPANY_UNPUBLISH",
   COMPANY_DELETE: "COMPANY_DELETE",
+} as const;
+
+export const AUDIT_ACTIONS = {
+  ...OPPORTUNITY_AUDIT_ACTIONS,
+  DOCUMENT_UPLOAD: "DOCUMENT_UPLOAD",
+  FILE_SCAN_REJECTED: "FILE_SCAN_REJECTED",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

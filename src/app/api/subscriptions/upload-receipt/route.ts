@@ -3,9 +3,28 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { receiptUploadSchema } from "@/lib/validations";
-import { createPublicDocumentUrl, createSubscriptionReceiptR2Key, getMissingR2Env, uploadObjectToS3 } from "@/lib/r2";
+import { receiptUploadRateLimiter, getClientIp } from "@/lib/rate-limit";
+import { scanFile } from "@/lib/file-scan";
+import { safeCreateAuditLog } from "@/lib/audit-log";
+import { sanitizeError } from "@/lib/sanitize-log";
+import {
+  createPublicDocumentUrl,
+  createSubscriptionReceiptR2Key,
+  deleteR2Object,
+  getMissingR2Env,
+  uploadObjectToS3,
+} from "@/lib/r2";
 
 export const runtime = "nodejs";
+
+const GENERIC_UPLOAD_ERROR = "Le fichier n'a pas pu être accepté. Veuillez vérifier le document et réessayer.";
+
+function makeRateLimitResponse(retryAfter: number) {
+  return NextResponse.json(
+    { error: "Trop de fichiers téléversés. Veuillez patienter.", code: "RATE_LIMITED" },
+    { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } }
+  );
+}
 
 export async function POST(req: Request) {
   try {
@@ -39,6 +58,7 @@ export async function POST(req: Request) {
     const fileType = typeof file.type === "string" ? file.type : "application/octet-stream";
     const fileSize = typeof file.size === "number" ? file.size : 0;
 
+    // AC-5: MIME validation via Zod (receiptUploadSchema)
     const parsed = receiptUploadSchema.safeParse({
       fileName,
       mimeType: fileType,
@@ -49,6 +69,14 @@ export async function POST(req: Request) {
         { error: parsed.error.issues[0]?.message ?? "Données invalides" },
         { status: 400 }
       );
+    }
+
+    // Story 26.7: rate limit by IP (3/min/IP) before any file processing
+    const ipIdentifier = `ip:${getClientIp(req)}`;
+    const publicRateLimit = await receiptUploadRateLimiter.limit(ipIdentifier);
+    if (!publicRateLimit.success) {
+      const retryAfter = Math.ceil((publicRateLimit.reset - Date.now()) / 1000);
+      return makeRateLimitResponse(retryAfter);
     }
 
     const subscription = await prisma.subscription.findFirst({
@@ -71,7 +99,30 @@ export async function POST(req: Request) {
     const r2Key = createSubscriptionReceiptR2Key(subscription.id, parsed.data.fileName, parsed.data.mimeType);
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // AC-4: antivirus scan before persisting anything
+    const scanResult = await scanFile(buffer);
+    if (!scanResult.isSafe) {
+      console.warn(`[upload-receipt] Scan antivirus rejeté pour subscriptionId=${subscription.id}:`, scanResult.reason);
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "FILE_SCAN_REJECTED",
+        entityType: "subscription_receipt",
+        entityId: subscription.id,
+        metadata: { r2Key, mimeType: parsed.data.mimeType, reason: scanResult.reason },
+      });
+      return NextResponse.json({ error: GENERIC_UPLOAD_ERROR, code: "FILE_SCAN_REJECTED" }, { status: 400 });
+    }
+
     await uploadObjectToS3(r2Key, buffer, parsed.data.mimeType);
+
+    // Audit log before DB write (pitfall #53)
+    await safeCreateAuditLog({
+      actorId: session.user.id,
+      action: "DOCUMENT_UPLOAD",
+      entityType: "subscription_receipt",
+      entityId: subscription.id,
+      metadata: { r2Key, mimeType: parsed.data.mimeType },
+    });
 
     const updated = await prisma.subscription.update({
       where: { id: subscription.id },
@@ -91,7 +142,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Receipt upload error:", error instanceof Error ? error.message : "unknown");
+    console.error("Receipt upload error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }

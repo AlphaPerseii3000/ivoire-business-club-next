@@ -6,12 +6,15 @@ const mockChatMessageFindMany = vi.hoisted(() => vi.fn());
 const mockChatMessageCount = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn());
 const mockRateLimit = vi.hoisted(() => vi.fn());
+const mockPublicRateLimit = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/sanitize-log", () => ({ sanitizeError: (error: unknown) => String(error) }));
 vi.mock("@/lib/rate-limit", () => ({
   chatMessageRateLimiter: { limit: mockRateLimit },
+  chatMessagePublicRateLimiter: { limit: mockPublicRateLimit },
   getClientIdentifier: (_req: Request, userId?: string) => (userId ? `user:${userId}` : "ip:unknown"),
+  getClientIp: () => "127.0.0.1",
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -43,6 +46,7 @@ describe("POST /api/chat/messages", () => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
     mockRateLimit.mockResolvedValue({ success: true, limit: 1, remaining: 0, reset: 0 });
+    mockPublicRateLimit.mockResolvedValue({ success: true, limit: 10, remaining: 9, reset: 0 });
     mockTransaction.mockImplementation(async (callback) => {
       const tx = {
         chatMessage: {
@@ -85,6 +89,17 @@ describe("POST /api/chat/messages", () => {
     const json = await res.json();
     expect(res.status).toBe(429);
     expect(json.code).toBe("RATE_LIMITED");
+    expect(res.headers.get("Retry-After")).toBeDefined();
+    expect(mockChatMessageCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when public IP rate limit exceeded", async () => {
+    mockPublicRateLimit.mockResolvedValue({ success: false, limit: 10, remaining: 0, reset: 1234567890 });
+    const res = await POST(makePostRequest({ category: "bug_technique", content: "Bug" }));
+    const json = await res.json();
+    expect(res.status).toBe(429);
+    expect(json.code).toBe("RATE_LIMITED");
+    expect(res.headers.get("Retry-After")).toBeDefined();
     expect(mockChatMessageCreate).not.toHaveBeenCalled();
   });
 

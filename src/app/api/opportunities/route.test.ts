@@ -7,6 +7,7 @@ const mockOpportunityFindMany = vi.hoisted(() => vi.fn());
 const mockOpportunityCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn((callback) => callback({ opportunity: { create: mockOpportunityCreate } })));
+const mockRateLimit = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
@@ -15,6 +16,10 @@ vi.mock("@/lib/prisma", () => ({
     opportunity: { findMany: mockOpportunityFindMany },
     user: { findUnique: mockUserFindUnique },
   },
+}));
+vi.mock("@/lib/rate-limit", () => ({
+  opportunityCreateRateLimiter: { limit: mockRateLimit },
+  getClientIp: () => "127.0.0.1",
 }));
 
 function makePostRequest(body: unknown) {
@@ -130,6 +135,7 @@ describe("GET /api/opportunities visibility", () => {
 describe("POST /api/opportunities tags", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRateLimit.mockResolvedValue({ success: true, limit: 2, remaining: 1, reset: 0 });
   });
 
   it("creates an opportunity with deduplicated tags", async () => {
@@ -167,6 +173,24 @@ describe("POST /api/opportunities tags", () => {
     }));
 
     expect(response.status).toBe(400);
+    expect(mockOpportunityCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when IP-based rate limit is exceeded", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "member-1" } });
+    mockRateLimit.mockResolvedValue({ success: false, limit: 2, remaining: 0, reset: 1234567890 });
+
+    const response = await POST(makePostRequest({
+      title: "Projet tech à Abidjan",
+      description: "Une opportunité de partenariat très détaillée.",
+      category: "BUSINESS",
+      amount: 75000,
+    }));
+
+    const payload = await response.json();
+    expect(response.status).toBe(429);
+    expect(payload.code).toBe("RATE_LIMITED");
+    expect(response.headers.get("Retry-After")).toBeDefined();
     expect(mockOpportunityCreate).not.toHaveBeenCalled();
   });
 });
