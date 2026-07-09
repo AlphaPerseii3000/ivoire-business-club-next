@@ -1,5 +1,5 @@
 ---
-baseline_commit: 9c77648
+baseline_commit: e1d1f00c353cffabcfc729f522f984d8d95b1f44
 agent_model_name_version: kimi-k2.7-code
 ---
 

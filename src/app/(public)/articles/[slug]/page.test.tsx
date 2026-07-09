@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArticleDetailPage, { generateMetadata } from "./page";
 import { ArticleVisibility } from "@/generated/prisma/client";
+import { parseFaqFromMarkdown } from "@/lib/article-faq";
 
 // Mock Auth
 const mockAuth = vi.hoisted(() => vi.fn());
@@ -157,6 +158,151 @@ describe("Article Detail Page", () => {
       absolute: "Guide Premium Abidjan — Ivoire Business Club",
     });
     expect(metadata.description).toBe("Extrait de l'article premium");
+  });
+
+  // ===== NEW TESTS: Associated Opportunity (AC 8) =====
+
+  // ===== JSON-LD GEO (Story 27.2) =====
+
+  it("renders enriched Article + BreadcrumbList JSON-LD", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      imageUrl: "https://example.com/cover.jpg",
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    const { container } = render(page);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    expect(script).toBeInTheDocument();
+
+    const data = JSON.parse(script?.textContent ?? "[]");
+    const articleLd = data.find((item: { '@type': string }) => item["@type"] === "Article");
+    const breadcrumbLd = data.find((item: { '@type': string }) => item["@type"] === "BreadcrumbList");
+
+    expect(articleLd).toBeDefined();
+    expect(articleLd.headline).toBe("Guide Premium Abidjan");
+    expect(articleLd.description).toBe("Extrait de l'article premium");
+    expect(articleLd.image).toBe("https://example.com/cover.jpg");
+    expect(articleLd.mainEntityOfPage).toEqual({
+      "@type": "WebPage",
+      "@id": "https://www.ivoire-business-club.com/articles/guide-premium-abidjan",
+    });
+    expect(articleLd.wordCount).toBeGreaterThanOrEqual(3);
+    expect(articleLd.articleSection).toBe("guide");
+    expect(articleLd.articleBody).toBe("## Contenu complet secret");
+    expect(articleLd.author).toEqual({ "@type": "Person", name: "Alexandre" });
+
+    expect(breadcrumbLd).toBeDefined();
+    expect(breadcrumbLd.itemListElement).toHaveLength(3);
+    expect(breadcrumbLd.itemListElement[0]).toMatchObject({
+      "@type": "ListItem",
+      position: 1,
+      name: "Accueil",
+      item: "https://www.ivoire-business-club.com",
+    });
+    expect(breadcrumbLd.itemListElement[2]).toMatchObject({
+      "@type": "ListItem",
+      position: 3,
+      name: "Guide Premium Abidjan",
+      item: "https://www.ivoire-business-club.com/articles/guide-premium-abidjan",
+    });
+  });
+
+  it("falls back to logo image when no imageUrl is provided", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    const { container } = render(page);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const data = JSON.parse(script?.textContent ?? "[]");
+    const articleLd = data.find((item: { '@type': string }) => item["@type"] === "Article");
+
+    expect(articleLd.image).toBe("https://www.ivoire-business-club.com/logo-ibc.webp");
+  });
+
+  it("uses excerpt for articleBody and wordCount on gated articles", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI" } });
+    mockHasActiveSubscription.mockResolvedValue(false);
+    mockFindFirst.mockResolvedValue(mockArticle);
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    const { container } = render(page);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const data = JSON.parse(script?.textContent ?? "[]");
+    const articleLd = data.find((item: { '@type': string }) => item["@type"] === "Article");
+
+    expect(articleLd.articleBody).toBe("Extrait de l'article premium");
+    expect(articleLd.wordCount).toBe(mockArticle.excerpt.trim().split(/\s+/).filter(Boolean).length);
+  });
+
+  it("injects FAQPage JSON-LD when FAQ section is present", async () => {
+    const contentWithFaq = `## Contenu
+
+## FAQ
+**Q:** Qui peut consulter cet article ?
+**A:** Les membres Premium et Affranchi de l'Ivoire Business Club.
+
+**Q:** Comment s'abonner ?
+**A:** Par virement bancaire via la page Tarifs.
+`;
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      content: contentWithFaq,
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    const { container } = render(page);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const data = JSON.parse(script?.textContent ?? "[]");
+    const faqLd = data.find((item: { '@type': string }) => item["@type"] === "FAQPage");
+
+    expect(faqLd).toBeDefined();
+    expect(faqLd.mainEntity).toHaveLength(2);
+    expect(faqLd.mainEntity[0]).toMatchObject({
+      "@type": "Question",
+      name: "Qui peut consulter cet article ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Les membres Premium et Affranchi de l'Ivoire Business Club.",
+      },
+    });
+  });
+
+  it("does not inject FAQPage when no FAQ heading exists", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", tier: "AFFRANCHI", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockFindFirst.mockResolvedValue({
+      ...mockArticle,
+      visibility: ArticleVisibility.PUBLIC,
+      content: "## Introduction\nPas de FAQ ici.\n\n## Conclusion\nFin.",
+    });
+
+    const page = await ArticleDetailPage({
+      params: Promise.resolve({ slug: "guide-premium-abidjan" }),
+    });
+    const { container } = render(page);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const data = JSON.parse(script?.textContent ?? "[]");
+    const faqLd = data.find((item: { '@type': string }) => item["@type"] === "FAQPage");
+
+    expect(faqLd).toBeUndefined();
   });
 
   // ===== NEW TESTS: Associated Opportunity (AC 8) =====

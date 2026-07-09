@@ -221,7 +221,7 @@ development_status:
 
   epic-27: in-progress
   27-1-infrastructure-geo-technique: done
-  27-2-schema-geo-articles: ready-for-dev
+  27-2-schema-geo-articles: in-progress
   27-3-schema-geo-evenements: backlog
   epic-27-retrospective: optional
 

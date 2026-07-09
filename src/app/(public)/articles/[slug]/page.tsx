@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { ArticleVisibility, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
 import type { DealCardDeal } from "@/components/features/deals/deal-card";
+import { parseFaqFromMarkdown } from "@/lib/article-faq";
 
 export const revalidate = 3600;
 
@@ -217,7 +218,8 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
   }
 
   // 4. Build article URL for sharing (AC 9)
-  const articleUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "")}/articles/${slug}`;
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
+  const articleUrl = `${siteUrl}/articles/${slug}`;
 
   const rawDate = article.publishedAt ?? article.createdAt;
   const formattedDate = rawDate
@@ -230,12 +232,27 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
   const badgeConfig = getTierBadgeConfig(article.visibility);
 
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
+  // Public articleBody: never leak full premium content when gated.
+  const publicBody = hasAccess
+    ? article.content
+    : article.excerpt ?? "";
+  const wordCount = publicBody.trim().split(/\s+/).filter(Boolean).length;
+
+  const articleImageUrl =
+    article.imageUrl && article.imageUrl.startsWith("http")
+      ? article.imageUrl
+      : `${siteUrl}/logo-ibc.webp`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": article.title,
     "description": article.excerpt,
+    "image": articleImageUrl,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
     "datePublished": article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())
       ? new Date(article.publishedAt).toISOString()
       : new Date(article.createdAt).toISOString(),
@@ -253,14 +270,60 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         "@type": "ImageObject",
         "url": `${siteUrl}/logo-ibc.webp`
       }
-    }
+    },
+    "wordCount": wordCount,
+    "articleSection": article.category,
+    "articleBody": publicBody,
   };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Accueil",
+        "item": siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Articles",
+        "item": `${siteUrl}/articles`,
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": article.title,
+        "item": articleUrl,
+      },
+    ],
+  };
+
+  const faqItems = hasAccess ? parseFaqFromMarkdown(article.content) : [];
+  const schemas: Array<Record<string, unknown>> = [jsonLd, breadcrumbLd];
+  if (faqItems.length > 0) {
+    const faqLd = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqItems.map((item) => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer,
+        },
+      })),
+    };
+    schemas.push(faqLd);
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, "\\u003c") }}
       />
       {/* Mobile Navigation */}
       <LandingMobileNav />
