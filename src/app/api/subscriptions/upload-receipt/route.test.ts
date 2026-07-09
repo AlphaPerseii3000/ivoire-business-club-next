@@ -7,10 +7,9 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockSubscriptionFindFirst = vi.hoisted(() => vi.fn());
 const mockSubscriptionUpdate = vi.hoisted(() => vi.fn());
 const mockUploadObjectToS3 = vi.hoisted(() => vi.fn());
-const mockDeleteR2Object = vi.hoisted(() => vi.fn());
 const mockCreateSubscriptionReceiptR2Key = vi.hoisted(() => vi.fn(() => "subscriptions/sub-1/receipts/uuid.pdf"));
 const mockCreatePublicDocumentUrl = vi.hoisted(() => vi.fn(() => "https://public.example.com/subscriptions/sub-1/receipts/uuid.pdf"));
-const mockGetMissingR2Env = vi.hoisted(() => vi.fn(() => []));
+const mockGetMissingR2Env = vi.hoisted(() => vi.fn<() => string[]>(() => []));
 const mockRateLimit = vi.hoisted(() => vi.fn());
 const mockScanFile = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
@@ -26,7 +25,6 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("@/lib/r2", () => ({
   uploadObjectToS3: mockUploadObjectToS3,
-  deleteR2Object: mockDeleteR2Object,
   createSubscriptionReceiptR2Key: mockCreateSubscriptionReceiptR2Key,
   createPublicDocumentUrl: mockCreatePublicDocumentUrl,
   getMissingR2Env: mockGetMissingR2Env,
@@ -37,13 +35,18 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 vi.mock("@/lib/file-scan", () => ({
   scanFile: mockScanFile,
+  validateMimeWithMagicBytes: vi.fn((declaredMimeType: string, buffer: Buffer) => {
+    // Test-only default: accept any non-empty buffer whose magic matches the declared type.
+    // Magic byte mismatch tests override this mock explicitly.
+    return { ok: true, detectedMimeType: declaredMimeType };
+  }),
 }));
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
 
-const makeFile = (overrides: { name?: string; type?: string } = {}) =>
-  new File(["receipt"], overrides.name ?? "receipt.pdf", { type: overrides.type ?? "application/pdf" });
+const makeFile = (overrides: { name?: string; type?: string; content?: string } = {}) =>
+  new File([overrides.content ?? "receipt"], overrides.name ?? "receipt.pdf", { type: overrides.type ?? "application/pdf" });
 
 function makeFormData(subscriptionId: string | null, file?: File) {
   const formData = new FormData();

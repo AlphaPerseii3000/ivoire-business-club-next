@@ -4,13 +4,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { receiptUploadSchema } from "@/lib/validations";
 import { receiptUploadRateLimiter, getClientIp } from "@/lib/rate-limit";
-import { scanFile } from "@/lib/file-scan";
+import { scanFile, validateMimeWithMagicBytes } from "@/lib/file-scan";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 import { sanitizeError } from "@/lib/sanitize-log";
 import {
   createPublicDocumentUrl,
   createSubscriptionReceiptR2Key,
-  deleteR2Object,
   getMissingR2Env,
   uploadObjectToS3,
 } from "@/lib/r2";
@@ -96,11 +95,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const r2Key = createSubscriptionReceiptR2Key(subscription.id, parsed.data.fileName, parsed.data.mimeType);
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // AC-5: backend magic-byte validation against the declared MIME type
+    const magicValidation = validateMimeWithMagicBytes(parsed.data.mimeType, buffer);
+    if (!magicValidation.ok) {
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "FILE_SCAN_REJECTED",
+        entityType: "subscription_receipt",
+        entityId: subscription.id,
+        metadata: { fileName, mimeType: parsed.data.mimeType, reason: magicValidation.reason },
+      });
+      return NextResponse.json({ error: GENERIC_UPLOAD_ERROR, code: "FILE_SCAN_REJECTED" }, { status: 400 });
+    }
+
+    const r2Key = createSubscriptionReceiptR2Key(subscription.id, parsed.data.fileName, parsed.data.mimeType);
+
     // AC-4: antivirus scan before persisting anything
-    const scanResult = await scanFile(buffer);
+    const scanResult = await scanFile(buffer, parsed.data.mimeType);
     if (!scanResult.isSafe) {
       console.warn(`[upload-receipt] Scan antivirus rejeté pour subscriptionId=${subscription.id}:`, scanResult.reason);
       await safeCreateAuditLog({
@@ -108,7 +121,7 @@ export async function POST(req: Request) {
         action: "FILE_SCAN_REJECTED",
         entityType: "subscription_receipt",
         entityId: subscription.id,
-        metadata: { r2Key, mimeType: parsed.data.mimeType, reason: scanResult.reason },
+        metadata: { fileName, mimeType: parsed.data.mimeType, reason: scanResult.reason },
       });
       return NextResponse.json({ error: GENERIC_UPLOAD_ERROR, code: "FILE_SCAN_REJECTED" }, { status: 400 });
     }

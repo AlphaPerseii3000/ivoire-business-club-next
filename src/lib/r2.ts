@@ -122,6 +122,10 @@ export function isAllowedDocumentMimeType(mimeType: string) {
   return DOCUMENT_ALLOWED_MIME_TYPES.includes(mimeType as (typeof DOCUMENT_ALLOWED_MIME_TYPES)[number]);
 }
 
+export function isAllowedReceiptMimeType(mimeType: string) {
+  return RECEIPT_ALLOWED_MIME_TYPES.includes(mimeType as (typeof RECEIPT_ALLOWED_MIME_TYPES)[number]);
+}
+
 export function getDocumentExtension(fileName: string, mimeType: string) {
   const safeName = fileName.toLowerCase();
   const fromName = safeName.match(/\.([a-z0-9]+)$/)?.[1];

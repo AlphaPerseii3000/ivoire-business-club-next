@@ -71,18 +71,27 @@ describe("createRateLimiter", () => {
 });
 
 describe("getClientIp", () => {
-  it("extracts IP from x-forwarded-for with single IP", () => {
+  it("extracts the trusted (rightmost) IP from x-forwarded-for with single IP", () => {
     const req = new Request("http://localhost", {
       headers: { "x-forwarded-for": "192.168.1.1" },
     });
     expect(getClientIp(req)).toBe("192.168.1.1");
   });
 
-  it("extracts first IP from x-forwarded-for with multiple IPs", () => {
+  it("extracts the last (most recent) private proxy IP from x-forwarded-for", () => {
+    // The rightmost IP is the one added by the trusted nginx proxy. Earlier
+    // entries are client/proxy-supplied and must not be trusted.
     const req = new Request("http://localhost", {
-      headers: { "x-forwarded-for": "192.168.1.1, 10.0.0.1, 172.16.0.1" },
+      headers: { "x-forwarded-for": "1.2.3.4, 10.0.0.1, 192.168.1.1" },
     });
     expect(getClientIp(req)).toBe("192.168.1.1");
+  });
+
+  it("ignores x-forwarded-for when the last hop is not a trusted proxy", () => {
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "192.168.1.1, 1.2.3.4" },
+    });
+    expect(getClientIp(req)).toBe("unknown");
   });
 
   it('returns "unknown" when no x-forwarded-for header', () => {
@@ -99,15 +108,17 @@ describe("getClientIdentifier", () => {
     expect(getClientIdentifier(req, "user-abc")).toBe("user:user-abc");
   });
 
-  it("returns ip:{ip} when no userId provided", () => {
+  it("returns ip:{ip} when no userId provided and the chain ends with a trusted proxy", () => {
     const req = new Request("http://localhost", {
-      headers: { "x-forwarded-for": "192.168.1.1" },
+      headers: { "x-forwarded-for": "10.0.0.1, 192.168.1.1" },
     });
     expect(getClientIdentifier(req)).toBe("ip:192.168.1.1");
   });
 
-  it("returns ip:unknown when no userId and no forwarded header", () => {
-    const req = new Request("http://localhost");
+  it("returns ip:unknown when no userId and no trusted forwarded header", () => {
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "1.2.3.4" },
+    });
     expect(getClientIdentifier(req)).toBe("ip:unknown");
   });
 });

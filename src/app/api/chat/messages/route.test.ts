@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockChatMessageCreate = vi.hoisted(() => vi.fn());

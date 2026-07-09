@@ -40,10 +40,30 @@ export function createRateLimiter({ requests, windowSeconds }: RateLimiterOption
   };
 }
 
+function isPrivateOrLocalIp(ip: string): boolean {
+  if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost") return true;
+  const parts = ip.split(".");
+  if (parts.length === 4) {
+    const [a, b, c] = parts.map(Number);
+    if (a === 10) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 169 && b === 254) return true; // link-local
+  }
+  return false;
+}
+
 export function getClientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    return forwarded.split(",")[0].trim();
+    const rawIps = forwarded.split(",").map((part) => part.trim()).filter(Boolean);
+    // Trust only when the request itself comes from a trusted proxy. The VPS app
+    // runs behind nginx, so Next.js sees a loopback or private address. Use the
+    // rightmost (most recently added) proxy IP to prevent spoofing.
+    const last = rawIps.at(-1);
+    if (last && isPrivateOrLocalIp(last)) {
+      return last;
+    }
   }
   return "unknown";
 }
