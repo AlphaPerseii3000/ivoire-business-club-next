@@ -23,7 +23,6 @@ import { EventRegisterButton } from "@/components/features/events/EventRegisterB
 import { EventGallery } from "@/components/features/events/EventGallery";
 import { EventStatus } from "@/generated/prisma/client";
 
-export const revalidate = 3600;
 
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
