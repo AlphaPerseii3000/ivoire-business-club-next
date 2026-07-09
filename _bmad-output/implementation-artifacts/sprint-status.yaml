@@ -219,8 +219,8 @@ development_status:
   26-7-securite-rate-limiting-et-scan-antivirus: backlog
   epic-26-retrospective: optional
 
-  epic-27: backlog
-  27-1-infrastructure-geo-technique: backlog
+  epic-27: in-progress
+  27-1-infrastructure-geo-technique: ready-for-dev
   27-2-schema-geo-articles: backlog
   27-3-schema-geo-evenements: backlog
   epic-27-retrospective: optional
