@@ -295,9 +295,13 @@ export function parseFaqFromMarkdown(content: string): FaqItem[] {
 - Epic 27 GEO dans `_bmad-output/planning-artifacts/epics.md` (lignes 2679-2749).
 - Sprint Change Proposal GEO : `_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-09-geo.md`.
 - Story 27.1 précédente : `_bmad-output/implementation-artifacts/27-1-infrastructure-geo-technique.md`.
-- Fichier existant : `src/app/(public)/articles/[slug]/page.tsx` (JSON-LD basique lignes 234-257).
+- Fichier existant : `src/app/(public)/articles/[slug]/page.tsx`.
 - Modèle Article : `prisma/schema.prisma` lignes 486-509.
 - Architecture SEO/GEO : Story 14.1 `_bmad-output/implementation-artifacts/14-1-infrastructure-seo-technique.md`.
+
+Status: review
+
+---
 
 ## Dev Agent Record
 
@@ -307,15 +311,26 @@ kimi-k2.7-code
 
 ### Debug Log References
 
-*(À remplir par le dev agent)*
+- Baseline commit : e1d1f00c353cffabcfc729f522f984d8d95b1f44
+- Merged into main: c114908
 
 ### Completion Notes List
 
-*(À remplir par le dev agent)*
+- AC-1: JSON-LD Article enrichi avec image, mainEntityOfPage, wordCount, articleSection et articleBody.
+- AC-2: FAQPage JSON-LD injecté conditionnellement si section FAQ détectée dans le contenu Markdown.
+- AC-3: BreadcrumbList JSON-LD avec Accueil > Articles > [titre].
+- AC-4/5: Structuration maintenue, extrait visible en haut, H2/H3 via ArticleContent, pas de fuite du contenu premium dans articleBody.
+- Tests co-localisés ajoutés dans src/app/(public)/articles/[slug]/page.test.tsx et src/lib/article-faq.test.ts.
+- Build OK, tests OK (182 fichiers, 1291 tests).
 
 ### File List
 
 - `src/app/(public)/articles/[slug]/page.tsx` — UPDATE
-- `src/lib/article-faq.ts` — CREATE (suggéré)
-- `src/app/(public)/articles/[slug]/page.test.tsx` — UPDATE (si besoin)
+- `src/lib/article-faq.ts` — CREATE
+- `src/lib/article-faq.test.ts` — CREATE
+- `src/app/(public)/articles/[slug]/page.test.tsx` — UPDATE
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — UPDATE
+
+### Change Log
+
+- Implémentation story 27.2 — schema GEO articles (c114908).
