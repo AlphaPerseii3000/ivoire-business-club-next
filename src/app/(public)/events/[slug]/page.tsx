@@ -196,7 +196,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   // JSON-LD GEO for events
   const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
   const eventUrl = `${siteUrl}/events/${slug}`;
-  const eventImageUrl = coverUrl ? `${siteUrl}${coverUrl}` : `${siteUrl}/logo-ibc.webp`;
+  const eventImageUrl = isPrivateVisitor || !coverUrl
+    ? `${siteUrl}/logo-ibc.webp`
+    : `${siteUrl}${coverUrl}`;
 
   const hasPublicOffers = !isPrivateVisitor && !isFree && visitor !== null && visitor > 0;
 
