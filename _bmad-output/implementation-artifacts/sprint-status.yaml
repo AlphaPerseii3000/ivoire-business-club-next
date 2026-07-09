@@ -219,6 +219,12 @@ development_status:
   26-7-securite-rate-limiting-et-scan-antivirus: backlog
   epic-26-retrospective: optional
 
+  epic-27: backlog
+  27-1-infrastructure-geo-technique: backlog
+  27-2-schema-geo-articles: backlog
+  27-3-schema-geo-evenements: backlog
+  epic-27-retrospective: optional
+
 # updated: epic-21, epic-23, epic-24, epic-25 → done, added epic-26 as backlog — 2026-07-08
 # cleanup: removed duplicate metadata lines, reordered 2-0-consolidation under epic-2 section
 # story 26-4: context created, status → ready-for-dev — 2026-07-08

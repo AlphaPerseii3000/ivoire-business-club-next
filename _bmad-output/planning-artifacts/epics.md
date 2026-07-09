@@ -2674,5 +2674,128 @@ Sécuriser la plateforme IBC (antivirus, rate-limiting), assurer sa conformité 
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.8. Épiques 8, 10-17, 20, 22-26 ajoutés via Sprint Change Propals. Stories 9-9, 9-10, 19-2b, 26.1-26.7 ajoutées. Audit BMAD 2026-07-08.*
+---
+
+## Epic 27: GEO — Generative Engine Optimization
+
+**Objectif :** Optimiser les articles et événements pour la visibilité dans les moteurs de recherche IA (ChatGPT, Perplexity, Google AI Overviews) via llms.txt, schemas structurés enrichis, et pré-rendu statique.
+
+**Source :** Sprint Change Proposal 2026-07-09 (CC workflow, approuvé par Jonathan)
+
+### Story 27.1: Infrastructure GEO technique
+
+**FR-GE01** : Le site permet le crawl par les bots IA principaux (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended) via robots.txt
+**FR-GE02** : Un fichier `llms.txt` est publié à la racine du domaine, listant les pages clés en Markdown avec descriptions courtes
+**FR-GE03** : Un fichier `llms-full.txt` est publié, embarquant le contenu Markdown des articles et événements publiés
+**FR-GE04** : Les pages articles et événements publiques ne sont plus en `force-dynamic` (pré-rendu statique pour optimiser le crawl)
+
+**Acceptance Criteria :**
+
+```gherkin
+Given le fichier robots.txt du site
+When un crawler IA (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended) le lit
+Then il trouve une règle explicite Allow pour son User-Agent
+
+Given la route /llms.txt
+When un agent IA ou un visiteur y accède
+Then il reçoit un fichier Markdown avec : titre du site, description, liens vers /articles, /events, /experts, /partners, /business-abidjan avec descriptions courtes
+
+Given la route /llms-full.txt
+When un agent IA y accède
+Then il reçoit le contenu Markdown des articles PUBLIC publiés + événements PUBLISHED
+
+Given la page article détail /articles/[slug]
+When elle est construite par Next.js
+Then elle n'est plus en force-dynamic mais utilise un mode de rendu statique ou revalidé
+
+Given la page événement détail /events/[slug]
+When elle est construite par Next.js
+Then elle n'est plus en force-dynamic mais utilise un mode de rendu statique ou revalidé
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+```
+
+### Story 27.2: Schema structuré GEO pour articles
+
+**FR-GE05** : Le JSON-LD des articles est enrichi avec `image`, `mainEntityOfPage`, `wordCount`, `articleBody` (extrait)
+**FR-GE06** : Si l'article contient une section FAQ, un JSON-LD `FAQPage` est généré
+**FR-GE07** : Un `BreadcrumbList` JSON-LD est présent sur chaque page article (Accueil > Articles > [titre])
+**FR-GE08** : Le contenu des articles est structuré pour l'extraction IA (résumé en haut, sous-titres H2/H3 clairs, paragraphes courts)
+
+**Acceptance Criteria :**
+
+```gherkin
+Given une page article détail publiée
+When on inspecte le JSON-LD Article
+Then il inclut : image, mainEntityOfPage, wordCount, articleSection
+
+Given un article contenant une section FAQ (marquée par un heading "FAQ" ou des éléments Q/R)
+When la page est rendue
+Then un JSON-LD FAQPage est généré avec Question/Answer pour chaque item
+
+Given une page article détail
+When on inspecte le JSON-LD
+Then un BreadcrumbList est présent : Accueil > Articles > [titre de l'article]
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests de la page article
+When npx vitest run est exécuté sur les tests existants
+Then ils passent sans régression
+```
+
+### Story 27.3: Schema structuré GEO pour événements
+
+**FR-GE09** : Un JSON-LD `Event` (schema.org/Event) est présent sur chaque page événement avec : name, description, startDate, endDate, location, organizer, offers (si pricing), image
+**FR-GE10** : Un `BreadcrumbList` JSON-LD est présent sur chaque page événement (Accueil > Événements > [titre])
+**FR-GE11** : Les événements privés (membres uniquement) ont un JSON-LD Event avec `eventStatus: EventScheduled` mais `description` limitée (pas de fuite de contenu privé)
+**FR-GE12** : Le sitemap inclut les dates `lastModified` correctes pour les événements
+
+**Acceptance Criteria :**
+
+```gherkin
+Given une page événement détail publiée
+When on inspecte le JSON-LD
+Then un schema.org/Event est présent avec : name, description, startDate, endDate, organizer
+
+Given un événement avec une localisation physique
+When on inspecte le JSON-LD Event
+Then location est de type Place avec name et address
+
+Given un événement en ligne (onlineUrl)
+When on inspecte le JSON-LD Event
+Then location est de type VirtualLocation avec url
+
+Given un événement avec pricing public
+When on inspecte le JSON-LD Event
+Then offers est présent avec price, priceCurrency, availability
+
+Given un événement avec coverImagePath
+When on inspecte le JSON-LD Event
+Then image est présent
+
+Given une page événement détail
+When on inspecte le JSON-LD
+Then un BreadcrumbList est présent : Accueil > Événements > [titre de l'événement]
+
+Given un événement privé (visibility PRIVATE)
+When on inspecte le JSON-LD Event
+Then la description ne contient pas de détails privés (message générique "Événement réservé aux membres")
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests de la page événement
+When npx vitest run est exécuté sur les tests existants
+Then ils passent sans régression
+```
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.8. Épiques 8, 10-17, 20, 22-27 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09.*
 
