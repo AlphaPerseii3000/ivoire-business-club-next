@@ -104,7 +104,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
         },
       },
       tags: { orderBy: [{ category: "asc" }, { value: "asc" }], select: { category: true, value: true } },
-      _count: { select: { documents: true, verificationApprovals: true } },
+      _count: { select: { documents: true, verificationApprovals: true, contactLogs: true, interests: true } },
       documents: {
         where: { mimeType: { in: ["image/jpeg", "image/png", "image/webp"] } },
         orderBy: { createdAt: "asc" },
@@ -161,6 +161,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
             <DealCard
               key={opportunity.id}
               match={{ commonTagCount: opportunity.commonTagCount, matchPercent: opportunity.matchPercent, matchedTags: opportunity.matchedTags }}
+              isOwnDeal={opportunity.authorId === session.user.id}
               deal={{
                 id: opportunity.id,
                 title: opportunity.title,
@@ -175,6 +176,8 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                 tags: opportunity.tags,
                 author: { phone: opportunity.author.phone },
                 thumbnailUrl: opportunity.documents.length > 0 ? `/api/opportunities/${opportunity.id}/thumbnail` : null,
+                contactLogCount: opportunity._count.contactLogs,
+                interestCount: opportunity._count.interests,
               }}
             />
           ))}

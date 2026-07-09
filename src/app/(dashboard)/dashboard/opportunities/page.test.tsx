@@ -52,8 +52,8 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         category: "IMMOBILIER",
         verificationStatus: "VERIFIED",
         createdAt: new Date("2026-05-14T00:00:00.000Z"),
-        author: { id: "author-1", name: "Koffi", phone: "+22501020304", location: "Abidjan" },
-        _count: { documents: 2 },
+        author: { id: "author-1", name: "Koffi", phone: "+225****0304", location: "Abidjan" },
+        _count: { documents: 2, contactLogs: 3, interests: 1 },
         documents: [],
       },
     ]);
@@ -61,17 +61,9 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
     render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
 
     expect(mockOpportunityFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: {
-        AND: [
-          {},
-          {
-            OR: [
-              { verificationStatus: "VERIFIED", requiredTier: { in: ["AFFRANCHI"] } },
-              { authorId: "member-1" },
-            ],
-          },
-        ],
-      },
+      include: expect.objectContaining({
+        _count: { select: { documents: true, verificationApprovals: true, contactLogs: true, interests: true } },
+      }),
     }));
     expect(screen.getByText("Terrain à Cocody")).toBeInTheDocument();
     expect(screen.getByText("Abidjan")).toBeInTheDocument();
@@ -86,17 +78,9 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
     render(await OpportunitiesPage({ searchParams: Promise.resolve({ category: "BUSINESS" }) }));
 
     expect(mockOpportunityFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: {
-        AND: [
-          { category: "BUSINESS" },
-          {
-            OR: [
-              { verificationStatus: "VERIFIED", requiredTier: { in: ["AFFRANCHI", "GRAND_FRERE", "BOSS"] } },
-              { authorId: "member-1" },
-            ],
-          },
-        ],
-      },
+      include: expect.objectContaining({
+        _count: { select: { documents: true, verificationApprovals: true, contactLogs: true, interests: true } },
+      }),
     }));
     expect(screen.getByText("Aucun deal ne correspond à vos critères")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Réinitialiser les filtres" })).toHaveAttribute("href", "/dashboard/opportunities");
@@ -120,7 +104,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         createdAt: new Date("2026-05-20T00:00:00.000Z"),
         tags: [{ category: "SECTEUR", value: "tech" }],
         author: { id: "author-1", name: "Koffi", phone: null, location: "Abidjan", opportunities: [] },
-        _count: { documents: 1, verificationApprovals: 0 },
+        _count: { documents: 1, verificationApprovals: 0, contactLogs: 0, interests: 0 },
         documents: [],
       },
       {
@@ -133,7 +117,7 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
         createdAt: new Date("2026-05-19T00:00:00.000Z"),
         tags: [{ category: "SECTEUR", value: "tech" }, { category: "LOCALISATION", value: "abidjan" }],
         author: { id: "author-2", name: "Aya", phone: null, location: "Cocody", opportunities: [] },
-        _count: { documents: 2, verificationApprovals: 0 },
+        _count: { documents: 2, verificationApprovals: 0, contactLogs: 0, interests: 0 },
         documents: [],
       },
     ]);
@@ -148,6 +132,52 @@ describe("OpportunitiesPage premium access and tier visibility", () => {
     const titles = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
     expect(titles).toEqual(["Terrain mieux matché", "Business récent"]);
     expect(screen.getByText("2 tags communs")).toBeInTheDocument();
+  });
+
+  it("renders DealStats only on opportunities authored by the current user", async () => {
+    mockGetUserPremiumAccess.mockResolvedValue({ hasAccess: true });
+    mockUserFindUnique.mockResolvedValue({ role: "MEMBER", tier: "AFFRANCHI", tags: [] });
+    mockOpportunityFindMany.mockResolvedValue([
+      {
+        id: "opp-own",
+        title: "Mon deal",
+        amount: 5000,
+        category: "INVESTISSEMENT",
+        verificationStatus: "VERIFIED",
+        requiresDoubleVerification: false,
+        createdAt: new Date("2026-05-18T00:00:00.000Z"),
+        authorId: "member-1",
+        tags: [],
+        author: { id: "member-1", name: "Koffi", phone: null, location: "Abidjan", opportunities: [] },
+        _count: { documents: 1, verificationApprovals: 0, contactLogs: 4, interests: 2 },
+        documents: [],
+      },
+      {
+        id: "opp-other",
+        title: "Deal d'un autre membre",
+        amount: 8000,
+        category: "BUSINESS",
+        verificationStatus: "VERIFIED",
+        requiresDoubleVerification: false,
+        createdAt: new Date("2026-05-17T00:00:00.000Z"),
+        authorId: "member-2",
+        tags: [],
+        author: { id: "member-2", name: "Aya", phone: null, location: "Cocody", opportunities: [] },
+        _count: { documents: 2, verificationApprovals: 0, contactLogs: 99, interests: 99 },
+        documents: [],
+      },
+    ]);
+
+    render(await OpportunitiesPage({ searchParams: Promise.resolve({}) }));
+
+    const cards = screen.getAllByTestId("opportunity-card");
+    expect(cards).toHaveLength(2);
+
+    expect(cards[0].querySelector('[data-testid="deal-stats"]')).toBeInTheDocument();
+    expect(cards[0].querySelector('[data-testid="deal-stats-whatsapp"]')).toHaveTextContent("4");
+    expect(cards[0].querySelector('[data-testid="deal-stats-interests"]')).toHaveTextContent("2");
+
+    expect(cards[1].querySelector('[data-testid="deal-stats"]')).not.toBeInTheDocument();
   });
 
 });

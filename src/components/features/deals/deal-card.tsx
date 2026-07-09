@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { MapPin, Paperclip, LockKeyhole } from "lucide-react";
+import { Heart, MapPin, Paperclip, LockKeyhole } from "lucide-react";
+
+import { DealStats } from "@/components/features/deals/deal-stats";
 
 import { TrustBadge } from "@/components/features/deals/trust-badge";
 import { TagChips } from "@/components/features/tags/tag-chips";
@@ -29,15 +31,18 @@ export type DealCardDeal = {
   author?: { phone?: string | null };
   category?: string | null;
   thumbnailUrl?: string | null;
+  contactLogCount?: number;
+  interestCount?: number;
 };
 
 type DealCardProps = {
   deal: DealCardDeal;
   match?: OpportunityMatchMetadata;
   isTeaser?: boolean;
+  isOwnDeal?: boolean;
 };
 
-export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
+export function DealCard({ deal, match, isTeaser = false, isOwnDeal = false }: DealCardProps) {
   const location = deal.location?.trim() ? deal.location : "Localisation non renseignée";
 
   if (isTeaser) {
@@ -112,6 +117,9 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
   const commonTagCount = match?.commonTagCount ?? 0;
   const shouldShowMatchBadge = commonTagCount > 0;
   const matchBadgeLabel = commonTagCount === 1 ? "1 tag commun" : `${commonTagCount} tags communs`;
+  const contactLogCount = deal.contactLogCount ?? 0;
+  const interestCount = deal.interestCount ?? 0;
+  const shouldShowStats = isOwnDeal === true;
 
   return (
     <article data-testid="opportunity-card" className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md">
@@ -154,6 +162,11 @@ export function DealCard({ deal, match, isTeaser = false }: DealCardProps) {
       {hasTags ? (
         <div className="px-4">
           <TagChips tags={deal.tags ?? []} interactive={false} />
+        </div>
+      ) : null}
+      {shouldShowStats ? (
+        <div className="px-4 pb-4 pt-2">
+          <DealStats contactLogCount={contactLogCount} interestCount={interestCount} isOwnDeal={shouldShowStats} />
         </div>
       ) : null}
       <div className="px-4 pb-4">

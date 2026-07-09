@@ -1,6 +1,10 @@
+---
+baseline_commit: 2d9ecce8731cc6d4a2d053efc0bae243316503f4
+---
+
 # Story 26.5 : Dashboard de Statistiques d'Attractivité (Koffi)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -37,33 +41,33 @@ so that **je puisse mesurer l'attractivité de mes deals sans quitter mon espace
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Auditer et adapter la requête Prisma de la page existante** (AC: #1, #3, #5)
-  - [ ] T1.1 Lire l'état actuel de `src/app/(dashboard)/dashboard/opportunities/page.tsx` (déjà chargé dans ce contexte).
-  - [ ] T1.2 Dans le `prisma.opportunity.findMany`, enrichir `_count` avec `contactLogs: true` et `interests: true`.
-  - [ ] T1.3 Ne **pas** modifier la clause `where` ni la logique de visibilité existante.
+- [x] **T1 — Auditer et adapter la requête Prisma de la page existante** (AC: #1, #3, #5)
+  - [x] T1.1 Lire l'état actuel de `src/app/(dashboard)/dashboard/opportunities/page.tsx` (déjà chargé dans ce contexte).
+  - [x] T1.2 Dans le `prisma.opportunity.findMany`, enrichir `_count` avec `contactLogs: true` et `interests: true`.
+  - [x] T1.3 Ne **pas** modifier la clause `where` ni la logique de visibilité existante.
 
-- [ ] **T2 — Créer le composant `DealStats`** (AC: #2, #4)
-  - [ ] T2.1 Créer `src/components/features/deals/deal-stats.tsx`.
-  - [ ] T2.2 Accepter en props `{ contactLogCount: number; interestCount: number; isOwnDeal: boolean }`.
-  - [ ] T2.3 Si `isOwnDeal` est `false`, retourner `null` (ne pas afficher de stat sur les deals des autres).
-  - [ ] T2.4 Afficher deux indicateurs : icône message + compteur WhatsApp, icône cœur/intérêt + compteur d'intérêts.
-  - [ ] T2.5 Gérer les cas `0` avec un style atténué (pas de "undefined" ou de "—").
+- [x] **T2 — Créer le composant `DealStats`** (AC: #2, #4)
+  - [x] T2.1 Créer `src/components/features/deals/deal-stats.tsx`.
+  - [x] T2.2 Accepter en props `{ contactLogCount: number; interestCount: number; isOwnDeal: boolean }`.
+  - [x] T2.3 Si `isOwnDeal` est `false`, retourner `null` (ne pas afficher de stat sur les deals des autres).
+  - [x] T2.4 Afficher deux indicateurs : icône message + compteur WhatsApp, icône cœur/intérêt + compteur d'intérêts.
+  - [x] T2.5 Gérer les cas `0` avec un style atténué (pas de "undefined" ou de "—").
 
-- [ ] **T3 — Intégrer `DealStats` dans `DealCard`** (AC: #2, #4, #5)
-  - [ ] T3.1 Étendre le type `DealCardDeal` pour inclure `contactLogCount?: number` et `interestCount?: number`.
-  - [ ] T3.2 Ajouter une prop optionnelle `isOwnDeal?: boolean` au `DealCard` (défaut `false`).
-  - [ ] T3.3 Dans le rendu principal (non `isTeaser`), afficher `<DealStats />` uniquement si `isOwnDeal === true`.
-  - [ ] T3.4 Utiliser le pattern `condition ? <Component /> : null` (interdit `&&` en JSX — pitfall #31).
+- [x] **T3 — Intégrer `DealStats` dans `DealCard`** (AC: #2, #4, #5)
+  - [x] T3.1 Étendre le type `DealCardDeal` pour inclure `contactLogCount?: number` et `interestCount?: number`.
+  - [x] T3.2 Ajouter une prop optionnelle `isOwnDeal?: boolean` au `DealCard` (défaut `false`).
+  - [x] T3.3 Dans le rendu principal (non `isTeaser`), afficher `<DealStats />` uniquement si `isOwnDeal === true`.
+  - [x] T3.4 Utiliser le pattern `condition ? <Component /> : null` (interdit `&&` en JSX — pitfall #31).
 
-- [ ] **T4 — Faire passer les données depuis la page vers `DealCard`** (AC: #1, #2, #4, #5)
-  - [ ] T4.1 Mapper `opportunity._count.contactLogs` et `opportunity._count.interests` dans l'objet passé à `DealCard`.
-  - [ ] T4.2 Calculer `isOwnDeal` par `opportunity.authorId === session.user.id`.
-  - [ ] T4.3 Passer `isOwnDeal` au `DealCard`.
+- [x] **T4 — Faire passer les données depuis la page vers `DealCard`** (AC: #1, #2, #4, #5)
+  - [x] T4.1 Mapper `opportunity._count.contactLogs` et `opportunity._count.interests` dans l'objet passé à `DealCard`.
+  - [x] T4.2 Calculer `isOwnDeal` par `opportunity.authorId === session.user.id`.
+  - [x] T4.3 Passer `isOwnDeal` au `DealCard`.
 
-- [ ] **T5 — Tests et vérifications** (AC: #3, #5)
-  - [ ] T5.1 Mettre à jour `src/app/(dashboard)/dashboard/opportunities/page.test.tsx` pour vérifier que `_count` inclut bien `contactLogs` et `interests`.
-  - [ ] T5.2 Ajouter un test unitaire co-localisé `deal-stats.test.tsx` pour valider le rendu `null` quand `isOwnDeal` est `false` et l'affichage des deux compteurs quand `isOwnDeal` est `true`.
-  - [ ] T5.3 Lancer `npx vitest run src/app/(dashboard)/dashboard/opportunities/page.test.tsx` et `npx vitest run src/components/features/deals/deal-stats.test.tsx`.
+- [x] **T5 — Tests et vérifications** (AC: #3, #5)
+  - [x] T5.1 Mettre à jour `src/app/(dashboard)/dashboard/opportunities/page.test.tsx` pour vérifier que `_count` inclut bien `contactLogs` et `interests`.
+  - [x] T5.2 Ajouter un test unitaire co-localisé `deal-stats.test.tsx` pour valider le rendu `null` quand `isOwnDeal` est `false` et l'affichage des deux compteurs quand `isOwnDeal` est `true`.
+  - [x] T5.3 Lancer `npx vitest run src/app/(dashboard)/dashboard/opportunities/page.test.tsx` et `npx vitest run src/components/features/deals/deal-stats.test.tsx`.
 
 ## Dev Notes
 
@@ -227,22 +231,33 @@ Dans `/dashboard/opportunities/page.tsx`, enrichir l'objet passé à `DealCard` 
 - [Source: `src/components/features/deals/deal-card.tsx` — composant à étendre]
 - [Source: `prisma/schema.prisma` — modèles `ContactLog` et `OpportunityInterest`]
 - [Source: `src/app/api/opportunities/[id]/contact/route.ts` — tracking WhatsApp / ContactLog]
-- [Source: `src/app/api/opportunities/[id]/interest/route.ts` — création OpportunityInterest]
-
-## Dev Agent Record
-
 ### Agent Model Used
 
-- Non applicable (fichier de contexte créé par `bmad-create-story`).
+- kimi-k2.7-code (via Hermes Agent).
 
 ### Debug Log References
 
-- N/A
+- Aucune erreur bloquante ; les tests Prisma `event.coverImagePath` non liés à la story ont émis un avertissement lors du build mais n'ont pas interrompu la compilation.
 
 ### Completion Notes List
 
-- N/A
+- Enrichi la requête Prisma de `/dashboard/opportunities` avec `_count: { select: { documents, verificationApprovals, contactLogs, interests } }`, récupéré après le contrôle d'accès premium.
+- Créé `DealStats` en Server Component (composant statique sans interaction) affichant deux badges : WhatsApp (`MessageCircle`) et intérêts (`Heart`), avec style atténué à zéro.
+- Intégré `DealStats` dans `DealCard` uniquement hors mode `isTeaser` et lorsque `isOwnDeal === true`, en respectant le JSX guardrail `condition ? <Component /> : null`.
+- Mappé `contactLogCount`, `interestCount` et `isOwnDeal` depuis la page vers `DealCard`.
+- Ajouté/mis à jour les tests : `deal-stats.test.tsx` (4 tests) et `page.test.tsx` (9 tests) ; `npx vitest run` : 181 fichiers / 1278 tests passés.
+- `npm run build` passe (un avertissement Prisma `events.coverImagePath` existe en dehors de la story).
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/story-26-5-dashboard-de-statistiques-dattractivite-koffi.md` (ce fichier)
+- `src/app/(dashboard)/dashboard/opportunities/page.tsx` (UPDATE)
+- `src/components/features/deals/deal-card.tsx` (UPDATE)
+- `src/components/features/deals/deal-stats.tsx` (NEW)
+- `src/app/(dashboard)/dashboard/opportunities/page.test.tsx` (UPDATE)
+- `src/components/features/deals/deal-stats.test.tsx` (NEW)
+- `_bmad-output/implementation-artifacts/story-26-5-dashboard-de-statistiques-dattractivite-koffi.md` (UPDATE : statut + Dev Agent Record)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE : statut 26-5 → review)
+
+### Change Log
+
+- 2026-07-09 — Implémentation de la story 26-5 : dashboard de statistiques d'attractivité.
