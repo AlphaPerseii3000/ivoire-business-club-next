@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-28T16:40:39+02:00
-last_updated: 2026-07-08T17:17:15+02:00
+last_updated: 2026-07-09T06:52:00+02:00
 project: ibc
 project_key: NOKEY
 tracking_system: file-system
@@ -214,7 +214,7 @@ development_status:
   26-2-registre-de-consentement-apdp-rgpd-a-linscription: done
   26-3-upload-de-preuve-de-virement-et-validation-admin: done
   26-4-route-de-tracking-et-redirection-whatsapp-centif-ci: done
-  26-5-dashboard-de-statistiques-dattractivite-koffi: backlog
+  26-5-dashboard-de-statistiques-dattractivite-koffi: ready-for-dev
   26-6-notifications-email-automatiques-resend: backlog
   26-7-securite-rate-limiting-et-scan-antivirus: backlog
   epic-26-retrospective: optional
@@ -223,3 +223,4 @@ development_status:
 # cleanup: removed duplicate metadata lines, reordered 2-0-consolidation under epic-2 section
 # story 26-4: context created, status → ready-for-dev — 2026-07-08
 # story 26-4: context created, status → ready-for-dev — 2026-07-08
+# story 26-5: context created, status → ready-for-dev — 2026-07-09
