@@ -4,7 +4,7 @@ baseline_commit: 2d9ecce8731cc6d4a2d053efc0bae243316503f4
 
 # Story 26.5 : Dashboard de Statistiques d'Attractivité (Koffi)
 
-Status: review
+Status: done
 
 ## Story
 
