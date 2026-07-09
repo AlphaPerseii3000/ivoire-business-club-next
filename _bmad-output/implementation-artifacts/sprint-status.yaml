@@ -216,7 +216,7 @@ development_status:
   26-4-route-de-tracking-et-redirection-whatsapp-centif-ci: done
   26-5-dashboard-de-statistiques-dattractivite-koffi: done
   26-6-notifications-email-automatiques-resend: done
-  26-7-securite-rate-limiting-et-scan-antivirus: review
+  26-7-securite-rate-limiting-et-scan-antivirus: done
   epic-26-retrospective: optional
 
   epic-27: in-progress

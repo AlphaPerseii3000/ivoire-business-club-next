@@ -35,7 +35,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 vi.mock("@/lib/file-scan", () => ({
   scanFile: mockScanFile,
-  validateMimeWithMagicBytes: vi.fn((declaredMimeType: string, buffer: Buffer) => {
+  validateMimeWithMagicBytes: vi.fn((declaredMimeType: string, _buffer: Buffer) => {
     // Test-only default: accept any non-empty buffer whose magic matches the declared type.
     // Magic byte mismatch tests override this mock explicitly.
     return { ok: true, detectedMimeType: declaredMimeType };

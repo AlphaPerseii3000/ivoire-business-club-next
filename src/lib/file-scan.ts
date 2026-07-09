@@ -1,5 +1,3 @@
-import { describe, expect, it } from "vitest";
-
 /**
  * Supported file signatures (magic bytes) for receipt uploads.
  * Matches the backend whitelist in src/lib/validations.ts:

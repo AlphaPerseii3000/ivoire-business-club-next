@@ -4,7 +4,7 @@ baseline_commit: bfc61ea8731cc6d4a2d053efc0bae243316503f4
 
 # Story 26.7 : Sécurité (Rate-Limiting & Scan Antivirus)
 
-Status: review
+Status: done
 
 ## Story
 
