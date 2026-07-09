@@ -1,10 +1,11 @@
 ---
 baseline_commit: 08c7789
+agent_model_name_version: kimi-k2.7-code
 ---
 
 # Story 27.1 : Infrastructure GEO Technique
 
-Status: ready-for-dev
+Status: review
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
@@ -94,51 +95,51 @@ Le site est aujourd'hui en `force-dynamic` sur `/articles/[slug]` et `/events/[s
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Mettre à jour `src/app/robots.ts` pour les crawlers IA** (AC: #1)
-  - [ ] T1.1 Importer `MetadataRoute.Robots` si pas déjà fait.
-  - [ ] T1.2 Transformer `rules` en tableau d'objets.
-  - [ ] T1.3 Ajouter une entrée par AI crawler avec `userAgent` exact et `allow: '/'` : `GPTBot`, `ClaudeBot`, `PerplexityBot`, `OAI-SearchBot`, `Google-Extended`.
-  - [ ] T1.4 Garder la règle par défaut `userAgent: '*'` avec `allow: '/'` et `disallow` des routes privées.
-  - [ ] T1.5 S'assurer que le sitemap est référencé en URL absolue `https://www.ivoire-business-club.com/sitemap.xml`.
-  - [ ] T1.6 Vérifier `/robots.txt` en dev après redémarrage.
+- [x] **T1 — Mettre à jour `src/app/robots.ts` pour les crawlers IA** (AC: #1)
+  - [x] T1.1 Importer `MetadataRoute.Robots` si pas déjà fait.
+  - [x] T1.2 Transformer `rules` en tableau d'objets.
+  - [x] T1.3 Ajouter une entrée par AI crawler avec `userAgent` exact et `allow: '/'` : `GPTBot`, `ClaudeBot`, `PerplexityBot`, `OAI-SearchBot`, `Google-Extended`.
+  - [x] T1.4 Garder la règle par défaut `userAgent: '*'` avec `allow: '/'` et `disallow` des routes privées.
+  - [x] T1.5 S'assurer que le sitemap est référencé en URL absolue `https://www.ivoire-business-club.com/sitemap.xml`.
+  - [x] T1.6 Vérifier `/robots.txt` en dev après redémarrage.
 
-- [ ] **T2 — Créer `src/app/llms.txt/route.ts`** (AC: #2)
-  - [ ] T2.1 Créer le dossier/fichier `src/app/llms.txt/route.ts`.
-  - [ ] T2.2 Exporter `GET` qui retourne `new Response(markdown, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })`.
-  - [ ] T2.3 Rédiger le Markdown avec : `# Ivoire Business Club`, description, liens vers `/articles`, `/events`, `/experts`, `/partners`, `/business-abidjan` avec descriptions courtes.
-  - [ ] T2.4 Utiliser `export const dynamic = 'force-static';` pour génération statique au build.
-  - [ ] T2.5 Vérifier `/llms.txt` en dev et en build.
+- [x] **T2 — Créer `src/app/llms.txt/route.ts`** (AC: #2)
+  - [x] T2.1 Créer le dossier/fichier `src/app/llms.txt/route.ts`.
+  - [x] T2.2 Exporter `GET` qui retourne `new Response(markdown, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })`.
+  - [x] T2.3 Rédiger le Markdown avec : `# Ivoire Business Club`, description, liens vers `/articles`, `/events`, `/experts`, `/partners`, `/business-abidjan` avec descriptions courtes.
+  - [x] T2.4 Utiliser `export const dynamic = 'force-static';` pour génération statique au build.
+  - [x] T2.5 Vérifier `/llms.txt` en dev et en build.
 
-- [ ] **T3 — Créer `src/app/llms-full.txt/route.ts`** (AC: #3)
-  - [ ] T3.1 Créer le dossier/fichier `src/app/llms-full.txt/route.ts`.
-  - [ ] T3.2 Exporter `GET` async qui charge via Prisma les articles PUBLIC publiés et les événements PUBLISHED.
-  - [ ] T3.3 Formater le Markdown : section `# Articles`, puis pour chaque article : titre, URL canonique, extrait, date ; section `# Événements`, même format.
-  - [ ] T3.4 Utiliser `export const revalidate = 3600;` pour ISR (le contenu change quand un article/événement est publié).
-  - [ ] T3.5 Gérer les erreurs Prisma avec `sanitizeError` et retourner le markdown de base (même vide) pour ne pas casser le build.
-  - [ ] T3.6 Vérifier `/llms-full.txt` en dev et après publication d'un article.
+- [x] **T3 — Créer `src/app/llms-full.txt/route.ts`** (AC: #3)
+  - [x] T3.1 Créer le dossier/fichier `src/app/llms-full.txt/route.ts`.
+  - [x] T3.2 Exporter `GET` async qui charge via Prisma les articles PUBLIC publiés et les événements PUBLISHED.
+  - [x] T3.3 Formater le Markdown : section `# Articles`, puis pour chaque article : titre, URL canonique, extrait, date ; section `# Événements`, même format.
+  - [x] T3.4 Utiliser `export const revalidate = 3600;` pour ISR (le contenu change quand un article/événement est publié).
+  - [x] T3.5 Gérer les erreurs Prisma avec `sanitizeError` et retourner le markdown de base (même vide) pour ne pas casser le build.
+  - [x] T3.6 Vérifier `/llms-full.txt` en dev et après publication d'un article.
 
-- [ ] **T4 — Passer `/articles/[slug]` en statique/revalidé** (AC: #4, #6)
-  - [ ] T4.1 Retirer `export const dynamic = "force-dynamic";` de `src/app/(public)/articles/[slug]/page.tsx`.
-  - [ ] T4.2 Ajouter `export const revalidate = 3600;`.
-  - [ ] T4.3 Ajouter `export async function generateStaticParams()` qui retourne les slugs des articles `published: true, visibility: 'PUBLIC', publishedAt <= now()`.
-  - [ ] T4.4 S'assurer que `generateMetadata` reste compatible (elle est déjà async et appelle Prisma).
-  - [ ] T4.5 Vérifier que `auth()` ne bloque pas le build en statique — si nécessaire, isoler les appels `auth()` / `hasActiveSubscription()` derrière une vérification conditionnelle ou un composant client. En pratique, Auth.js v5 en App Router autorise `auth()` dans des pages statiques ; le rendu statique se fera pour un visiteur non connecté.
-  - [ ] T4.6 Lancer `npm run build` et corriger les éventuelles erreurs de "dynamic server usage".
-  - [ ] T4.7 Lancer `npx vitest run src/app/(public)/articles/[slug]/page.test.tsx`.
+- [x] **T4 — Passer `/articles/[slug]` en statique/revalidé** (AC: #4, #6)
+  - [x] T4.1 Retirer `export const dynamic = "force-dynamic";` de `src/app/(public)/articles/[slug]/page.tsx`.
+  - [x] T4.2 Ajouter `export const revalidate = 3600;`.
+  - [x] T4.3 Ajouter `export async function generateStaticParams()` qui retourne les slugs des articles `published: true, visibility: 'PUBLIC', publishedAt <= now()`.
+  - [x] T4.4 S'assurer que `generateMetadata` reste compatible (elle est déjà async et appelle Prisma).
+  - [x] T4.5 Vérifier que `auth()` ne bloque pas le build en statique — si nécessaire, isoler les appels `auth()` / `hasActiveSubscription()` derrière une vérification conditionnelle ou un composant client. En pratique, Auth.js v5 en App Router autorise `auth()` dans des pages statiques ; le rendu statique se fera pour un visiteur non connecté.
+  - [x] T4.6 Lancer `npm run build` et corriger les éventuelles erreurs de "dynamic server usage".
+  - [x] T4.7 Lancer `npx vitest run src/app/(public)/articles/[slug]/page.test.tsx`.
 
-- [ ] **T5 — Passer `/events/[slug]` en statique/revalidé** (AC: #5, #6)
-  - [ ] T5.1 Retirer `export const dynamic = "force-dynamic";` de `src/app/(public)/events/[slug]/page.tsx`.
-  - [ ] T5.2 Ajouter `export const revalidate = 3600;`.
-  - [ ] T5.3 Ajouter `export async function generateStaticParams()` qui retourne les slugs des événements `status: 'PUBLISHED'`.
-  - [ ] T5.4 Vérifier que `auth()` / `prisma.eventRegistration` ne cassent pas le build statique.
-  - [ ] T5.5 Lancer `npm run build`.
-  - [ ] T5.6 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
+- [x] **T5 — Passer `/events/[slug]` en statique/revalidé** (AC: #5, #6)
+  - [x] T5.1 Retirer `export const dynamic = "force-dynamic";` de `src/app/(public)/events/[slug]/page.tsx`.
+  - [x] T5.2 Ajouter `export const revalidate = 3600;`.
+  - [x] T5.3 Ajouter `export async function generateStaticParams()` qui retourne les slugs des événements `status: 'PUBLISHED'`.
+  - [x] T5.4 Vérifier que `auth()` / `prisma.eventRegistration` ne cassent pas le build statique.
+  - [x] T5.5 Lancer `npm run build`.
+  - [x] T5.6 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
 
-- [ ] **T6 — Validation transversale** (AC: #6)
-  - [ ] T6.1 Lancer `npm run build` complet.
-  - [ ] T6.2 Lancer `npx vitest run` (ou du moins les tests des deux pages détail).
-  - [ ] T6.3 Vérifier `/robots.txt`, `/llms.txt`, `/llms-full.txt` après build (`.next/server/app/...`).
-  - [ ] T6.4 Vérifier que `/articles/[slug]` et `/events/[slug]` génèrent des fichiers HTML statiques dans `.next/server/app/articles/[slug].html` ou équivalent.
+- [x] **T6 — Validation transversale** (AC: #6)
+  - [x] T6.1 Lancer `npm run build` complet.
+  - [x] T6.2 Lancer `npx vitest run` (ou du moins les tests des deux pages détail).
+  - [x] T6.3 Vérifier `/robots.txt`, `/llms.txt`, `/llms-full.txt` après build (`.next/server/app/...`).
+  - [x] T6.4 Vérifier que `/articles/[slug]` et `/events/[slug]` génèrent des fichiers HTML statiques dans `.next/server/app/articles/[slug].html` ou équivalent.
 
 ## Dev Notes
 
@@ -363,11 +364,28 @@ export async function generateStaticParams() {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+kimi-k2.7-code
 
 ### Debug Log References
 
+- Build OK ; warning préexistant sur `coverImagePath` absent de la DB utilisée en build (story 25-3).
+- Full Vitest suite OK (181 fichiers, 1280 tests).
+
 ### Completion Notes List
+
+- AC-1 : robots.ts expose des règles explicites `Allow: /` pour GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended, plus la règle par défaut ; sitemap absolu conservé ; routes privées `Disallow`.
+- AC-2 : route `/llms.txt` générée statiquement (`force-static`), Content-Type `text/plain; charset=utf-8`, Markdown avec titre, description et liens clés.
+- AC-3 : route `/llms-full.txt` en ISR (`revalidate = 3600`), Markdown des articles PUBLIC publiés + événements PUBLISHED, gestion d'erreur via `sanitizeError`, contenu premium exclu.
+- AC-4 : `/articles/[slug]` n'est plus `force-dynamic` ; ISR `revalidate = 3600` + `generateStaticParams` pour les articles PUBLIC publiés ; `generateMetadata` inchangée.
+- AC-5 : `/events/[slug]` n'est plus `force-dynamic` ; ISR `revalidate = 3600` + `generateStaticParams` pour les événements PUBLISHED.
+- AC-6 : build Next.js OK (routes `/llms.txt`, `/llms-full.txt`, `/articles/[slug]`, `/events/[slug]` en statique/SSG) ; tests Vitest 1280/1280 OK sans régression.
 
 ### File List
 
+- `src/app/robots.ts` — UPDATE
+- `src/app/llms.txt/route.ts` — CREATE
+- `src/app/llms-full.txt/route.ts` — CREATE
+- `src/app/(public)/articles/[slug]/page.tsx` — UPDATE
+- `src/app/(public)/events/[slug]/page.tsx` — UPDATE
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — UPDATE
+- `_bmad-output/implementation-artifacts/27-1-infrastructure-geo-technique.md` — UPDATE

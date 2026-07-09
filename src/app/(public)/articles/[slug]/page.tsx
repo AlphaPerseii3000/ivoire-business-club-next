@@ -24,10 +24,31 @@ import { ArticleVisibility, Tier } from "@/generated/prisma/client";
 import { sanitizeError } from "@/lib/sanitize-log";
 import type { DealCardDeal } from "@/components/features/deals/deal-card";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 interface ArticleDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+interface StaticParamsArticle {
+  slug: string;
+}
+
+export async function generateStaticParams(): Promise<StaticParamsArticle[]> {
+  try {
+    const articles = await prisma.article.findMany({
+      where: {
+        published: true,
+        visibility: 'PUBLIC',
+        publishedAt: { lte: new Date() },
+      },
+      select: { slug: true },
+    });
+    return articles.map((article) => ({ slug: article.slug }));
+  } catch (error) {
+    console.error('generateStaticParams articles error:', sanitizeError(error));
+    return [];
+  }
 }
 
 interface CustomSessionUser {

@@ -24,10 +24,27 @@ import { EventRegisterButton } from "@/components/features/events/EventRegisterB
 import { EventGallery } from "@/components/features/events/EventGallery";
 import { EventStatus } from "@/generated/prisma/client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+interface StaticParamsEvent {
+  slug: string;
+}
+
+export async function generateStaticParams(): Promise<StaticParamsEvent[]> {
+  try {
+    const events = await prisma.event.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { slug: true },
+    });
+    return events.map((event) => ({ slug: event.slug }));
+  } catch (error) {
+    console.error('generateStaticParams events error:', sanitizeError(error));
+    return [];
+  }
 }
 
 export interface EventDetailWithRegistrations {
