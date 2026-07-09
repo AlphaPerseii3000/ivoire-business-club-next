@@ -1,11 +1,11 @@
 ---
-baseline_commit: e1d1f00c353cffabcfc729f522f984d8d95b1f44
+baseline_commit: 9c77648efdfc6705d9049e3c50c71debee5e1dd1
 agent_model_name_version: kimi-k2.7-code
 ---
 
 # Story 27.2 : Schema structuré GEO pour articles
 
-Status: ready-for-dev
+Status: review
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
