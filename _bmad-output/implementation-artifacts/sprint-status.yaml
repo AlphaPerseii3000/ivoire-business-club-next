@@ -220,7 +220,7 @@ development_status:
   epic-26-retrospective: optional
 
   epic-27: in-progress
-  27-1-infrastructure-geo-technique: review
+  27-1-infrastructure-geo-technique: done
   27-2-schema-geo-articles: backlog
   27-3-schema-geo-evenements: backlog
   epic-27-retrospective: optional

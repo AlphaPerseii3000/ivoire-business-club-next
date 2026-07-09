@@ -5,7 +5,7 @@ agent_model_name_version: kimi-k2.7-code
 
 # Story 27.1 : Infrastructure GEO Technique
 
-Status: review
+Status: done
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
