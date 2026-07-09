@@ -5,7 +5,7 @@ agent_model_name_version: kimi-k2.7-code
 
 # Story 27.2 : Schema structuré GEO pour articles
 
-Status: review
+Status: done
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
@@ -299,7 +299,7 @@ export function parseFaqFromMarkdown(content: string): FaqItem[] {
 - Modèle Article : `prisma/schema.prisma` lignes 486-509.
 - Architecture SEO/GEO : Story 14.1 `_bmad-output/implementation-artifacts/14-1-infrastructure-seo-technique.md`.
 
-Status: review
+Status: done
 
 ---
 
