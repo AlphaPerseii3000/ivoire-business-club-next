@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import EventDetailPage, { generateMetadata } from "./page";
@@ -47,6 +46,18 @@ const baseEvent = {
   registrations: [],
 };
 
+const parseJsonLd = () => {
+  const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+  return scripts.flatMap((script) => {
+    const text = script.textContent ?? "";
+    try {
+      return JSON.parse(text);
+    } catch {
+      return [];
+    }
+  });
+};
+
 describe("Event Detail Page", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -93,6 +104,196 @@ describe("Event Detail Page", () => {
 
     const image = screen.getByRole("img", { name: "Lancement Réseau IBC" });
     expect(image).toBeInTheDocument();
+  });
+
+  it("injects complete JSON-LD Event for public in-person event", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue(baseEvent);
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd).toBeDefined();
+    expect(eventLd?.name).toBe(baseEvent.title);
+    expect(eventLd?.description).toBe(baseEvent.description);
+    expect(eventLd?.startDate).toBe(baseEvent.startDate.toISOString());
+    expect(eventLd?.endDate).toBe(baseEvent.endDate.toISOString());
+    expect(eventLd?.eventStatus).toBe("https://schema.org/EventScheduled");
+    expect(eventLd?.organizer).toEqual({
+      "@type": "Organization",
+      "name": "Ivoire Business Club",
+    });
+    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/api/media/events/${baseEvent.id}/cover`);
+    expect(eventLd?.location).toEqual({
+      "@type": "Place",
+      "name": baseEvent.location,
+      "address": baseEvent.location,
+    });
+    expect(eventLd?.offers).toEqual({
+      "@type": "Offer",
+      "price": 10000,
+      "priceCurrency": "XOF",
+      "availability": "https://schema.org/InStock",
+      "url": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events/${baseEvent.slug}`,
+    });
+  });
+
+  it("injects BreadcrumbList for event detail", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue(baseEvent);
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const breadcrumbLd = schemas.find((schema) => schema["@type"] === "BreadcrumbList");
+
+    expect(breadcrumbLd).toBeDefined();
+    expect(breadcrumbLd?.itemListElement).toHaveLength(3);
+    expect(breadcrumbLd?.itemListElement[0]).toEqual({
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Accueil",
+      "item": process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com",
+    });
+    expect(breadcrumbLd?.itemListElement[1]).toEqual({
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Événements",
+      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events`,
+    });
+    expect(breadcrumbLd?.itemListElement[2]).toEqual({
+      "@type": "ListItem",
+      "position": 3,
+      "name": baseEvent.title,
+      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events/${baseEvent.slug}`,
+    });
+  });
+
+  it("uses VirtualLocation for online events", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      eventType: "ONLINE",
+      onlineUrl: "https://meet.example.com/ibc",
+      location: null,
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.location).toEqual({
+      "@type": "VirtualLocation",
+      "url": "https://meet.example.com/ibc",
+    });
+    expect(eventLd?.offers).toBeDefined();
+  });
+
+  it("marks offers as SoldOut when no spots remain", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      maxCapacity: 2,
+      registrations: [{ status: "REGISTERED" }, { status: "REGISTERED" }],
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.offers?.availability).toBe("https://schema.org/SoldOut");
+  });
+
+  it("omits offers for free public events", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      pricing: { visitor: 0, affranchi: 0, grand_frere: 0, boss: 0 },
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.offers).toBeUndefined();
+  });
+
+  it("hides private event details in JSON-LD for visitors", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      visibility: "PRIVATE",
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.description).toBe("Événement réservé aux membres");
+    expect(eventLd?.location).toBeUndefined();
+    expect(eventLd?.offers).toBeUndefined();
+    expect(eventLd?.eventStatus).toBe("https://schema.org/EventScheduled");
+    expect(eventLd?.name).toBe(baseEvent.title);
+  });
+
+  it("uses logo fallback image when coverImagePath is absent", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      coverImagePath: null,
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/logo-ibc.webp`);
+  });
+
+  it("marks cancelled event status in JSON-LD", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue({
+      ...baseEvent,
+      status: "CANCELLED",
+    });
+
+    const page = await EventDetailPage({
+      params: Promise.resolve({ slug: "lancement-reseau-ibc" }),
+    });
+    render(page);
+
+    const schemas = parseJsonLd();
+    const eventLd = schemas.find((schema) => schema["@type"] === "Event");
+
+    expect(eventLd?.eventStatus).toBe("https://schema.org/EventCancelled");
   });
 
   it("renders cancelled badge for cancelled events", async () => {

@@ -19,7 +19,6 @@ import {
   isPrivateEventForVisitor,
   normalizePricing,
 } from "@/lib/event-utils";
-import { Button } from "@/components/ui/button";
 import { EventRegisterButton } from "@/components/features/events/EventRegisterButton";
 import { EventGallery } from "@/components/features/events/EventGallery";
 import { EventStatus } from "@/generated/prisma/client";
@@ -151,20 +150,25 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   }
 
   let isAlreadyRegistered = false;
-  if (session?.user?.id && prisma.eventRegistration?.findFirst) {
+  const userId = session?.user?.id;
+  const userEmail = session?.user?.email;
+  const hasUserId = Boolean(userId) && Boolean(prisma.eventRegistration?.findFirst);
+  const hasUserEmail = Boolean(userEmail) && Boolean(prisma.eventRegistration?.findFirst);
+
+  if (hasUserId) {
     const reg = await prisma.eventRegistration.findFirst({
       where: {
         eventId: event.id,
-        userId: session.user.id,
+        userId,
         status: { in: ["REGISTERED", "ATTENDED"] },
       },
     });
     isAlreadyRegistered = Boolean(reg);
-  } else if (session?.user?.email && prisma.eventRegistration?.findFirst) {
+  } else if (hasUserEmail) {
     const reg = await prisma.eventRegistration.findFirst({
       where: {
         eventId: event.id,
-        email: session.user.email.toLowerCase(),
+        email: userEmail?.toLowerCase(),
         status: { in: ["REGISTERED", "ATTENDED"] },
       },
     });
@@ -177,14 +181,107 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const pricing = normalizePricing(event.pricing);
   const { visitor, memberMin, isFree } = formatEventPricing(pricing);
   const userPrice = userTier ? getPriceForTier(pricing, userTier) : null;
-  const showUserPrice = isAuthenticated && userPrice !== null;
+  const showUserPrice = Boolean(isAuthenticated) && userPrice !== null;
   const remainingSpots = getRemainingSpots(event.maxCapacity, event.registrations);
 
-  const startDateFormatted = formatEventDate(event.startDate);
   const hasEndDate = event.endDate !== null;
-  const endDateFormatted = hasEndDate ? formatEventDate(event.endDate as Date) : "";
+  const startDateIsValid = !isNaN(event.startDate.getTime());
+  const endDateIsValid = hasEndDate && !isNaN((event.endDate as Date).getTime());
+  const endDateFormatted = hasEndDate && endDateIsValid ? formatEventDate(event.endDate as Date) : "";
+
+  const startDateFormatted = formatEventDate(event.startDate);
 
   const coverUrl = event.coverImagePath ? `/api/media/events/${event.id}/cover` : null;
+
+  // JSON-LD GEO for events
+  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
+  const eventUrl = `${siteUrl}/events/${slug}`;
+  const eventImageUrl = coverUrl ? `${siteUrl}${coverUrl}` : `${siteUrl}/logo-ibc.webp`;
+
+  const hasPublicOffers = !isPrivateVisitor && !isFree && visitor !== null && visitor > 0;
+
+  const eventLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "description": isPrivateVisitor ? "Événement réservé aux membres" : event.description,
+    "startDate": startDateIsValid ? event.startDate.toISOString() : new Date().toISOString(),
+    "eventStatus": event.status === "CANCELLED"
+      ? "https://schema.org/EventCancelled"
+      : "https://schema.org/EventScheduled",
+    "organizer": {
+      "@type": "Organization",
+      "name": "Ivoire Business Club",
+    },
+    "image": eventImageUrl,
+  };
+
+  const isOnlineEvent = event.eventType === "ONLINE";
+  const isInPersonEvent = event.eventType === "IN_PERSON";
+  const endDateAsDate = event.endDate as Date | null;
+  const hasValidEndDate = endDateAsDate !== null && !isNaN(endDateAsDate.getTime());
+  if (hasValidEndDate) {
+    eventLd.endDate = endDateAsDate.toISOString();
+  }
+
+  const hasOnlineLocation = isOnlineEvent && Boolean(event.onlineUrl);
+  const hasInPersonLocation = isInPersonEvent && Boolean(event.location);
+
+  if (!isPrivateVisitor) {
+    if (hasOnlineLocation) {
+      eventLd.location = {
+        "@type": "VirtualLocation",
+        "url": event.onlineUrl,
+      };
+    } else if (hasInPersonLocation) {
+      eventLd.location = {
+        "@type": "Place",
+        "name": event.location,
+        "address": event.location,
+      };
+    }
+  }
+
+  if (hasPublicOffers) {
+    const availability = remainingSpots === 0
+      ? "https://schema.org/SoldOut"
+      : "https://schema.org/InStock";
+
+    eventLd.offers = {
+      "@type": "Offer",
+      "price": visitor,
+      "priceCurrency": "XOF",
+      "availability": availability,
+      "url": eventUrl,
+    };
+  }
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Accueil",
+        "item": siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Événements",
+        "item": `${siteUrl}/events`,
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": event.title,
+        "item": eventUrl,
+      },
+    ],
+  };
+
+  const schemas: Array<Record<string, unknown>> = [eventLd, breadcrumbLd];
 
   const renderNavigationHeader = () => (
     <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
@@ -210,6 +307,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   if (isCancelled) {
     return (
       <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, "\\u003c") }}
+        />
         <LandingMobileNav />
         {renderNavigationHeader()}
 
@@ -239,6 +340,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   return (
     <div className="flex min-h-screen flex-col bg-[#090D16] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, "\\u003c") }}
+      />
       <LandingMobileNav />
       {renderNavigationHeader()}
 

@@ -1,11 +1,11 @@
 ---
-baseline_commit: ddeb087686580ddf6975218de3fbb6872f2717f6
+baseline_commit: 3d09c5ed71e1e440f1f934a834ef3c552e73bde2
 agent_model_name_version: kimi-k2.7-code
 ---
 
 # Story 27.3 : Schema structuré GEO pour événements
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
