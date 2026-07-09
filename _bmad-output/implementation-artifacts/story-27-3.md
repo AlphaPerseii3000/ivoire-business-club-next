@@ -5,7 +5,7 @@ agent_model_name_version: kimi-k2.7-code
 
 # Story 27.3 : Schema structuré GEO pour événements
 
-Status: in-progress
+Status: review
 
 <!-- Validation optionnelle : lancer validate-create-story avant dev-story si besoin. -->
 
@@ -103,42 +103,42 @@ Le site est en Next.js 16 App Router avec des Server Components. La page événe
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Enrichir la requête event si nécessaire** (AC: #1)
-  - [ ] T1.1 Ajouter `author: { select: { name: true } }` dans `getEventBySlug` si l'on expose l'auteur comme organizer (sinon garder `Ivoire Business Club` comme valeur par défaut).
-  - [ ] T1.2 S'assurer que la requête retourne tous les champs nécessaires : `id`, `title`, `slug`, `description`, `startDate`, `endDate`, `eventType`, `visibility`, `location`, `onlineUrl`, `coverImagePath`, `maxCapacity`, `pricing`, `status`, `updatedAt`.
+- [x] **T1 — Enrichir la requête event si nécessaire** (AC: #1)
+  - [x] T1.1 Ajouter `author: { select: { name: true } }` dans `getEventBySlug` si l'on expose l'auteur comme organizer (sinon garder `Ivoire Business Club` comme valeur par défaut).
+  - [x] T1.2 S'assurer que la requête retourne tous les champs nécessaires : `id`, `title`, `slug`, `description`, `startDate`, `endDate`, `eventType`, `visibility`, `location`, `onlineUrl`, `coverImagePath`, `maxCapacity`, `pricing`, `status`, `updatedAt`.
 
-- [ ] **T2 — Générer le JSON-LD Event** (AC: #1 à #5, #7)
-  - [ ] T2.1 Construire l'objet `eventLd` avec `@context: "https://schema.org"` et `@type: "Event"`.
-  - [ ] T2.2 Remplir `name`, `startDate`, `endDate` (ISO 8601, omettre `endDate` si null).
-  - [ ] T2.3 `organizer` : `{ @type: "Organization", name: "Ivoire Business Club" }` (ou `event.author?.name` si l'auteur est exposé).
-  - [ ] T2.4 `location` : `Place` avec `name`/`address` pour `IN_PERSON`, `VirtualLocation` avec `url` pour `ONLINE`.
-  - [ ] T2.5 `offers` : conditionnel, uniquement si `pricing.visitor > 0`, avec `price`, `priceCurrency: "XOF"`, `availability` selon les places restantes, `validFrom` optionnel.
-  - [ ] T2.6 `image` : URL absolue de couverture si présente, sinon logo IBC.
-  - [ ] T2.7 `eventStatus` : `EventScheduled` pour les événements publics/privés programmés. Éventuellement `EventCancelled` si `status === "CANCELLED"` (cohérent avec le rendu de la page).
-  - [ ] T2.8 Pour `visibility === "PRIVATE"`, forcer `description` à `"Événement réservé aux membres"`, masquer `location`, `onlineUrl`, `offers`, et tout contenu détaillé dans le JSON-LD.
+- [x] **T2 — Générer le JSON-LD Event** (AC: #1 à #5, #7)
+  - [x] T2.1 Construire l'objet `eventLd` avec `@context: "https://schema.org"` et `@type: "Event"`.
+  - [x] T2.2 Remplir `name`, `startDate`, `endDate` (ISO 8601, omettre `endDate` si null).
+  - [x] T2.3 `organizer` : `{ @type: "Organization", name: "Ivoire Business Club" }` (ou `event.author?.name` si l'auteur est exposé).
+  - [x] T2.4 `location` : `Place` avec `name`/`address` pour `IN_PERSON`, `VirtualLocation` avec `url` pour `ONLINE`.
+  - [x] T2.5 `offers` : conditionnel, uniquement si `pricing.visitor > 0`, avec `price`, `priceCurrency: "XOF"`, `availability` selon les places restantes, `validFrom` optionnel.
+  - [x] T2.6 `image` : URL absolue de couverture si présente, sinon logo IBC.
+  - [x] T2.7 `eventStatus` : `EventScheduled` pour les événements publics/privés programmés. Éventuellement `EventCancelled` si `status === "CANCELLED"` (cohérent avec le rendu de la page).
+  - [x] T2.8 Pour `visibility === "PRIVATE"`, forcer `description` à `"Événement réservé aux membres"`, masquer `location`, `onlineUrl`, `offers`, et tout contenu détaillé dans le JSON-LD.
 
-- [ ] **T3 — Générer le BreadcrumbList JSON-LD** (AC: #6)
-  - [ ] T3.1 Construire un objet `BreadcrumbList` avec 3 `ListItem`.
-  - [ ] T3.2 Item 1 : `name: "Accueil"`, `item: siteUrl`, `position: 1`.
-  - [ ] T3.3 Item 2 : `name: "Événements"`, `item: ${siteUrl}/events`, `position: 2`.
-  - [ ] T3.4 Item 3 : `name: event.title`, `item: eventUrl`, `position: 3`.
-  - [ ] T3.5 Injecter ce schema dans la page via le même `<script type="application/ld+json">` que l'Event (tableau de schemas).
+- [x] **T3 — Générer le BreadcrumbList JSON-LD** (AC: #6)
+  - [x] T3.1 Construire un objet `BreadcrumbList` avec 3 `ListItem`.
+  - [x] T3.2 Item 1 : `name: "Accueil"`, `item: siteUrl`, `position: 1`.
+  - [x] T3.3 Item 2 : `name: "Événements"`, `item: ${siteUrl}/events`, `position: 2`.
+  - [x] T3.4 Item 3 : `name: event.title`, `item: eventUrl`, `position: 3`.
+  - [x] T3.5 Injecter ce schema dans la page via le même `<script type="application/ld+json">` que l'Event (tableau de schemas).
 
-- [ ] **T4 — Injecter les scripts JSON-LD dans le JSX** (AC: #1, #6)
-  - [ ] T4.1 Utiliser `<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([eventLd, breadcrumbLd]).replace(/</g, "\\u003c") }} />`.
-  - [ ] T4.2 Placer le script dans le `<div>` racine de la page, avant `<LandingMobileNav />` (même pattern que les articles et les pages partenaires/experts).
+- [x] **T4 — Injecter les scripts JSON-LD dans le JSX** (AC: #1, #6)
+  - [x] T4.1 Utiliser `<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([eventLd, breadcrumbLd]).replace(/</g, "\\u003c") }} />`.
+  - [x] T4.2 Placer le script dans le `<div>` racine de la page, avant `<LandingMobileNav />` (même pattern que les articles et les pages partenaires/experts).
 
-- [ ] **T5 — Mettre à jour et compléter les tests** (AC: #9)
-  - [ ] T5.1 Ouvrir `src/app/(public)/events/[slug]/page.test.tsx`.
-  - [ ] T5.2 Ajouter un test qui vérifie que le JSON-LD `Event` est injecté avec les champs requis (`name`, `description`, `startDate`, `endDate`, `location`, `organizer`, `offers`, `image`).
-  - [ ] T5.3 Ajouter un test qui vérifie le `BreadcrumbList` avec `Accueil > Événements > [titre]`.
-  - [ ] T5.4 Ajouter un test pour un événement privé : la description JSON-LD doit être `"Événement réservé aux membres"` et aucun détail privé ne doit apparaître.
-  - [ ] T5.5 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
+- [x] **T5 — Mettre à jour et compléter les tests** (AC: #9)
+  - [x] T5.1 Ouvrir `src/app/(public)/events/[slug]/page.test.tsx`.
+  - [x] T5.2 Ajouter un test qui vérifie que le JSON-LD `Event` est injecté avec les champs requis (`name`, `description`, `startDate`, `endDate`, `location`, `organizer`, `offers`, `image`).
+  - [x] T5.3 Ajouter un test qui vérifie le `BreadcrumbList` avec `Accueil > Événements > [titre]`.
+  - [x] T5.4 Ajouter un test pour un événement privé : la description JSON-LD doit être `"Événement réservé aux membres"` et aucun détail privé ne doit apparaître.
+  - [x] T5.5 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
 
-- [ ] **T6 — Validation transversale** (AC: #9)
-  - [ ] T6.1 Lancer `npm run build`.
-  - [ ] T6.2 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
-  - [ ] T6.3 Optionnel : valider le JSON-LD généré via https://search.google.com/test/rich-results avec un extrait de HTML.
+- [x] **T6 — Validation transversale** (AC: #9)
+  - [x] T6.1 Lancer `npm run build`.
+  - [x] T6.2 Lancer `npx vitest run src/app/(public)/events/[slug]/page.test.tsx`.
+  - [x] T6.3 Optionnel : valider le JSON-LD généré via https://search.google.com/test/rich-results avec un extrait de HTML.
 
 ## Dev Notes
 
@@ -396,19 +396,32 @@ kimi-k2.7-code
 
 ### Debug Log References
 
-- Baseline commit : ddeb087686580ddf6975218de3fbb6872f2717f6 (story 27-2 marquée done après review PASS).
+- Baseline commit : 3d09c5ed71e1e440f1f934a834ef3c552e73bde2
+- Implementation commit : 4a64bf99c29f1814cfb32002791759aacbcefa36
 
 ### Completion Notes List
 
-- Story 27.3 identifiée dans `sprint-status.yaml` comme `backlog` → passage à `ready-for-dev`.
-- Fichier de story créé avec le contexte complet GEO pour les événements, les guardrails de contenu privé, le pattern JSON-LD/BreadcrumbList, et la vérification FR-GE12.
-- Aucune implémentation de code effectuée à ce stade (phase create-story uniquement).
+- Story 27.3 implémentée avec succès : JSON-LD Event + BreadcrumbList sur `src/app/(public)/events/[slug]/page.tsx`.
+- Gestion de la visibilité `PRIVATE` : description générique `"Événement réservé aux membres"`, masquage de location/offers/onlineUrl dans le JSON-LD public.
+- Location `Place` pour `IN_PERSON`, `VirtualLocation` pour `ONLINE`.
+- Offers conditionnelles avec `priceCurrency: "XOF"` et `availability` InStock/SoldOut.
+- Fallback image vers `logo-ibc.webp` si pas de couverture.
+- `eventStatus` canonique schema.org (`EventScheduled` / `EventCancelled`).
+- Tests enrichis dans `src/app/(public)/events/[slug]/page.test.tsx` (8 nouveaux tests JSON-LD).
+- `npm run build` passe (exit 0).
+- `npx vitest run` passe : 182 fichiers, 1299 tests.
+- Vérification FR-GE12 : `sitemap.ts` utilise déjà `lastModified: event.updatedAt`, aucune modification requise.
+- Nettoyage : suppression de l'import inutilisé `Button` et du `React` non utilisé dans les tests.
+- Commit/push réalisé : `feat(geo): implement story 27.3 schema GEO evenements`.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/story-27-3.md` (NEW)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE : statut 27-3 → ready-for-dev)
+- `src/app/(public)/events/[slug]/page.tsx` (UPDATE : ajout JSON-LD Event + BreadcrumbList)
+- `src/app/(public)/events/[slug]/page.test.tsx` (UPDATE : tests JSON-LD Event, BreadcrumbList, private, online, sold-out, gratuit, fallback image, annulé)
+- `_bmad-output/implementation-artifacts/story-27-3.md` (UPDATE : statut → review, baseline_commit, tâches cochées, notes)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE : statut 27-3 → review)
 
 ### Change Log
 
 - 2026-07-09 — Création du contexte de la story 27.3 : schema structuré GEO pour événements.
+- 2026-07-09 — Implémentation de la story 27.3 (AC-1 à AC-9) et passage en review.
