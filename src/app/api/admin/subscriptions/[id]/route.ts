@@ -161,29 +161,25 @@ export async function PATCH(req: Request, { params }: Params) {
       },
     });
 
-    try {
-      if (action === "validate") {
-        await sendSubscriptionActivatedEmail({
-          to: subscription.user.email,
-          name: subscription.user.name,
-          tier: subscription.tier,
-        });
-      }
+    if (action === "validate") {
+      void sendSubscriptionActivatedEmail({
+        to: subscription.user.email,
+        name: subscription.user.name,
+        tier: subscription.tier,
+      }).catch((emailError) => {
+        console.error("Subscription email error:", sanitizeError(emailError));
+      });
+    }
 
-      if (action === "reject") {
-        await sendSubscriptionRejectedEmail({
-          to: subscription.user.email,
-          name: subscription.user.name,
-          tier: subscription.tier,
-          reason: parsed.data.reason,
-        });
-      }
-    } catch (emailError) {
-      console.error("Subscription email error:", sanitizeError(emailError));
-      return NextResponse.json(
-        { error: "Abonnement mis à jour, mais l'email n'a pas pu être envoyé.", code: "EMAIL_FAILED" },
-        { status: 500 }
-      );
+    if (action === "reject") {
+      void sendSubscriptionRejectedEmail({
+        to: subscription.user.email,
+        name: subscription.user.name,
+        tier: subscription.tier,
+        reason: parsed.data.reason,
+      }).catch((emailError) => {
+        console.error("Subscription email error:", sanitizeError(emailError));
+      });
     }
 
     console.info("Admin subscription action", {

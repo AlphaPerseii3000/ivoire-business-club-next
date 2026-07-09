@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { getTierBadgeConfig } from "@/lib/tier-config";
 import {
   MOBILE_MONEY_CONFIG,
@@ -28,40 +28,16 @@ type OpportunityRejectedEmailInput = OpportunityEmailBase & {
   note: string;
 };
 
-let _transporter: nodemailer.Transporter | null = null;
+let resendClient: Resend | null = null;
 
-function getTransporter(): nodemailer.Transporter {
-  if (_transporter) return _transporter;
-
-  const host = process.env.MAIL_HOST;
-  const port = parseInt(process.env.MAIL_PORT || "587", 10);
-  const user = process.env.MAIL_USERNAME;
-  const pass = process.env.MAIL_PASSWORD;
-  const encryption = process.env.MAIL_ENCRYPTION;
-
-  if (!host || !user || !pass) {
-    throw new Error(
-      "MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD must be configured for email sending"
-    );
+function getResendClient(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
   }
-
-  _transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    requireTLS: encryption === "tls",
-    auth: { user, pass },
-  });
-
-  return _transporter;
+  return resendClient;
 }
 
-function getSender(): { name: string; address: string } {
-  const fromName = process.env.MAIL_FROM_NAME || "Ivoire Business Club";
-  const fromAddress =
-    process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || "";
-  return { name: fromName, address: fromAddress };
-}
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "";
 
 function greeting(name?: string | null) {
   return name?.trim() ? `Bonjour ${name.trim()},` : "Bonjour,";
@@ -92,26 +68,24 @@ async function sendEmail({
   subject: string;
   text: string;
 }) {
-  const transporter = getTransporter();
-  const from = getSender();
-
-  try {
-    const result = await transporter.sendMail({
-      from,
-      to,
-      subject,
-      text,
-    });
-
-    if (process.env.NODE_ENV !== "test") {
-      console.log(`[email] Sent to ${to}: ${subject} (id: ${result.messageId})`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("[email] Failed to send:", error);
-    throw error;
+  if (!process.env.RESEND_API_KEY || !FROM_EMAIL) {
+    throw new Error(
+      "RESEND_API_KEY and RESEND_FROM_EMAIL must be configured for email sending"
+    );
   }
+
+  const result = await getResendClient().emails.send({
+    from: `Ivoire Business Club <${FROM_EMAIL}>`,
+    to,
+    subject,
+    text,
+  });
+
+  if (process.env.NODE_ENV !== "test") {
+    console.log(`[email] Sent to ${to}: ${subject} (id: ${result.data?.id ?? "n/a"})`);
+  }
+
+  return result;
 }
 
 export async function sendEmailVerificationEmail({
@@ -412,7 +386,4 @@ export async function sendSetPasswordEmail({
   });
 }
 
-// Reset transporter (for tests)
-export function _resetTransporter() {
-  _transporter = null;
-}
+

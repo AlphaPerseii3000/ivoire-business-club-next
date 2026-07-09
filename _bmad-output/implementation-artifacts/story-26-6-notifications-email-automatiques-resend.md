@@ -4,7 +4,7 @@ baseline_commit: bfc61ea8731cc6d4a2d053efc0bae243316503f4
 
 # Story 26.6 : Notifications Email Automatiques (Resend)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -55,44 +55,44 @@ so that **les membres et porteurs reçoivent une notification soignée en franç
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Auditer `src/lib/email.ts` et toutes ses signatures publiques** (AC: #1, #2)
-  - [ ] T1.1 Lister toutes les fonctions exportées actuelles (`sendEmailVerificationEmail`, `sendSubscriptionActivatedEmail`, `sendAdminSubscriptionConfirmationEmail`, `sendSubscriptionRejectedEmail`, `sendOpportunityVerifiedEmail`, `sendOpportunityMatchedEmail`, `sendOpportunityRejectedEmail`, `sendWelcomeEmail`, `sendReminderEmail`, `sendGuideEmail`, `sendPasswordResetEmail`, `sendSetPasswordEmail`).
-  - [ ] T1.2 Vérifier qu'aucune signature ne change ; seule l'implémentation interne (`sendEmail` / `getTransporter`) est refactorée.
-  - [ ] T1.3 Installer `resend` (`npm install resend`).
-  - [ ] T1.4 Désinstaller `nodemailer` et `@types/nodemailer` (`npm uninstall nodemailer @types/nodemailer`).
-  - [ ] T1.5 Supprimer `_transporter`, `_resetTransporter`, `getTransporter`, `getSender` et toutes les références aux variables `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`.
-  - [ ] T1.6 Initialiser le client Resend avec `new Resend(process.env.RESEND_API_KEY)`.
-  - [ ] T1.7 Utiliser `process.env.RESEND_FROM_EMAIL` comme expéditeur (`from`) ; nommer l'expéditeur `Ivoire Business Club` (comportement actuel).
-  - [ ] T1.8 Renvoyer le résultat de `resend.emails.send({ from, to, subject, text })` dans `sendEmail` ; conserver le log `console.log` en non-test.
+- [x] **T1 — Auditer `src/lib/email.ts` et toutes ses signatures publiques** (AC: #1, #2)
+  - [x] T1.1 Lister toutes les fonctions exportées actuelles (`sendEmailVerificationEmail`, `sendSubscriptionActivatedEmail`, `sendAdminSubscriptionConfirmationEmail`, `sendSubscriptionRejectedEmail`, `sendOpportunityVerifiedEmail`, `sendOpportunityMatchedEmail`, `sendOpportunityRejectedEmail`, `sendWelcomeEmail`, `sendReminderEmail`, `sendGuideEmail`, `sendPasswordResetEmail`, `sendSetPasswordEmail`).
+  - [x] T1.2 Vérifier qu'aucune signature ne change ; seule l'implémentation interne (`sendEmail` / `getTransporter`) est refactorée.
+  - [x] T1.3 Installer `resend` (`npm install resend`).
+  - [x] T1.4 Désinstaller `nodemailer` et `@types/nodemailer` (`npm uninstall nodemailer @types/nodemailer`).
+  - [x] T1.5 Supprimer `_transporter`, `_resetTransporter`, `getTransporter`, `getSender` et toutes les références aux variables `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`.
+  - [x] T1.6 Initialiser le client Resend avec `new Resend(process.env.RESEND_API_KEY)`.
+  - [x] T1.7 Utiliser `process.env.RESEND_FROM_EMAIL` comme expéditeur (`from`) ; nommer l'expéditeur `Ivoire Business Club` (comportement actuel).
+  - [x] T1.8 Renvoyer le résultat de `resend.emails.send({ from, to, subject, text })` dans `sendEmail` ; conserver le log `console.log` en non-test.
 
-- [ ] **T2 — Adapter `src/app/api/admin/subscriptions/[id]/route.ts` au fire-and-forget** (AC: #3, #4, #6, #8)
-  - [ ] T2.1 Confirmer que `safeCreateAuditLog` est bien appelé **avant** l'envoi d'email (déjà correct).
-  - [ ] T2.2 Transformer le bloc `try { ... } catch { return 500 }` actuel autour des emails en appels asynchrones non bloquants : `void sendSubscriptionActivatedEmail(...).catch(error => console.error(...))`.
-  - [ ] T2.3 S'assurer que l'API retourne `200 { data: updatedSubscription }` même si l'email échoue.
-  - [ ] T2.4 Conserver `sanitizeError` dans le log d'erreur.
+- [x] **T2 — Adapter `src/app/api/admin/subscriptions/[id]/route.ts` au fire-and-forget** (AC: #3, #4, #6, #8)
+  - [x] T2.1 Confirmer que `safeCreateAuditLog` est bien appelé **avant** l'envoi d'email (déjà correct).
+  - [x] T2.2 Transformer le bloc `try { ... } catch { return 500 }` actuel autour des emails en appels asynchrones non bloquants : `void sendSubscriptionActivatedEmail(...).catch(error => console.error(...))`.
+  - [x] T2.3 S'assurer que l'API retourne `200 { data: updatedSubscription }` même si l'email échoue.
+  - [x] T2.4 Conserver `sanitizeError` dans le log d'erreur.
 
-- [ ] **T3 — Vérifier `src/app/api/admin/opportunities/[id]/verify/route.ts`** (AC: #5, #6, #7, #8)
-  - [ ] T3.1 Confirmer que `safeCreateAuditLog` précède `sendFinalEmail` (déjà correct).
-  - [ ] T3.2 Conserver l'appel à `sendFinalEmail` sans `await` ou via `void ... .catch(...)` pour rester fire-and-forget.
-  - [ ] T3.3 Conserver `notifyMatchedMembers` en `try/catch` avec `Promise.allSettled` ; vérifier qu'il ne se déclenche que lorsque `currentStatus !== "VERIFIED"` et `effectiveNextStatus === "VERIFIED"` (idempotence déjà présente).
-  - [ ] T3.4 S'assurer que `sendFinalEmail` n'est appelé que lorsque `!pendingSecondVerification` (déjà correct).
+- [x] **T3 — Vérifier `src/app/api/admin/opportunities/[id]/verify/route.ts`** (AC: #5, #6, #7, #8)
+  - [x] T3.1 Confirmer que `safeCreateAuditLog` précède `sendFinalEmail` (déjà correct).
+  - [x] T3.2 Conserver l'appel à `sendFinalEmail` sans `await` ou via `void ... .catch(...)` pour rester fire-and-forget.
+  - [x] T3.3 Conserver `notifyMatchedMembers` en `try/catch` avec `Promise.allSettled` ; vérifier qu'il ne se déclenche que lorsque `currentStatus !== "VERIFIED"` et `effectiveNextStatus === "VERIFIED"` (idempotence déjà présente).
+  - [x] T3.4 S'assurer que `sendFinalEmail` n'est appelé que lorsque `!pendingSecondVerification` (déjà correct).
 
-- [ ] **T4 — Mettre à jour les tests** (AC: #9)
-  - [ ] T4.1 Réécrire `src/lib/email.test.ts` : mocker le module `resend` au lieu de `nodemailer`, initialiser `process.env.RESEND_API_KEY` et `RESEND_FROM_EMAIL` dans `beforeEach`.
-  - [ ] T4.2 Adapter les assertions : vérifier l'appel à `resend.emails.send` avec `{ from, to, subject, text }`.
-  - [ ] T4.3 Mettre à jour `src/app/api/admin/subscriptions/[id]/route.test.ts` : l'email est maintenant fire-and-forget, vérifier qu'il est appelé et que l'API retourne 200 même si l'email échoue.
-  - [ ] T4.4 Mettre à jour `src/app/api/admin/opportunities/[id]/verify/route.test.ts` si nécessaire (les mocks existants doivent rester compatibles).
-  - [ ] T4.5 Lancer `npx vitest run src/lib/email.test.ts src/app/api/admin/subscriptions/[id]/route.test.ts src/app/api/admin/opportunities/[id]/verify/route.test.ts`.
+- [x] **T4 — Mettre à jour les tests** (AC: #9)
+  - [x] T4.1 Réécrire `src/lib/email.test.ts` : mocker le module `resend` au lieu de `nodemailer`, initialiser `process.env.RESEND_API_KEY` et `RESEND_FROM_EMAIL` dans `beforeEach`.
+  - [x] T4.2 Adapter les assertions : vérifier l'appel à `resend.emails.send` avec `{ from, to, subject, text }`.
+  - [x] T4.3 Mettre à jour `src/app/api/admin/subscriptions/[id]/route.test.ts` : l'email est maintenant fire-and-forget, vérifier qu'il est appelé et que l'API retourne 200 même si l'email échoue.
+  - [x] T4.4 Mettre à jour `src/app/api/admin/opportunities/[id]/verify/route.test.ts` si nécessaire (les mocks existants doivent rester compatibles).
+  - [x] T4.5 Lancer `npx vitest run src/lib/email.test.ts src/app/api/admin/subscriptions/[id]/route.test.ts src/app/api/admin/opportunities/[id]/verify/route.test.ts`.
 
-- [ ] **T5 — Variables d'environnement et documentation** (AC: #1, #2)
-  - [ ] T5.1 S'assurer que `.env.example` contient toujours `RESEND_API_KEY` et `RESEND_FROM_EMAIL` (déjà présents).
-  - [ ] T5.2 Laisser les variables `MAIL_*` dans `.env.example` pour compatibilité ascendante, mais ne plus les utiliser dans le code.
-  - [ ] T5.3 Vérifier que `next.config.ts` n'a pas besoin de modification (les variables publiques ne changent pas).
+- [x] **T5 — Variables d'environnement et documentation** (AC: #1, #2)
+  - [x] T5.1 S'assurer que `.env.example` contient toujours `RESEND_API_KEY` et `RESEND_FROM_EMAIL` (déjà présents).
+  - [x] T5.2 Laisser les variables `MAIL_*` dans `.env.example` pour compatibilité ascendante, mais ne plus les utiliser dans le code (mises en commentaire).
+  - [x] T5.3 Vérifier que `next.config.ts` n'a pas besoin de modification (les variables publiques ne changent pas).
 
-- [ ] **T6 — Build et validation** (AC: #9)
-  - [ ] T6.1 Lancer `npm run build`.
-  - [ ] T6.2 Lancer la suite de tests Vitest concernée.
-  - [ ] T6.3 Vérifier qu'aucune référence à `nodemailer` ne subsiste dans le code source (`grep -r "nodemailer" src/ --include="*.ts" --include="*.tsx"`).
+- [x] **T6 — Build et validation** (AC: #9)
+  - [x] T6.1 Lancer `npm run build`.
+  - [x] T6.2 Lancer la suite de tests Vitest concernée.
+  - [x] T6.3 Vérifier qu'aucune référence à `nodemailer` ne subsiste dans le code source (`grep -r "nodemailer" src/ --include="*.ts" --include="*.tsx"`).
 
 ## Dev Notes
 
@@ -303,12 +303,33 @@ expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
 - Story 26.6 identifiée dans `sprint-status.yaml` comme `backlog` → passage à `ready-for-dev`.
 - Fichier de story créé avec le contexte complet de migration Resend, les guardrails fire-and-forget, l'audit log placement et les fichiers impactés.
 - Baseline commit enregistré : `bfc61ea8731cc6d4a2d053efc0bae243316503f4`.
+- **Implémentation DS terminée** :
+  - `src/lib/email.ts` refactoré de Nodemailer SMTP vers Resend API ; toutes les signatures publiques conservées ; `_resetTransporter`, `_transporter`, `getTransporter`, `getSender` supprimés ; log `console.log` préservé en non-test.
+  - `resend` installé (`^4.x`), `nodemailer` et `@types/nodemailer` désinstallés.
+  - `src/app/api/admin/subscriptions/[id]/route.ts` : envoi d'email fire-and-forget (`void send...().catch(...)`), retourne toujours 200 même en cas d'échec email, audit log avant envoi.
+  - `src/app/api/admin/opportunities/[id]/verify/route.ts` : `sendFinalEmail` en fire-and-forget, audit log avant envoi, idempotence conservée (`currentStatus !== "VERIFIED"`).
+  - `src/lib/email.test.ts` et `src/app/api/admin/subscriptions/[id]/route.test.ts` adaptés pour mocker Resend et tester le comportement fire-and-forget.
+  - `.env.example` mis à jour : `RESEND_API_KEY` / `RESEND_FROM_EMAIL` actifs, variables `MAIL_*` commentées pour compatibilité ascendante.
+- **Validation** :
+  - `npm run build` : OK.
+  - `npx vitest run src/lib/email.test.ts src/app/api/admin/subscriptions/[id]/route.test.ts src/app/api/admin/opportunities/[id]/verify/route.test.ts` : OK (42/42).
+  - `npx vitest run` complet : OK (181 fichiers, 1280 tests).
+  - `grep -r "nodemailer" src/` : aucune référence résiduelle.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/story-26-6-notifications-email-automatiques-resend.md` (NEW)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE : statut 26-6 → ready-for-dev)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATE : statut 26-6 → review)
+- `src/lib/email.ts` (REFACTOR : Nodemailer → Resend)
+- `src/lib/email.test.ts` (UPDATE : mock Resend, assertions Resend)
+- `src/app/api/admin/subscriptions/[id]/route.ts` (UPDATE : fire-and-forget)
+- `src/app/api/admin/subscriptions/[id]/route.test.ts` (UPDATE : tests fire-and-forget + email failures)
+- `src/app/api/admin/opportunities/[id]/verify/route.ts` (UPDATE : fire-and-forget)
+- `package.json` (UPDATE : +resend, -nodemailer, -@types/nodemailer)
+- `package-lock.json` (UPDATE : suite aux modifications de dépendances)
+- `.env.example` (UPDATE : Resend actif, MAIL_* commentées pour compatibilité ascendante)
 
 ### Change Log
 
 - 2026-07-09 — Création du contexte de la story 26.6 : notifications email automatiques via Resend.
+- 2026-07-09 — Implémentation DS 26.6 terminée : migration Resend, fire-and-forget, tests verts, build OK.

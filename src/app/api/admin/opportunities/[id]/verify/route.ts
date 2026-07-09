@@ -280,12 +280,10 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       },
     });
 
-    try {
-      if (!pendingSecondVerification) {
-        await sendFinalEmail(effectiveNextStatus, updated);
-      }
-    } catch (error) {
-      console.error("[admin-opportunity-email]", { opportunityId: id, status: effectiveNextStatus, error: sanitizeError(error) });
+    if (!pendingSecondVerification) {
+      void sendFinalEmail(effectiveNextStatus, updated).catch((error) => {
+        console.error("[admin-opportunity-email]", { opportunityId: id, status: effectiveNextStatus, error: sanitizeError(error) });
+      });
     }
 
     if (!pendingSecondVerification && effectiveNextStatus === "VERIFIED" && currentStatus !== "VERIFIED") {

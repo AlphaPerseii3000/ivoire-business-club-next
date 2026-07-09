@@ -1,34 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockSendMail = vi.hoisted(() => vi.fn());
+const mockSend = vi.hoisted(() => vi.fn());
 
-vi.mock("nodemailer", () => ({
-  default: {
-    createTransport: vi.fn(() => ({
-      sendMail: mockSendMail,
-    })),
-  },
-}));
+vi.mock("resend", () => {
+  return {
+    Resend: class MockResend {
+      emails = { send: mockSend };
+    },
+  };
+});
 
 describe("email helpers", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    process.env.MAIL_HOST = "mail.infomaniak.com";
-    process.env.MAIL_PORT = "587";
-    process.env.MAIL_USERNAME = "test@ivoire-business-club.com";
-    process.env.MAIL_PASSWORD = "test-password";
-    process.env.MAIL_ENCRYPTION = "tls";
-    process.env.MAIL_FROM_ADDRESS = "sarah@ivoire-business-club.com";
-    process.env.MAIL_FROM_NAME = "Ivoire Business Club";
+    process.env.RESEND_API_KEY = "re_xxxxxxxx";
+    process.env.RESEND_FROM_EMAIL = "sarah@ivoire-business-club.com";
     delete process.env.APP_URL;
   });
 
-  it("sends the exact French subscription activation copy via SMTP", async () => {
-    const { sendSubscriptionActivatedEmail, _resetTransporter } = await import(
-      "./email"
-    );
-    _resetTransporter();
+  it("sends the exact French subscription activation copy via Resend", async () => {
+    const { sendSubscriptionActivatedEmail } = await import("./email");
 
     await sendSubscriptionActivatedEmail({
       to: "member@example.com",
@@ -36,10 +28,10 @@ describe("email helpers", () => {
       tier: "GRAND_FRERE",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        from: "Ivoire Business Club <sarah@ivoire-business-club.com>",
         to: "member@example.com",
         subject: "Votre abonnement IBC est activé",
         text: expect.stringContaining(
@@ -51,9 +43,7 @@ describe("email helpers", () => {
 
   it("sends the admin confirmation email with dashboard link", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    const { sendAdminSubscriptionConfirmationEmail, _resetTransporter } =
-      await import("./email");
-    _resetTransporter();
+    const { sendAdminSubscriptionConfirmationEmail } = await import("./email");
 
     await sendAdminSubscriptionConfirmationEmail({
       to: "member@example.com",
@@ -61,10 +51,10 @@ describe("email helpers", () => {
       tier: "BOSS",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        from: "Ivoire Business Club <sarah@ivoire-business-club.com>",
         to: "member@example.com",
         subject: "Votre abonnement IBC est confirmé",
         text: expect.stringContaining(
@@ -74,14 +64,10 @@ describe("email helpers", () => {
     );
   });
 
-  it("throws when MAIL credentials are missing", async () => {
-    delete process.env.MAIL_HOST;
-    delete process.env.MAIL_USERNAME;
-    delete process.env.MAIL_PASSWORD;
-    const { sendSubscriptionActivatedEmail, _resetTransporter } = await import(
-      "./email"
-    );
-    _resetTransporter();
+  it("throws when RESEND credentials are missing", async () => {
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM_EMAIL;
+    const { sendSubscriptionActivatedEmail } = await import("./email");
 
     await expect(
       sendSubscriptionActivatedEmail({
@@ -90,17 +76,13 @@ describe("email helpers", () => {
         tier: "AFFRANCHI",
       })
     ).rejects.toThrow(
-      "MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD must be configured"
+      "RESEND_API_KEY and RESEND_FROM_EMAIL must be configured"
     );
   });
 
-  it("uses MAIL_FROM_ADDRESS and MAIL_FROM_NAME as sender", async () => {
-    process.env.MAIL_FROM_ADDRESS = "custom@ibc.test";
-    process.env.MAIL_FROM_NAME = "IBC Custom";
-    const { sendSubscriptionActivatedEmail, _resetTransporter } = await import(
-      "./email"
-    );
-    _resetTransporter();
+  it("uses RESEND_FROM_EMAIL as sender name", async () => {
+    process.env.RESEND_FROM_EMAIL = "custom@ibc.test";
+    const { sendSubscriptionActivatedEmail } = await import("./email");
 
     await sendSubscriptionActivatedEmail({
       to: "member@example.com",
@@ -108,17 +90,16 @@ describe("email helpers", () => {
       tier: "AFFRANCHI",
     });
 
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { name: "IBC Custom", address: "custom@ibc.test" },
+        from: "Ivoire Business Club <custom@ibc.test>",
       })
     );
   });
 
   it("sends verification email with correct link and copy", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    const { sendEmailVerificationEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendEmailVerificationEmail } = await import("./email");
 
     await sendEmailVerificationEmail({
       to: "newmember@example.com",
@@ -126,8 +107,8 @@ describe("email helpers", () => {
       token: "secret-token-123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "newmember@example.com",
         subject: "Vérifiez votre adresse email - Ivoire Business Club",
@@ -145,8 +126,7 @@ describe("email helpers", () => {
     process.env.BANK_TRANSFER_BANK_ADDRESS = "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
-    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
       to: "newmember@example.com",
@@ -155,8 +135,8 @@ describe("email helpers", () => {
       userId: "user123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    const text = mockSendMail.mock.calls[0][0].text;
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain(
       "Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier Affranchis (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."
     );
@@ -182,8 +162,7 @@ describe("email helpers", () => {
     process.env.BANK_TRANSFER_BANK_ADDRESS = "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
-    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
       to: "newmember@example.com",
@@ -193,8 +172,8 @@ describe("email helpers", () => {
       userId: "user123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    const text = mockSendMail.mock.calls[0][0].text;
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain(
       "Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée."
     );
@@ -213,8 +192,7 @@ describe("email helpers", () => {
     process.env.NEXT_PUBLIC_WAVE_MERCHANT_NUMBER = "+225****0650";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
-    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
       to: "newmember@example.com",
@@ -225,16 +203,16 @@ describe("email helpers", () => {
       userId: "user123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        from: "Ivoire Business Club <sarah@ivoire-business-club.com>",
         to: "newmember@example.com",
         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Wave :"),
       })
     );
-    const text = mockSendMail.mock.calls[0][0].text;
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
     expect(text).toContain("Numéro marchand Wave : +225****0650");
     expect(text).toContain("Depuis votre numéro Wave : +225****0405");
@@ -249,8 +227,7 @@ describe("email helpers", () => {
     process.env.NEXT_PUBLIC_ORANGE_MONEY_USSD_CODE = "#144#";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
 
-    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
       to: "newmember@example.com",
@@ -261,16 +238,16 @@ describe("email helpers", () => {
       userId: "user123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { name: "Ivoire Business Club", address: "sarah@ivoire-business-club.com" },
+        from: "Ivoire Business Club <sarah@ivoire-business-club.com>",
         to: "newmember@example.com",
         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Orange Money :"),
       })
     );
-    const text = mockSendMail.mock.calls[0][0].text;
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
     expect(text).toContain("Numéro marchand Orange Money : +225****0650");
     expect(text).toContain("Depuis votre numéro Orange Money : +225****0405");
@@ -286,8 +263,7 @@ describe("email helpers", () => {
     delete process.env.BANK_TRANSFER_BANK_ADDRESS;
     delete process.env.ADHESION_CONTRACT_URL;
 
-    const { sendWelcomeEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
       to: "newmember@example.com",
@@ -297,8 +273,8 @@ describe("email helpers", () => {
       userId: "user123",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    const text = mockSendMail.mock.calls[0][0].text;
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).not.toContain("Pour finaliser votre adhésion");
     expect(text).toContain(
       "Choisissez votre formule d'abonnement dans votre espace membre : https://ivoirebusinessclub.test/pricing"
@@ -308,8 +284,7 @@ describe("email helpers", () => {
 
   it("sends reminder EMAIL_VERIFICATION with correct French copy and link", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    const { sendReminderEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendReminderEmail } = await import("./email");
 
     await sendReminderEmail({
       to: "newmember@example.com",
@@ -317,8 +292,8 @@ describe("email helpers", () => {
       type: "EMAIL_VERIFICATION",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "newmember@example.com",
         subject: "Vérifiez votre adresse email — Ivoire Business Club",
@@ -327,7 +302,7 @@ describe("email helpers", () => {
         ),
       })
     );
-    const text = mockSendMail.mock.calls[0][0].text;
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain(
       "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
     );
@@ -335,8 +310,7 @@ describe("email helpers", () => {
 
   it("sends reminder PROFILE_COMPLETION with correct link and legal mention", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    const { sendReminderEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendReminderEmail } = await import("./email");
 
     await sendReminderEmail({
       to: "newmember@example.com",
@@ -344,8 +318,8 @@ describe("email helpers", () => {
       type: "PROFILE_COMPLETION",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    const text = mockSendMail.mock.calls[0][0].text;
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
     expect(text).toContain("complétez votre profil");
     expect(text).toContain(
@@ -355,8 +329,7 @@ describe("email helpers", () => {
 
   it("sends reminder FINAL_REMINDER with both links and legal mention", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    const { sendReminderEmail, _resetTransporter } = await import("./email");
-    _resetTransporter();
+    const { sendReminderEmail } = await import("./email");
 
     await sendReminderEmail({
       to: "newmember@example.com",
@@ -364,8 +337,8 @@ describe("email helpers", () => {
       type: "FINAL_REMINDER",
     });
 
-    expect(mockSendMail).toHaveBeenCalledTimes(1);
-    const text = mockSendMail.mock.calls[0][0].text;
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const text = mockSend.mock.calls[0][0].text;
     expect(text).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
     expect(text).toContain("finalisé");

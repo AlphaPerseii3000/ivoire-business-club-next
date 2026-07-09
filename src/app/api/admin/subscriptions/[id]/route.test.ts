@@ -160,6 +160,22 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
     });
   });
 
+  it("returns 200 even when activation email fails (fire-and-forget)", async () => {
+    mockSubscriptionFindUnique.mockResolvedValueOnce(pendingSubscription);
+    mockSendActivated.mockRejectedValueOnce(new Error("resend down"));
+
+    const res = await PATCH(request({ action: "validate" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.status).toBe("ACTIVE");
+    expect(mockSendActivated).toHaveBeenCalledWith({
+      to: "jean@example.com",
+      name: "Jean Kouassi",
+      tier: "GRAND_FRERE",
+    });
+  });
+
   it("rejects invalid transition from ACTIVE to validate", async () => {
     mockSubscriptionFindUnique.mockResolvedValueOnce(activeSubscription);
 
@@ -217,6 +233,24 @@ describe("PATCH /api/admin/subscriptions/[id]", () => {
         tier: "GRAND_FRERE",
         paymentStatus: "failed",
       }),
+    });
+  });
+
+  it("returns 200 even when rejection email fails (fire-and-forget)", async () => {
+    mockSubscriptionFindUnique.mockResolvedValueOnce(pendingSubscription);
+    mockSubscriptionUpdate.mockResolvedValueOnce({ ...pendingSubscription, status: "CANCELLED" });
+    mockSendRejected.mockRejectedValueOnce(new Error("resend down"));
+
+    const res = await PATCH(request({ action: "reject", reason: "Virement non reçu" }), params);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.status).toBe("CANCELLED");
+    expect(mockSendRejected).toHaveBeenCalledWith({
+      to: "jean@example.com",
+      name: "Jean Kouassi",
+      tier: "GRAND_FRERE",
+      reason: "Virement non reçu",
     });
   });
 
