@@ -2797,5 +2797,202 @@ Then ils passent sans régression
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.8. Épiques 8, 10-17, 20, 22-27 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09.*
+## Epic 28: Consolidation & Hardening
+
+Consolidation de la dette technique accumulée dans `deferred-work.md` à travers 27 epics et ~90 stories. Quatre stories thématiques pour durcir la sécurité, fiabiliser PostHog, corriger les problèmes de data integrity, et nettoyer le code de qualité.
+
+**FRs couverts :** FR-PH01 à FR-PH05 (PostHog), FR-SH01 à FR-SH06 (Security), FR-RD01 à FR-RD07 (Robustness), FR-CQ01 à FR-CQ06 (Code Quality)
+**NFRs couverts :** NFR-S2, NFR-S4, NFR-S10, NFR-S11, NFR-P2, NFR-S9
+**Source :** `deferred-work.md` (30+ items reportés lors des code reviews des Epics 1-27)
+
+---
+
+### Story 28-1: PostHog Error Handling & Analytics Hardening
+
+**En tant que** développeur,
+**Je veux** que les erreurs PostHog ne crashent jamais les API ou pages du site,
+**Afin de** garantir la disponibilité de la plateforme indépendamment de l'état du service PostHog.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given un endpoint API qui appelle posthogServer.capture après une opération DB
+When PostHog a une erreur réseau (timeout, DNS, connexion refusée)
+Then l'API retourne quand même un 200/201 (le résultat DB est préservé)
+And l'erreur PostHog est loggée (console.error) mais non propagée
+
+Given la page /pricing/virement
+When l'utilisateur rafraîchit la page 3 fois
+Then l'event `bank_transfer_page_viewed` n'est capturé qu'une seule fois (ou via client-side uniquement)
+
+Given un utilisateur qui se connecte via Google OAuth
+When le callback OAuth réussit
+Then l'event `user_signed_in` avec propriété `method: "google"` est capturé côté client
+
+Given le serveur Next.js en cours d'exécution
+When il reçoit SIGTERM ou SIGINT
+Then les events PostHog en mémoire sont flushés avant l'arrêt
+
+Given le serveur en mode développement
+When une variable d'env PostHog change
+Then le singleton se réinitialise au prochain appel (pas besoin de restart manuel)
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests existants
+When npx vitest run est exécuté
+Then ils passent sans régression
+```
+
+---
+
+### Story 28-2: Security Hardening — Rate Limiting, Timing-Safe Comparison & Password UX
+
+**En tant que** administrateur sécurité,
+**Je veux** que les endpoints sensibles soient rate-limités et que les comparaisons de secrets soient timing-safe,
+**Afin de** protéger la plateforme contre le bruteforce et les attaques temporelles.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given la route PUT /api/user/password
+When plus de 5 tentatives par minute depuis la même IP
+Then la 6ème retourne 429 avec Retry-After
+
+Given la route POST /api/auth/set-password
+When plus de 3 tentatives par minute depuis la même IP
+Then la 4ème retourne 429 avec Retry-After
+
+Given l'endpoint cron /api/cron/remind-incomplete-users
+When le header Authorization Bearer est comparé au CRON_SECRET
+Then la comparaison utilise crypto.timingSafeEqual (constant-time)
+And les headers avec espaces supplémentaires entre "Bearer" et le token sont acceptés
+
+Given un utilisateur authentifié via Google OAuth (pas de mot de passe local)
+When il accède à son profil et clique sur "Définir un mot de passe"
+Then un formulaire lui permet de créer un mot de passe local (sans exiger l'ancien)
+
+Given un changement de mot de passe réussi
+When l'API répond 200
+Then un log d'audit est créé (AUDIT_ACTIONS.PASSWORD_CHANGED)
+And un email de notification est envoyé à l'utilisateur
+
+Given le bouton d'envoi d'invitation dans le profil admin
+When l'admin clique sur "Envoyer l'invitation"
+Then le bouton est désactivé pendant 30s avec un countdown visible
+
+Given la page de reset password avec un token
+When la page se charge
+Then le token est validé côté serveur et un message s'affiche s'il est expiré/invalide avant la soumission
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests existants
+When npx vitest run est exécuté
+Then ils passent sans régression
+```
+
+---
+
+### Story 28-3: Robustesse & Data Integrity — Pagination, Race Conditions & Types
+
+**En tant que** développeur,
+**Je veux** que les listes soient paginées, les inscriptions événements atomiques et les types sécurisés,
+**Afin de** garantir la scalabilité et l'intégrité des données.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given un événement avec 10 places disponibles
+When 12 utilisateurs s'inscrivent simultanément
+Then exactement 10 inscriptions réussissent et 2 sont refusées (places épuisées)
+And la vérification du compteur et la création sont dans une transaction atomique
+
+Given la liste admin des articles avec 50+ articles
+When l'admin ouvre /admin/articles
+Then la page affiche 20 articles par page avec navigation
+
+Given l'API GET /api/companies avec 50+ entreprises
+When un client la consulte
+Then elle retourne 20 résultats par page avec métadonnées de pagination
+
+Given l'API GET /api/events/[id]/gallery avec 50+ photos
+When un client la consulte
+Then elle retourne 20 résultats par page
+
+Given les endpoints d'API articles (route.ts, [id]/route.ts)
+When on inspecte le code
+Then session.user est typé via le type SessionUser généré par Auth.js (pas de `as any`)
+
+Given un membre connecté qui a posté un commentaire
+When il consulte le commentaire
+Then il voit un bouton "Modifier" et "Supprimer"
+And la modification met à jour le contenu avec un timestamp `updatedAt`
+And la suppression est soft (marqué deleted, contenu masqué)
+
+Given un utilisateur qui poste 6 commentaires en 1 minute
+When le 6ème est soumis
+Then l'API retourne 429 avec Retry-After
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests existants
+When npx vitest run est exécuté
+Then ils passent sans régression
+```
+
+---
+
+### Story 28-4: Code Quality & Tech Debt Cleanup
+
+**En tant que** développeur,
+**Je veux** que le code soit centralisé, testable et robuste,
+**Afin de** réduire la maintenance et prévenir les bugs futurs.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given les pages publiques (landing, articles, events, partners, experts, mentions-legales, etc.)
+When on inspecte le code source
+Then le header et le footer sont définis une seule fois dans le layout Next.js et hérités par toutes les pages
+And aucune page ne redéfinit manuellement le header/footer
+
+Given le fichier sitemap.ts et les pages qui construisent des URLs absolues
+When on cherche l'URL de base
+Then elle provient d'une constante unique (ex: `src/lib/site-config.ts` ou `process.env.NEXT_PUBLIC_SITE_URL`)
+
+Given le lien "Tarifs" dans la navigation mobile sur /partners ou /partners/[slug]
+When l'utilisateur clique dessus
+Then il est redirigé vers la landing page avec l'ancre #pricing (et non une ancre sur la page courante)
+
+Given le fichier next.config.ts
+When le module patch-readlink.js est absent ou corrompu
+Then le build ne crash pas (try-catch autour de l'import)
+
+Given les tests interactifs (boutons, formulaires, selects)
+When on inspecte le code de test
+Then ils utilisent userEvent.click / userEvent.type (pas fireEvent)
+
+Given le test d'accessibilité accessibility.test.tsx
+When il vérifie les animations CSS
+Then il utilise getComputedStyle ou un mock runtime au lieu de fs.readFileSync(globals.css)
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given les tests existants
+When npx vitest run est exécuté
+Then ils passent sans régression
+```
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11.*
 
