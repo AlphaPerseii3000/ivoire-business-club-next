@@ -11,6 +11,7 @@ inputDocuments:
   - architecture.md
   - technical-feasibility-ibc-2026-05-12.md
   - domain-research-2026-05-12-ibc-deep-dive.md
+  - sprint-change-proposal-2026-07-11-consolidation.md
 ---
 
 # IBC — Epic Breakdown & User Stories
@@ -127,6 +128,31 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 - **FR88** : Le système applique un rate-limiting sur l'API de chat (10 messages/minute/IP) et l'API de création d'opportunité (2 opportunités/minute/IP) avec retour d'erreur `429 Too Many Requests`.
 - **FR89** : Tout fichier de justificatif téléversé fait l'objet d'un contrôle strict d'extension (MIME type) et d'un scan de sécurité antivirus côté serveur (via une API de scan) avant d'être accepté et écrit en base de données.
 
+**Consolidation & Hardening (Epic 28)**
+- **FR-PH01** : Tous les appels `posthogServer.capture` sont wrappés dans try-catch pour éviter qu'une défaillance PostHog ne crash l'API ou la page
+- **FR-PH02** : La page virement bancaire ne capture plus d'event serveur à chaque rendu (évite les duplications)
+- **FR-PH03** : Le sign-in via Google OAuth déclenche l'event client `user_signed_in` (parité avec credentials)
+- **FR-PH04** : Le serveur PostHog flush ses events en mémoire avant shutdown (process exit signals)
+- **FR-PH05** : Le singleton PostHog se réinitialise en dev quand les variables d'env changent
+- **FR-SH01** : Les routes API `/api/user/password` (changement mot de passe) et `/api/auth/set-password` (invitation) sont rate-limitées
+- **FR-SH02** : La comparaison du `CRON_SECRET` utilise `crypto.timingSafeEqual` (constant-time)
+- **FR-SH03** : Les utilisateurs authentifiés via Google OAuth peuvent définir un mot de passe local depuis leur profil
+- **FR-SH04** : Un changement de mot de passe réussi déclenche un log d'audit et un email de notification
+- **FR-SH05** : Le bouton d'envoi d'invitation a un cooldown de 30s pour empêcher le spam d'emails
+- **FR-SH06** : La page de réinitialisation de mot de passe valide le token au chargement (avant soumission)
+- **FR-RD01** : L'inscription à un événement utilise une transaction + vérification de places disponibles atomique (anti-overbooking)
+- **FR-RD02** : La liste admin des articles est paginée
+- **FR-RD03** : L'API publique `/api/companies` est paginée
+- **FR-RD04** : L'API galerie d'événements `/api/events/[id]/gallery` est paginée
+- **FR-RD05** : Les endpoints articles utilisent un typage sécurisé pour la session (suppression des `as any`)
+- **FR-RD06** : Les commentaires peuvent être modifiés ou supprimés par leur auteur
+- **FR-RD07** : Un rate-limiting anti-flood est appliqué à la création de commentaires (5/minute/utilisateur)
+- **FR-CQ01** : Les en-têtes et footers des pages publiques sont centralisés dans le layout Next.js (suppression de la duplication)
+- **FR-CQ02** : L'URL de base du site (`siteUrl`) est centralisée dans une constante unique et utilisée partout
+- **FR-CQ03** : Le lien "Tarifs" fonctionne depuis toutes les pages (redirige vers `/#pricing` sur la landing)
+- **FR-CQ04** : L'import top-level de `patch-readlink.js` dans `next.config.ts` est sécurisé (try-catch)
+- **FR-CQ05** : Les tests utilisent `userEvent` au lieu de `fireEvent` pour les interactions interactives
+- **FR-CQ06** : Le parsing CSS dans les tests d'accessibilité est remplacé par une vérification runtime (getComputedStyle)
 
 ### Non-Functional Requirements (NFR)
 
@@ -244,6 +270,12 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 - **UX-DR33** : Profil (header card avatar+tier, statut abonnement, tags chips, reviews, settings)
 - **UX-DR34** : Admin kanban (metrics top, colonnes 4 statuts, carte détail slide-in)
 
+**Consolidation & Hardening (Epic 28)**
+- **UX-DR35** : Cooldown UI sur le bouton d'invitation admin (désactivation 30s + countdown)
+- **UX-DR36** : Validation de token de reset de mot de passe au chargement de la page avec message d'erreur clair
+- **UX-DR37** : UI de modification et suppression soft pour les commentaires de l'auteur
+- **UX-DR38** : Centralisation des en-têtes/footers dans un layout unique pour supprimer la duplication de structure
+
 ---
 
 ## FR Coverage Map
@@ -323,6 +355,30 @@ Le produit IBC est un club business digital à trois niveaux pour la diaspora iv
 | FR87 | Epic 26 | 26.3 | Visualisation admin du justificatif de virement dans Kanban |
 | FR88 | Epic 26 | 26.7 | Rate-limiting API chat (10/min) et creation deal (2/min) |
 | FR89 | Epic 26 | 26.7 | Validation MIME type et scan antivirus justificatif |
+| FR-PH01 | Epic 28 | 28-1 | Wrapper try-catch sur posthogServer.capture |
+| FR-PH02 | Epic 28 | 28-1 | Éviter duplication event virement bancaire |
+| FR-PH03 | Epic 28 | 28-1 | Event user_signed_in pour Google OAuth |
+| FR-PH04 | Epic 28 | 28-1 | Flush PostHog events avant shutdown |
+| FR-PH05 | Epic 28 | 28-1 | Singleton PostHog réinitialisé en dev |
+| FR-SH01 | Epic 28 | 28-2 | Rate limiting routes password et set-password |
+| FR-SH02 | Epic 28 | 28-2 | crypto.timingSafeEqual pour CRON_SECRET |
+| FR-SH03 | Epic 28 | 28-2 | Définition de mot de passe local pour Google OAuth |
+| FR-SH04 | Epic 28 | 28-2 | Audit log et email de notification sur changement de mot de passe |
+| FR-SH05 | Epic 28 | 28-2 | Cooldown 30s sur envoi d'invitation |
+| FR-SH06 | Epic 28 | 28-2 | Validation token reset password au chargement |
+| FR-RD01 | Epic 28 | 28-3 | Inscription événement atomique (transaction + check places) |
+| FR-RD02 | Epic 28 | 28-3 | Pagination liste articles admin |
+| FR-RD03 | Epic 28 | 28-3 | Pagination API publique /api/companies |
+| FR-RD04 | Epic 28 | 28-3 | Pagination API galerie events |
+| FR-RD05 | Epic 28 | 28-3 | Typage sécurisé SessionUser dans API articles |
+| FR-RD06 | Epic 28 | 28-3 | Modification et suppression de commentaires |
+| FR-RD07 | Epic 28 | 28-3 | Rate limiting anti-flood sur commentaires |
+| FR-CQ01 | Epic 28 | 28-4 | Centralisation header/footer dans le layout public |
+| FR-CQ02 | Epic 28 | 28-4 | Centralisation siteUrl dans constante unique |
+| FR-CQ03 | Epic 28 | 28-4 | Correction lien "Tarifs" dans la navigation |
+| FR-CQ04 | Epic 28 | 28-4 | Try-catch sur l'import de patch-readlink.js |
+| FR-CQ05 | Epic 28 | 28-4 | Utilisation userEvent au lieu de fireEvent dans les tests |
+| FR-CQ06 | Epic 28 | 28-4 | Remplacement parsing globals.css par getComputedStyle ou mock |
 
 ---
 
@@ -398,6 +454,12 @@ Intégration du SDK PostHog (client/serveur) pour suivre les interactions utilis
 
 **FRs couverts :** FR64, FR65, FR66
 **NFRs couverts :** NFR-P1
+
+### Epic 28: Consolidation & Hardening
+Consolidation de la dette technique accumulée dans `deferred-work.md` à travers 27 epics et ~90 stories. Quatre stories thématiques pour durcir la sécurité, fiabiliser PostHog, corriger les problèmes de data integrity, et nettoyer le code de qualité.
+
+**FRs couverts :** FR-PH01 à FR-PH05, FR-SH01 à FR-SH06, FR-RD01 à FR-RD07, FR-CQ01 à FR-CQ06
+**NFRs couverts :** NFR-S2, NFR-S4, NFR-S10, NFR-S11, NFR-P2, NFR-S9
 
 ---
 
