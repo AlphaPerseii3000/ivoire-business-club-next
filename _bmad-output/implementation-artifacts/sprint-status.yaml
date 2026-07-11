@@ -209,7 +209,7 @@ development_status:
   25-6-moments-ibc-landing-dashboard: done
   epic-25-retrospective: optional
 
-  epic-26: in-progress
+  epic-26: done
   26-1-creation-des-pages-legales-et-footer: done
   26-2-registre-de-consentement-apdp-rgpd-a-linscription: done
   26-3-upload-de-preuve-de-virement-et-validation-admin: done
@@ -219,11 +219,21 @@ development_status:
   26-7-securite-rate-limiting-et-scan-antivirus: done
   epic-26-retrospective: optional
 
-  epic-27: in-progress
+  epic-27: done
   27-1-infrastructure-geo-technique: done
   27-2-schema-geo-articles: done
   27-3-schema-geo-evenements: done
   epic-27-retrospective: optional
+
+  epic-28: backlog
+  28-1-posthog-error-handling-et-analytics-hardening: backlog
+  28-2-security-hardening-rate-limiting-timing-safe-et-password-ux: backlog
+  28-3-robustesse-data-integrity-pagination-race-conditions-et-types: backlog
+  28-4-code-quality-et-tech-debt-cleanup: backlog
+  epic-28-retrospective: optional
+
+# updated: epic-26, epic-27 → done — 2026-07-11
+# added epic-28 (Consolidation & Hardening) with 4 stories in backlog — 2026-07-11
 
 # updated: epic-21, epic-23, epic-24, epic-25 → done, added epic-26 as backlog — 2026-07-08
 # cleanup: removed duplicate metadata lines, reordered 2-0-consolidation under epic-2 section
