@@ -63,10 +63,14 @@ function PostHogIdentitySyncInternal() {
     if (!session?.user?.id) return;
 
     const signedInKey = `signed-in-tracked-${session.user.id}`;
-    if (typeof window !== "undefined" && !sessionStorage.getItem(signedInKey)) {
-      const provider = (session.user as unknown as Record<string, unknown>).provider || "credentials";
-      posthog.capture("user_signed_in", { method: provider });
-      sessionStorage.setItem(signedInKey, "true");
+    try {
+      if (!sessionStorage.getItem(signedInKey)) {
+        const provider = (session.user as unknown as Record<string, unknown>).provider || "credentials";
+        posthog.capture("user_signed_in", { method: provider });
+        sessionStorage.setItem(signedInKey, "true");
+      }
+    } catch (e) {
+      console.error("Failed to access sessionStorage or track sign-in:", e);
     }
 
     const extendedUser = session.user as unknown as Record<string, unknown>;

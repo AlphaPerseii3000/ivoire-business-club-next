@@ -1,16 +1,22 @@
 import { PostHog } from "posthog-node";
 
 const isTestEnv = process.env.NODE_ENV === "test";
+const isProd = process.env.NODE_ENV === "production";
+
+// Cache environment variables once in production to avoid CPU-heavy process.env lookups
+const cachedKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const cachedHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
 
 class DummyPostHog {
   capture(..._: unknown[]) {}
   identify(..._: unknown[]) {}
   alias(..._: unknown[]) {}
-  close() { return Promise.resolve(); }
+  shutdown() { return Promise.resolve(); }
   flush() { return Promise.resolve(); }
   isFeatureEnabled(..._: unknown[]) { return Promise.resolve(false); }
   getFeatureFlag(..._: unknown[]) { return Promise.resolve(undefined); }
   getFeatureFlagPayload(..._: unknown[]) { return Promise.resolve(undefined); }
+  reloadFeatureFlags() { return Promise.resolve(); }
 }
 
 const globalForPostHog = globalThis as unknown as {
@@ -20,19 +26,24 @@ const globalForPostHog = globalThis as unknown as {
 };
 
 function getActivePostHogClient(): PostHog | DummyPostHog {
-  const currentKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  const currentHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+  let currentKey = cachedKey;
+  let currentHost = cachedHost;
 
-  if (process.env.NODE_ENV !== "production" && !isTestEnv) {
+  // In non-production, check environment variables dynamically for hot-reloading
+  if (!isProd) {
+    currentKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    currentHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+
     if (
       globalForPostHog.posthogKey !== currentKey ||
       globalForPostHog.posthogHost !== currentHost
     ) {
-      if (globalForPostHog.posthogServer && "close" in globalForPostHog.posthogServer) {
+      const stale = globalForPostHog.posthogServer;
+      if (stale && "shutdown" in stale) {
         try {
-          (globalForPostHog.posthogServer as PostHog).close();
+          (stale as any).shutdown();
         } catch (err) {
-          console.error("Error closing stale PostHog client:", err);
+          console.error("Error shutting down stale PostHog client:", err);
         }
       }
       globalForPostHog.posthogServer = undefined;
@@ -57,54 +68,88 @@ function getActivePostHogClient(): PostHog | DummyPostHog {
   return globalForPostHog.posthogServer;
 }
 
+// Proxy wrapper around the active client instance
 export const posthogServer = new Proxy({}, {
   get(target, prop, receiver) {
     const client = getActivePostHogClient();
-    const original = Reflect.get(client, prop);
+    let original = Reflect.get(client, prop);
     
+    // Fallback: if a method does not exist on the client (e.g. DummyPostHog or future APIs),
+    // return a safe no-op function instead of crashing.
+    if (original === undefined) {
+      return function (...args: any[]) {
+        const asyncMethods = ["isFeatureEnabled", "getFeatureFlag", "getFeatureFlagPayload", "shutdown", "flush", "reloadFeatureFlags"];
+        if (asyncMethods.includes(String(prop))) {
+          if (prop === "isFeatureEnabled") return Promise.resolve(false);
+          return Promise.resolve(undefined);
+        }
+        return undefined;
+      };
+    }
+
     if (typeof original === "function") {
       return function (...args: any[]) {
+        // Map deprecated close calls to shutdown
+        const propName = prop === "close" ? "shutdown" : prop;
+        const targetMethod = prop === "close" ? (client as any).shutdown : original;
+
         try {
-          const result = original.apply(client, args);
+          const result = targetMethod.apply(client, args);
           if (result instanceof Promise) {
             return result.catch((err) => {
-              console.error(`PostHog error in async method ${String(prop)}:`, err);
-              if (prop === "isFeatureEnabled") return false;
+              console.error(`PostHog error in async method ${String(propName)}:`, err);
+              if (propName === "isFeatureEnabled") return false;
               return undefined;
             });
           }
           return result;
         } catch (err) {
-          console.error(`PostHog error in method ${String(prop)}:`, err);
-          if (prop === "isFeatureEnabled") return Promise.resolve(false);
-          if (prop === "close" || prop === "flush") return Promise.resolve();
+          console.error(`PostHog error in method ${String(propName)}:`, err);
+          const asyncMethods = ["isFeatureEnabled", "getFeatureFlag", "getFeatureFlagPayload", "shutdown", "flush", "reloadFeatureFlags", "close"];
+          if (asyncMethods.includes(String(propName))) {
+            if (propName === "isFeatureEnabled") return Promise.resolve(false);
+            return Promise.resolve(undefined);
+          }
+          if (propName === "isFeatureEnabled") return false;
           return undefined;
         }
       };
     }
     return original;
   }
-}) as PostHog;
+}) as unknown as PostHog;
 
-if (typeof process !== "undefined") {
+// Register process shutdown hooks once globally to avoid Next.js dev server listener leaks
+const globalForShutdown = globalThis as unknown as {
+  shutdownRegistered: boolean | undefined;
+};
+
+if (typeof process !== "undefined" && !globalForShutdown.shutdownRegistered) {
   const shutdown = async () => {
     const client = globalForPostHog.posthogServer;
-    if (client && "flush" in client) {
+    if (client) {
       try {
-        await (client as PostHog).flush();
-        await (client as PostHog).close();
+        if ("flush" in client) {
+          await (client as any).flush();
+        }
+        if ("shutdown" in client) {
+          await (client as any).shutdown();
+        }
       } catch (err) {
-        console.error("Error flushing/closing PostHog during shutdown:", err);
+        console.error("Error flushing/shutting down PostHog client:", err);
       }
     }
   };
+
   process.once("SIGTERM", async () => {
     await shutdown();
-    process.exit(0);
+    process.kill(process.pid, "SIGTERM");
   });
+
   process.once("SIGINT", async () => {
     await shutdown();
-    process.exit(0);
+    process.kill(process.pid, "SIGINT");
   });
-}
 
+  globalForShutdown.shutdownRegistered = true;
+}

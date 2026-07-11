@@ -5,7 +5,7 @@ vi.mock("posthog-node", () => {
   const mockCapture = vi.fn();
   const mockIdentify = vi.fn();
   const mockAlias = vi.fn();
-  const mockClose = vi.fn().mockResolvedValue(undefined);
+  const mockShutdown = vi.fn().mockResolvedValue(undefined);
   const mockFlush = vi.fn().mockResolvedValue(undefined);
   const mockIsFeatureEnabled = vi.fn().mockResolvedValue(false);
   
@@ -15,7 +15,7 @@ vi.mock("posthog-node", () => {
         capture: mockCapture,
         identify: mockIdentify,
         alias: mockAlias,
-        close: mockClose,
+        shutdown: mockShutdown,
         flush: mockFlush,
         isFeatureEnabled: mockIsFeatureEnabled,
       };
@@ -24,11 +24,9 @@ vi.mock("posthog-node", () => {
 });
 
 describe("posthogServer safety proxy", () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
     // Clear global posthog state between tests
     const g = globalThis as any;
     g.posthogServer = undefined;
@@ -37,12 +35,12 @@ describe("posthogServer safety proxy", () => {
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    vi.unstubAllEnvs();
   });
 
   it("should not crash if NEXT_PUBLIC_POSTHOG_KEY is not set (uses dummy)", async () => {
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "";
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NODE_ENV", "production");
     
     vi.resetModules();
     const { posthogServer } = await import("./posthog-server");
@@ -53,9 +51,9 @@ describe("posthogServer safety proxy", () => {
   });
 
   it("should initialize PostHog when KEY is set", async () => {
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "test-key";
-    process.env.NEXT_PUBLIC_POSTHOG_HOST = "https://test.posthog.com";
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://test.posthog.com");
+    vi.stubEnv("NODE_ENV", "production");
     
     vi.resetModules();
     const { posthogServer } = await import("./posthog-server");
@@ -68,8 +66,8 @@ describe("posthogServer safety proxy", () => {
   });
 
   it("should catch synchronous errors in PostHog methods", async () => {
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "test-key";
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("NODE_ENV", "production");
     
     vi.resetModules();
     const { posthogServer } = await import("./posthog-server");
@@ -96,8 +94,8 @@ describe("posthogServer safety proxy", () => {
   });
 
   it("should catch asynchronous promise rejections in PostHog methods", async () => {
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "test-key";
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("NODE_ENV", "production");
 
     vi.resetModules();
     const { posthogServer } = await import("./posthog-server");
@@ -110,7 +108,7 @@ describe("posthogServer safety proxy", () => {
 
     mockClientInstance.isFeatureEnabled.mockRejectedValueOnce(new Error("Async timeout"));
 
-    const isEnabled = await posthogServer.isFeatureEnabled("feature");
+    const isEnabled = await posthogServer.isFeatureEnabled("feature", "123");
     expect(isEnabled).toBe(false); // fallback value for isFeatureEnabled
 
     expect(consoleErrorSpy).toHaveBeenCalled();
@@ -118,8 +116,8 @@ describe("posthogServer safety proxy", () => {
   });
 
   it("should re-initialize PostHog in dev environment if env vars change", async () => {
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "key-1";
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "key-1");
+    vi.stubEnv("NODE_ENV", "development");
 
     vi.resetModules();
     const { posthogServer } = await import("./posthog-server");
@@ -129,7 +127,7 @@ describe("posthogServer safety proxy", () => {
     expect(PostHog).toHaveBeenLastCalledWith("key-1", expect.any(Object));
 
     // Change key and call again
-    process.env.NEXT_PUBLIC_POSTHOG_KEY = "key-2";
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "key-2");
     posthogServer.capture({ distinctId: "123", event: "test" });
 
     expect(PostHog).toHaveBeenLastCalledWith("key-2", expect.any(Object));

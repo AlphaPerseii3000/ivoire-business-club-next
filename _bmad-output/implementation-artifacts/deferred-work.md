@@ -123,5 +123,6 @@
 
 - Duplication de code de layout [src/app/(public)/cgv/page.tsx:1] — Duplication de la structure générale, de l'en-tête et du footer entre les trois pages légales créées.
 
+## Deferred from: code review of 28-1-posthog-error-handling-et-analytics-hardening.md (2026-07-11)
 
-
+- Next-Auth Session type casting instead of module augmentation [src/lib/auth.config.ts] — Repeatedly casting `session.user` to `Record<string, unknown>` to access custom fields like `provider` instead of properly extending type definitions in next-auth.d.ts. (pre-existing)

@@ -57,13 +57,15 @@ export function BankTransferInstructions({
   const config = getTierConfig(tier);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    try {
       const key = `viewed-virement-${tier}-${period}`;
       if (!sessionStorage.getItem(key)) {
         posthog.capture("bank_transfer_page_viewed", { tier, period, amount });
         posthog.capture("bank_transfer_instructions_viewed", { tier, period, amount });
         sessionStorage.setItem(key, "true");
       }
+    } catch (e) {
+      console.error("Failed to access sessionStorage or track events:", e);
     }
   }, [tier, period, amount]);
 
