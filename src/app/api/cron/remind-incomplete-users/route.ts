@@ -6,7 +6,7 @@ import crypto from "crypto";
 function getBearerToken(header: string | null): string | null {
   if (!header) return null;
   const match = header.match(/^Bearer\s+(.+)$/);
-  return match ? match[1] : null;
+  return match ? match[1].trim() : null;
 }
 
 export async function POST(req: Request) {

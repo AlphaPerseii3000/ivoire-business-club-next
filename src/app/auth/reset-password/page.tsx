@@ -54,20 +54,28 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    const controller = new AbortController();
     async function validateToken() {
       try {
-        const res = await fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`);
+        const res = await fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`, {
+          signal: controller.signal,
+        });
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) {
           setServerError(payload.error || "Ce lien est invalide ou expiré.");
         }
-      } catch {
-        setServerError("Erreur réseau");
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          setServerError("Erreur réseau");
+        }
       } finally {
-        setIsValidating(false);
+        if (!controller.signal.aborted) {
+          setIsValidating(false);
+        }
       }
     }
     void validateToken();
+    return () => controller.abort();
   }, [token]);
 
   const onSubmit = async (data: PasswordResetInput) => {

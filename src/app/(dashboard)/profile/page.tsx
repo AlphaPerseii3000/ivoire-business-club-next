@@ -224,7 +224,18 @@ export default async function ProfilePage() {
 
       <Card>
         <CardContent className="pt-6">
-          <ProfileEditForm user={{ ...user, hasPassword: !!user.passwordHash }} />
+          <ProfileEditForm
+            user={{
+              name: user.name,
+              email: user.email,
+              bio: user.bio,
+              phone: user.phone,
+              location: user.location,
+              country: user.country,
+              tags: user.tags,
+              hasPassword: !!user.passwordHash,
+            }}
+          />
         </CardContent>
       </Card>
 

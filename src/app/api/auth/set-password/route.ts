@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { passwordSetSchema } from "@/lib/validations";
 import { setPasswordRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
-import { safeCreateAuditLog } from "@/lib/audit-log";
+import { safeCreateAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log";
 import { sendPasswordChangedEmail } from "@/lib/email";
 
 const BCRYPT_COST = 12;
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     // Create Audit Log
     await safeCreateAuditLog({
       actorId: userId,
-      action: "PASSWORD_CHANGED",
+      action: AUDIT_ACTIONS.PASSWORD_CHANGED,
       entityType: "USER",
       entityId: userId,
     });

@@ -1,0 +1,1476 @@
+diff --git a/_bmad-output/implementation-artifacts/28-2-security-hardening-rate-limiting-timing-safe-et-password-ux.md b/_bmad-output/implementation-artifacts/28-2-security-hardening-rate-limiting-timing-safe-et-password-ux.md
+index 88f4bc0..fa0250e 100644
+--- a/_bmad-output/implementation-artifacts/28-2-security-hardening-rate-limiting-timing-safe-et-password-ux.md
++++ b/_bmad-output/implementation-artifacts/28-2-security-hardening-rate-limiting-timing-safe-et-password-ux.md
+@@ -1,10 +1,10 @@
+ ---
+-baseline_commit: ""
++baseline_commit: "2b0388bd75a72112a633976d0b88978200bf7d90"
+ ---
+ 
+ # Story 28.2: Security Hardening — Rate Limiting, Timing-Safe Comparison & Password UX
+ 
+-Status: ready-for-dev
++Status: review
+ 
+ ## Story
+ 
+@@ -56,61 +56,61 @@ Then ils passent sans régression
+ 
+ ## Tasks / Subtasks
+ 
+-- [ ] **Task 1 : Configurer et intégrer les Rate Limiters** (AC: PUT /api/user/password, POST /api/auth/set-password)
+-  - [ ] Dans [src/lib/rate-limit.ts](file:///d:/Code/ivoire-business-club-next/src/lib/rate-limit.ts), définir et exporter :
++- [x] **Task 1 : Configurer et intégrer les Rate Limiters** (AC: PUT /api/user/password, POST /api/auth/set-password)
++  - [x] Dans [src/lib/rate-limit.ts](file:///d:/Code/ivoire-business-club-next/src/lib/rate-limit.ts), définir et exporter :
+     - `userPasswordUpdateRateLimiter` avec une limite de 5 requêtes par 60 secondes.
+     - `setPasswordRateLimiter` avec une limite de 3 requêtes par 60 secondes.
+-  - [ ] Appliquer `userPasswordUpdateRateLimiter` dans [src/app/api/user/password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.ts). En cas d'excès, renvoyer une erreur 429 avec le header `Retry-After`.
+-  - [ ] Appliquer `setPasswordRateLimiter` dans le nouvel endpoint [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts). En cas d'excès, renvoyer une erreur 429 avec le header `Retry-After`.
++  - [x] Appliquer `userPasswordUpdateRateLimiter` dans [src/app/api/user/password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.ts). En cas d'excès, renvoyer une erreur 429 avec le header `Retry-After`.
++  - [x] Appliquer `setPasswordRateLimiter` dans le nouvel endpoint [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts). En cas d'excès, renvoyer une erreur 429 avec le header `Retry-After`.
+ 
+-- [ ] **Task 2 : Sécuriser la comparaison Bearer et tolérer les espaces multiples** (AC: l'endpoint cron)
+-  - [ ] Dans [src/app/api/cron/remind-incomplete-users/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/cron/remind-incomplete-users/route.ts), modifier la fonction `getBearerToken` pour utiliser un regex tolérant un ou plusieurs espaces entre "Bearer" et le token (ex: `/^Bearer\s+(.+)$/`).
+-  - [ ] Implémenter une comparaison en temps constant (timing-safe) en utilisant `crypto.timingSafeEqual` pour comparer le token extrait au secret `process.env.CRON_SECRET`. Veiller à gérer de façon sécurisée le cas où les longueurs des chaînes diffèrent pour éviter que `timingSafeEqual` ne lève d'erreur de taille de buffer tout en préservant le temps constant (par ex. en comparant les empreintes SHA-256 des chaînes).
++- [x] **Task 2 : Sécuriser la comparaison Bearer et tolérer les espaces multiples** (AC: l'endpoint cron)
++  - [x] Dans [src/app/api/cron/remind-incomplete-users/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/cron/remind-incomplete-users/route.ts), modifier la fonction `getBearerToken` pour utiliser un regex tolérant un ou plusieurs espaces entre "Bearer" et le token (ex: `/^Bearer\s+(.+)$/`).
++  - [x] Implémenter une comparaison en temps constant (timing-safe) en utilisant `crypto.timingSafeEqual` pour comparer le token extrait au secret `process.env.CRON_SECRET`. Veiller à gérer de façon sécurisée le cas où les longueurs des chaînes diffèrent pour éviter que `timingSafeEqual` ne lève d'erreur de taille de buffer tout en préservant le temps constant (par ex. en comparant les empreintes SHA-256 des chaînes).
+ 
+-- [ ] **Task 3 : Permettre la définition d'un premier mot de passe pour les utilisateurs Google OAuth** (AC: utilisateur Google OAuth)
+-  - [ ] Dans [src/lib/validations.ts](file:///d:/Code/ivoire-business-club-next/src/lib/validations.ts), déclarer et exporter un schéma `passwordSetSchema` (champs `password` et `confirmPassword` avec les mêmes exigences de complexité et de longueur de 8 à 72 caractères que pour le changement classique).
+-  - [ ] Créer la route API [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts) :
++- [x] **Task 3 : Permettre la définition d'un premier mot de passe pour les utilisateurs Google OAuth** (AC: utilisateur Google OAuth)
++  - [x] Dans [src/lib/validations.ts](file:///d:/Code/ivoire-business-club-next/src/lib/validations.ts), déclarer et exporter un schéma `passwordSetSchema` (champs `password` et `confirmPassword` avec les mêmes exigences de complexité et de longueur de 8 à 72 caractères que pour le changement classique).
++  - [x] Créer la route API [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts) :
+     - Doit être authentifiée (session active via `auth()`).
+     - Valider la requête avec `passwordSetSchema`.
+     - Vérifier que l'utilisateur n'a pas déjà de `passwordHash` défini (sinon renvoyer une erreur 400).
+     - Hacher le nouveau mot de passe avec `bcryptjs` (cost = 12) et mettre à jour le compte utilisateur.
+-  - [ ] Dans [src/app/(dashboard)/profile/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(dashboard)/profile/page.tsx), modifier la sélection Prisma de l'utilisateur pour inclure `passwordHash` afin de pouvoir passer `hasPassword: !!user.passwordHash` à `ProfileEditForm`.
+-  - [ ] Dans [src/components/features/auth/profile-edit-form.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/auth/profile-edit-form.tsx) :
++  - [x] Dans [src/app/(dashboard)/profile/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(dashboard)/profile/page.tsx), modifier la sélection Prisma de l'utilisateur pour inclure `passwordHash` afin de pouvoir passer `hasPassword: !!user.passwordHash` à `ProfileEditForm`.
++  - [x] Dans [src/components/features/auth/profile-edit-form.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/auth/profile-edit-form.tsx) :
+     - Lorsque `user.hasPassword` est faux, remplacer le message statique Google par une vue affichant le bouton "Définir un mot de passe local".
+     - Ce bouton doit ouvrir un formulaire permettant de saisir le mot de passe et sa confirmation (sans demander le mot de passe actuel).
+     - Soumettre ce formulaire en `POST` à `/api/auth/set-password`. En cas de succès, afficher un toast et passer le composant en état "hasPassword: true" pour afficher le formulaire de changement classique.
+ 
+-- [ ] **Task 4 : Journalisation d'audit et notifications par email** (AC: changement de mot de passe réussi)
+-  - [ ] Dans [src/lib/audit-log.ts](file:///d:/Code/ivoire-business-club-next/src/lib/audit-log.ts), ajouter `"PASSWORD_CHANGED"` à l'objet `AUDIT_ACTIONS`.
+-  - [ ] Dans [src/lib/email.ts](file:///d:/Code/ivoire-business-club-next/src/lib/email.ts), implémenter et exporter une fonction `sendPasswordChangedEmail({ to, name })` utilisant Resend pour informer l'utilisateur de la modification.
+-  - [ ] Intégrer l'appel à `safeCreateAuditLog` et `sendPasswordChangedEmail` dans les deux endpoints de modification de mot de passe lors d'une réussite (200) :
++- [x] **Task 4 : Journalisation d'audit et notifications par email** (AC: changement de mot de passe réussi)
++  - [x] Dans [src/lib/audit-log.ts](file:///d:/Code/ivoire-business-club-next/src/lib/audit-log.ts), ajouter `"PASSWORD_CHANGED"` à l'objet `AUDIT_ACTIONS`.
++  - [x] Dans [src/lib/email.ts](file:///d:/Code/ivoire-business-club-next/src/lib/email.ts), implémenter et exporter une fonction `sendPasswordChangedEmail({ to, name })` utilisant Resend pour informer l'utilisateur de la modification.
++  - [x] Intégrer l'appel à `safeCreateAuditLog` et `sendPasswordChangedEmail` dans les deux endpoints de modification de mot de passe lors d'une réussite (200) :
+     - [src/app/api/user/password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.ts) (supporter également la méthode `PUT` pour répondre strictement aux critères Gherkin, tout en gardant `POST` ou en redirigeant `POST` sur la même logique pour ne pas casser les appels existants).
+     - [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts).
+ 
+-- [ ] **Task 5 : Cooldown de 30s sur l'envoi d'invitations dans le profil admin** (AC: bouton d'envoi d'invitation)
+-  - [ ] Dans [src/components/features/admin/admin-member-invite-button.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/admin/admin-member-invite-button.tsx) :
++- [x] **Task 5 : Cooldown de 30s sur l'envoi d'invitations dans le profil admin** (AC: bouton d'envoi d'invitation)
++  - [x] Dans [src/components/features/admin/admin-member-invite-button.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/admin/admin-member-invite-button.tsx) :
+     - Implémenter un état de cooldown local initié à 30 secondes après un clic réussi d'envoi d'invitation.
+     - Utiliser un `useEffect` avec un intervalle/timeout de 1s pour décrémenter le cooldown.
+     - Désactiver le bouton pendant le cooldown et afficher un libellé dynamique avec le temps restant (ex: "Renvoyer l'invitation dans 30s" ou "Envoyer l'invitation (30s)").
+ 
+-- [ ] **Task 6 : Validation côté serveur du token de réinitialisation au chargement** (AC: page de reset password avec token)
+-  - [ ] Dans [src/app/api/auth/reset-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/reset-password/route.ts), implémenter un handler `GET` qui prend le `token` en paramètre d'URL.
++- [x] **Task 6 : Validation côté serveur du token de réinitialisation au chargement** (AC: page de reset password avec token)
++  - [x] Dans [src/app/api/auth/reset-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/reset-password/route.ts), implémenter un handler `GET` qui prend le `token` en paramètre d'URL.
+     - Hacher le token en SHA-256 et rechercher s'il existe en base de données avec le type `PASSWORD_RESET` ou `SET_PASSWORD`.
+     - Valider que le token n'a pas expiré.
+     - Renvoyer `{ valid: true }` ou une erreur `{ error: "Ce lien est invalide ou expiré." }` avec un status 400.
+-  - [ ] Dans [src/app/auth/reset-password/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.tsx) :
++  - [x] Dans [src/app/auth/reset-password/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.tsx) :
+     - Appeler cette API de validation via `fetch` au chargement de la page (dans un `useEffect` initial).
+     - Si le token est invalide ou expiré, stocker le message d'erreur dans l'état `serverError` et masquer le formulaire avant toute soumission.
+ 
+-- [ ] **Task 7 : Tests de non-régression et build final** (AC: build et tests)
+-  - [ ] Mettre à jour et ajouter des tests unitaires/d'intégration dans :
++- [x] **Task 7 : Tests de non-régression et build final** (AC: build et tests)
++  - [x] Mettre à jour et ajouter des tests unitaires/d'intégration dans :
+     - [src/app/api/user/password/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.test.ts) (tester la méthode `PUT`, le rate-limiting, la journalisation et l'email).
+     - [src/app/api/auth/reset-password/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/reset-password/route.test.ts) (tester la route `GET` de validation du token).
+     - [src/app/api/cron/remind-incomplete-users/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/cron/remind-incomplete-users/route.test.ts) (tester les espaces multiples et la robustesse timingSafeEqual).
+     - [src/app/auth/reset-password/page.test.tsx](file:///d:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.test.tsx) (tester le comportement au chargement avec token valide/invalide en mockant le fetch d'initialisation).
+     - Créer le fichier de test pour le nouvel endpoint : `src/app/api/auth/set-password/route.test.ts`.
+-  - [ ] Lancer les tests unitaires via `npx vitest run` et s'assurer qu'aucun test ne régresse.
+-  - [ ] Lancer `npm run build` et vérifier le succès complet du build standalone.
++  - [x] Lancer les tests unitaires via `npx vitest run` et s'assurer qu'aucun test ne régresse.
++  - [x] Lancer `npm run build` et vérifier le succès complet du build standalone.
+ 
+ ## Dev Notes
+ 
+@@ -134,10 +134,42 @@ Then ils passent sans régression
+ 
+ ### Agent Model Used
+ 
+-Gemini 3.5 Flash (High)
++Gemini 3.5 Flash (High) (using Antigravity coding agent)
+ 
+ ### Debug Log References
+ 
++- N/A
++
+ ### Completion Notes List
+ 
++- Configured two new rate limiters: `userPasswordUpdateRateLimiter` (5 req/min) and `setPasswordRateLimiter` (3 req/min).
++- Applied rate limits, audit logs, and email notifications to user password update route (/api/user/password) and set password route (/api/auth/set-password).
++- Added support for PUT method in `/api/user/password`.
++- Implemented space-insensitive, timing-safe Bearer token check in remind-incomplete-users cron task using SHA-256 derivation before `crypto.timingSafeEqual`.
++- Created schema-validated, session-guaranteed local password setter (/api/auth/set-password) for OAuth users.
++- Updated user profile edit form to show password definition modal instead of static message for OAuth users, and transition smoothly.
++- Implemented 30-second countdown cooldown on resending invite button in admin member profile page.
++- Created GET route validation check for reset/invite tokens in /api/auth/reset-password.
++- Updated reset-password page to fetch validation state on mount and render loading/error states.
++- Created and updated unit tests for set-password API endpoint, reset-password API endpoint and page, cron task, and password update.
++- Successfully built project in production mode.
++
+ ### File List
++
++- [src/lib/rate-limit.ts](file:///d:/Code/ivoire-business-club-next/src/lib/rate-limit.ts)
++- [src/app/api/user/password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.ts)
++- [src/app/api/cron/remind-incomplete-users/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/cron/remind-incomplete-users/route.ts)
++- [src/lib/validations.ts](file:///d:/Code/ivoire-business-club-next/src/lib/validations.ts)
++- [src/app/api/auth/set-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.ts)
++- [src/app/(dashboard)/profile/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(dashboard)/profile/page.tsx)
++- [src/components/features/auth/profile-edit-form.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/auth/profile-edit-form.tsx)
++- [src/lib/audit-log.ts](file:///d:/Code/ivoire-business-club-next/src/lib/audit-log.ts)
++- [src/lib/email.ts](file:///d:/Code/ivoire-business-club-next/src/lib/email.ts)
++- [src/components/features/admin/admin-member-invite-button.tsx](file:///d:/Code/ivoire-business-club-next/src/components/features/admin/admin-member-invite-button.tsx)
++- [src/app/api/auth/reset-password/route.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/reset-password/route.ts)
++- [src/app/auth/reset-password/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.tsx)
++- [src/app/api/user/password/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/user/password/route.test.ts)
++- [src/app/api/auth/reset-password/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/reset-password/route.test.ts)
++- [src/app/api/cron/remind-incomplete-users/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/cron/remind-incomplete-users/route.test.ts)
++- [src/app/auth/reset-password/page.test.tsx](file:///d:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.test.tsx)
++- [src/app/api/auth/set-password/route.test.ts](file:///d:/Code/ivoire-business-club-next/src/app/api/auth/set-password/route.test.ts)
+diff --git a/_bmad-output/implementation-artifacts/sprint-status.yaml b/_bmad-output/implementation-artifacts/sprint-status.yaml
+index 2cab91f..34d1ba1 100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@ -35,8 +35,8 @@
+ # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+ 
+ generated: 2026-06-28T16:40:39+02:00
+-# last_updated: 2026-07-11T18:13:30+02:00
+-last_updated: 2026-07-11T19:20:00+02:00
++# last_updated: 2026-07-11T19:20:00+02:00
++last_updated: 2026-07-11T19:28:29+02:00
+ project_key: NOKEY
+ tracking_system: file-system
+ story_location: _bmad-output/implementation-artifacts
+@@ -227,7 +227,7 @@ development_status:
+ 
+   epic-28: in-progress
+   28-1-posthog-error-handling-et-analytics-hardening: done
+-  28-2-security-hardening-rate-limiting-timing-safe-et-password-ux: ready-for-dev
++  28-2-security-hardening-rate-limiting-timing-safe-et-password-ux: review
+   28-3-robustesse-data-integrity-pagination-race-conditions-et-types: backlog
+   28-4-code-quality-et-tech-debt-cleanup: backlog
+   epic-28-retrospective: optional
+diff --git a/src/app/(dashboard)/profile/page.tsx b/src/app/(dashboard)/profile/page.tsx
+index 0715e49..d48e0e0 100644
+--- a/src/app/(dashboard)/profile/page.tsx
++++ b/src/app/(dashboard)/profile/page.tsx
+@@ -72,6 +72,7 @@ export default async function ProfilePage() {
+       role: true,
+       verificationStatus: true,
+       createdAt: true,
++      passwordHash: true,
+       tags: {
+         orderBy: [{ category: "asc" }, { value: "asc" }],
+         select: { category: true, value: true },
+@@ -223,7 +224,7 @@ export default async function ProfilePage() {
+ 
+       <Card>
+         <CardContent className="pt-6">
+-          <ProfileEditForm user={user} />
++          <ProfileEditForm user={{ ...user, hasPassword: !!user.passwordHash }} />
+         </CardContent>
+       </Card>
+ 
+diff --git a/src/app/api/auth/reset-password/route.test.ts b/src/app/api/auth/reset-password/route.test.ts
+index 2b32a1f..0e82eae 100644
+--- a/src/app/api/auth/reset-password/route.test.ts
++++ b/src/app/api/auth/reset-password/route.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, it, expect, vi, beforeEach } from "vitest";
+-import { POST } from "./route";
++import { POST, GET } from "./route";
+ 
+ const mockVerificationTokenFindUnique = vi.hoisted(() => vi.fn());
+ const mockVerificationTokenDelete = vi.hoisted(() => vi.fn());
+@@ -230,4 +230,82 @@ describe("POST /api/auth/reset-password", () => {
+     expect(res.status).toBe(400);
+     expect(json.error).toBe("Ce compte a été suspendu.");
+   });
++
++  describe("GET /api/auth/reset-password", () => {
++    it("returns 400 when token is missing", async () => {
++      const req = new Request("http://localhost/api/auth/reset-password", { method: "GET" });
++      const res = await GET(req);
++      const json = await res.json();
++      expect(res.status).toBe(400);
++      expect(json.error).toBe("Le token est requis.");
++    });
++
++    it("returns 400 when token type is invalid", async () => {
++      mockVerificationTokenFindUnique.mockResolvedValueOnce({
++        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
++        expires: new Date(Date.now() + 60 * 60 * 1000),
++        userId: "user-123",
++        tokenType: "EMAIL_VERIFICATION",
++      });
++
++      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
++      const res = await GET(req);
++      const json = await res.json();
++
++      expect(res.status).toBe(400);
++      expect(json.error).toBe("Ce lien est invalide ou expiré.");
++    });
++
++    it("returns 400 and deletes token when expired", async () => {
++      mockVerificationTokenFindUnique.mockResolvedValueOnce({
++        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
++        expires: new Date(Date.now() - 60 * 60 * 1000),
++        userId: "user-123",
++        tokenType: "PASSWORD_RESET",
++      });
++      mockVerificationTokenDelete.mockResolvedValueOnce({});
++
++      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
++      const res = await GET(req);
++      const json = await res.json();
++
++      expect(res.status).toBe(400);
++      expect(json.error).toBe("Ce lien est invalide ou expiré.");
++      expect(mockVerificationTokenDelete).toHaveBeenCalledWith({
++        where: { token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943" },
++      });
++    });
++
++    it("returns 200 with valid: true for valid PASSWORD_RESET token", async () => {
++      mockVerificationTokenFindUnique.mockResolvedValueOnce({
++        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
++        expires: new Date(Date.now() + 60 * 60 * 1000),
++        userId: "user-123",
++        tokenType: "PASSWORD_RESET",
++      });
++
++      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
++      const res = await GET(req);
++      const json = await res.json();
++
++      expect(res.status).toBe(200);
++      expect(json.valid).toBe(true);
++    });
++
++    it("returns 200 with valid: true for valid SET_PASSWORD token", async () => {
++      mockVerificationTokenFindUnique.mockResolvedValueOnce({
++        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
++        expires: new Date(Date.now() + 60 * 60 * 1000),
++        userId: "user-123",
++        tokenType: "SET_PASSWORD",
++      });
++
++      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
++      const res = await GET(req);
++      const json = await res.json();
++
++      expect(res.status).toBe(200);
++      expect(json.valid).toBe(true);
++    });
++  });
+ });
+diff --git a/src/app/api/auth/reset-password/route.ts b/src/app/api/auth/reset-password/route.ts
+index 4520ad2..50eaab2 100644
+--- a/src/app/api/auth/reset-password/route.ts
++++ b/src/app/api/auth/reset-password/route.ts
+@@ -148,3 +148,51 @@ export async function POST(req: Request) {
+     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+   }
+ }
++
++export async function GET(req: Request) {
++  try {
++    const { searchParams } = new URL(req.url);
++    const token = searchParams.get("token");
++
++    if (!token || typeof token !== "string" || token.trim() === "") {
++      return NextResponse.json({ error: "Le token est requis." }, { status: 400 });
++    }
++
++    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
++
++    const verificationToken = await prisma.verificationToken.findUnique({
++      where: { token: hashedToken },
++    });
++
++    if (
++      !verificationToken ||
++      (verificationToken.tokenType !== "PASSWORD_RESET" &&
++        verificationToken.tokenType !== "SET_PASSWORD")
++    ) {
++      return NextResponse.json(
++        { error: "Ce lien est invalide ou expiré." },
++        { status: 400 }
++      );
++    }
++
++    const now = new Date();
++    if (verificationToken.expires.getTime() < now.getTime()) {
++      try {
++        await prisma.verificationToken.delete({
++          where: { token: hashedToken },
++        });
++      } catch (e) {
++        console.warn("Could not delete expired reset token during GET validation:", sanitizeError(e));
++      }
++      return NextResponse.json(
++        { error: "Ce lien est invalide ou expiré." },
++        { status: 400 }
++      );
++    }
++
++    return NextResponse.json({ valid: true });
++  } catch (error) {
++    console.error("GET reset-password token validation error:", sanitizeError(error));
++    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
++  }
++}
+diff --git a/src/app/api/auth/set-password/route.test.ts b/src/app/api/auth/set-password/route.test.ts
+new file mode 100644
+index 0000000..eb54b49
+--- /dev/null
++++ b/src/app/api/auth/set-password/route.test.ts
+@@ -0,0 +1,166 @@
++import { describe, it, expect, vi, beforeEach } from "vitest";
++import { POST } from "./route";
++
++const mockAuth = vi.hoisted(() =>
++  vi.fn(() => Promise.resolve({ user: { id: "user-123" } }))
++);
++const mockUserFindUnique = vi.hoisted(() => vi.fn());
++const mockUserUpdate = vi.hoisted(() => vi.fn());
++const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
++const mockSendPasswordChangedEmail = vi.hoisted(() => vi.fn());
++const mockRateLimitLimit = vi.hoisted(() => vi.fn(() => Promise.resolve({ success: true, reset: 0 })));
++
++vi.mock("@/lib/auth", () => ({
++  auth: mockAuth,
++}));
++
++vi.mock("@/lib/prisma", () => ({
++  prisma: {
++    user: {
++      findUnique: mockUserFindUnique,
++      update: mockUserUpdate,
++    },
++  },
++}));
++
++vi.mock("bcryptjs", () => ({
++  default: {
++    hash: vi.fn(async () => "new-hashed-password"),
++  },
++}));
++
++vi.mock("@/lib/sanitize-log", () => ({
++  sanitizeError: vi.fn((e: unknown) =>
++    e instanceof Error ? `Error: ${e.name}` : "Unknown error"
++  ),
++}));
++
++vi.mock("@/lib/audit-log", () => ({
++  safeCreateAuditLog: mockSafeCreateAuditLog,
++}));
++
++vi.mock("@/lib/email", () => ({
++  sendPasswordChangedEmail: mockSendPasswordChangedEmail,
++}));
++
++vi.mock("@/lib/rate-limit", () => ({
++  setPasswordRateLimiter: {
++    limit: mockRateLimitLimit,
++  },
++  getClientIp: vi.fn(() => "127.0.0.1"),
++}));
++
++function makeRequest(body: unknown) {
++  return new Request("http://localhost/api/auth/set-password", {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify(body),
++  });
++}
++
++describe("POST /api/auth/set-password", () => {
++  beforeEach(() => {
++    vi.clearAllMocks();
++  });
++
++  it("sets password successfully for an OAuth user without existing password", async () => {
++    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
++    mockUserFindUnique.mockResolvedValueOnce({
++      id: "user-123",
++      name: "Jean",
++      email: "jean@example.com",
++      passwordHash: null,
++      status: "ACTIVE",
++    });
++    mockUserUpdate.mockResolvedValueOnce({ id: "user-123" });
++
++    const req = makeRequest({
++      password: "newSecurePassword123!",
++      confirmPassword: "newSecurePassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(200);
++    expect(json.message).toBe("Mot de passe défini avec succès.");
++    expect(mockUserUpdate).toHaveBeenCalledWith({
++      where: { id: "user-123" },
++      data: { passwordHash: "new-hashed-password" },
++    });
++    expect(mockSafeCreateAuditLog).toHaveBeenCalled();
++    expect(mockSendPasswordChangedEmail).toHaveBeenCalledWith({
++      to: "jean@example.com",
++      name: "Jean",
++    });
++  });
++
++  it("returns 401 if user is not authenticated", async () => {
++    mockAuth.mockResolvedValueOnce(null);
++
++    const req = makeRequest({
++      password: "newSecurePassword123!",
++      confirmPassword: "newSecurePassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(401);
++    expect(json.error).toBe("Non autorisé");
++  });
++
++  it("returns 400 if password already exists", async () => {
++    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
++    mockUserFindUnique.mockResolvedValueOnce({
++      id: "user-123",
++      name: "Jean",
++      email: "jean@example.com",
++      passwordHash: "already-hashed-password",
++      status: "ACTIVE",
++    });
++
++    const req = makeRequest({
++      password: "newSecurePassword123!",
++      confirmPassword: "newSecurePassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(400);
++    expect(json.error).toBe("Un mot de passe est déjà configuré pour ce compte.");
++  });
++
++  it("returns 429 when rate limit is exceeded", async () => {
++    mockRateLimitLimit.mockResolvedValueOnce({ success: false, reset: Date.now() + 60000 });
++
++    const req = makeRequest({
++      password: "newSecurePassword123!",
++      confirmPassword: "newSecurePassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(429);
++    expect(json.error).toContain("Trop de tentatives");
++    expect(res.headers.get("Retry-After")).toBeDefined();
++  });
++
++  it("returns 400 on Zod validation errors (confirmPassword mismatch)", async () => {
++    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
++
++    const req = makeRequest({
++      password: "newSecurePassword123!",
++      confirmPassword: "differentPassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(400);
++    expect(json.error).toBe("Données invalides");
++    expect(json.details.confirmPassword).toBeDefined();
++  });
++});
+diff --git a/src/app/api/auth/set-password/route.ts b/src/app/api/auth/set-password/route.ts
+new file mode 100644
+index 0000000..b21fbf8
+--- /dev/null
++++ b/src/app/api/auth/set-password/route.ts
+@@ -0,0 +1,100 @@
++import { NextResponse } from "next/server";
++import { auth } from "@/lib/auth";
++import { prisma } from "@/lib/prisma";
++import bcrypt from "bcryptjs";
++import { passwordSetSchema } from "@/lib/validations";
++import { setPasswordRateLimiter, getClientIp } from "@/lib/rate-limit";
++import { sanitizeError } from "@/lib/sanitize-log";
++import { safeCreateAuditLog } from "@/lib/audit-log";
++import { sendPasswordChangedEmail } from "@/lib/email";
++
++const BCRYPT_COST = 12;
++
++export async function POST(req: Request) {
++  try {
++    const ip = getClientIp(req);
++    const rateLimit = await setPasswordRateLimiter.limit(ip);
++    if (!rateLimit.success) {
++      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
++      return NextResponse.json(
++        { error: "Trop de tentatives. Réessayez dans une minute." },
++        { status: 429, headers: { "Retry-After": String(retryAfter) } }
++      );
++    }
++
++    const session = await auth();
++    if (!session?.user?.id) {
++      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
++    }
++
++    const userId = session.user.id;
++    let body;
++    try {
++      body = await req.json();
++    } catch {
++      return NextResponse.json({ error: "Requête malformée." }, { status: 400 });
++    }
++
++    const parsed = passwordSetSchema.safeParse(body);
++    if (!parsed.success) {
++      return NextResponse.json(
++        { error: "Données invalides", details: parsed.error.flatten().fieldErrors },
++        { status: 400 }
++      );
++    }
++
++    const { password } = parsed.data;
++
++    const user = await prisma.user.findUnique({
++      where: { id: userId },
++      select: { name: true, email: true, passwordHash: true, status: true },
++    });
++
++    if (!user) {
++      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
++    }
++
++    if (user.status === "SUSPENDED") {
++      return NextResponse.json({ error: "Compte suspendu" }, { status: 403 });
++    }
++
++    if (user.passwordHash) {
++      return NextResponse.json(
++        { error: "Un mot de passe est déjà configuré pour ce compte." },
++        { status: 400 }
++      );
++    }
++
++    const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
++
++    await prisma.user.update({
++      where: { id: userId },
++      data: { passwordHash: hashedPassword },
++    });
++
++    // Create Audit Log
++    await safeCreateAuditLog({
++      actorId: userId,
++      action: "PASSWORD_CHANGED",
++      entityType: "USER",
++      entityId: userId,
++    });
++
++    // Send Email
++    if (user.email) {
++      try {
++        await sendPasswordChangedEmail({
++          to: user.email,
++          name: user.name,
++        });
++      } catch (e) {
++        console.error("Failed to send set password notification email:", sanitizeError(e));
++      }
++    }
++
++    return NextResponse.json({ message: "Mot de passe défini avec succès." });
++  } catch (error) {
++    console.error("Set password error:", sanitizeError(error));
++    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
++  }
++}
+diff --git a/src/app/api/cron/remind-incomplete-users/route.test.ts b/src/app/api/cron/remind-incomplete-users/route.test.ts
+index dfaeab5..d171146 100644
+--- a/src/app/api/cron/remind-incomplete-users/route.test.ts
++++ b/src/app/api/cron/remind-incomplete-users/route.test.ts
+@@ -77,11 +77,21 @@ describe("POST /api/cron/remind-incomplete-users", () => {
+     expect(mockSendReminders).toHaveBeenCalledTimes(1);
+   });
+ 
+-  it("trims whitespace from bearer token", async () => {
+-    const res = await POST(makeRequest("Bearer super-secret-cron-key"));
++  it("accepts bearer token with multiple spaces", async () => {
++    const res = await POST(makeRequest("Bearer    super-secret-cron-key"));
+     expect(res.status).toBe(200);
+   });
+ 
++  it("handles different secret lengths without throwing in timingSafeEqual", async () => {
++    // short token
++    const resShort = await POST(makeRequest("Bearer short"));
++    expect(resShort.status).toBe(401);
++
++    // long token
++    const resLong = await POST(makeRequest(`Bearer ${"a".repeat(100)}`));
++    expect(resLong.status).toBe(401);
++  });
++
+   it("rejects malformed Authorization header", async () => {
+     const res = await POST(makeRequest("super-secret-cron-key"));
+     const json = await res.json();
+diff --git a/src/app/api/cron/remind-incomplete-users/route.ts b/src/app/api/cron/remind-incomplete-users/route.ts
+index 769f830..c274b79 100644
+--- a/src/app/api/cron/remind-incomplete-users/route.ts
++++ b/src/app/api/cron/remind-incomplete-users/route.ts
+@@ -1,12 +1,12 @@
+ import { NextResponse } from "next/server";
+ import { sendRemindersToIncompleteUsers } from "@/lib/reminders.server";
+ import { sanitizeError } from "@/lib/sanitize-log";
++import crypto from "crypto";
+ 
+ function getBearerToken(header: string | null): string | null {
+   if (!header) return null;
+-  const parts = header.split(" ");
+-  if (parts.length !== 2 || parts[0] !== "Bearer") return null;
+-  return parts[1]?.trim() || null;
++  const match = header.match(/^Bearer\s+(.+)$/);
++  return match ? match[1] : null;
+ }
+ 
+ export async function POST(req: Request) {
+@@ -15,7 +15,14 @@ export async function POST(req: Request) {
+     const token = getBearerToken(authHeader);
+     const expected = process.env.CRON_SECRET;
+ 
+-    if (!expected || token !== expected) {
++    if (!expected || !token) {
++      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
++    }
++
++    const tokenHash = crypto.createHash("sha256").update(token).digest();
++    const expectedHash = crypto.createHash("sha256").update(expected).digest();
++
++    if (!crypto.timingSafeEqual(tokenHash, expectedHash)) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
+ 
+diff --git a/src/app/api/user/password/route.test.ts b/src/app/api/user/password/route.test.ts
+index 6b9b35d..8680764 100644
+--- a/src/app/api/user/password/route.test.ts
++++ b/src/app/api/user/password/route.test.ts
+@@ -1,11 +1,14 @@
+ import { describe, it, expect, vi, beforeEach } from "vitest";
+-import { POST } from "./route";
++import { POST, PUT } from "./route";
+ 
+ const mockAuth = vi.hoisted(() =>
+   vi.fn(() => Promise.resolve({ user: { id: "user-123" } }))
+ );
+ const mockUserFindUnique = vi.hoisted(() => vi.fn());
+ const mockUserUpdate = vi.hoisted(() => vi.fn());
++const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
++const mockSendPasswordChangedEmail = vi.hoisted(() => vi.fn());
++const mockRateLimitLimit = vi.hoisted(() => vi.fn(() => Promise.resolve({ success: true, reset: 0 })));
+ 
+ vi.mock("@/lib/auth", () => ({
+   auth: mockAuth,
+@@ -33,6 +36,21 @@ vi.mock("@/lib/sanitize-log", () => ({
+   ),
+ }));
+ 
++vi.mock("@/lib/audit-log", () => ({
++  safeCreateAuditLog: mockSafeCreateAuditLog,
++}));
++
++vi.mock("@/lib/email", () => ({
++  sendPasswordChangedEmail: mockSendPasswordChangedEmail,
++}));
++
++vi.mock("@/lib/rate-limit", () => ({
++  userPasswordUpdateRateLimiter: {
++    limit: mockRateLimitLimit,
++  },
++  getClientIp: vi.fn(() => "127.0.0.1"),
++}));
++
+ function makeRequest(body: unknown) {
+   return new Request("http://localhost/api/user/password", {
+     method: "POST",
+@@ -238,4 +256,58 @@ describe("POST /api/user/password", () => {
+     expect(json.error).toBe("Compte suspendu");
+     expect(mockUserUpdate).not.toHaveBeenCalled();
+   });
++
++  it("updates password successfully via PUT method", async () => {
++    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
++    mockUserFindUnique.mockResolvedValueOnce({
++      id: "user-123",
++      name: "Jean",
++      email: "jean@example.com",
++      passwordHash: "correct-password-hash",
++    });
++    mockUserUpdate.mockResolvedValueOnce({ id: "user-123" });
++
++    const req = new Request("http://localhost/api/user/password", {
++      method: "PUT",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({
++        currentPassword: "correct-password",
++        newPassword: "newSecurePassword123!",
++        confirmNewPassword: "newSecurePassword123!",
++      }),
++    });
++
++    const res = await PUT(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(200);
++    expect(json.message).toBe("Mot de passe mis à jour avec succès.");
++    expect(mockUserUpdate).toHaveBeenCalledWith({
++      where: { id: "user-123" },
++      data: { passwordHash: "new-hashed-password" },
++    });
++    expect(mockSafeCreateAuditLog).toHaveBeenCalled();
++    expect(mockSendPasswordChangedEmail).toHaveBeenCalledWith({
++      to: "jean@example.com",
++      name: "Jean",
++    });
++  });
++
++  it("returns 429 when rate limit is exceeded", async () => {
++    mockRateLimitLimit.mockResolvedValueOnce({ success: false, reset: Date.now() + 60000 });
++
++    const req = makeRequest({
++      currentPassword: "correct-password",
++      newPassword: "newSecurePassword123!",
++      confirmNewPassword: "newSecurePassword123!",
++    });
++
++    const res = await POST(req);
++    const json = await res.json();
++
++    expect(res.status).toBe(429);
++    expect(json.error).toContain("Trop de tentatives");
++    expect(res.headers.get("Retry-After")).toBeDefined();
++    expect(mockUserUpdate).not.toHaveBeenCalled();
++  });
+ });
+diff --git a/src/app/api/user/password/route.ts b/src/app/api/user/password/route.ts
+index d0286fb..963b583 100644
+--- a/src/app/api/user/password/route.ts
++++ b/src/app/api/user/password/route.ts
+@@ -4,11 +4,24 @@ import { prisma } from "@/lib/prisma";
+ import bcrypt from "bcryptjs";
+ import { passwordChangeSchema } from "@/lib/validations";
+ import { sanitizeError } from "@/lib/sanitize-log";
++import { userPasswordUpdateRateLimiter, getClientIp } from "@/lib/rate-limit";
++import { safeCreateAuditLog } from "@/lib/audit-log";
++import { sendPasswordChangedEmail } from "@/lib/email";
+ 
+ const BCRYPT_COST = 12;
+ 
+-export async function POST(req: Request) {
++async function handlePasswordChange(req: Request) {
+   try {
++    const ip = getClientIp(req);
++    const rateLimit = await userPasswordUpdateRateLimiter.limit(ip);
++    if (!rateLimit.success) {
++      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
++      return NextResponse.json(
++        { error: "Trop de tentatives. Réessayez dans une minute." },
++        { status: 429, headers: { "Retry-After": String(retryAfter) } }
++      );
++    }
++
+     const session = await auth();
+     if (!session?.user?.id) {
+       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+@@ -34,7 +47,7 @@ export async function POST(req: Request) {
+ 
+     const user = await prisma.user.findUnique({
+       where: { id: userId },
+-      select: { passwordHash: true, status: true },
++      select: { name: true, email: true, passwordHash: true, status: true },
+     });
+ 
+     if (!user) {
+@@ -67,9 +80,37 @@ export async function POST(req: Request) {
+       data: { passwordHash: hashedNewPassword },
+     });
+ 
++    // Log Audit
++    await safeCreateAuditLog({
++      actorId: userId,
++      action: "PASSWORD_CHANGED",
++      entityType: "USER",
++      entityId: userId,
++    });
++
++    // Send Email Notification
++    if (user.email) {
++      try {
++        await sendPasswordChangedEmail({
++          to: user.email,
++          name: user.name,
++        });
++      } catch (e) {
++        console.error("Failed to send password changed email:", sanitizeError(e));
++      }
++    }
++
+     return NextResponse.json({ message: "Mot de passe mis à jour avec succès." });
+   } catch (error) {
+-    console.error("Password change POST error:", sanitizeError(error));
++    console.error("Password change error:", sanitizeError(error));
+     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+   }
+ }
++
++export async function POST(req: Request) {
++  return handlePasswordChange(req);
++}
++
++export async function PUT(req: Request) {
++  return handlePasswordChange(req);
++}
+diff --git a/src/app/auth/reset-password/page.test.tsx b/src/app/auth/reset-password/page.test.tsx
+index 62cec84..1e92729 100644
+--- a/src/app/auth/reset-password/page.test.tsx
++++ b/src/app/auth/reset-password/page.test.tsx
+@@ -10,24 +10,33 @@ vi.mock("next/navigation", () => ({
+   useSearchParams: () => mockSearchParams,
+ }));
+ 
+-function mockFetch(status: number, body: Record<string, unknown>) {
+-  return vi.fn().mockResolvedValueOnce({
+-    ok: status >= 200 && status < 300,
+-    status,
+-    json: async () => body,
+-  } as Response);
+-}
+-
+ describe("ResetPasswordPage", () => {
+   beforeEach(() => {
+     mockPush.mockClear();
+     mockSearchParams = new URLSearchParams("token=raw-token");
++    global.fetch = vi.fn().mockImplementation(async (url, init) => {
++      const method = init?.method || "GET";
++      if (method === "GET") {
++        return {
++          ok: true,
++          status: 200,
++          json: async () => ({ valid: true }),
++        } as Response;
++      }
++      return {
++        ok: true,
++        status: 200,
++        json: async () => ({ message: "Success" }),
++      } as Response;
++    });
+   });
+ 
+-  it("renders the reset password form with valid token", () => {
++  it("renders the reset password form with valid token", async () => {
+     render(<ResetPasswordPage />);
+-    expect(screen.getByRole("heading", { name: "Nouveau mot de passe" })).toBeInTheDocument();
+-    expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    await waitFor(() => {
++      expect(screen.getByRole("heading", { name: "Nouveau mot de passe" })).toBeInTheDocument();
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    });
+   });
+ 
+   it("shows invalid link error when token is missing", async () => {
+@@ -39,8 +48,28 @@ describe("ResetPasswordPage", () => {
+     });
+   });
+ 
++  it("shows invalid link error when token validation fails on mount", async () => {
++    global.fetch = vi.fn().mockImplementation(async (url, init) => {
++      return {
++        ok: false,
++        status: 400,
++        json: async () => ({ error: "Ce lien est invalide ou expiré." }),
++      } as Response;
++    });
++
++    render(<ResetPasswordPage />);
++
++    await waitFor(() => {
++      expect(screen.getByTestId("auth-error")).toHaveTextContent("Ce lien est invalide ou expiré.");
++      expect(screen.queryByTestId("reset-form")).toBeNull();
++    });
++  });
++
+   it("shows password strength indicator", async () => {
+     render(<ResetPasswordPage />);
++    await waitFor(() => {
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    });
+     fireEvent.change(screen.getByTestId("password-input"), { target: { value: "Abcdef1!" } });
+ 
+     await waitFor(() => {
+@@ -49,9 +78,27 @@ describe("ResetPasswordPage", () => {
+   });
+ 
+   it("submits new password and shows success", async () => {
+-    global.fetch = mockFetch(200, { message: "Mot de passe réinitialisé avec succès." });
++    global.fetch = vi.fn().mockImplementation(async (url, init) => {
++      const method = init?.method || "GET";
++      if (method === "GET") {
++        return {
++          ok: true,
++          status: 200,
++          json: async () => ({ valid: true }),
++        } as Response;
++      }
++      return {
++        ok: true,
++        status: 200,
++        json: async () => ({ message: "Mot de passe mis à jour avec succès." }),
++      } as Response;
++    });
+ 
+     render(<ResetPasswordPage />);
++    await waitFor(() => {
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    });
++
+     await act(async () => {
+       fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
+       fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
+@@ -64,9 +111,27 @@ describe("ResetPasswordPage", () => {
+   });
+ 
+   it("displays server error on reset failure", async () => {
+-    global.fetch = mockFetch(400, { error: "Ce lien a déjà été utilisé." });
++    global.fetch = vi.fn().mockImplementation(async (url, init) => {
++      const method = init?.method || "GET";
++      if (method === "GET") {
++        return {
++          ok: true,
++          status: 200,
++          json: async () => ({ valid: true }),
++        } as Response;
++      }
++      return {
++        ok: false,
++        status: 400,
++        json: async () => ({ error: "Ce lien a déjà été utilisé." }),
++      } as Response;
++    });
+ 
+     render(<ResetPasswordPage />);
++    await waitFor(() => {
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    });
++
+     await act(async () => {
+       fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
+       fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
+@@ -78,25 +143,45 @@ describe("ResetPasswordPage", () => {
+     }, { timeout: 2000 });
+   });
+ 
+-  it("renders the set password form when type=set", () => {
++  it("renders the set password form when type=set", async () => {
+     mockSearchParams = new URLSearchParams("token=raw-token&type=set");
+     render(<ResetPasswordPage />);
+-    expect(
+-      screen.getByRole("heading", { name: "Définir votre mot de passe" })
+-    ).toBeInTheDocument();
+-    expect(screen.getByTestId("password-input")).toBeInTheDocument();
+-    expect(screen.getByTestId("submit-button")).toHaveTextContent(
+-      "Définir le mot de passe"
+-    );
++    await waitFor(() => {
++      expect(
++        screen.getByRole("heading", { name: "Définir votre mot de passe" })
++      ).toBeInTheDocument();
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++      expect(screen.getByTestId("submit-button")).toHaveTextContent(
++        "Définir le mot de passe"
++      );
++    });
+   });
+ 
+   it("submits defined password and shows success when type=set", async () => {
+     mockSearchParams = new URLSearchParams("token=raw-token&type=set");
+-    global.fetch = mockFetch(200, {
+-      message: "Votre mot de passe a été défini. Vous pouvez vous connecter.",
++    global.fetch = vi.fn().mockImplementation(async (url, init) => {
++      const method = init?.method || "GET";
++      if (method === "GET") {
++        return {
++          ok: true,
++          status: 200,
++          json: async () => ({ valid: true }),
++        } as Response;
++      }
++      return {
++        ok: true,
++        status: 200,
++        json: async () => ({
++          message: "Votre mot de passe a été défini. Vous pouvez vous connecter.",
++        }),
++      } as Response;
+     });
+ 
+     render(<ResetPasswordPage />);
++    await waitFor(() => {
++      expect(screen.getByTestId("password-input")).toBeInTheDocument();
++    });
++
+     await act(async () => {
+       fireEvent.change(screen.getByTestId("password-input"), {
+         target: { value: "newPass123!" },
+diff --git a/src/app/auth/reset-password/page.tsx b/src/app/auth/reset-password/page.tsx
+index 650e508..add93d9 100644
+--- a/src/app/auth/reset-password/page.tsx
++++ b/src/app/auth/reset-password/page.tsx
+@@ -31,6 +31,7 @@ export default function ResetPasswordPage() {
+ 
+   const [serverError, setServerError] = useState("");
+   const [success, setSuccess] = useState(false);
++  const [isValidating, setIsValidating] = useState(true);
+ 
+   const {
+     register,
+@@ -49,7 +50,24 @@ export default function ResetPasswordPage() {
+   useEffect(() => {
+     if (!token) {
+       setServerError("Ce lien est invalide.");
++      setIsValidating(false);
++      return;
+     }
++
++    async function validateToken() {
++      try {
++        const res = await fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`);
++        const payload = await res.json().catch(() => ({}));
++        if (!res.ok) {
++          setServerError(payload.error || "Ce lien est invalide ou expiré.");
++        }
++      } catch {
++        setServerError("Erreur réseau");
++      } finally {
++        setIsValidating(false);
++      }
++    }
++    void validateToken();
+   }, [token]);
+ 
+   const onSubmit = async (data: PasswordResetInput) => {
+@@ -90,8 +108,8 @@ export default function ResetPasswordPage() {
+     }
+   };
+ 
+-  const showForm = hasToken && !success;
+-  const showFallbackLink = !showForm && !success;
++  const showForm = hasToken && !success && !serverError && !isValidating;
++  const showFallbackLink = !showForm && !success && !isValidating;
+ 
+   return (
+     <div className="flex min-h-screen items-center justify-center bg-background">
+@@ -106,6 +124,12 @@ export default function ResetPasswordPage() {
+               : "Définis un nouveau mot de passe sécurisé"}
+           </p>
+         </div>
++        {isValidating ? (
++          <div className="flex flex-col items-center justify-center py-8 space-y-3">
++            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
++            <p className="text-sm text-muted-foreground">Validation du lien en cours...</p>
++          </div>
++        ) : null}
+         {serverError ? (
+           <div
+             data-testid="auth-error"
+diff --git a/src/components/features/admin/admin-member-invite-button.tsx b/src/components/features/admin/admin-member-invite-button.tsx
+index f776336..c2fb394 100644
+--- a/src/components/features/admin/admin-member-invite-button.tsx
++++ b/src/components/features/admin/admin-member-invite-button.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useState, useEffect } from "react";
+ import { useRouter } from "next/navigation";
+ import { toast } from "sonner";
+ import { Button } from "@/components/ui/button";
+@@ -14,9 +14,18 @@ export function AdminMemberInviteButton({
+ }) {
+   const router = useRouter();
+   const [isSending, setIsSending] = useState(false);
++  const [cooldown, setCooldown] = useState(0);
++
++  useEffect(() => {
++    if (cooldown <= 0) return;
++    const timer = setInterval(() => {
++      setCooldown((prev) => prev - 1);
++    }, 1000);
++    return () => clearInterval(timer);
++  }, [cooldown]);
+ 
+   async function handleClick() {
+-    if (isSending) return;
++    if (isSending || cooldown > 0) return;
+     setIsSending(true);
+     try {
+       const response = await fetch(`/api/admin/users/${userId}/invite`, {
+@@ -28,6 +37,7 @@ export function AdminMemberInviteButton({
+         throw new Error(payload.error || "Une erreur est survenue");
+       }
+       toast.success("Invitation à définir le mot de passe envoyée.");
++      setCooldown(30);
+       router.refresh();
+     } catch (error) {
+       toast.error(
+@@ -43,10 +53,14 @@ export function AdminMemberInviteButton({
+       type="button"
+       className="min-h-11 focus-visible:ring-2 focus-visible:ring-ring"
+       variant="outline"
+-      disabled={disabled || isSending}
++      disabled={disabled || isSending || cooldown > 0}
+       onClick={() => void handleClick()}
+     >
+-      {isSending ? "Envoi en cours..." : "Inviter à définir le mot de passe"}
++      {isSending
++        ? "Envoi en cours..."
++        : cooldown > 0
++        ? `Renvoyer l'invitation (${cooldown}s)`
++        : "Inviter à définir le mot de passe"}
+     </Button>
+   );
+ }
+diff --git a/src/components/features/auth/profile-edit-form.tsx b/src/components/features/auth/profile-edit-form.tsx
+index c72c3d1..17fc09d 100644
+--- a/src/components/features/auth/profile-edit-form.tsx
++++ b/src/components/features/auth/profile-edit-form.tsx
+@@ -8,8 +8,10 @@ import {
+   profileUpdateSchema,
+   ALL_COUNTRIES,
+   passwordChangeSchema,
++  passwordSetSchema,
+   type ProfileUpdateInput,
+   type PasswordChangeInput,
++  type PasswordSetInput,
+ } from "@/lib/validations";
+ import { Input } from "@/components/ui/input";
+ import { Label } from "@/components/ui/label";
+@@ -40,6 +42,8 @@ interface ProfileEditFormProps {
+ 
+ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
+   const [isSubmitting, setIsSubmitting] = useState(false);
++  const [hasPasswordState, setHasPasswordState] = useState(!!user.hasPassword);
++  const [showSetPasswordForm, setShowSetPasswordForm] = useState(false);
+ 
+   const {
+     register,
+@@ -229,36 +233,48 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
+         </p>
+       </div>
+ 
+-      {user.hasPassword ? (
++      {hasPasswordState ? (
+         <PasswordChangeForm />
++      ) : showSetPasswordForm ? (
++        <PasswordSetForm onSuccess={() => setHasPasswordState(true)} />
+       ) : (
+-        <div className="rounded-lg border border-muted bg-card p-5 flex items-start gap-4 shadow-sm">
+-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted mt-0.5">
+-            <svg className="h-5 w-5" viewBox="0 0 24 24">
+-              <path
+-                fill="#EA4335"
+-                d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.273 0 3.19 2.764 1.255 6.79l3.995 2.975z"
+-              />
+-              <path
+-                fill="#34A853"
+-                d="M16.04 15.34c-1.045.727-2.382 1.173-4.04 1.173-2.927 0-5.418-1.982-6.309-4.655L1.627 14.8C3.627 18.864 7.782 21.6 12 21.6c3.155 0 6.027-1.127 8.09-3.082l-4.05-3.178z"
+-              />
+-              <path
+-                fill="#4285F4"
+-                d="M23.49 12.275c0-.8-.073-1.573-.2-2.318H12v4.51h6.473c-.282 1.482-1.11 2.74-2.382 3.59l4.05 3.18c2.373-2.19 3.736-5.418 3.736-8.962z"
+-              />
+-              <path
+-                fill="#FBBC05"
+-                d="M5.69 11.858c-.236-.727-.372-1.5-.372-2.3a7.12 7.12 0 0 1 .364-2.29l-3.995-2.975A11.95 11.95 0 0 0 0 12c0 2.873.973 5.518 2.618 7.627l3.073-2.769z"
+-              />
+-            </svg>
+-          </div>
+-          <div className="space-y-1">
+-            <p className="text-sm font-semibold">Compte connecté via Google</p>
+-            <p className="text-xs text-muted-foreground">
+-              Votre compte est connecté via Google. Aucun mot de passe local n'est configuré pour ce compte.
+-            </p>
++        <div className="rounded-lg border border-muted bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
++          <div className="flex items-start gap-4">
++            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted mt-0.5">
++              <svg className="h-5 w-5" viewBox="0 0 24 24">
++                <path
++                  fill="#EA4335"
++                  d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.273 0 3.19 2.764 1.255 6.79l3.995 2.975z"
++                />
++                <path
++                  fill="#34A853"
++                  d="M16.04 15.34c-1.045.727-2.382 1.173-4.04 1.173-2.927 0-5.418-1.982-6.309-4.655L1.627 14.8C3.627 18.864 7.782 21.6 12 21.6c3.155 0 6.027-1.127 8.09-3.082l-4.05-3.178z"
++                />
++                <path
++                  fill="#4285F4"
++                  d="M23.49 12.275c0-.8-.073-1.573-.2-2.318H12v4.51h6.473c-.282 1.482-1.11 2.74-2.382 3.59l4.05 3.18c2.373-2.19 3.736-5.418 3.736-8.962z"
++                />
++                <path
++                  fill="#FBBC05"
++                  d="M5.69 11.858c-.236-.727-.372-1.5-.372-2.3a7.12 7.12 0 0 1 .364-2.29l-3.995-2.975A11.95 11.95 0 0 0 0 12c0 2.873.973 5.518 2.618 7.627l3.073-2.769z"
++                />
++              </svg>
++            </div>
++            <div className="space-y-1">
++              <p className="text-sm font-semibold">Compte connecté via Google</p>
++              <p className="text-xs text-muted-foreground">
++                Votre compte est connecté via Google. Aucun mot de passe local n'est configuré pour ce compte.
++              </p>
++            </div>
+           </div>
++          <Button
++            type="button"
++            variant="outline"
++            onClick={() => setShowSetPasswordForm(true)}
++            className="w-full sm:w-auto text-xs min-h-[44px]"
++          >
++            Définir un mot de passe
++          </Button>
+         </div>
+       )}
+     </div>
+@@ -400,4 +416,109 @@ function PasswordChangeForm() {
+       </Button>
+     </form>
+   );
++}
++
++function PasswordSetForm({ onSuccess }: { onSuccess: () => void }) {
++  const [isSubmitting, setIsSubmitting] = useState(false);
++
++  const {
++    register,
++    handleSubmit,
++    watch,
++    reset,
++    formState: { errors },
++  } = useForm<PasswordSetInput>({
++    resolver: zodResolver(passwordSetSchema),
++    mode: "onBlur",
++    defaultValues: {
++      password: "",
++      confirmPassword: "",
++    },
++  });
++
++  const passwordValue = watch("password", "");
++  const strength = getPasswordStrength(passwordValue);
++
++  const onSubmit = async (data: PasswordSetInput) => {
++    setIsSubmitting(true);
++    try {
++      const res = await fetch("/api/auth/set-password", {
++        method: "POST",
++        headers: { "Content-Type": "application/json" },
++        body: JSON.stringify(data),
++      });
++
++      if (res.status === 401) {
++        window.location.href = "/auth/signin";
++        return;
++      }
++
++      const payload = await res.json();
++
++      if (!res.ok) {
++        toast.error(payload.error || "Une erreur est survenue");
++        return;
++      }
++
++      toast.success("Mot de passe défini avec succès.");
++      reset();
++      onSuccess();
++    } catch {
++      toast.error("Une erreur est survenue");
++    } finally {
++      setIsSubmitting(false);
++    }
++  };
++
++  return (
++    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
++      <div className="space-y-2">
++        <Label htmlFor="password">Nouveau mot de passe</Label>
++        <Input
++          id="password"
++          type="password"
++          autoComplete="new-password"
++          className="min-h-[44px]"
++          aria-invalid={!!errors.password}
++          aria-describedby={[
++            errors.password ? "password-error" : "",
++            strength.label ? "password-strength" : "",
++          ].filter(Boolean).join(" ") || undefined}
++          {...register("password")}
++        />
++        {strength.label ? (
++          <p id="password-strength" className={`text-xs font-medium ${strength.color}`}>
++            Force : {strength.label}
++          </p>
++        ) : null}
++        {errors.password ? (
++          <p id="password-error" className="text-xs text-destructive">{errors.password.message}</p>
++        ) : null}
++      </div>
++
++      <div className="space-y-2">
++        <Label htmlFor="confirmPassword">Confirmation du mot de passe</Label>
++        <Input
++          id="confirmPassword"
++          type="password"
++          autoComplete="new-password"
++          className="min-h-[44px]"
++          aria-invalid={!!errors.confirmPassword}
++          aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
++          {...register("confirmPassword")}
++        />
++        {errors.confirmPassword ? (
++          <p id="confirmPassword-error" className="text-xs text-destructive">{errors.confirmPassword.message}</p>
++        ) : null}
++      </div>
++
++      <Button
++        type="submit"
++        disabled={isSubmitting}
++        className="min-h-[44px] w-full mt-4"
++      >
++        {isSubmitting ? "Définition..." : "Définir le mot de passe"}
++      </Button>
++    </form>
++  );
+ }
+\ No newline at end of file
+diff --git a/src/lib/audit-log.ts b/src/lib/audit-log.ts
+index 7c5beac..939637a 100644
+--- a/src/lib/audit-log.ts
++++ b/src/lib/audit-log.ts
+@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = {
+   ...OPPORTUNITY_AUDIT_ACTIONS,
+   DOCUMENT_UPLOAD: "DOCUMENT_UPLOAD",
+   FILE_SCAN_REJECTED: "FILE_SCAN_REJECTED",
++  PASSWORD_CHANGED: "PASSWORD_CHANGED",
+ } as const;
+ 
+ export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
+diff --git a/src/lib/email.ts b/src/lib/email.ts
+index b179b18..6151fb9 100644
+--- a/src/lib/email.ts
++++ b/src/lib/email.ts
+@@ -386,4 +386,25 @@ export async function sendSetPasswordEmail({
+   });
+ }
+ 
++export async function sendPasswordChangedEmail({
++  to,
++  name,
++}: {
++  to: string;
++  name?: string | null;
++}) {
++  const subject = "Votre mot de passe a été modifié";
++  const text = `${greeting(name)}
++
++Nous vous informons que le mot de passe de votre compte Ivoire Business Club a été modifié avec succès.
++
++Si vous n'êtes pas à l'origine de cette modification, veuillez contacter immédiatement notre support.
++${dashboardLine()}
++
++Cordialement,
++L'équipe Ivoire Business Club`;
++
++  return sendEmail({ to, subject, text });
++}
++
+ 
+diff --git a/src/lib/rate-limit.ts b/src/lib/rate-limit.ts
+index d264382..751cf53 100644
+--- a/src/lib/rate-limit.ts
++++ b/src/lib/rate-limit.ts
+@@ -82,4 +82,6 @@ export const verificationSendRateLimiter = createRateLimiter({ requests: 3, wind
+ // IP-based public rate limiters used by story 26.7 to mitigate spam/abuse across accounts
+ export const chatMessagePublicRateLimiter = createRateLimiter({ requests: 10, windowSeconds: 60 });
+ export const opportunityCreateRateLimiter = createRateLimiter({ requests: 2, windowSeconds: 60 });
+-export const receiptUploadRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
+\ No newline at end of file
++export const receiptUploadRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
++export const userPasswordUpdateRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
++export const setPasswordRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
+\ No newline at end of file
+diff --git a/src/lib/validations.ts b/src/lib/validations.ts
+index 1771bec..53da972 100644
+--- a/src/lib/validations.ts
++++ b/src/lib/validations.ts
+@@ -95,6 +95,22 @@ export const passwordChangeSchema = z
+     path: ["newPassword"],
+   });
+ 
++export const passwordSetSchema = z
++  .object({
++    password: z
++      .string()
++      .min(8, "Le mot de passe doit contenir au moins 8 caractères")
++      .max(72, "Le mot de passe ne peut pas dépasser 72 caractères")
++      .refine((val) => /[a-zA-Z]/.test(val) && /\d/.test(val), {
++        message: "Le mot de passe doit contenir au moins une lettre et un chiffre",
++      }),
++    confirmPassword: z.string().min(1, "La confirmation du mot de passe est requise"),
++  })
++  .refine((data) => data.password === data.confirmPassword, {
++    message: "Les mots de passe ne correspondent pas",
++    path: ["confirmPassword"],
++  });
++
+ export type SignupInput = z.infer<typeof signupSchema>;
+ export type SigninInput = z.infer<typeof signinSchema>;
+ export type ForgotPasswordRequestInput = z.infer<typeof forgotPasswordRequestSchema>;
+@@ -102,6 +118,7 @@ export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
+ export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+ export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
+ export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
++export type PasswordSetInput = z.infer<typeof passwordSetSchema>;
+ 
+ const MOBILE_MONEY_PREFIXES = [
+   "+225", // Côte d'Ivoire

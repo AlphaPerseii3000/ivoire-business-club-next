@@ -38,6 +38,9 @@ vi.mock("@/lib/sanitize-log", () => ({
 
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
+  AUDIT_ACTIONS: {
+    PASSWORD_CHANGED: "PASSWORD_CHANGED",
+  },
 }));
 
 vi.mock("@/lib/email", () => ({

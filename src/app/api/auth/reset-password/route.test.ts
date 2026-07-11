@@ -5,6 +5,27 @@ const mockVerificationTokenFindUnique = vi.hoisted(() => vi.fn());
 const mockVerificationTokenDelete = vi.hoisted(() => vi.fn());
 const mockUserUpdate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockSendPasswordChangedEmail = vi.hoisted(() => vi.fn());
+const mockRateLimitLimit = vi.hoisted(() => vi.fn(() => Promise.resolve({ success: true, reset: 0 })));
+
+vi.mock("@/lib/audit-log", () => ({
+  safeCreateAuditLog: mockSafeCreateAuditLog,
+  AUDIT_ACTIONS: {
+    PASSWORD_CHANGED: "PASSWORD_CHANGED",
+  },
+}));
+
+vi.mock("@/lib/email", () => ({
+  sendPasswordChangedEmail: mockSendPasswordChangedEmail,
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  resetPasswordRateLimiter: {
+    limit: mockRateLimitLimit,
+  },
+  getClientIp: vi.fn(() => "127.0.0.1"),
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -256,14 +277,13 @@ describe("POST /api/auth/reset-password", () => {
       expect(json.error).toBe("Ce lien est invalide ou expiré.");
     });
 
-    it("returns 400 and deletes token when expired", async () => {
+    it("returns 400 when expired (without deleting token)", async () => {
       mockVerificationTokenFindUnique.mockResolvedValueOnce({
         token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
         expires: new Date(Date.now() - 60 * 60 * 1000),
         userId: "user-123",
         tokenType: "PASSWORD_RESET",
       });
-      mockVerificationTokenDelete.mockResolvedValueOnce({});
 
       const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
       const res = await GET(req);
@@ -271,9 +291,7 @@ describe("POST /api/auth/reset-password", () => {
 
       expect(res.status).toBe(400);
       expect(json.error).toBe("Ce lien est invalide ou expiré.");
-      expect(mockVerificationTokenDelete).toHaveBeenCalledWith({
-        where: { token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943" },
-      });
+      expect(mockVerificationTokenDelete).not.toHaveBeenCalled();
     });
 
     it("returns 200 with valid: true for valid PASSWORD_RESET token", async () => {
@@ -306,6 +324,36 @@ describe("POST /api/auth/reset-password", () => {
 
       expect(res.status).toBe(200);
       expect(json.valid).toBe(true);
+    });
+
+    it("returns 429 when rate limit is exceeded on GET", async () => {
+      mockRateLimitLimit.mockResolvedValueOnce({ success: false, reset: Date.now() + 60000 });
+
+      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(429);
+      expect(json.error).toContain("Trop de tentatives");
+      expect(res.headers.get("Retry-After")).toBeDefined();
+    });
+  });
+
+  describe("POST Rate Limiting", () => {
+    it("returns 429 when rate limit is exceeded on POST", async () => {
+      mockRateLimitLimit.mockResolvedValueOnce({ success: false, reset: Date.now() + 60000 });
+
+      const req = makeRequest({
+        token: "raw-token",
+        password: "newSecurePassword123!",
+        confirmPassword: "newSecurePassword123!",
+      });
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(429);
+      expect(json.error).toContain("Trop de tentatives");
+      expect(res.headers.get("Retry-After")).toBeDefined();
     });
   });
 });

@@ -4,16 +4,21 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { passwordChangeSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/sanitize-log";
-import { userPasswordUpdateRateLimiter, getClientIp } from "@/lib/rate-limit";
-import { safeCreateAuditLog } from "@/lib/audit-log";
+import { userPasswordUpdateRateLimiter } from "@/lib/rate-limit";
+import { safeCreateAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log";
 import { sendPasswordChangedEmail } from "@/lib/email";
 
 const BCRYPT_COST = 12;
 
 async function handlePasswordChange(req: Request) {
   try {
-    const ip = getClientIp(req);
-    const rateLimit = await userPasswordUpdateRateLimiter.limit(ip);
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const rateLimit = await userPasswordUpdateRateLimiter.limit(`user:${userId}`);
     if (!rateLimit.success) {
       const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
       return NextResponse.json(
@@ -22,12 +27,6 @@ async function handlePasswordChange(req: Request) {
       );
     }
 
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
     let body;
     try {
       body = await req.json();
@@ -83,7 +82,7 @@ async function handlePasswordChange(req: Request) {
     // Log Audit
     await safeCreateAuditLog({
       actorId: userId,
-      action: "PASSWORD_CHANGED",
+      action: AUDIT_ACTIONS.PASSWORD_CHANGED,
       entityType: "USER",
       entityId: userId,
     });

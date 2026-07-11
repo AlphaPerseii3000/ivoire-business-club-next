@@ -4,7 +4,7 @@ baseline_commit: "2b0388bd75a72112a633976d0b88978200bf7d90"
 
 # Story 28.2: Security Hardening — Rate Limiting, Timing-Safe Comparison & Password UX
 
-Status: review
+Status: done
 
 ## Story
 
@@ -111,6 +111,22 @@ Then ils passent sans régression
     - Créer le fichier de test pour le nouvel endpoint : `src/app/api/auth/set-password/route.test.ts`.
   - [x] Lancer les tests unitaires via `npx vitest run` et s'assurer qu'aucun test ne régresse.
   - [x] Lancer `npm run build` et vérifier le succès complet du build standalone.
+
+### Review Findings
+
+- [x] [Review][Patch] Fuite du hash de mot de passe dans ProfileEditForm [src/app/(dashboard)/profile/page.tsx:72-76]
+- [x] [Review][Patch] Absence de rate-limiting sur l'API de validation GET [src/app/api/auth/reset-password/route.ts:297-343]
+- [x] [Review][Patch] Suppression de token non-idempotente dans le GET [src/app/api/auth/reset-password/route.ts:324-331]
+- [x] [Review][Patch] Rate limiting par IP au lieu de userId dans password update [src/app/api/user/password/route.ts:804-812]
+- [x] [Review][Patch] Absence de trim sur l'extraction Bearer dans cron [src/app/api/cron/remind-incomplete-users/route.ts:660-667]
+- [x] [Review][Patch] Anti-pattern useEffect timer dans invite button [src/components/features/admin/admin-member-invite-button.tsx:136-143]
+- [x] [Review][Patch] Erreurs UX cryptiques sur les appels fetch [src/components/features/auth/profile-edit-form.tsx:1310-1327]
+- [x] [Review][Patch] Absence d'AbortController sur le mount de reset password page [src/app/auth/reset-password/page.tsx:1077-1090]
+- [x] [Review][Patch] Absence de couverture de test pour le statut SUSPENDED dans set-password [src/app/api/auth/set-password/route.test.ts]
+- [x] [Review][Patch] Bypassing de l'énumération typée AUDIT_ACTIONS [src/app/api/auth/set-password/route.ts:599]
+- [x] [Review][Patch] Logs d'audit et notifications par email manquants sur POST reset-password [src/app/api/auth/reset-password/route.ts:130-145]
+- [x] [Review][Patch] Bouton Annuler manquant sur le formulaire PasswordSetForm [src/components/features/auth/profile-edit-form.tsx:1281]
+- [x] [Review][Patch] Risque de double soumission sur handleClick de invitation admin [src/components/features/admin/admin-member-invite-button.tsx:1145]
 
 ## Dev Notes
 

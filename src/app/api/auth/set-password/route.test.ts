@@ -37,6 +37,9 @@ vi.mock("@/lib/sanitize-log", () => ({
 
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
+  AUDIT_ACTIONS: {
+    PASSWORD_CHANGED: "PASSWORD_CHANGED",
+  },
 }));
 
 vi.mock("@/lib/email", () => ({
@@ -130,6 +133,28 @@ describe("POST /api/auth/set-password", () => {
 
     expect(res.status).toBe(400);
     expect(json.error).toBe("Un mot de passe est déjà configuré pour ce compte.");
+  });
+
+  it("returns 403 if user is suspended", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-123",
+      name: "Jean",
+      email: "jean@example.com",
+      passwordHash: null,
+      status: "SUSPENDED",
+    });
+
+    const req = makeRequest({
+      password: "newSecurePassword123!",
+      confirmPassword: "newSecurePassword123!",
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(json.error).toBe("Compte suspendu");
   });
 
   it("returns 429 when rate limit is exceeded", async () => {

@@ -236,7 +236,7 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
       {hasPasswordState ? (
         <PasswordChangeForm />
       ) : showSetPasswordForm ? (
-        <PasswordSetForm onSuccess={() => setHasPasswordState(true)} />
+        <PasswordSetForm onSuccess={() => setHasPasswordState(true)} onCancel={() => setShowSetPasswordForm(false)} />
       ) : (
         <div className="rounded-lg border border-muted bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-start gap-4">
@@ -418,7 +418,7 @@ function PasswordChangeForm() {
   );
 }
 
-function PasswordSetForm({ onSuccess }: { onSuccess: () => void }) {
+function PasswordSetForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -453,7 +453,14 @@ function PasswordSetForm({ onSuccess }: { onSuccess: () => void }) {
         return;
       }
 
-      const payload = await res.json();
+      const contentType = res.headers.get("content-type");
+      let payload: any = {};
+      if (contentType && contentType.includes("application/json")) {
+        payload = await res.json().catch(() => ({}));
+      } else {
+        toast.error("Une erreur serveur est survenue.");
+        return;
+      }
 
       if (!res.ok) {
         toast.error(payload.error || "Une erreur est survenue");
@@ -512,13 +519,23 @@ function PasswordSetForm({ onSuccess }: { onSuccess: () => void }) {
         ) : null}
       </div>
 
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="min-h-[44px] w-full mt-4"
-      >
-        {isSubmitting ? "Définition..." : "Définir le mot de passe"}
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="min-h-[44px] flex-1 order-2 sm:order-1"
+        >
+          Annuler
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="min-h-[44px] flex-1 order-1 sm:order-2"
+        >
+          {isSubmitting ? "Définition..." : "Définir le mot de passe"}
+        </Button>
+      </div>
     </form>
   );
-}
+}

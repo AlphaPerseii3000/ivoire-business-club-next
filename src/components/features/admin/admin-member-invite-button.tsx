@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,24 +15,34 @@ export function AdminMemberInviteButton({
   const router = useRouter();
   const [isSending, setIsSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const isSendingRef = useRef(false);
 
   useEffect(() => {
     if (cooldown <= 0) return;
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       setCooldown((prev) => prev - 1);
     }, 1000);
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer);
   }, [cooldown]);
 
   async function handleClick() {
-    if (isSending || cooldown > 0) return;
+    if (isSending || isSendingRef.current || cooldown > 0) return;
+    isSendingRef.current = true;
     setIsSending(true);
     try {
       const response = await fetch(`/api/admin/users/${userId}/invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-      const payload = await response.json().catch(() => ({}));
+
+      const contentType = response.headers.get("content-type");
+      let payload: any = {};
+      if (contentType && contentType.includes("application/json")) {
+        payload = await response.json().catch(() => ({}));
+      } else {
+        throw new Error("Une erreur serveur est survenue.");
+      }
+
       if (!response.ok) {
         throw new Error(payload.error || "Une erreur est survenue");
       }
@@ -44,6 +54,7 @@ export function AdminMemberInviteButton({
         error instanceof Error ? error.message : "Une erreur est survenue"
       );
     } finally {
+      isSendingRef.current = false;
       setIsSending(false);
     }
   }
@@ -64,3 +75,4 @@ export function AdminMemberInviteButton({
     </Button>
   );
 }
+
