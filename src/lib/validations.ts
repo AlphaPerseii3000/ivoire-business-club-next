@@ -95,6 +95,22 @@ export const passwordChangeSchema = z
     path: ["newPassword"],
   });
 
+export const passwordSetSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+      .max(72, "Le mot de passe ne peut pas dépasser 72 caractères")
+      .refine((val) => /[a-zA-Z]/.test(val) && /\d/.test(val), {
+        message: "Le mot de passe doit contenir au moins une lettre et un chiffre",
+      }),
+    confirmPassword: z.string().min(1, "La confirmation du mot de passe est requise"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type SigninInput = z.infer<typeof signinSchema>;
 export type ForgotPasswordRequestInput = z.infer<typeof forgotPasswordRequestSchema>;
@@ -102,6 +118,7 @@ export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AccountDeletionInput = z.infer<typeof accountDeletionSchema>;
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
+export type PasswordSetInput = z.infer<typeof passwordSetSchema>;
 
 const MOBILE_MONEY_PREFIXES = [
   "+225", // Côte d'Ivoire

@@ -31,6 +31,7 @@ export default function ResetPasswordPage() {
 
   const [serverError, setServerError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
 
   const {
     register,
@@ -49,7 +50,24 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     if (!token) {
       setServerError("Ce lien est invalide.");
+      setIsValidating(false);
+      return;
     }
+
+    async function validateToken() {
+      try {
+        const res = await fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`);
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setServerError(payload.error || "Ce lien est invalide ou expiré.");
+        }
+      } catch {
+        setServerError("Erreur réseau");
+      } finally {
+        setIsValidating(false);
+      }
+    }
+    void validateToken();
   }, [token]);
 
   const onSubmit = async (data: PasswordResetInput) => {
@@ -90,8 +108,8 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const showForm = hasToken && !success;
-  const showFallbackLink = !showForm && !success;
+  const showForm = hasToken && !success && !serverError && !isValidating;
+  const showFallbackLink = !showForm && !success && !isValidating;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -106,6 +124,12 @@ export default function ResetPasswordPage() {
               : "Définis un nouveau mot de passe sécurisé"}
           </p>
         </div>
+        {isValidating ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">Validation du lien en cours...</p>
+          </div>
+        ) : null}
         {serverError ? (
           <div
             data-testid="auth-error"

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "./route";
+import { POST, GET } from "./route";
 
 const mockVerificationTokenFindUnique = vi.hoisted(() => vi.fn());
 const mockVerificationTokenDelete = vi.hoisted(() => vi.fn());
@@ -229,5 +229,83 @@ describe("POST /api/auth/reset-password", () => {
 
     expect(res.status).toBe(400);
     expect(json.error).toBe("Ce compte a été suspendu.");
+  });
+
+  describe("GET /api/auth/reset-password", () => {
+    it("returns 400 when token is missing", async () => {
+      const req = new Request("http://localhost/api/auth/reset-password", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Le token est requis.");
+    });
+
+    it("returns 400 when token type is invalid", async () => {
+      mockVerificationTokenFindUnique.mockResolvedValueOnce({
+        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+        expires: new Date(Date.now() + 60 * 60 * 1000),
+        userId: "user-123",
+        tokenType: "EMAIL_VERIFICATION",
+      });
+
+      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Ce lien est invalide ou expiré.");
+    });
+
+    it("returns 400 and deletes token when expired", async () => {
+      mockVerificationTokenFindUnique.mockResolvedValueOnce({
+        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+        expires: new Date(Date.now() - 60 * 60 * 1000),
+        userId: "user-123",
+        tokenType: "PASSWORD_RESET",
+      });
+      mockVerificationTokenDelete.mockResolvedValueOnce({});
+
+      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Ce lien est invalide ou expiré.");
+      expect(mockVerificationTokenDelete).toHaveBeenCalledWith({
+        where: { token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943" },
+      });
+    });
+
+    it("returns 200 with valid: true for valid PASSWORD_RESET token", async () => {
+      mockVerificationTokenFindUnique.mockResolvedValueOnce({
+        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+        expires: new Date(Date.now() + 60 * 60 * 1000),
+        userId: "user-123",
+        tokenType: "PASSWORD_RESET",
+      });
+
+      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.valid).toBe(true);
+    });
+
+    it("returns 200 with valid: true for valid SET_PASSWORD token", async () => {
+      mockVerificationTokenFindUnique.mockResolvedValueOnce({
+        token: "34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943",
+        expires: new Date(Date.now() + 60 * 60 * 1000),
+        userId: "user-123",
+        tokenType: "SET_PASSWORD",
+      });
+
+      const req = new Request("http://localhost/api/auth/reset-password?token=raw-token", { method: "GET" });
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.valid).toBe(true);
+    });
   });
 });

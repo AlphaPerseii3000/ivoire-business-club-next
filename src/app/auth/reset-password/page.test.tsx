@@ -10,24 +10,33 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-function mockFetch(status: number, body: Record<string, unknown>) {
-  return vi.fn().mockResolvedValueOnce({
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-  } as Response);
-}
-
 describe("ResetPasswordPage", () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockSearchParams = new URLSearchParams("token=raw-token");
+    global.fetch = vi.fn().mockImplementation(async (url, init) => {
+      const method = init?.method || "GET";
+      if (method === "GET") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: true }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ message: "Success" }),
+      } as Response;
+    });
   });
 
-  it("renders the reset password form with valid token", () => {
+  it("renders the reset password form with valid token", async () => {
     render(<ResetPasswordPage />);
-    expect(screen.getByRole("heading", { name: "Nouveau mot de passe" })).toBeInTheDocument();
-    expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Nouveau mot de passe" })).toBeInTheDocument();
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    });
   });
 
   it("shows invalid link error when token is missing", async () => {
@@ -39,8 +48,28 @@ describe("ResetPasswordPage", () => {
     });
   });
 
+  it("shows invalid link error when token validation fails on mount", async () => {
+    global.fetch = vi.fn().mockImplementation(async (url, init) => {
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "Ce lien est invalide ou expiré." }),
+      } as Response;
+    });
+
+    render(<ResetPasswordPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-error")).toHaveTextContent("Ce lien est invalide ou expiré.");
+      expect(screen.queryByTestId("reset-form")).toBeNull();
+    });
+  });
+
   it("shows password strength indicator", async () => {
     render(<ResetPasswordPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    });
     fireEvent.change(screen.getByTestId("password-input"), { target: { value: "Abcdef1!" } });
 
     await waitFor(() => {
@@ -49,9 +78,27 @@ describe("ResetPasswordPage", () => {
   });
 
   it("submits new password and shows success", async () => {
-    global.fetch = mockFetch(200, { message: "Mot de passe réinitialisé avec succès." });
+    global.fetch = vi.fn().mockImplementation(async (url, init) => {
+      const method = init?.method || "GET";
+      if (method === "GET") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: true }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ message: "Mot de passe mis à jour avec succès." }),
+      } as Response;
+    });
 
     render(<ResetPasswordPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    });
+
     await act(async () => {
       fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
       fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
@@ -64,9 +111,27 @@ describe("ResetPasswordPage", () => {
   });
 
   it("displays server error on reset failure", async () => {
-    global.fetch = mockFetch(400, { error: "Ce lien a déjà été utilisé." });
+    global.fetch = vi.fn().mockImplementation(async (url, init) => {
+      const method = init?.method || "GET";
+      if (method === "GET") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: true }),
+        } as Response;
+      }
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "Ce lien a déjà été utilisé." }),
+      } as Response;
+    });
 
     render(<ResetPasswordPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    });
+
     await act(async () => {
       fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
       fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
@@ -78,25 +143,45 @@ describe("ResetPasswordPage", () => {
     }, { timeout: 2000 });
   });
 
-  it("renders the set password form when type=set", () => {
+  it("renders the set password form when type=set", async () => {
     mockSearchParams = new URLSearchParams("token=raw-token&type=set");
     render(<ResetPasswordPage />);
-    expect(
-      screen.getByRole("heading", { name: "Définir votre mot de passe" })
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("password-input")).toBeInTheDocument();
-    expect(screen.getByTestId("submit-button")).toHaveTextContent(
-      "Définir le mot de passe"
-    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Définir votre mot de passe" })
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+      expect(screen.getByTestId("submit-button")).toHaveTextContent(
+        "Définir le mot de passe"
+      );
+    });
   });
 
   it("submits defined password and shows success when type=set", async () => {
     mockSearchParams = new URLSearchParams("token=raw-token&type=set");
-    global.fetch = mockFetch(200, {
-      message: "Votre mot de passe a été défini. Vous pouvez vous connecter.",
+    global.fetch = vi.fn().mockImplementation(async (url, init) => {
+      const method = init?.method || "GET";
+      if (method === "GET") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: true }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          message: "Votre mot de passe a été défini. Vous pouvez vous connecter.",
+        }),
+      } as Response;
     });
 
     render(<ResetPasswordPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("password-input")).toBeInTheDocument();
+    });
+
     await act(async () => {
       fireEvent.change(screen.getByTestId("password-input"), {
         target: { value: "newPass123!" },

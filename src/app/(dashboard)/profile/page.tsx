@@ -72,6 +72,7 @@ export default async function ProfilePage() {
       role: true,
       verificationStatus: true,
       createdAt: true,
+      passwordHash: true,
       tags: {
         orderBy: [{ category: "asc" }, { value: "asc" }],
         select: { category: true, value: true },
@@ -223,7 +224,7 @@ export default async function ProfilePage() {
 
       <Card>
         <CardContent className="pt-6">
-          <ProfileEditForm user={user} />
+          <ProfileEditForm user={{ ...user, hasPassword: !!user.passwordHash }} />
         </CardContent>
       </Card>
 

@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "./route";
+import { POST, PUT } from "./route";
 
 const mockAuth = vi.hoisted(() =>
   vi.fn(() => Promise.resolve({ user: { id: "user-123" } }))
 );
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockUserUpdate = vi.hoisted(() => vi.fn());
+const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockSendPasswordChangedEmail = vi.hoisted(() => vi.fn());
+const mockRateLimitLimit = vi.hoisted(() => vi.fn(() => Promise.resolve({ success: true, reset: 0 })));
 
 vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -31,6 +34,21 @@ vi.mock("@/lib/sanitize-log", () => ({
   sanitizeError: vi.fn((e: unknown) =>
     e instanceof Error ? `Error: ${e.name}` : "Unknown error"
   ),
+}));
+
+vi.mock("@/lib/audit-log", () => ({
+  safeCreateAuditLog: mockSafeCreateAuditLog,
+}));
+
+vi.mock("@/lib/email", () => ({
+  sendPasswordChangedEmail: mockSendPasswordChangedEmail,
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  userPasswordUpdateRateLimiter: {
+    limit: mockRateLimitLimit,
+  },
+  getClientIp: vi.fn(() => "127.0.0.1"),
 }));
 
 function makeRequest(body: unknown) {
@@ -236,6 +254,60 @@ describe("POST /api/user/password", () => {
 
     expect(res.status).toBe(403);
     expect(json.error).toBe("Compte suspendu");
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+  });
+
+  it("updates password successfully via PUT method", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "user-123" } });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-123",
+      name: "Jean",
+      email: "jean@example.com",
+      passwordHash: "correct-password-hash",
+    });
+    mockUserUpdate.mockResolvedValueOnce({ id: "user-123" });
+
+    const req = new Request("http://localhost/api/user/password", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentPassword: "correct-password",
+        newPassword: "newSecurePassword123!",
+        confirmNewPassword: "newSecurePassword123!",
+      }),
+    });
+
+    const res = await PUT(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.message).toBe("Mot de passe mis à jour avec succès.");
+    expect(mockUserUpdate).toHaveBeenCalledWith({
+      where: { id: "user-123" },
+      data: { passwordHash: "new-hashed-password" },
+    });
+    expect(mockSafeCreateAuditLog).toHaveBeenCalled();
+    expect(mockSendPasswordChangedEmail).toHaveBeenCalledWith({
+      to: "jean@example.com",
+      name: "Jean",
+    });
+  });
+
+  it("returns 429 when rate limit is exceeded", async () => {
+    mockRateLimitLimit.mockResolvedValueOnce({ success: false, reset: Date.now() + 60000 });
+
+    const req = makeRequest({
+      currentPassword: "correct-password",
+      newPassword: "newSecurePassword123!",
+      confirmNewPassword: "newSecurePassword123!",
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(429);
+    expect(json.error).toContain("Trop de tentatives");
+    expect(res.headers.get("Retry-After")).toBeDefined();
     expect(mockUserUpdate).not.toHaveBeenCalled();
   });
 });

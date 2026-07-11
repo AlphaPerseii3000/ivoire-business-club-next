@@ -2,18 +2,18 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { passwordChangeSchema } from "@/lib/validations";
+import { passwordSetSchema } from "@/lib/validations";
+import { setPasswordRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeError } from "@/lib/sanitize-log";
-import { userPasswordUpdateRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 import { sendPasswordChangedEmail } from "@/lib/email";
 
 const BCRYPT_COST = 12;
 
-async function handlePasswordChange(req: Request) {
+export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rateLimit = await userPasswordUpdateRateLimiter.limit(ip);
+    const rateLimit = await setPasswordRateLimiter.limit(ip);
     if (!rateLimit.success) {
       const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
       return NextResponse.json(
@@ -35,7 +35,7 @@ async function handlePasswordChange(req: Request) {
       return NextResponse.json({ error: "Requête malformée." }, { status: 400 });
     }
 
-    const parsed = passwordChangeSchema.safeParse(body);
+    const parsed = passwordSetSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Données invalides", details: parsed.error.flatten().fieldErrors },
@@ -43,7 +43,7 @@ async function handlePasswordChange(req: Request) {
       );
     }
 
-    const { currentPassword, newPassword } = parsed.data;
+    const { password } = parsed.data;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -58,29 +58,21 @@ async function handlePasswordChange(req: Request) {
       return NextResponse.json({ error: "Compte suspendu" }, { status: 403 });
     }
 
-    if (!user.passwordHash) {
+    if (user.passwordHash) {
       return NextResponse.json(
-        { error: "Ce compte utilise la connexion Google." },
+        { error: "Un mot de passe est déjà configuré pour ce compte." },
         { status: 400 }
       );
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: "Le mot de passe actuel est incorrect." },
-        { status: 400 }
-      );
-    }
-
-    const hashedNewPassword = await bcrypt.hash(newPassword, BCRYPT_COST);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     await prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: hashedNewPassword },
+      data: { passwordHash: hashedPassword },
     });
 
-    // Log Audit
+    // Create Audit Log
     await safeCreateAuditLog({
       actorId: userId,
       action: "PASSWORD_CHANGED",
@@ -88,7 +80,7 @@ async function handlePasswordChange(req: Request) {
       entityId: userId,
     });
 
-    // Send Email Notification
+    // Send Email
     if (user.email) {
       try {
         await sendPasswordChangedEmail({
@@ -96,21 +88,13 @@ async function handlePasswordChange(req: Request) {
           name: user.name,
         });
       } catch (e) {
-        console.error("Failed to send password changed email:", sanitizeError(e));
+        console.error("Failed to send set password notification email:", sanitizeError(e));
       }
     }
 
-    return NextResponse.json({ message: "Mot de passe mis à jour avec succès." });
+    return NextResponse.json({ message: "Mot de passe défini avec succès." });
   } catch (error) {
-    console.error("Password change error:", sanitizeError(error));
+    console.error("Set password error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
-}
-
-export async function POST(req: Request) {
-  return handlePasswordChange(req);
-}
-
-export async function PUT(req: Request) {
-  return handlePasswordChange(req);
 }

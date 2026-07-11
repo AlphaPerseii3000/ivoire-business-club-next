@@ -8,8 +8,10 @@ import {
   profileUpdateSchema,
   ALL_COUNTRIES,
   passwordChangeSchema,
+  passwordSetSchema,
   type ProfileUpdateInput,
   type PasswordChangeInput,
+  type PasswordSetInput,
 } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +42,8 @@ interface ProfileEditFormProps {
 
 export default function ProfileEditForm({ user }: ProfileEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasPasswordState, setHasPasswordState] = useState(!!user.hasPassword);
+  const [showSetPasswordForm, setShowSetPasswordForm] = useState(false);
 
   const {
     register,
@@ -229,36 +233,48 @@ export default function ProfileEditForm({ user }: ProfileEditFormProps) {
         </p>
       </div>
 
-      {user.hasPassword ? (
+      {hasPasswordState ? (
         <PasswordChangeForm />
+      ) : showSetPasswordForm ? (
+        <PasswordSetForm onSuccess={() => setHasPasswordState(true)} />
       ) : (
-        <div className="rounded-lg border border-muted bg-card p-5 flex items-start gap-4 shadow-sm">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted mt-0.5">
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.273 0 3.19 2.764 1.255 6.79l3.995 2.975z"
-              />
-              <path
-                fill="#34A853"
-                d="M16.04 15.34c-1.045.727-2.382 1.173-4.04 1.173-2.927 0-5.418-1.982-6.309-4.655L1.627 14.8C3.627 18.864 7.782 21.6 12 21.6c3.155 0 6.027-1.127 8.09-3.082l-4.05-3.178z"
-              />
-              <path
-                fill="#4285F4"
-                d="M23.49 12.275c0-.8-.073-1.573-.2-2.318H12v4.51h6.473c-.282 1.482-1.11 2.74-2.382 3.59l4.05 3.18c2.373-2.19 3.736-5.418 3.736-8.962z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.69 11.858c-.236-.727-.372-1.5-.372-2.3a7.12 7.12 0 0 1 .364-2.29l-3.995-2.975A11.95 11.95 0 0 0 0 12c0 2.873.973 5.518 2.618 7.627l3.073-2.769z"
-              />
-            </svg>
+        <div className="rounded-lg border border-muted bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted mt-0.5">
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path
+                  fill="#EA4335"
+                  d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.273 0 3.19 2.764 1.255 6.79l3.995 2.975z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M16.04 15.34c-1.045.727-2.382 1.173-4.04 1.173-2.927 0-5.418-1.982-6.309-4.655L1.627 14.8C3.627 18.864 7.782 21.6 12 21.6c3.155 0 6.027-1.127 8.09-3.082l-4.05-3.178z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M23.49 12.275c0-.8-.073-1.573-.2-2.318H12v4.51h6.473c-.282 1.482-1.11 2.74-2.382 3.59l4.05 3.18c2.373-2.19 3.736-5.418 3.736-8.962z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.69 11.858c-.236-.727-.372-1.5-.372-2.3a7.12 7.12 0 0 1 .364-2.29l-3.995-2.975A11.95 11.95 0 0 0 0 12c0 2.873.973 5.518 2.618 7.627l3.073-2.769z"
+                />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Compte connecté via Google</p>
+              <p className="text-xs text-muted-foreground">
+                Votre compte est connecté via Google. Aucun mot de passe local n'est configuré pour ce compte.
+              </p>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold">Compte connecté via Google</p>
-            <p className="text-xs text-muted-foreground">
-              Votre compte est connecté via Google. Aucun mot de passe local n'est configuré pour ce compte.
-            </p>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowSetPasswordForm(true)}
+            className="w-full sm:w-auto text-xs min-h-[44px]"
+          >
+            Définir un mot de passe
+          </Button>
         </div>
       )}
     </div>
@@ -397,6 +413,111 @@ function PasswordChangeForm() {
         className="min-h-[44px] w-full mt-4"
       >
         {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+      </Button>
+    </form>
+  );
+}
+
+function PasswordSetForm({ onSuccess }: { onSuccess: () => void }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<PasswordSetInput>({
+    resolver: zodResolver(passwordSetSchema),
+    mode: "onBlur",
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const passwordValue = watch("password", "");
+  const strength = getPasswordStrength(passwordValue);
+
+  const onSubmit = async (data: PasswordSetInput) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/auth/signin";
+        return;
+      }
+
+      const payload = await res.json();
+
+      if (!res.ok) {
+        toast.error(payload.error || "Une erreur est survenue");
+        return;
+      }
+
+      toast.success("Mot de passe défini avec succès.");
+      reset();
+      onSuccess();
+    } catch {
+      toast.error("Une erreur est survenue");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="password">Nouveau mot de passe</Label>
+        <Input
+          id="password"
+          type="password"
+          autoComplete="new-password"
+          className="min-h-[44px]"
+          aria-invalid={!!errors.password}
+          aria-describedby={[
+            errors.password ? "password-error" : "",
+            strength.label ? "password-strength" : "",
+          ].filter(Boolean).join(" ") || undefined}
+          {...register("password")}
+        />
+        {strength.label ? (
+          <p id="password-strength" className={`text-xs font-medium ${strength.color}`}>
+            Force : {strength.label}
+          </p>
+        ) : null}
+        {errors.password ? (
+          <p id="password-error" className="text-xs text-destructive">{errors.password.message}</p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirmation du mot de passe</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          className="min-h-[44px]"
+          aria-invalid={!!errors.confirmPassword}
+          aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+          {...register("confirmPassword")}
+        />
+        {errors.confirmPassword ? (
+          <p id="confirmPassword-error" className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+        ) : null}
+      </div>
+
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="min-h-[44px] w-full mt-4"
+      >
+        {isSubmitting ? "Définition..." : "Définir le mot de passe"}
       </Button>
     </form>
   );

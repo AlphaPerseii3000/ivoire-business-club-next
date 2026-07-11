@@ -77,9 +77,19 @@ describe("POST /api/cron/remind-incomplete-users", () => {
     expect(mockSendReminders).toHaveBeenCalledTimes(1);
   });
 
-  it("trims whitespace from bearer token", async () => {
-    const res = await POST(makeRequest("Bearer super-secret-cron-key"));
+  it("accepts bearer token with multiple spaces", async () => {
+    const res = await POST(makeRequest("Bearer    super-secret-cron-key"));
     expect(res.status).toBe(200);
+  });
+
+  it("handles different secret lengths without throwing in timingSafeEqual", async () => {
+    // short token
+    const resShort = await POST(makeRequest("Bearer short"));
+    expect(resShort.status).toBe(401);
+
+    // long token
+    const resLong = await POST(makeRequest(`Bearer ${"a".repeat(100)}`));
+    expect(resLong.status).toBe(401);
   });
 
   it("rejects malformed Authorization header", async () => {

@@ -148,3 +148,51 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const token = searchParams.get("token");
+
+    if (!token || typeof token !== "string" || token.trim() === "") {
+      return NextResponse.json({ error: "Le token est requis." }, { status: 400 });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const verificationToken = await prisma.verificationToken.findUnique({
+      where: { token: hashedToken },
+    });
+
+    if (
+      !verificationToken ||
+      (verificationToken.tokenType !== "PASSWORD_RESET" &&
+        verificationToken.tokenType !== "SET_PASSWORD")
+    ) {
+      return NextResponse.json(
+        { error: "Ce lien est invalide ou expiré." },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date();
+    if (verificationToken.expires.getTime() < now.getTime()) {
+      try {
+        await prisma.verificationToken.delete({
+          where: { token: hashedToken },
+        });
+      } catch (e) {
+        console.warn("Could not delete expired reset token during GET validation:", sanitizeError(e));
+      }
+      return NextResponse.json(
+        { error: "Ce lien est invalide ou expiré." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ valid: true });
+  } catch (error) {
+    console.error("GET reset-password token validation error:", sanitizeError(error));
+    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+  }
+}

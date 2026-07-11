@@ -386,4 +386,25 @@ export async function sendSetPasswordEmail({
   });
 }
 
+export async function sendPasswordChangedEmail({
+  to,
+  name,
+}: {
+  to: string;
+  name?: string | null;
+}) {
+  const subject = "Votre mot de passe a été modifié";
+  const text = `${greeting(name)}
+
+Nous vous informons que le mot de passe de votre compte Ivoire Business Club a été modifié avec succès.
+
+Si vous n'êtes pas à l'origine de cette modification, veuillez contacter immédiatement notre support.
+${dashboardLine()}
+
+Cordialement,
+L'équipe Ivoire Business Club`;
+
+  return sendEmail({ to, subject, text });
+}
+
 
