@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CheckCircle2, Copy, Loader2, Landmark, Globe, Upload, File, X } from "lucide-react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import SubscriptionStatusTracker from "@/components/subscription-status-tracker";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,17 @@ export function BankTransferInstructions({
   const [localReceiptFile, setLocalReceiptFile] = useState<File | null>(null);
   const [receiptFileError, setReceiptFileError] = useState<string | null>(null);
   const config = getTierConfig(tier);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const key = `viewed-virement-${tier}-${period}`;
+      if (!sessionStorage.getItem(key)) {
+        posthog.capture("bank_transfer_page_viewed", { tier, period, amount });
+        posthog.capture("bank_transfer_instructions_viewed", { tier, period, amount });
+        sessionStorage.setItem(key, "true");
+      }
+    }
+  }, [tier, period, amount]);
 
   const effectiveReceiptFile = localReceiptFile ?? receiptFile ?? null;
   const hasReceiptFile = effectiveReceiptFile !== null;

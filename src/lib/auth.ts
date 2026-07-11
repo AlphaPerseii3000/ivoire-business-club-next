@@ -174,6 +174,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         sessionUser.status = args.token.status ?? "ACTIVE";
         sessionUser.emailVerified = typeof args.token.emailVerified === "boolean" ? args.token.emailVerified : false;
         sessionUser.onboardingCompleted = !!args.token.onboardingCompleted;
+        sessionUser.provider = args.token.provider;
       }
       return session;
     },

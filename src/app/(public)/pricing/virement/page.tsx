@@ -8,7 +8,6 @@ import { auth } from "@/lib/auth";
 import { getAmountForTier } from "@/lib/bank-transfer-config";
 import { getTierConfig, type MembershipTier } from "@/lib/tier-config";
 import LandingMobileNav from "@/components/landing/mobile-nav";
-import { posthogServer } from "@/lib/posthog-server";
 
 const allowedTiers: MembershipTier[] = ["AFFRANCHI", "GRAND_FRERE", "BOSS"];
 
@@ -46,12 +45,6 @@ export default async function BankTransferPage({ searchParams }: VirementPagePro
   const amount = getAmountForTier(tier, period);
   const reference = `IBC-${session.user.id}-${tier}`;
   const tierConfig = getTierConfig(tier);
-
-  posthogServer.capture({
-    distinctId: session.user.id,
-    event: "bank_transfer_instructions_viewed",
-    properties: { tier, period, amount },
-  });
 
   return (
     <div className="min-h-screen">

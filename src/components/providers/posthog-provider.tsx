@@ -62,6 +62,13 @@ function PostHogIdentitySyncInternal() {
     if (status !== "authenticated") return;
     if (!session?.user?.id) return;
 
+    const signedInKey = `signed-in-tracked-${session.user.id}`;
+    if (typeof window !== "undefined" && !sessionStorage.getItem(signedInKey)) {
+      const provider = (session.user as unknown as Record<string, unknown>).provider || "credentials";
+      posthog.capture("user_signed_in", { method: provider });
+      sessionStorage.setItem(signedInKey, "true");
+    }
+
     const extendedUser = session.user as unknown as Record<string, unknown>;
     const payload = {
       id: session.user.id,

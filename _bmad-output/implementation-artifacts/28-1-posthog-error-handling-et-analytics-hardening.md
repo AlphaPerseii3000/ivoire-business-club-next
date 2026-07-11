@@ -1,6 +1,10 @@
+---
+baseline_commit: b61d72e31cd96bd12e8a2be00c0c91fd5bf07082
+---
+
 # Story 28.1: PostHog Error Handling & Analytics Hardening
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -44,30 +48,30 @@ so that the application remains fully available and analytics metrics are accura
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Implement Safe Proxy Wrapper & Dev Reloading in posthog-server.ts** (AC: 1, 4, 5)
-  - [ ] Wrap the `posthogServer` export in a Proxy that intercepts all method calls (e.g., `capture`, `identify`, `alias`, `close`, `flush`).
-  - [ ] Implement a dynamic getter `getActivePostHogClient()` inside the Proxy that checks if environment variables (`NEXT_PUBLIC_POSTHOG_KEY` or `NEXT_PUBLIC_POSTHOG_HOST`) changed during development and re-initializes the client if needed.
-  - [ ] Add try/catch blocks around all intercepted method executions. Catch synchronous errors and append `.catch()` handlers to any returned Promises to avoid unhandled rejections. Log errors using `console.error`.
-  - [ ] Register `process.once("SIGTERM")` and `process.once("SIGINT")` event listeners to call `flush()` and `close()` on the active client before exiting.
+- [x] **Task 1: Implement Safe Proxy Wrapper & Dev Reloading in posthog-server.ts** (AC: 1, 4, 5)
+  - [x] Wrap the `posthogServer` export in a Proxy that intercepts all method calls (e.g., `capture`, `identify`, `alias`, `close`, `flush`).
+  - [x] Implement a dynamic getter `getActivePostHogClient()` inside the Proxy that checks if environment variables (`NEXT_PUBLIC_POSTHOG_KEY` or `NEXT_PUBLIC_POSTHOG_HOST`) changed during development and re-initializes the client if needed.
+  - [x] Add try/catch blocks around all intercepted method executions. Catch synchronous errors and append `.catch()` handlers to any returned Promises to avoid unhandled rejections. Log errors using `console.error`.
+  - [x] Register `process.once("SIGTERM")` and `process.once("SIGINT")` event listeners to call `flush()` and `close()` on the active client before exiting.
 
-- [ ] **Task 2: Harden Authentication callbacks to track OAuth Provider** (AC: 3)
-  - [ ] Update [auth.config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.config.ts) to capture and store the provider name (`account.provider`) into the JWT token inside the `jwt` callback, and expose it in the session user object in the `session` callback.
-  - [ ] Update [auth.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.ts) to also expose `provider` on `session.user` inside the `session` callback.
+- [x] **Task 2: Harden Authentication callbacks to track OAuth Provider** (AC: 3)
+  - [x] Update [auth.config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.config.ts) to capture and store the provider name (`account.provider`) into the JWT token inside the `jwt` callback, and expose it in the session user object in the `session` callback.
+  - [x] Update [auth.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.ts) to also expose `provider` on `session.user` inside the `session` callback.
 
-- [ ] **Task 3: Client-Side Google OAuth Event Capture in posthog-provider.tsx** (AC: 3)
-  - [ ] In [posthog-provider.tsx](file:///d:/Code/ivoire-business-club-next/src/components/providers/posthog-provider.tsx), check the session provider name inside `PostHogIdentitySyncInternal`.
-  - [ ] If `status === "authenticated"` and `session.user` contains a provider (e.g. `"google"`), capture `user_signed_in` with the property `{ method: provider }`.
-  - [ ] Guard this capture with a `sessionStorage` key (e.g., `signed-in-tracked-${userId}`) to ensure it is only triggered once per session.
+- [x] **Task 3: Client-Side Google OAuth Event Capture in posthog-provider.tsx** (AC: 3)
+  - [x] In [posthog-provider.tsx](file:///d:/Code/ivoire-business-club-next/src/components/providers/posthog-provider.tsx), check the session provider name inside `PostHogIdentitySyncInternal`.
+  - [x] If `status === "authenticated"` and `session.user` contains a provider (e.g. `"google"`), capture `user_signed_in` with the property `{ method: provider }`.
+  - [x] Guard this capture with a `sessionStorage` key (e.g., `signed-in-tracked-${userId}`) to ensure it is only triggered once per session.
 
-- [ ] **Task 4: Move Bank Transfer Page Tracking to Client-Side** (AC: 2)
-  - [ ] Remove the server-side `posthogServer.capture` call in [page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(public)/pricing/virement/page.tsx).
-  - [ ] In [bank-transfer-instructions.tsx](file:///d:/Code/ivoire-business-club-next/src/components/bank-transfer-instructions.tsx), add a `useEffect` hook to capture both `bank_transfer_page_viewed` and `bank_transfer_instructions_viewed` events client-side using `posthog.capture`.
-  - [ ] Guard this effect with a `sessionStorage` key (e.g., `viewed-virement-${tier}-${period}`) to prevent duplicate events on page refresh.
+- [x] **Task 4: Move Bank Transfer Page Tracking to Client-Side** (AC: 2)
+  - [x] Remove the server-side `posthogServer.capture` call in [page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(public)/pricing/virement/page.tsx).
+  - [x] In [bank-transfer-instructions.tsx](file:///d:/Code/ivoire-business-club-next/src/components/bank-transfer-instructions.tsx), add a `useEffect` hook to capture both `bank_transfer_page_viewed` and `bank_transfer_instructions_viewed` events client-side using `posthog.capture`.
+  - [x] Guard this effect with a `sessionStorage` key (e.g., `viewed-virement-${tier}-${period}`) to prevent duplicate events on page refresh.
 
-- [ ] **Task 5: Verify Build and Tests** (AC: 6)
-  - [ ] Run `npm run build` to verify there are no compilation or type errors.
-  - [ ] Run existing tests using `npx vitest run` to ensure no regression.
-  - [ ] Add unit/integration tests to verify the PostHog safety Proxy behaves correctly.
+- [x] **Task 5: Verify Build and Tests** (AC: 6)
+  - [x] Run `npm run build` to verify there are no compilation or type errors.
+  - [x] Run existing tests using `npx vitest run` to ensure no regression.
+  - [x] Add unit/integration tests to verify the PostHog safety Proxy behaves correctly.
 
 ## Dev Notes
 
@@ -270,4 +274,18 @@ Gemini 3.5 Flash (High)
 
 ### Completion Notes List
 
+- Safe PostHog Proxy wrapper with `getActivePostHogClient()` dynamically instantiating PostHog node client on key changes in dev.
+- Resilient client-side tracking: OAuth provider tracked on credentials vs Google sign-in and captured once per session.
+- Move bank transfer page views to client component `bank-transfer-instructions.tsx`, deduplicating using `sessionStorage` key.
+- Safe termination: `SIGTERM` and `SIGINT` flush and close active server-side clients cleanly.
+- Production build passes successfully and 100% of unit tests pass (1,279 passed + 5 new posthog-server unit tests).
+
 ### File List
+
+- [src/lib/posthog-server.ts](file:///d:/Code/ivoire-business-club-next/src/lib/posthog-server.ts)
+- [src/lib/auth.config.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.config.ts)
+- [src/lib/auth.ts](file:///d:/Code/ivoire-business-club-next/src/lib/auth.ts)
+- [src/components/providers/posthog-provider.tsx](file:///d:/Code/ivoire-business-club-next/src/components/providers/posthog-provider.tsx)
+- [src/app/(public)/pricing/virement/page.tsx](file:///d:/Code/ivoire-business-club-next/src/app/(public)/pricing/virement/page.tsx)
+- [src/components/bank-transfer-instructions.tsx](file:///d:/Code/ivoire-business-club-next/src/components/bank-transfer-instructions.tsx)
+- [src/lib/posthog-server.test.ts](file:///d:/Code/ivoire-business-club-next/src/lib/posthog-server.test.ts)

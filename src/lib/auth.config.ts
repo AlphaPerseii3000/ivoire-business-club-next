@@ -11,7 +11,7 @@ export const authConfig: NextAuthConfig = {
     newUser: "/auth/signup",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.tier = (user as unknown as Record<string, unknown>).tier ?? "AFFRANCHI";
@@ -26,6 +26,9 @@ export const authConfig: NextAuthConfig = {
           token.role = "ADMIN";
         }
       }
+      if (account?.provider) {
+        token.provider = account.provider;
+      }
       return token;
     },
     async session({ session, token }) {
@@ -35,6 +38,7 @@ export const authConfig: NextAuthConfig = {
         (session.user as unknown as Record<string, unknown>).role = isConfiguredAdminEmail(session.user.email) ? "ADMIN" : token.role;
         (session.user as unknown as Record<string, unknown>).emailVerified = typeof token.emailVerified === "boolean" ? token.emailVerified : false;
         (session.user as unknown as Record<string, unknown>).onboardingCompleted = !!token.onboardingCompleted;
+        (session.user as unknown as Record<string, unknown>).provider = token.provider;
       }
       return session;
     },
