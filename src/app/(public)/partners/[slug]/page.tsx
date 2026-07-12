@@ -7,17 +7,16 @@ import type { Metadata } from "next";
 import { ArrowLeft, Mail, Phone, Globe, Building2, ShieldCheck, User } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Footer } from "@/components/landing/footer";
-import LandingMobileNav from "@/components/landing/mobile-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
+import { SITE_URL } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
+const siteUrl = SITE_URL;
 
 const cleanMarkdown = (markdown: string) => {
   if (!markdown) return "";
@@ -192,50 +191,10 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       {/* Navigation mobile */}
-      <LandingMobileNav />
-
+      
 
       {/* Navigation Header */}
-      <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
-          <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
-            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
-              Ivoire Business Club
-            </span>
-          </Link>
-          <nav className="flex gap-6 text-sm items-center">
-            <Link href="/" className="text-slate-300 hover:text-white transition-colors">
-              Accueil
-            </Link>
-            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
-              Articles
-            </Link>
-            <Link href="/experts" className="text-slate-300 hover:text-white transition-colors font-medium">
-              Experts
-            </Link>
-            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors font-medium">
-              Partenaires
-            </Link>
-            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
-              Événements
-            </Link>
-            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
-              Tarifs
-            </Link>
-            {isLoggedIn ? (
-              <Link href="/dashboard" className="text-slate-300 hover:text-white transition-colors font-medium">
-                Tableau de bord
-              </Link>
-            ) : (
-              <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">
-                Connexion
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
-
+      
       {/* Mise en page principale */}
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
         {/* Lien de retour */}
@@ -388,7 +347,6 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

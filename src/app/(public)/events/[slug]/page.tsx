@@ -4,9 +4,8 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, MapPin, Lock, Ticket, Users, ExternalLink } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Footer } from "@/components/landing/footer";
-import LandingMobileNav from "@/components/landing/mobile-nav";
 import { sanitizeError } from "@/lib/sanitize-log";
+import { SITE_URL } from "@/lib/site-config";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
@@ -74,7 +73,7 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
     if (!event) return {};
 
     const isPrivateVisitor = isPrivateEventForVisitor(event.visibility, false);
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com";
+    const siteUrl = SITE_URL;
     const pageUrl = `${siteUrl}/events/${slug}`;
     const imageUrl = event.coverImagePath
       ? `${siteUrl}/api/media/events/${event.id}/cover`
@@ -177,7 +176,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const coverUrl = event.coverImagePath ? `/api/media/events/${event.id}/cover` : null;
 
   // JSON-LD GEO for events
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com").replace(/\/$/, "");
+  const siteUrl = SITE_URL;
   const eventUrl = `${siteUrl}/events/${slug}`;
   const eventImageUrl = isPrivateVisitor || !coverUrl
     ? `${siteUrl}/logo-ibc.webp`
@@ -268,26 +267,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   const schemas: Array<Record<string, unknown>> = [eventLd, breadcrumbLd];
 
-  const renderNavigationHeader = () => (
-    <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-          <Image src="/logo-ibc.webp" alt="IBC Logo" width={32} height={32} className="h-8 w-auto" />
-          <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
-            Ivoire Business Club
-          </span>
-        </Link>
-        <nav className="flex gap-6 text-sm items-center">
-          <Link href="/" className="text-slate-300 hover:text-white transition-colors">Accueil</Link>
-          <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">Articles</Link>
-          <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">Experts</Link>
-          <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">Événements</Link>
-          <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">Tarifs</Link>
-          <Link href="/auth/signin" className="text-slate-300 hover:text-white transition-colors">Connexion</Link>
-        </nav>
-      </div>
-    </header>
-  );
 
   if (isCancelled) {
     return (
@@ -296,8 +275,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, "\\u003c") }}
         />
-        <LandingMobileNav />
-        {renderNavigationHeader()}
 
         <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
           <Link href="/events" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group">
@@ -318,8 +295,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           </div>
         </main>
 
-        <Footer />
-      </div>
+              </div>
     );
   }
 
@@ -329,8 +305,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, "\\u003c") }}
       />
-      <LandingMobileNav />
-      {renderNavigationHeader()}
 
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-12">
         <Link href="/events" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors group">
@@ -525,8 +499,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         )}
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }
 

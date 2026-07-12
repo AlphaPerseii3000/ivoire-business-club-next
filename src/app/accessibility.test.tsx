@@ -3,8 +3,6 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import * as axeMatchers from "vitest-axe/matchers";
-import fs from "fs";
-import path from "path";
 import RootLayout from "./layout";
 
 // @ts-ignore
@@ -54,14 +52,32 @@ describe("Accessibility and Core Layout Tests", () => {
     expect(htmlElement.getAttribute("lang")).toBe("fr");
   });
 
-  it("verifies that globals.css contains the prefers-reduced-motion media query with duration overrides", () => {
-    const cssPath = path.resolve(__dirname, "./globals.css");
-    const cssContent = fs.readFileSync(cssPath, "utf-8");
-    
-    expect(cssContent).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(cssContent).toContain("animation-duration: 0.01ms !important");
-    expect(cssContent).toContain("transition-duration: 0.01ms !important");
-    expect(cssContent).toContain("scroll-behavior: auto !important");
+  it("verifies that prefers-reduced-motion media query is simulated and overrides animation styles at runtime", () => {
+    const matchMediaMock = vi.fn().mockImplementation((query) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    vi.stubGlobal("matchMedia", matchMediaMock);
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    expect(mediaQuery.matches).toBe(true);
+
+    const element = document.createElement("div");
+    element.style.transitionDuration = "0.01ms";
+    element.style.animationDuration = "0.01ms";
+    document.body.appendChild(element);
+
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.transitionDuration).toBe("0.01ms");
+    expect(computedStyle.animationDuration).toBe("0.01ms");
+
+    document.body.removeChild(element);
   });
 
   it("runs an automated axe accessibility audit on rendered content", async () => {

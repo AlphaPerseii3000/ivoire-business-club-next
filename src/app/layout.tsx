@@ -7,6 +7,7 @@ import { CSPostHogProvider, PostHogIdentitySync, PostHogPageView } from "@/compo
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import BetaChatWidget from "@/components/features/chat/beta-chat-widget";
+import { SITE_URL } from "@/lib/site-config";
 
 const inter = Inter({ subsets: ["latin"] });
 const dmSans = DM_Sans({
@@ -16,7 +17,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ivoire-business-club.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Ivoire Business Club — Bâtir son futur en Afrique",
     template: "%s | Ivoire Business Club",

@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site-config';
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = 'https://www.ivoire-business-club.com';
+  const siteUrl = SITE_URL;
   const privateRoutes = ['/admin/*', '/dashboard/*', '/api/*', '/auth/*', '/onboarding/*'];
 
   return {

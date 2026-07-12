@@ -9,7 +9,6 @@ import { ScrollLoopBackground } from '@/components/landing/scroll-loop-backgroun
 import { Pricing } from '@/components/landing/pricing';
 import { OpportunityTeasers } from '@/components/landing/opportunity-teasers';
 import { LeadMagnet } from '@/components/landing/lead-magnet';
-import { Footer } from '@/components/landing/footer';
 import { prisma } from '@/lib/prisma';
 import { SuccessWall } from '@/components/landing/success-wall';
 import { ScrollVideoPlayer } from '@/components/ui/scroll-video-player';
@@ -18,7 +17,6 @@ import { MomentsIbc } from '@/components/landing/moments-ibc';
 import { NextEventCard, type NextEventCardEvent } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
 import { getNextPublishedEvent, getMomentsIbcPhotos } from '@/lib/event-server-utils';
-import LandingMobileNav from '@/components/landing/mobile-nav';
 
 // Le rendu dynamique évite d'accéder à la base de données lors du build statique.
 export const dynamic = 'force-dynamic';
@@ -147,48 +145,8 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col text-white pb-20 md:pb-0 grain-overlay relative">
       <ScrollLoopBackground threshold={2800} opacity={0.25} />
-      <LandingMobileNav />
-
-      <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
-          <Link
-            href="/"
-            className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
-          >
-            <img src="/logo-ibc-landing.webp" alt="IBC Logo" className="h-8 w-auto" />
-            <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
-              Ivoire Business Club
-            </span>
-          </Link>
-          <nav className="flex gap-6 text-sm items-center">
-            <a href="#mission" className="text-slate-300 hover:text-white transition-colors">
-              Mission
-            </a>
-            <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">
-              Tarifs
-            </a>
-            <Link href="/articles" className="text-slate-300 hover:text-white transition-colors">
-              Articles
-            </Link>
-            <Link href="/experts" className="text-slate-300 hover:text-white transition-colors">
-              Experts
-            </Link>
-            <Link href="/partners" className="text-slate-300 hover:text-white transition-colors">
-              Partenaires
-            </Link>
-            <Link href="/events" className="text-slate-300 hover:text-white transition-colors font-medium">
-              Événements
-            </Link>
-            <Link
-              href="/auth/signin"
-              className="text-slate-300 hover:text-white transition-colors"
-            >
-              Connexion
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+      
+      
       <main className="flex-1 relative z-10">
         <HeroShutter />
         <Mission />
@@ -212,8 +170,7 @@ export default async function HomePage() {
       <div className="relative z-10">
         {nextEvent ? <EventPopup event={nextEvent} enabled={showEventPopup} /> : null}
 
-        <Footer />
-
+        
         {/* Sticky Bottom CTA for Mobile */}
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
           <Link

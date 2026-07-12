@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft } from 'lucide-react';
-import LandingMobileNav from '@/components/landing/mobile-nav';
-import { Footer } from '@/components/landing/footer';
 
 export const metadata: Metadata = {
   title: 'Conditions Générales de Vente (CGV) — IBC',
@@ -25,30 +23,9 @@ export const metadata: Metadata = {
 export default function CgvPage() {
   return (
     <div className="bg-[#090D16] min-h-screen text-slate-300 flex flex-col font-sans">
-      <LandingMobileNav />
-
+      
       {/* Header Desktop */}
-      <header className="hidden md:flex sticky top-0 z-40 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
-          <Link
-            href="/"
-            className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
-          >
-            <img src="/logo-ibc-landing.webp" alt="IBC Logo" className="h-8 w-auto" />
-            <span className="bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent">
-              Ivoire Business Club
-            </span>
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-[#D4A847]" />
-            <span>Retour à l’accueil</span>
-          </Link>
-        </div>
-      </header>
-
+      
       {/* Main Content */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-16 md:py-24">
         {/* Mobile back link */}
@@ -159,7 +136,6 @@ export default function CgvPage() {
         </article>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

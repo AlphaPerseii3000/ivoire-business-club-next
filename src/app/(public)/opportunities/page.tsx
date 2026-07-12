@@ -1,8 +1,6 @@
 import { OpportunityTeasers } from "@/components/landing/opportunity-teasers";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
-import LandingMobileNav from "@/components/landing/mobile-nav";
-import { Footer } from "@/components/landing/footer";
 
 export const dynamic = "force-dynamic";
 
@@ -46,15 +44,13 @@ export default async function PublicOpportunitiesPage() {
 
   return (
     <div className="min-h-screen bg-[#090D16] text-white flex flex-col">
-      <LandingMobileNav />
-      <main className="flex-1">
+            <main className="flex-1">
         <OpportunityTeasers
           opportunities={opportunities}
           title="Toutes les opportunités visibles publiquement"
           description="Les visiteurs voient uniquement le titre et la localisation. Les montants, documents et contacts sont réservés aux membres actifs."
         />
       </main>
-      <Footer />
-    </div>
+          </div>
   );
 }

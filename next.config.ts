@@ -1,4 +1,8 @@
-import "./patch-readlink.js";
+try {
+  require("./patch-readlink.js");
+} catch (e) {
+  console.warn("Warning: patch-readlink.js is missing or could not be loaded:", e);
+}
 import type { NextConfig } from "next";
 
 const securityHeaders = [
