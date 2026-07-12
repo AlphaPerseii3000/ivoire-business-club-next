@@ -43,7 +43,7 @@ export async function GET(
 
     const { searchParams } = new URL(req.url);
     const pageRaw = searchParams.get("page");
-    const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+    const page = Math.min(100000, Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1));
     const limit = 20;
     const skip = (page - 1) * limit;
 

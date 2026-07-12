@@ -59,6 +59,12 @@ export async function GET(
         return {
           ...comment,
           content: "Ce commentaire a été supprimé.",
+          userId: "deleted",
+          user: {
+            id: "deleted",
+            name: "Membre",
+            image: null,
+          },
         };
       }
       return comment;
@@ -181,6 +187,32 @@ export async function PUT(
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
+    const rateLimit = await commentCreateRateLimiter.limit(`user:${session.user.id}`);
+    if (!rateLimit.success) {
+      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: "Trop de requêtes. Veuillez réessayer plus tard." },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
+    }
+
+    const hasAccess = await hasActiveSubscription(session.user.id);
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
+    }
+
+    const isAdmin = session.user.role === "ADMIN";
+    const article = await prisma.article.findFirst({
+      where: {
+        OR: [{ id: articleId }, { slug: articleId }],
+        ...(!isAdmin ? { published: true } : {}),
+      },
+    });
+
+    if (!article) {
+      return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
+    }
+
     let body;
     try {
       body = await req.json();
@@ -210,6 +242,10 @@ export async function PUT(
 
     if (!comment) {
       return NextResponse.json({ error: "Commentaire introuvable" }, { status: 404 });
+    }
+
+    if (comment.articleId !== article.id) {
+      return NextResponse.json({ error: "Commentaire non associé à cet article" }, { status: 400 });
     }
 
     if (comment.deletedAt) {
@@ -252,7 +288,7 @@ export async function PUT(
         entityType: "Comment",
         entityId: commentId,
         metadata: {
-          articleId,
+          articleId: article.id,
         },
       });
     } catch (auditError) {
@@ -275,6 +311,27 @@ export async function DELETE(
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    const rateLimit = await commentCreateRateLimiter.limit(`user:${session.user.id}`);
+    if (!rateLimit.success) {
+      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: "Trop de requêtes. Veuillez réessayer plus tard." },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
+    }
+
+    const isAdmin = session.user.role === "ADMIN";
+    const article = await prisma.article.findFirst({
+      where: {
+        OR: [{ id: articleId }, { slug: articleId }],
+        ...(!isAdmin ? { published: true } : {}),
+      },
+    });
+
+    if (!article) {
+      return NextResponse.json({ error: "Article non trouvé" }, { status: 404 });
     }
 
     let commentId: string | null = null;
@@ -304,7 +361,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Commentaire introuvable" }, { status: 404 });
     }
 
-    const isAdmin = session.user.role === "ADMIN";
+    if (comment.articleId !== article.id) {
+      return NextResponse.json({ error: "Commentaire non associé à cet article" }, { status: 400 });
+    }
+
+    if (comment.deletedAt) {
+      return NextResponse.json({ error: "Ce commentaire a déjà été supprimé" }, { status: 400 });
+    }
+
     const isAuthor = comment.userId === session.user.id;
 
     if (!isAdmin && !isAuthor) {
@@ -325,7 +389,7 @@ export async function DELETE(
         entityType: "Comment",
         entityId: commentId,
         metadata: {
-          articleId,
+          articleId: article.id,
         },
       });
     } catch (auditError) {

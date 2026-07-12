@@ -184,6 +184,9 @@ describe("POST /api/articles/[id]/comments", () => {
 describe("PUT /api/articles/[id]/comments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCommentCreateRateLimiterLimit.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 });
+    mockHasActiveSubscription.mockResolvedValue(true);
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
   });
 
   it("returns 401 if unauthenticated", async () => {
@@ -205,11 +208,47 @@ describe("PUT /api/articles/[id]/comments", () => {
     expect(response.status).toBe(404);
   });
 
+  it("returns 403 if user is not subscribed", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockHasActiveSubscription.mockResolvedValueOnce(false);
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 429 if rate limit is exceeded", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentCreateRateLimiterLimit.mockResolvedValueOnce({ success: false, limit: 5, remaining: 0, reset: Date.now() + 60000 });
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(429);
+  });
+
+  it("returns 400 if comment does not belong to the article", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      articleId: "art-2",
+      deletedAt: null,
+    });
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(400);
+  });
+
   it("returns 403 if not the author", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-2", role: "MEMBER" } });
     mockCommentFindUnique.mockResolvedValue({
       id: "com-1",
       userId: "user-1",
+      articleId: "art-1",
       deletedAt: null,
     });
 
@@ -224,6 +263,7 @@ describe("PUT /api/articles/[id]/comments", () => {
     mockCommentFindUnique.mockResolvedValue({
       id: "com-1",
       userId: "user-1",
+      articleId: "art-1",
       deletedAt: null,
     });
     mockCommentUpdate.mockResolvedValue({
@@ -252,6 +292,8 @@ describe("PUT /api/articles/[id]/comments", () => {
 describe("DELETE /api/articles/[id]/comments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCommentCreateRateLimiterLimit.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 });
+    mockArticleFindFirst.mockResolvedValue(mockArticle);
   });
 
   it("returns 401 if unauthenticated", async () => {
@@ -273,11 +315,52 @@ describe("DELETE /api/articles/[id]/comments", () => {
     expect(response.status).toBe(404);
   });
 
+  it("returns 429 if rate limit is exceeded", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentCreateRateLimiterLimit.mockResolvedValueOnce({ success: false, limit: 5, remaining: 0, reset: Date.now() + 60000 });
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(429);
+  });
+
+  it("returns 400 if comment does not belong to the article", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      articleId: "art-2",
+      deletedAt: null,
+    });
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("returns 400 if comment is already soft-deleted", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      articleId: "art-1",
+      deletedAt: new Date(),
+    });
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(400);
+  });
+
   it("returns 403 if not author and not admin", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-2", role: "MEMBER" } });
     mockCommentFindUnique.mockResolvedValue({
       id: "com-1",
       userId: "user-1",
+      articleId: "art-1",
       deletedAt: null,
     });
 
@@ -292,6 +375,7 @@ describe("DELETE /api/articles/[id]/comments", () => {
     mockCommentFindUnique.mockResolvedValue({
       id: "com-1",
       userId: "user-1",
+      articleId: "art-1",
       deletedAt: null,
     });
     mockCommentUpdate.mockResolvedValue({ id: "com-1" });
@@ -315,6 +399,7 @@ describe("DELETE /api/articles/[id]/comments", () => {
     mockCommentFindUnique.mockResolvedValue({
       id: "com-1",
       userId: "user-1",
+      articleId: "art-1",
       deletedAt: null,
     });
     mockCommentUpdate.mockResolvedValue({ id: "com-1" });

@@ -23,7 +23,7 @@ export default async function AdminArticlesPage({
 
   const query = (await searchParams) ?? {};
   const pageRaw = Array.isArray(query.page) ? query.page[0] : query.page;
-  const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+  const page = Math.min(100000, Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1));
   const limit = 20;
   const skip = (page - 1) * limit;
 
@@ -83,8 +83,8 @@ export default async function AdminArticlesPage({
             Créer un article
           </Button>
           <a
-             href="/admin/dashboard"
-             className="text-sm text-muted-foreground hover:text-primary"
+            href="/admin/dashboard"
+            className="text-sm text-muted-foreground hover:text-primary"
           >
             ← Retour au dashboard
           </a>

@@ -413,6 +413,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               articleId={article.id}
               userId={userId}
               isAuthorized={hasAccess}
+              isAdmin={isAdmin}
             />
           </div>
         ) : (
@@ -421,6 +422,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               articleId={article.id}
               userId={userId}
               isAuthorized={hasAccess}
+              isAdmin={isAdmin}
             />
             {/* Excerpt still shown */}
             <p className="text-lg text-slate-300 leading-relaxed italic border-l-4 border-slate-500 pl-4 py-1">

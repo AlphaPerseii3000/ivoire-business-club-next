@@ -126,3 +126,9 @@
 ## Deferred from: code review of 28-1-posthog-error-handling-et-analytics-hardening.md (2026-07-11)
 
 - Next-Auth Session type casting instead of module augmentation [src/lib/auth.config.ts] — Repeatedly casting `session.user` to `Record<string, unknown>` to access custom fields like `provider` instead of properly extending type definitions in next-auth.d.ts. (pre-existing)
+
+## Deferred from: code review of 28-3-robustesse-data-integrity-pagination-race-conditions-et-types.md (2026-07-12)
+
+- Non-standard parameter parsing in DELETE endpoint [src/app/api/articles/[id]/comments/route.ts:866] — The DELETE endpoint attempts to parse commentId from query parameters and falls back to parsing from the request body if not found.
+- Lack of system-wide soft-delete query filters [prisma/schema.prisma] — Database queries for comments outside the modified API do not automatically filter out soft-deleted comments because no global query filter is implemented.
+
