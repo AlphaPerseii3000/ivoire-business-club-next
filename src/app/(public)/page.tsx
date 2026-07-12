@@ -17,6 +17,7 @@ import { MomentsIbc } from '@/components/landing/moments-ibc';
 import { NextEventCard, type NextEventCardEvent } from '@/components/features/events/NextEventCard';
 import { EventPopup } from '@/components/features/events/EventPopup';
 import { getNextPublishedEvent, getMomentsIbcPhotos } from '@/lib/event-server-utils';
+import { SITE_URL } from '@/lib/site-config';
 
 // Le rendu dynamique évite d'accéder à la base de données lors du build statique.
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: homeTitle,
     description: homeDescription,
-    url: 'https://ivoire-business-club.com',
+    url: SITE_URL,
     siteName: 'Ivoire Business Club',
     images: [
       {

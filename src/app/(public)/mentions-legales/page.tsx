@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft } from 'lucide-react';
+import { SITE_URL } from '@/lib/site-config';
 
 export const metadata: Metadata = {
   title: 'Mentions Légales — Ivoire Business Club',
   description:
-    'Consultez les mentions légales de l\u2019Ivoire Business Club (IBC), géré par KS Investment SA à Abidjan.',
+    'Consultez les mentions légales de l’Ivoire Business Club (IBC), géré par KS Investment SA à Abidjan.',
   alternates: {
     canonical: '/mentions-legales',
   },
   openGraph: {
     title: 'Mentions Légales — Ivoire Business Club',
     description:
-      'Mentions légales de l\u2019Ivoire Business Club (IBC). Informations sur l\u2019éditeur KS Investment SA et l\u2019hébergeur Infomaniak.',
-    url: 'https://ivoire-business-club.com/mentions-legales',
+      'Mentions légales de l’Ivoire Business Club (IBC). Informations sur l’éditeur KS Investment SA et l’hébergeur Infomaniak.',
+    url: `${SITE_URL}/mentions-legales`,
     siteName: 'Ivoire Business Club',
     locale: 'fr_FR',
     type: 'website',
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function MentionsLegalesPage() {
   return (
-    <div className="bg-[#090D16] min-h-screen text-slate-300 flex flex-col font-sans">
+    <>
       
       {/* Header Desktop */}
       
@@ -108,6 +109,6 @@ export default function MentionsLegalesPage() {
         </article>
       </main>
 
-          </div>
+    </>
   );
 }

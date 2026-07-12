@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft } from 'lucide-react';
+import { SITE_URL } from '@/lib/site-config';
 
 export const metadata: Metadata = {
   title: 'Politique de Confidentialité — IBC',
   description:
-    'Découvrez comment l\u2019Ivoire Business Club (IBC) protège vos données personnelles conformément à l\u2019APDP et au RGPD.',
+    'Découvrez comment l’Ivoire Business Club (IBC) protège vos données personnelles conformément à l’APDP et au RGPD.',
   alternates: {
     canonical: '/politique-confidentialite',
   },
   openGraph: {
     title: 'Politique de Confidentialité — IBC',
     description:
-      'Politique de protection des données personnelles de l\u2019Ivoire Business Club. Conformité APDP (Loi 2013-450) et RGPD.',
-    url: 'https://ivoire-business-club.com/politique-confidentialite',
+      'Politique de protection des données personnelles de l’Ivoire Business Club. Conformité APDP (Loi 2013-450) et RGPD.',
+    url: `${SITE_URL}/politique-confidentialite`,
     siteName: 'Ivoire Business Club',
     locale: 'fr_FR',
     type: 'website',
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function PolitiqueConfidentialitePage() {
   return (
-    <div className="bg-[#090D16] min-h-screen text-slate-300 flex flex-col font-sans">
+    <>
       
       {/* Header Desktop */}
       
@@ -120,6 +121,6 @@ export default function PolitiqueConfidentialitePage() {
         </article>
       </main>
 
-          </div>
+    </>
   );
 }

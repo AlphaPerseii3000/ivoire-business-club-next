@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { sanitizeError } from '@/lib/sanitize-log';
+import { SITE_URL } from '@/lib/site-config';
 
 export const revalidate = 3600;
 
-const siteUrl = 'https://www.ivoire-business-club.com';
+const siteUrl = SITE_URL;
 
 function formatDate(date: Date | null): string {
   if (!date) return '';

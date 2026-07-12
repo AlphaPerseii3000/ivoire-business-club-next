@@ -132,3 +132,7 @@
 - Non-standard parameter parsing in DELETE endpoint [src/app/api/articles/[id]/comments/route.ts:866] — The DELETE endpoint attempts to parse commentId from query parameters and falls back to parsing from the request body if not found.
 - Lack of system-wide soft-delete query filters [prisma/schema.prisma] — Database queries for comments outside the modified API do not automatically filter out soft-deleted comments because no global query filter is implemented.
 
+## Deferred from: code review of 28-4-code-quality-et-tech-debt-cleanup.md (2026-07-12)
+
+- Contournements via manipulation DOM et timers fictifs dans les tests unitaires [src/components/features/admin/event-form.test.tsx:1] — Certains tests suppriment des attributs HTML (`accept`, `maxLength`) directement sur le DOM pour contourner les validations strictes d'interactions de `user-event`, ou utilisent des timers fictifs de manière potentiellement instable.
+

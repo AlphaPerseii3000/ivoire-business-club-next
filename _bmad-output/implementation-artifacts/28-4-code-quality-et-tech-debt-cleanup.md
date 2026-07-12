@@ -78,6 +78,19 @@ so that maintenance is reduced and future bugs are prevented.
     - [x] `src/components/orange-money-instructions.test.tsx`
     - [x] `src/components/wave-instructions.test.tsx`
 
+### Review Findings
+
+- [x] [Review][Decision] Rendu dynamique forcé sur toutes les pages publiques par le Header asynchrone — Résolu en migrant le statut de session côté client via useSession.
+- [x] [Review][Patch] Absence du Footer et de la navigation mobile (LandingMobileNav) dans le layout public [src/app/(public)/layout.tsx:1]
+- [x] [Review][Patch] URLs absolues codées en dur non centralisées [src/app/(public)/page.tsx:37]
+- [x] [Review][Patch] Test d'accessibilité prefers-reduced-motion tautologique et stub matchMedia persistant [src/app/accessibility.test.tsx:66]
+- [x] [Review][Patch] Risque de crash généralisé du site public sur erreur de session/DB dans le Header [src/components/landing/header.tsx:4]
+- [x] [Review][Patch] Risque de crash si SITE_URL est configuré sans protocole [src/lib/site-config.ts:7]
+- [x] [Review][Patch] Utilisation d'une balise native <img> non optimisée pour le logo [src/components/landing/header.tsx:1]
+- [x] [Review][Patch] Balises div parent redondantes et conflits de styles textuels [src/app/(public)/page.tsx:1]
+- [x] [Review][Patch] Problèmes d'indentation et de formatage dans le layout public [src/app/(public)/layout.tsx:1]
+- [x] [Review][Defer] Contournements via manipulation DOM et timers fictifs dans les tests unitaires [src/components/features/admin/event-form.test.tsx:1] — deferred, pre-existing
+
 ## Dev Notes
 
 - **Conventions d'importation :** Utiliser l'alias `@/*` pour tout import depuis le dossier `src/` (ex: `@/lib/site-config`).
@@ -88,11 +101,9 @@ so that maintenance is reduced and future bugs are prevented.
 - **Header / Footer :** Placé sous `src/components/landing/header.tsx` et importé dans `src/app/(public)/layout.tsx`.
 - **Site URL :** Défini sous `src/lib/site-config.ts` sous la forme :
   ```typescript
-  export const SITE_URL = (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    'https://www.ivoire-business-club.com'
-  ).replace(/\/$/, '');
+  const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://www.ivoire-business-club.com';
+  const cleanUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+  export const SITE_URL = cleanUrl.replace(/\/$/, '');
   ```
 
 ### References

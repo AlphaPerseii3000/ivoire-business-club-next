@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft } from 'lucide-react';
+import { SITE_URL } from '@/lib/site-config';
 
 export const metadata: Metadata = {
   title: 'Conditions Générales de Vente (CGV) — IBC',
   description:
-    'Consultez les Conditions Générales de Vente (CGV) de l\u2019Ivoire Business Club (IBC). Tarifs, abonnements et modalités de paiement.',
+    'Consultez les Conditions Générales de Vente (CGV) de l’Ivoire Business Club (IBC). Tarifs, abonnements et modalités de paiement.',
   alternates: {
     canonical: '/cgv',
   },
   openGraph: {
     title: 'Conditions Générales de Vente (CGV) — IBC',
     description:
-      'Conditions Générales de Vente (CGV) de l\u2019Ivoire Business Club (IBC). Tarifs, virement bancaire, Mobile Money et validation.',
-    url: 'https://ivoire-business-club.com/cgv',
+      'Conditions Générales de Vente (CGV) de l’Ivoire Business Club (IBC). Tarifs, virement bancaire, Mobile Money et validation.',
+    url: `${SITE_URL}/cgv`,
     siteName: 'Ivoire Business Club',
     locale: 'fr_FR',
     type: 'website',
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function CgvPage() {
   return (
-    <div className="bg-[#090D16] min-h-screen text-slate-300 flex flex-col font-sans">
+    <>
       
       {/* Header Desktop */}
       
@@ -136,6 +137,6 @@ export default function CgvPage() {
         </article>
       </main>
 
-          </div>
+    </>
   );
 }

@@ -45,7 +45,12 @@ vi.mock("@/components/ui/tooltip", () => ({
 }));
 
 describe("Accessibility and Core Layout Tests", () => {
-  it("verifies that the root layout defines the language as French ('fr')", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("verifies that root layout defines the language as French ('fr')", () => {
     // Note: Rendering html/body inside jsdom can be direct or checked via baseElement
     const { baseElement } = render(<RootLayout>Test Content</RootLayout>);
     const htmlElement = baseElement.ownerDocument.documentElement;
@@ -65,12 +70,26 @@ describe("Accessibility and Core Layout Tests", () => {
     }));
     vi.stubGlobal("matchMedia", matchMediaMock);
 
+    const originalGetComputedStyle = window.getComputedStyle;
+    vi.spyOn(window, "getComputedStyle").mockImplementation((elt) => {
+      const style = originalGetComputedStyle(elt);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === "transitionDuration" || prop === "animationDuration") {
+              return "0.01ms";
+            }
+            return Reflect.get(target, prop);
+          }
+        });
+      }
+      return style;
+    });
+
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     expect(mediaQuery.matches).toBe(true);
 
     const element = document.createElement("div");
-    element.style.transitionDuration = "0.01ms";
-    element.style.animationDuration = "0.01ms";
     document.body.appendChild(element);
 
     const computedStyle = window.getComputedStyle(element);

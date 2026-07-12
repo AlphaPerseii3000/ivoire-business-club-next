@@ -1,6 +1,8 @@
 export const dynamic = 'force-static';
 
-const siteUrl = 'https://www.ivoire-business-club.com';
+import { SITE_URL } from '@/lib/site-config';
+
+const siteUrl = SITE_URL;
 
 export function GET(): Response {
   const body = `# Ivoire Business Club

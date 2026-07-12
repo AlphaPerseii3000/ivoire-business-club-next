@@ -1,15 +1,25 @@
-import Link from 'next/link';
-import { auth } from '@/lib/auth';
+'use client';
 
-export default async function Header() {
-  const session = await auth();
+import Link from 'next/link';
+import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+
+export default function Header() {
+  const { data: session } = useSession();
   const isLoggedIn = !!session?.user?.id;
 
   return (
     <header className="hidden md:flex sticky top-0 z-50 border-b border-white/10 bg-[#090D16]/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
         <Link href="/" className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-          <img src="/logo-ibc-landing.webp" alt="IBC Logo" className="h-8 w-auto" />
+          <Image
+            src="/logo-ibc-landing.webp"
+            alt="IBC Logo"
+            width={128}
+            height={32}
+            className="h-8 w-auto"
+            priority
+          />
           <span className="hidden sm:inline bg-gradient-to-r from-white to-[#D4A847] bg-clip-text text-transparent font-sans">
             Ivoire Business Club
           </span>
