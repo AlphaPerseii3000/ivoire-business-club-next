@@ -5,6 +5,7 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockCompanyFindMany = vi.hoisted(() => vi.fn());
 const mockCompanyCreate = vi.hoisted(() => vi.fn());
 const mockCompanyFindFirst = vi.hoisted(() => vi.fn());
+const mockCompanyCount = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 const mockPromoteConfiguredAdminUser = vi.hoisted(() => vi.fn());
 
@@ -15,6 +16,7 @@ vi.mock("@/lib/prisma", () => ({
       findMany: mockCompanyFindMany,
       create: mockCompanyCreate,
       findFirst: mockCompanyFindFirst,
+      count: mockCompanyCount,
     },
   },
 }));
@@ -81,17 +83,50 @@ describe("GET /api/companies", () => {
 
   it("returns only published companies sorted by createdAt desc", async () => {
     mockCompanyFindMany.mockResolvedValue([mockCompanies[0]]);
+    mockCompanyCount.mockResolvedValue(1);
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/companies"));
     const payload = await response.json();
 
     expect(response.status).toBe(200);
     expect(payload.data).toHaveLength(1);
     expect(payload.data[0].name).toBe("KS Construction");
+    expect(payload.meta).toEqual({
+      page: 1,
+      limit: 20,
+      totalCount: 1,
+      totalPages: 1,
+    });
     expect(mockCompanyFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { isPublished: true },
         orderBy: { createdAt: "desc" },
+        skip: 0,
+        take: 20,
+      })
+    );
+  });
+
+  it("handles pagination via page parameter", async () => {
+    mockCompanyFindMany.mockResolvedValue([]);
+    mockCompanyCount.mockResolvedValue(25);
+
+    const response = await GET(new Request("http://localhost/api/companies?page=2"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.meta).toEqual({
+      page: 2,
+      limit: 20,
+      totalCount: 25,
+      totalPages: 2,
+    });
+    expect(mockCompanyFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isPublished: true },
+        orderBy: { createdAt: "desc" },
+        skip: 20,
+        take: 20,
       })
     );
   });

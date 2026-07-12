@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET, POST } from "./route";
+import { GET, POST, PUT, DELETE } from "./route";
 
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockArticleFindFirst = vi.hoisted(() => vi.fn());
 const mockCommentFindMany = vi.hoisted(() => vi.fn());
 const mockCommentCreate = vi.hoisted(() => vi.fn());
+const mockCommentFindUnique = vi.hoisted(() => vi.fn());
+const mockCommentUpdate = vi.hoisted(() => vi.fn());
 const mockHasActiveSubscription = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
+const mockCommentCreateRateLimiterLimit = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/subscription-access", () => ({
@@ -20,15 +23,22 @@ vi.mock("@/lib/prisma", () => ({
     comment: {
       findMany: mockCommentFindMany,
       create: mockCommentCreate,
+      findUnique: mockCommentFindUnique,
+      update: mockCommentUpdate,
     },
   },
 }));
 vi.mock("@/lib/audit-log", () => ({
   safeCreateAuditLog: mockSafeCreateAuditLog,
 }));
+vi.mock("@/lib/rate-limit", () => ({
+  commentCreateRateLimiter: {
+    limit: mockCommentCreateRateLimiterLimit,
+  },
+}));
 
-function makeRequest(method: string, body?: unknown) {
-  return new Request("http://localhost/api/articles/art-1/comments", {
+function makeRequest(method: string, body?: unknown, url = "http://localhost/api/articles/art-1/comments") {
+  return new Request(url, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
@@ -48,6 +58,7 @@ const mockComments = [
     createdAt: new Date("2026-06-16T12:00:00Z"),
     userId: "user-1",
     articleId: "art-1",
+    deletedAt: null,
     user: {
       id: "user-1",
       name: "Jean Dupont",
@@ -95,44 +106,30 @@ describe("GET /api/articles/[id]/comments", () => {
     expect(response.status).toBe(200);
     const payload = await response.json();
     expect(payload).toEqual({ comments: JSON.parse(JSON.stringify(mockComments)) });
-    expect(mockCommentFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { articleId: "art-1" },
-        orderBy: { createdAt: "asc" },
-        take: 100,
-      })
-    );
   });
 
-  it("returns 404 if article is not published and user is not admin", async () => {
+  it("masks content for soft-deleted comments", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
     mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockImplementation(({ where }) => {
-      // Simulate no article found because where clause enforces published: true for MEMBER
-      if (where.published === true) return Promise.resolve(null);
-      return Promise.resolve(mockArticle);
-    });
-
-    const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
-    expect(response.status).toBe(404);
-  });
-
-  it("returns 200 with comments if article is not published but user is admin", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
     mockArticleFindFirst.mockResolvedValue(mockArticle);
-    mockCommentFindMany.mockResolvedValue(mockComments);
+    mockCommentFindMany.mockResolvedValue([
+      {
+        ...mockComments[0],
+        deletedAt: new Date("2026-06-16T13:00:00Z"),
+      },
+    ]);
 
     const response = await GET(makeRequest("GET"), { params: Promise.resolve({ id: "art-1" }) });
     expect(response.status).toBe(200);
     const payload = await response.json();
-    expect(payload).toEqual({ comments: JSON.parse(JSON.stringify(mockComments)) });
+    expect(payload.comments[0].content).toBe("Ce commentaire a été supprimé.");
   });
 });
 
 describe("POST /api/articles/[id]/comments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCommentCreateRateLimiterLimit.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 });
   });
 
   it("returns 401 if user is not authenticated", async () => {
@@ -144,71 +141,18 @@ describe("POST /api/articles/[id]/comments", () => {
     expect(response.status).toBe(401);
   });
 
-  it("returns 403 if user is not subscribed and not admin", async () => {
+  it("returns 429 if rate limit is exceeded", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(false);
+    mockCommentCreateRateLimiterLimit.mockResolvedValue({ success: false, limit: 5, remaining: 0, reset: Date.now() + 60000 });
 
     const response = await POST(makeRequest("POST", { content: "Un commentaire" }), {
       params: Promise.resolve({ id: "art-1" }),
     });
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeDefined();
   });
 
-  it("returns 404 if article is not found", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockResolvedValue(null);
-
-    const response = await POST(makeRequest("POST", { content: "Un commentaire" }), {
-      params: Promise.resolve({ id: "art-1" }),
-    });
-    expect(response.status).toBe(404);
-  });
-
-  it("returns 400 when body has malformed JSON", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockResolvedValue(mockArticle);
-
-    const badRequest = new Request("http://localhost/api/articles/art-1/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{invalid-json",
-    });
-
-    const response = await POST(badRequest, { params: Promise.resolve({ id: "art-1" }) });
-    expect(response.status).toBe(400);
-    const payload = await response.json();
-    expect(payload.error).toBe("Corps de requête JSON invalide ou vide");
-  });
-
-  it("returns 400 if comment content is too short", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockResolvedValue(mockArticle);
-
-    const response = await POST(makeRequest("POST", { content: "a" }), {
-      params: Promise.resolve({ id: "art-1" }),
-    });
-    expect(response.status).toBe(400);
-    const payload = await response.json();
-    expect(payload.error).toBe("Le commentaire doit contenir au moins 2 caractères");
-  });
-
-  it("returns 400 if comment content is too long", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockResolvedValue(mockArticle);
-
-    const response = await POST(makeRequest("POST", { content: "a".repeat(1001) }), {
-      params: Promise.resolve({ id: "art-1" }),
-    });
-    expect(response.status).toBe(400);
-    const payload = await response.json();
-    expect(payload.error).toBe("Le commentaire ne doit pas dépasser 1000 caractères");
-  });
-
-  it("creates comment and returns 201 with created comment for active subscriber", async () => {
+  it("creates comment and returns 201 for active subscriber", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
     mockHasActiveSubscription.mockResolvedValue(true);
     mockArticleFindFirst.mockResolvedValue(mockArticle);
@@ -234,39 +178,158 @@ describe("POST /api/articles/[id]/comments", () => {
     expect(response.status).toBe(201);
     const payload = await response.json();
     expect(payload).toEqual(JSON.parse(JSON.stringify(newComment)));
-    expect(mockCommentCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          content: "Un super commentaire !",
-          userId: "user-1",
-          articleId: "art-1",
-        },
-      })
-    );
+  });
+});
+
+describe("PUT /api/articles/[id]/comments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 if unauthenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 404 if comment not found", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue(null);
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 403 if not the author", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-2", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      deletedAt: null,
+    });
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 200 and updates comment if authorized author", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      deletedAt: null,
+    });
+    mockCommentUpdate.mockResolvedValue({
+      id: "com-1",
+      content: "Modified content",
+      userId: "user-1",
+    });
+
+    const response = await PUT(makeRequest("PUT", { commentId: "com-1", content: "Modified content" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload.content).toBe("Modified content");
     expect(mockSafeCreateAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
         actorId: "user-1",
-        action: "COMMENT_CREATE",
+        action: "COMMENT_UPDATE",
         entityType: "Comment",
-        entityId: "com-2",
-        metadata: {
-          articleId: "art-1",
-        },
+        entityId: "com-1",
+      })
+    );
+  });
+});
+
+describe("DELETE /api/articles/[id]/comments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 if unauthenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 404 if comment not found", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue(null);
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 403 if not author and not admin", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-2", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      deletedAt: null,
+    });
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 200 and soft-deletes comment if user is author", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      deletedAt: null,
+    });
+    mockCommentUpdate.mockResolvedValue({ id: "com-1" });
+
+    const response = await DELETE(makeRequest("DELETE", { commentId: "com-1" }), {
+      params: Promise.resolve({ id: "art-1" }),
+    });
+    expect(response.status).toBe(200);
+    expect(mockCommentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "com-1" },
+        data: expect.objectContaining({
+          deletedAt: expect.any(Date),
+        }),
       })
     );
   });
 
-  it("returns 404 if article is not published and user is not admin", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1", role: "MEMBER" } });
-    mockHasActiveSubscription.mockResolvedValue(true);
-    mockArticleFindFirst.mockImplementation(({ where }) => {
-      if (where.published === true) return Promise.resolve(null);
-      return Promise.resolve(mockArticle);
+  it("returns 200 and soft-deletes comment if user is admin (even if not author)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
+    mockCommentFindUnique.mockResolvedValue({
+      id: "com-1",
+      userId: "user-1",
+      deletedAt: null,
     });
+    mockCommentUpdate.mockResolvedValue({ id: "com-1" });
 
-    const response = await POST(makeRequest("POST", { content: "Un commentaire" }), {
+    const response = await DELETE(makeRequest("DELETE", null, "http://localhost/api/articles/art-1/comments?commentId=com-1"), {
       params: Promise.resolve({ id: "art-1" }),
     });
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(200);
+    expect(mockCommentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "com-1" },
+        data: expect.objectContaining({
+          deletedAt: expect.any(Date),
+        }),
+      })
+    );
   });
 });

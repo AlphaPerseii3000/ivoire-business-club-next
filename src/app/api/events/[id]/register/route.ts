@@ -5,6 +5,7 @@ import { eventRegistrationSchema } from "@/lib/validations";
 import { normalizePricing, getPriceForTier } from "@/lib/event-utils";
 import { posthogServer } from "@/lib/posthog-server";
 import { Tier } from "@/generated/prisma/client";
+import { getDatabaseProvider } from "@/lib/prisma-runtime";
 
 export async function POST(
   req: Request,
@@ -38,6 +39,12 @@ export async function POST(
     const paymentMethod = payOnSite ? "PAY_ON_SITE" : provider;
 
     const result = await prisma.$transaction(async (tx) => {
+      const dbUrl = process.env.DATABASE_URL || "";
+      const dbProvider = getDatabaseProvider(dbUrl);
+      if (dbProvider === "postgresql") {
+        await tx.$executeRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      }
+
       const event = await tx.event.findUnique({
         where: { id },
         select: {

@@ -41,17 +41,40 @@ export async function GET(
       }
     }
 
-    const photos = await prisma.eventGalleryPhoto.findMany({
-      where: { eventId: id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        uploader: {
-          select: { id: true, name: true, image: true },
+    const { searchParams } = new URL(req.url);
+    const pageRaw = searchParams.get("page");
+    const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const [photos, totalCount] = await Promise.all([
+      prisma.eventGalleryPhoto.findMany({
+        where: { eventId: id },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          uploader: {
+            select: { id: true, name: true, image: true },
+          },
         },
+      }),
+      prisma.eventGalleryPhoto.count({
+        where: { eventId: id },
+      }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+    return NextResponse.json({
+      data: photos,
+      meta: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
       },
     });
-
-    return NextResponse.json({ data: photos });
   } catch (error) {
     console.error("GET event gallery error:", sanitizeError(error));
     return NextResponse.json(

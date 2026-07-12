@@ -4,11 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArticleVisibility } from "@/lib/validations";
+import { cn } from "@/lib/utils";
 
 import ArticlesListTable from "@/components/features/admin/articles-list-table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
-export default async function AdminArticlesPage() {
+export default async function AdminArticlesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string | string[] }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
   const currentAdminId = session.user.id;
@@ -16,22 +21,38 @@ export default async function AdminArticlesPage() {
   const admin = await promoteConfiguredAdminUser(currentAdminId);
   if (admin?.role !== "ADMIN") redirect("/dashboard");
 
-  const articles = await prisma.article.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: {
-        select: {
-          name: true,
+  const query = (await searchParams) ?? {};
+  const pageRaw = Array.isArray(query.page) ? query.page[0] : query.page;
+  const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [articles, totalCount] = await Promise.all([
+    prisma.article.findMany({
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: {
+          select: {
+            name: true,
+          },
+        },
+        opportunity: {
+          select: {
+            id: true,
+            title: true,
+          },
         },
       },
-      opportunity: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-  });
+    }),
+    prisma.article.count(),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const hasPreviousPage = page > 1;
+  const hasNextPage = page < totalPages;
+  const showPagination = totalPages > 1;
 
   // Serialize dates for Client Component safety
   const serializedArticles = articles.map((art) => ({
@@ -62,8 +83,8 @@ export default async function AdminArticlesPage() {
             Créer un article
           </Button>
           <a
-            href="/admin/dashboard"
-            className="text-sm text-muted-foreground hover:text-primary"
+             href="/admin/dashboard"
+             className="text-sm text-muted-foreground hover:text-primary"
           >
             ← Retour au dashboard
           </a>
@@ -71,6 +92,32 @@ export default async function AdminArticlesPage() {
       </div>
 
       <ArticlesListTable articles={serializedArticles} />
+
+      {showPagination ? (
+        <nav className="mt-8 flex items-center justify-between gap-3" aria-label="Pagination des articles">
+          {hasPreviousPage ? (
+            <Link
+              href={`/admin/articles?page=${page - 1}`}
+              className={cn(buttonVariants({ variant: "outline" }), "min-h-11 inline-flex items-center justify-center")}
+            >
+              Page précédente
+            </Link>
+          ) : (
+            <span className="min-h-11" />
+          )}
+          <p className="text-sm text-muted-foreground">Page {page} / {totalPages}</p>
+          {hasNextPage ? (
+            <Link
+              href={`/admin/articles?page=${page + 1}`}
+              className={cn(buttonVariants({ variant: "outline" }), "min-h-11 inline-flex items-center justify-center")}
+            >
+              Page suivante
+            </Link>
+          ) : (
+            <span className="min-h-11" />
+          )}
+        </nav>
+      ) : null}
     </div>
   );
 }

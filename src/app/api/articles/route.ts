@@ -15,10 +15,10 @@ export async function GET(req: Request) {
     let userTier = null;
 
     if (session?.user) {
-      isAdmin = (session.user as any).role === "ADMIN";
+      isAdmin = session.user.role === "ADMIN";
       if (!isAdmin) {
         hasActiveSub = await hasActiveSubscription(session.user.id);
-        userTier = (session.user as any).tier;
+        userTier = session.user.tier;
       }
     }
 
@@ -56,7 +56,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 

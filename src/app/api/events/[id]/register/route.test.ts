@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 
+process.env.DATABASE_URL = "file:prisma/dev.db";
+
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn());
 const mockPosthogCapture = vi.hoisted(() => vi.fn());

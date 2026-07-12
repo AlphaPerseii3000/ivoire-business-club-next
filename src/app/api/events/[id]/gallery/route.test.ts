@@ -11,6 +11,7 @@ const mockAuth = vi.hoisted(() => vi.fn());
 const mockEventFindUnique = vi.hoisted(() => vi.fn());
 const mockGalleryFindMany = vi.hoisted(() => vi.fn());
 const mockGalleryCreate = vi.hoisted(() => vi.fn());
+const mockGalleryCount = vi.hoisted(() => vi.fn());
 const mockSafeCreateAuditLog = vi.hoisted(() => vi.fn());
 
 const mockToFile = vi.hoisted(() => vi.fn().mockImplementation(async (dest: string) => {
@@ -48,6 +49,7 @@ vi.mock("@/lib/prisma", () => ({
     eventGalleryPhoto: {
       findMany: mockGalleryFindMany,
       create: mockGalleryCreate,
+      count: mockGalleryCount,
     },
   },
 }));
@@ -87,11 +89,47 @@ describe("GET /api/events/[id]/gallery", () => {
     mockEventFindUnique.mockResolvedValue({ id: "evt-1", visibility: "PUBLIC" });
     const fakePhotos = [{ id: "p1", caption: "Photo 1" }];
     mockGalleryFindMany.mockResolvedValue(fakePhotos);
+    mockGalleryCount.mockResolvedValue(1);
 
     const res = await runGet("evt-1");
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.data).toEqual(fakePhotos);
+    expect(json.meta).toEqual({
+      page: 1,
+      limit: 20,
+      totalCount: 1,
+      totalPages: 1,
+    });
+  });
+
+  it("handles pagination via page parameter", async () => {
+    mockEventFindUnique.mockResolvedValue({ id: "evt-1", visibility: "PUBLIC" });
+    mockGalleryFindMany.mockResolvedValue([]);
+    mockGalleryCount.mockResolvedValue(25);
+
+    const req = new NextRequest(`http://localhost:3000/api/events/evt-1/gallery?page=2`, {
+      method: "GET",
+    });
+    const params = Promise.resolve({ id: "evt-1" });
+    const res = await GET(req, { params });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.meta).toEqual({
+      page: 2,
+      limit: 20,
+      totalCount: 25,
+      totalPages: 2,
+    });
+    expect(mockGalleryFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { eventId: "evt-1" },
+        orderBy: { createdAt: "desc" },
+        skip: 20,
+        take: 20,
+      })
+    );
   });
 });
 

@@ -19,10 +19,10 @@ export async function GET(
     let userTier = null;
 
     if (session?.user) {
-      isAdmin = (session.user as any).role === "ADMIN";
+      isAdmin = session.user.role === "ADMIN";
       if (!isAdmin) {
         hasActiveSub = await hasActiveSubscription(session.user.id);
-        userTier = (session.user as any).tier;
+        userTier = session.user.tier;
       }
     }
 
@@ -67,7 +67,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
@@ -176,7 +176,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 

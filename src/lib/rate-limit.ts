@@ -85,4 +85,5 @@ export const opportunityCreateRateLimiter = createRateLimiter({ requests: 2, win
 export const receiptUploadRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
 export const userPasswordUpdateRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
 export const setPasswordRateLimiter = createRateLimiter({ requests: 3, windowSeconds: 60 });
-export const resetPasswordRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
+export const resetPasswordRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });
+export const commentCreateRateLimiter = createRateLimiter({ requests: 5, windowSeconds: 60 });

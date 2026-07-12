@@ -1,6 +1,9 @@
+---
+baseline_commit: b71f463bc8d47d50746528d9e60cb9cd939025b9
+---
 # Story 28.3: Robustesse & Data Integrity — Pagination, Race Conditions & Types
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

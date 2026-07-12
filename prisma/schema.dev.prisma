@@ -535,6 +535,7 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   articleId String

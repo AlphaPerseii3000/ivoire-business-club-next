@@ -7,18 +7,43 @@ import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 import { promoteConfiguredAdminUser } from "@/lib/admin-access";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const companies = await prisma.company.findMany({
-      where: {
-        isPublished: true,
-      },
-      orderBy: {
-        createdAt: "desc",
+    const { searchParams } = new URL(req.url);
+    const pageRaw = searchParams.get("page");
+    const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const [companies, totalCount] = await Promise.all([
+      prisma.company.findMany({
+        where: {
+          isPublished: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.company.count({
+        where: {
+          isPublished: true,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+    return NextResponse.json({
+      data: companies,
+      meta: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
       },
     });
-
-    return NextResponse.json({ data: companies });
   } catch (error) {
     console.error("List companies error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });

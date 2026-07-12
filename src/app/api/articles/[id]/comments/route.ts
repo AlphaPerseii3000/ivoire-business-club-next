@@ -6,6 +6,8 @@ import { hasActiveSubscription } from "@/lib/subscription-access";
 import { sanitizeError } from "@/lib/sanitize-log";
 import { safeCreateAuditLog } from "@/lib/audit-log";
 import DOMPurify from "isomorphic-dompurify";
+import { commentCreateRateLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
 
 export async function GET(
   req: Request,
@@ -52,7 +54,17 @@ export async function GET(
       take: 100,
     });
 
-    return NextResponse.json({ comments });
+    const processedComments = comments.map((comment) => {
+      if (comment.deletedAt) {
+        return {
+          ...comment,
+          content: "Ce commentaire a été supprimé.",
+        };
+      }
+      return comment;
+    });
+
+    return NextResponse.json({ comments: processedComments });
   } catch (error) {
     console.error("Get comments error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
@@ -68,6 +80,15 @@ export async function POST(
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    const rateLimit = await commentCreateRateLimiter.limit(`user:${session.user.id}`);
+    if (!rateLimit.success) {
+      const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: "Trop de requêtes. Veuillez réessayer plus tard." },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
     }
 
     const hasAccess = await hasActiveSubscription(session.user.id);
@@ -145,6 +166,175 @@ export async function POST(
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
     console.error("Create comment error:", sanitizeError(error));
+    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: articleId } = await params;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Corps de requête JSON invalide ou vide" }, { status: 400 });
+    }
+
+    const commentUpdateSchema = z.object({
+      commentId: z.string().min(1, "L'identifiant du commentaire est requis"),
+      content: z.string().trim().min(2, "Le commentaire doit contenir au moins 2 caractères").max(1000, "Le commentaire ne doit pas dépasser 1000 caractères"),
+    });
+
+    const parsed = commentUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json(
+        { error: firstError?.message ?? "Données invalides" },
+        { status: 400 }
+      );
+    }
+
+    const { commentId, content } = parsed.data;
+
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return NextResponse.json({ error: "Commentaire introuvable" }, { status: 404 });
+    }
+
+    if (comment.deletedAt) {
+      return NextResponse.json({ error: "Ce commentaire a été supprimé" }, { status: 400 });
+    }
+
+    if (comment.userId !== session.user.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    }
+
+    const sanitizedContent = DOMPurify.sanitize(content).trim();
+    if (sanitizedContent.length < 2) {
+      return NextResponse.json(
+        { error: "Le commentaire doit contenir au moins 2 caractères" },
+        { status: 400 }
+      );
+    }
+
+    const updatedComment = await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        content: sanitizedContent,
+        updatedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    try {
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "COMMENT_UPDATE",
+        entityType: "Comment",
+        entityId: commentId,
+        metadata: {
+          articleId,
+        },
+      });
+    } catch (auditError) {
+      console.error("Failed to create audit log for comment update:", sanitizeError(auditError));
+    }
+
+    return NextResponse.json(updatedComment);
+  } catch (error) {
+    console.error("Update comment error:", sanitizeError(error));
+    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: articleId } = await params;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    let commentId: string | null = null;
+
+    // Accept via query param first, then body
+    const { searchParams } = new URL(req.url);
+    commentId = searchParams.get("commentId");
+
+    if (!commentId) {
+      try {
+        const body = await req.json();
+        commentId = body?.commentId || null;
+      } catch {
+        // Body is not json or empty, ignore
+      }
+    }
+
+    if (!commentId) {
+      return NextResponse.json({ error: "L'identifiant du commentaire est requis" }, { status: 400 });
+    }
+
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return NextResponse.json({ error: "Commentaire introuvable" }, { status: 404 });
+    }
+
+    const isAdmin = session.user.role === "ADMIN";
+    const isAuthor = comment.userId === session.user.id;
+
+    if (!isAdmin && !isAuthor) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    }
+
+    await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    try {
+      await safeCreateAuditLog({
+        actorId: session.user.id,
+        action: "COMMENT_DELETE",
+        entityType: "Comment",
+        entityId: commentId,
+        metadata: {
+          articleId,
+        },
+      });
+    } catch (auditError) {
+      console.error("Failed to create audit log for comment delete:", sanitizeError(auditError));
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete comment error:", sanitizeError(error));
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 }
