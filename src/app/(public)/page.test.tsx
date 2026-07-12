@@ -73,7 +73,7 @@ describe('HomePage SEO & Rendering', () => {
     render(resolvedJSX);
 
     expect(screen.getByTestId('scroll-video-player')).toBeInTheDocument();
-    expect(screen.getByText('Bâtir son futur en Afrique')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Bâtir son futur/i })).toBeInTheDocument();
     expect(screen.getByText('Comment ça marche ?')).toBeInTheDocument();
     
     const headings = screen.getAllByRole('heading', { level: 2 });

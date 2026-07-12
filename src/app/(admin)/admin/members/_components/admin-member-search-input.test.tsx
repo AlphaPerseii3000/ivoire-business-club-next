@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { AdminMemberSearchInput } from "./admin-member-search-input";
 
 const mockReplace = vi.fn();
@@ -22,10 +23,11 @@ describe("AdminMemberSearchInput", () => {
 
   it("updates q and deletes page param after debounce", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<AdminMemberSearchInput defaultValue="" />);
     const input = screen.getByRole("searchbox");
 
-    fireEvent.change(input, { target: { value: "test" } });
+    await user.type(input, "test");
 
     expect(mockReplace).not.toHaveBeenCalled();
 

@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import ResendVerificationButton from "./resend-verification-button";
 
@@ -19,6 +20,7 @@ describe("ResendVerificationButton Component", () => {
   });
 
   it("calls API on click and shows success message", async () => {
+    const user = userEvent.setup();
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true }),
@@ -27,7 +29,7 @@ describe("ResendVerificationButton Component", () => {
     render(<ResendVerificationButton />);
     const button = screen.getByRole("button", { name: "Renvoyer l'email de vérification" });
 
-    fireEvent.click(button);
+    await user.click(button);
 
     expect(mockFetch).toHaveBeenCalledWith("/api/auth/send-verification", {
       method: "POST",
@@ -40,6 +42,7 @@ describe("ResendVerificationButton Component", () => {
   });
 
   it("displays server error message on failure", async () => {
+    const user = userEvent.setup();
     mockFetch.mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Trop de tentatives. Veuillez patienter." }),
@@ -48,7 +51,7 @@ describe("ResendVerificationButton Component", () => {
     render(<ResendVerificationButton />);
     const button = screen.getByRole("button", { name: "Renvoyer l'email de vérification" });
 
-    fireEvent.click(button);
+    await user.click(button);
 
     await waitFor(() => {
       expect(screen.getByText("Trop de tentatives. Veuillez patienter.")).toBeInTheDocument();

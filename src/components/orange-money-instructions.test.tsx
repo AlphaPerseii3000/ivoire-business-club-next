@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -39,24 +39,28 @@ describe("OrangeMoneyInstructions", () => {
   });
 
   it("copies the reference when copy button is clicked", async () => {
+    const user = userEvent.setup();
+    const writeTextSpy = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
     render(<OrangeMoneyInstructions tier="AFFRANCHI" userId="user-456" amount={29} />);
 
     const reference = "IBC-user-456-AFFRANCHI";
-    fireEvent.click(screen.getByRole("button", { name: /Copier la référence/i }));
+    await user.click(screen.getByRole("button", { name: /Copier la référence/i }));
 
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenCalledWith(reference);
+      expect(writeTextSpy).toHaveBeenCalledWith(reference);
     });
     expect(mockToastSuccess).toHaveBeenCalledWith("Copié");
   });
 
   it("copies the USSD code when its copy button is clicked", async () => {
+    const user = userEvent.setup();
+    const writeTextSpy = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
     render(<OrangeMoneyInstructions tier="BOSS" userId="user-789" amount={129} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Copier le code/i }));
+    await user.click(screen.getByRole("button", { name: /Copier le code/i }));
 
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenCalled();
+      expect(writeTextSpy).toHaveBeenCalled();
     });
     expect(mockToastSuccess).toHaveBeenCalledWith("Copié");
   });

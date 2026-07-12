@@ -1,6 +1,9 @@
+---
+baseline_commit: fa4b0085a000d32a7e3928da4487e4082bd18614
+---
 # Story 28.4: Code Quality & Tech Debt Cleanup
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -56,24 +59,24 @@ so that maintenance is reduced and future bugs are prevented.
   - [x] Mettre à jour `next.config.ts` pour encapsuler le `require("./patch-readlink.js")` dans un bloc try-catch
 - [x] Mettre à jour le test d'accessibilité (AC: 6)
   - [x] Modifier `src/app/accessibility.test.tsx` pour remplacer la lecture de `globals.css` via `fs` par des assertions `getComputedStyle` et `matchMedia` au runtime
-- [ ] Migration de `fireEvent` vers `userEvent` (AC: 5)
-  - [ ] Migrer les tests interactifs identifiés qui utilisent encore `fireEvent` pour utiliser `userEvent` :
-    - [ ] `src/app/(admin)/admin/members/_components/admin-member-filter-select.test.tsx`
-    - [ ] `src/app/(admin)/admin/members/_components/admin-member-search-input.test.tsx`
-    - [ ] `src/app/auth/forgot-password/page.test.tsx`
-    - [ ] `src/app/auth/reset-password/page.test.tsx`
-    - [ ] `src/app/auth/signin/page.test.tsx`
-    - [ ] `src/app/auth/signup/page.test.tsx`
-    - [ ] `src/components/bank-transfer-instructions.test.tsx`
-    - [ ] `src/components/features/admin/event-form.test.tsx`
-    - [ ] `src/components/features/articles/ArticleCommentsSection.test.tsx`
-    - [ ] `src/components/features/auth/resend-verification-button.test.tsx`
-    - [ ] `src/components/features/chat/beta-chat-widget.test.tsx`
-    - [ ] `src/components/features/deals/review-form.test.tsx`
-    - [ ] `src/components/features/events/EventGallery.test.tsx`
-    - [ ] `src/components/features/onboarding/complete-profile-form.test.tsx`
-    - [ ] `src/components/orange-money-instructions.test.tsx`
-    - [ ] `src/components/wave-instructions.test.tsx`
+- [x] Migration de `fireEvent` vers `userEvent` (AC: 5)
+  - [x] Migrer les tests interactifs identifiés qui utilisent encore `fireEvent` pour utiliser `userEvent` :
+    - [x] `src/app/(admin)/admin/members/_components/admin-member-filter-select.test.tsx`
+    - [x] `src/app/(admin)/admin/members/_components/admin-member-search-input.test.tsx`
+    - [x] `src/app/auth/forgot-password/page.test.tsx`
+    - [x] `src/app/auth/reset-password/page.test.tsx`
+    - [x] `src/app/auth/signin/page.test.tsx`
+    - [x] `src/app/auth/signup/page.test.tsx`
+    - [x] `src/components/bank-transfer-instructions.test.tsx`
+    - [x] `src/components/features/admin/event-form.test.tsx`
+    - [x] `src/components/features/articles/ArticleCommentsSection.test.tsx`
+    - [x] `src/components/features/auth/resend-verification-button.test.tsx`
+    - [x] `src/components/features/chat/beta-chat-widget.test.tsx`
+    - [x] `src/components/features/deals/review-form.test.tsx`
+    - [x] `src/components/features/events/EventGallery.test.tsx`
+    - [x] `src/components/features/onboarding/complete-profile-form.test.tsx`
+    - [x] `src/components/orange-money-instructions.test.tsx`
+    - [x] `src/components/wave-instructions.test.tsx`
 
 ## Dev Notes
 
@@ -114,6 +117,7 @@ Gemini 3.5 Flash (High)
 - Centralisation de `SITE_URL` effectuée.
 - Try-catch sur l'import de `patch-readlink.js` effectué.
 - Test d'accessibilité converti aux vérifications JSDOM au runtime.
+- Migration de 16 fichiers de tests interactifs de `fireEvent` vers `userEvent` effectuée.
 
 ### File List
 
@@ -125,3 +129,19 @@ Gemini 3.5 Flash (High)
 - [src/app/robots.ts](file:///D:/Code/ivoire-business-club-next/src/app/robots.ts)
 - [next.config.ts](file:///D:/Code/ivoire-business-club-next/next.config.ts)
 - [src/app/accessibility.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/accessibility.test.tsx)
+- [src/app/(admin)/admin/members/_components/admin-member-filter-select.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(admin)/admin/members/_components/admin-member-filter-select.test.tsx)
+- [src/app/(admin)/admin/members/_components/admin-member-search-input.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/(admin)/admin/members/_components/admin-member-search-input.test.tsx)
+- [src/app/auth/forgot-password/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/auth/forgot-password/page.test.tsx)
+- [src/app/auth/reset-password/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/auth/reset-password/page.test.tsx)
+- [src/app/auth/signin/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/auth/signin/page.test.tsx)
+- [src/app/auth/signup/page.test.tsx](file:///D:/Code/ivoire-business-club-next/src/app/auth/signup/page.test.tsx)
+- [src/components/bank-transfer-instructions.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/bank-transfer-instructions.test.tsx)
+- [src/components/features/admin/event-form.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/admin/event-form.test.tsx)
+- [src/components/features/articles/ArticleCommentsSection.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/articles/ArticleCommentsSection.test.tsx)
+- [src/components/features/auth/resend-verification-button.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/auth/resend-verification-button.test.tsx)
+- [src/components/features/chat/beta-chat-widget.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/chat/beta-chat-widget.test.tsx)
+- [src/components/features/deals/review-form.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/deals/review-form.test.tsx)
+- [src/components/features/events/EventGallery.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/events/EventGallery.test.tsx)
+- [src/components/features/onboarding/complete-profile-form.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/features/onboarding/complete-profile-form.test.tsx)
+- [src/components/orange-money-instructions.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/orange-money-instructions.test.tsx)
+- [src/components/wave-instructions.test.tsx](file:///D:/Code/ivoire-business-club-next/src/components/wave-instructions.test.tsx)

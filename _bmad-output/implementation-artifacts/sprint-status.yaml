@@ -36,7 +36,7 @@
 
 generated: 2026-06-28T16:40:39+02:00
 # last_updated: 2026-07-11T19:28:29+02:00
-last_updated: 2026-07-12T15:57:00+02:00
+last_updated: 2026-07-12T19:51:00+02:00
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -229,7 +229,7 @@ development_status:
   28-1-posthog-error-handling-et-analytics-hardening: done
   28-2-security-hardening-rate-limiting-timing-safe-et-password-ux: done
   28-3-robustesse-data-integrity-pagination-race-conditions-et-types: done
-  28-4-code-quality-et-tech-debt-cleanup: ready-for-dev
+  28-4-code-quality-et-tech-debt-cleanup: done
   epic-28-retrospective: optional
 
 # updated: epic-26, epic-27 → done — 2026-07-11

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ReviewForm } from "./review-form";
@@ -25,11 +26,12 @@ describe("ReviewForm", () => {
   });
 
   it("submits valid reviews and refreshes the page", async () => {
+    const user = userEvent.setup();
     render(<ReviewForm opportunityId="opp-1" />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "5 étoiles" }));
-    fireEvent.change(screen.getByLabelText("Commentaire"), { target: { value: "Très bon échange" } });
-    fireEvent.click(screen.getByRole("button", { name: "Soumettre mon avis" }));
+    await user.click(screen.getByRole("radio", { name: "5 étoiles" }));
+    await user.type(screen.getByLabelText("Commentaire"), "Très bon échange");
+    await user.click(screen.getByRole("button", { name: "Soumettre mon avis" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/opportunities/opp-1/reviews", expect.objectContaining({ method: "POST" }));
@@ -40,12 +42,13 @@ describe("ReviewForm", () => {
   });
 
   it("shows server errors in French", async () => {
+    const user = userEvent.setup();
     global.fetch = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Vous avez déjà laissé un avis pour ce deal." }) }) as typeof fetch;
     render(<ReviewForm opportunityId="opp-1" />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "4 étoiles" }));
-    fireEvent.change(screen.getByLabelText("Commentaire"), { target: { value: "Bon échange" } });
-    fireEvent.click(screen.getByRole("button", { name: "Soumettre mon avis" }));
+    await user.click(screen.getByRole("radio", { name: "4 étoiles" }));
+    await user.type(screen.getByLabelText("Commentaire"), "Bon échange");
+    await user.click(screen.getByRole("button", { name: "Soumettre mon avis" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Vous avez déjà laissé un avis pour ce deal.");
   });

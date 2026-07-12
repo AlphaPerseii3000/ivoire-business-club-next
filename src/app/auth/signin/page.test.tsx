@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import SignInPage from "./page";
 
 const mockSignIn = vi.fn();
@@ -30,17 +31,19 @@ describe("SignInPage", () => {
     expect(screen.getByText("Mot de passe oublié ?")).toBeInTheDocument();
   });
 
-  it("calls signIn with google and callbackUrl /dashboard when Google button is clicked", () => {
+  it("calls signIn with google and callbackUrl /dashboard when Google button is clicked", async () => {
+    const user = userEvent.setup();
     render(<SignInPage />);
     const googleButton = screen.getByText("Continuer avec Google");
-    fireEvent.click(googleButton);
+    await user.click(googleButton);
     expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/dashboard" });
   });
 
-  it("disables Google button and shows loading text while signing in", () => {
+  it("disables Google button and shows loading text while signing in", async () => {
+    const user = userEvent.setup();
     render(<SignInPage />);
     const googleButton = screen.getByText("Continuer avec Google");
-    fireEvent.click(googleButton);
+    await user.click(googleButton);
     expect(mockSignIn).toHaveBeenCalled();
     expect(googleButton).toBeDisabled();
   });
@@ -63,10 +66,11 @@ describe("SignInPage", () => {
 
   // ---- Story 1.3 new tests ----
   it("shows Zod validation errors inline before submission", async () => {
+    const user = userEvent.setup();
     render(<SignInPage />);
     const emailInput = screen.getByPlaceholderText("ton@email.com");
-    fireEvent.change(emailInput, { target: { value: "bad-email" } });
-    fireEvent.blur(emailInput);
+    await user.type(emailInput, "bad-email");
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText("Email invalide")).toBeInTheDocument();
@@ -74,13 +78,14 @@ describe("SignInPage", () => {
   });
 
   it("calls signIn with credentials and redirect:false on form submit", async () => {
+    const user = userEvent.setup();
     mockSignIn.mockResolvedValue({ ok: true, error: undefined });
 
     render(<SignInPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
-    fireEvent.click(screen.getByText("Se connecter"));
+    await user.click(screen.getByText("Se connecter"));
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith("credentials", {
@@ -93,13 +98,14 @@ describe("SignInPage", () => {
   });
 
   it("redirects to /dashboard on successful signIn", async () => {
+    const user = userEvent.setup();
     mockSignIn.mockResolvedValue({ ok: true, error: undefined });
 
     render(<SignInPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
-    fireEvent.click(screen.getByText("Se connecter"));
+    await user.click(screen.getByText("Se connecter"));
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/dashboard");
@@ -107,13 +113,14 @@ describe("SignInPage", () => {
   });
 
   it("displays error message on invalid credentials", async () => {
+    const user = userEvent.setup();
     mockSignIn.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
 
     render(<SignInPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "bad@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "wrongpass" } });
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "bad@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "wrongpass");
 
-    fireEvent.click(screen.getByText("Se connecter"));
+    await user.click(screen.getByText("Se connecter"));
 
     await waitFor(() => {
       expect(
@@ -123,13 +130,14 @@ describe("SignInPage", () => {
   });
 
   it("displays error message on network error", async () => {
+    const user = userEvent.setup();
     mockSignIn.mockRejectedValue(new Error("Network error"));
 
     render(<SignInPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
-    fireEvent.click(screen.getByText("Se connecter"));
+    await user.click(screen.getByText("Se connecter"));
 
     await waitFor(() => {
       expect(
@@ -139,15 +147,16 @@ describe("SignInPage", () => {
   });
 
   it("disables submit button during form submission", async () => {
+    const user = userEvent.setup();
     let resolveSignIn: (value: unknown) => void;
     mockSignIn.mockImplementation(() => new Promise((resolve) => { resolveSignIn = resolve; }));
 
     render(<SignInPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
     const submitBtn = screen.getByText("Se connecter");
-    fireEvent.click(submitBtn);
+    await user.click(submitBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Connexion...")).toBeDisabled();

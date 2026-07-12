@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import ResetPasswordPage from "./page";
 
 const mockPush = vi.fn();
@@ -66,11 +67,12 @@ describe("ResetPasswordPage", () => {
   });
 
   it("shows password strength indicator", async () => {
+    const user = userEvent.setup();
     render(<ResetPasswordPage />);
     await waitFor(() => {
       expect(screen.getByTestId("password-input")).toBeInTheDocument();
     });
-    fireEvent.change(screen.getByTestId("password-input"), { target: { value: "Abcdef1!" } });
+    await user.type(screen.getByTestId("password-input"), "Abcdef1!");
 
     await waitFor(() => {
       expect(screen.getByText(/Force :/)).toBeInTheDocument();
@@ -78,6 +80,7 @@ describe("ResetPasswordPage", () => {
   });
 
   it("submits new password and shows success", async () => {
+    const user = userEvent.setup();
     global.fetch = vi.fn().mockImplementation(async (url, init) => {
       const method = init?.method || "GET";
       if (method === "GET") {
@@ -99,11 +102,9 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByTestId("password-input")).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
-      fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
-      fireEvent.click(screen.getByTestId("submit-button"));
-    });
+    await user.type(screen.getByTestId("password-input"), "newPass123!");
+    await user.type(screen.getByTestId("confirm-password-input"), "newPass123!");
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(() => {
       expect(screen.getByTestId("success-message")).toHaveTextContent("Mot de passe mis à jour");
@@ -111,6 +112,7 @@ describe("ResetPasswordPage", () => {
   });
 
   it("displays server error on reset failure", async () => {
+    const user = userEvent.setup();
     global.fetch = vi.fn().mockImplementation(async (url, init) => {
       const method = init?.method || "GET";
       if (method === "GET") {
@@ -132,11 +134,9 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByTestId("password-input")).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.change(screen.getByTestId("password-input"), { target: { value: "newPass123!" } });
-      fireEvent.change(screen.getByTestId("confirm-password-input"), { target: { value: "newPass123!" } });
-      fireEvent.click(screen.getByTestId("submit-button"));
-    });
+    await user.type(screen.getByTestId("password-input"), "newPass123!");
+    await user.type(screen.getByTestId("confirm-password-input"), "newPass123!");
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(() => {
       expect(screen.getByTestId("auth-error")).toHaveTextContent("Ce lien a déjà été utilisé.");
@@ -158,6 +158,7 @@ describe("ResetPasswordPage", () => {
   });
 
   it("submits defined password and shows success when type=set", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams("token=raw-token&type=set");
     global.fetch = vi.fn().mockImplementation(async (url, init) => {
       const method = init?.method || "GET";
@@ -182,15 +183,9 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByTestId("password-input")).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.change(screen.getByTestId("password-input"), {
-        target: { value: "newPass123!" },
-      });
-      fireEvent.change(screen.getByTestId("confirm-password-input"), {
-        target: { value: "newPass123!" },
-      });
-      fireEvent.click(screen.getByTestId("submit-button"));
-    });
+    await user.type(screen.getByTestId("password-input"), "newPass123!");
+    await user.type(screen.getByTestId("confirm-password-input"), "newPass123!");
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(
       () => {

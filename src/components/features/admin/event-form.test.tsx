@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import EventForm from "./event-form";
@@ -80,8 +80,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-location-input"), "Abidjan");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     await user.click(screen.getByTestId("event-submit-button"));
 
@@ -168,8 +168,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-description-input"), "Description complète du webinaire");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     // Basculer en ONLINE
     await user.click(screen.getByTestId("event-type-trigger"));
@@ -194,8 +194,8 @@ describe("EventForm Component", () => {
     await user.clear(screen.getByTestId("event-location-input"));
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     await user.click(screen.getByTestId("event-submit-button"));
 
@@ -214,11 +214,13 @@ describe("EventForm Component", () => {
   });
 
   it("rejects invalid cover file type before upload", async () => {
+    const user = userEvent.setup();
     render(<EventForm initialData={null} />);
 
     const input = screen.getByTestId("event-cover-file-input") as HTMLInputElement;
+    input.removeAttribute("accept");
     const file = createValidFile("cover.gif", "image/gif", 1024);
-    fireEvent.change(input, { target: { files: [file] } });
+    await user.upload(input, file);
 
     expect(await screen.findByText("Format non supporté. Utilisez jpeg, png ou webp.")).toBeInTheDocument();
   });
@@ -244,8 +246,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-location-input"), "Abidjan");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     const coverInput = screen.getByTestId("event-cover-file-input") as HTMLInputElement;
     const file = createValidFile();
@@ -285,8 +287,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-location-input"), "Abidjan");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     const coverInput = screen.getByTestId("event-cover-file-input") as HTMLInputElement;
     const file = createValidFile();
@@ -357,8 +359,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-location-input"), "Abidjan");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     await user.type(screen.getByTestId("event-pricing-visitor-input"), "10000");
     await user.type(screen.getByTestId("event-pricing-affranchi-input"), "5000");
@@ -391,8 +393,8 @@ describe("EventForm Component", () => {
     await user.type(screen.getByTestId("event-location-input"), "Abidjan");
 
     const startInput = screen.getByTestId("event-start-date-input") as HTMLInputElement;
-    await userEvent.clear(startInput);
-    fireEvent.change(startInput, { target: { value: "2026-07-15T18:00" } });
+    await user.clear(startInput);
+    await user.type(startInput, "2026-07-15T18:00");
 
     await user.click(screen.getByTestId("event-submit-button"));
 

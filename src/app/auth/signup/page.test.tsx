@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import SignUpPage from "./page";
 
 const mockSignIn = vi.fn();
@@ -27,17 +28,19 @@ describe("SignUpPage", () => {
     expect(screen.getByText("Continuer avec Google")).toBeInTheDocument();
   });
 
-  it("calls signIn with google and callbackUrl /dashboard when Google button is clicked", () => {
+  it("calls signIn with google and callbackUrl /dashboard when Google button is clicked", async () => {
+    const user = userEvent.setup();
     render(<SignUpPage />);
     const googleButton = screen.getByText("Continuer avec Google");
-    fireEvent.click(googleButton);
+    await user.click(googleButton);
     expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/dashboard" });
   });
 
-  it("disables Google button and shows loading text while signing in", () => {
+  it("disables Google button and shows loading text while signing in", async () => {
+    const user = userEvent.setup();
     render(<SignUpPage />);
     const googleButton = screen.getByText("Continuer avec Google");
-    fireEvent.click(googleButton);
+    await user.click(googleButton);
     expect(mockSignIn).toHaveBeenCalled();
     expect(googleButton).toBeDisabled();
   });
@@ -60,10 +63,11 @@ describe("SignUpPage", () => {
 
   // ---- Story 1.2 new tests ----
   it("shows Zod validation errors inline before submission", async () => {
+    const user = userEvent.setup();
     render(<SignUpPage />);
     const emailInput = screen.getByPlaceholderText("ton@email.com");
-    fireEvent.change(emailInput, { target: { value: "bad-email" } });
-    fireEvent.blur(emailInput);
+    await user.type(emailInput, "bad-email");
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText("Email invalide")).toBeInTheDocument();
@@ -71,10 +75,11 @@ describe("SignUpPage", () => {
   });
 
   it("shows password strength indicator as weak for short password", async () => {
+    const user = userEvent.setup();
     render(<SignUpPage />);
     const pwInput = screen.getByPlaceholderText("••••••••");
-    fireEvent.change(pwInput, { target: { value: "abc" } });
-    fireEvent.blur(pwInput);
+    await user.type(pwInput, "abc");
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText("Force : Faible")).toBeInTheDocument();
@@ -82,10 +87,11 @@ describe("SignUpPage", () => {
   });
 
   it("shows password strength indicator as strong for 12+ chars with symbols", async () => {
+    const user = userEvent.setup();
     render(<SignUpPage />);
     const pwInput = screen.getByPlaceholderText("••••••••");
-    fireEvent.change(pwInput, { target: { value: "MyP@ssw0rd!23" } });
-    fireEvent.blur(pwInput);
+    await user.type(pwInput, "MyP@ssw0rd!23");
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText("Force : Fort")).toBeInTheDocument();
@@ -93,6 +99,7 @@ describe("SignUpPage", () => {
   });
 
   it("submits form via fetch with correct payload and redirects to /auth/signup-success on success", async () => {
+    const user = userEvent.setup();
     const originalWindow = window;
     const assignMock = vi.fn();
     vi.stubGlobal("window", {
@@ -108,15 +115,15 @@ describe("SignUpPage", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     render(<SignUpPage />);
-    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("Jean Dupont"), "Jean");
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
     
     const checkbox = screen.getByTestId("accept-terms-checkbox");
-    fireEvent.click(checkbox);
+    await user.click(checkbox);
 
     const submitBtn = screen.getByText("Créer mon compte");
-    fireEvent.click(submitBtn);
+    await user.click(submitBtn);
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/auth/signup", expect.objectContaining({
@@ -133,6 +140,7 @@ describe("SignUpPage", () => {
   });
 
   it("displays exact French duplicate-email error from API", async () => {
+    const user = userEvent.setup();
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 409,
@@ -141,14 +149,14 @@ describe("SignUpPage", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     render(<SignUpPage />);
-    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "dup@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("Jean Dupont"), "Jean");
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "dup@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
     const checkbox = screen.getByTestId("accept-terms-checkbox");
-    fireEvent.click(checkbox);
+    await user.click(checkbox);
 
-    fireEvent.click(screen.getByText("Créer mon compte"));
+    await user.click(screen.getByText("Créer mon compte"));
 
     await waitFor(() => {
       expect(
@@ -158,16 +166,17 @@ describe("SignUpPage", () => {
   });
 
   it("prevents submission and displays validation error if acceptTerms checkbox is not checked", async () => {
+    const user = userEvent.setup();
     const mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
 
     render(<SignUpPage />);
-    fireEvent.change(screen.getByPlaceholderText("Jean Dupont"), { target: { value: "Jean" } });
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "securePass123!" } });
+    await user.type(screen.getByPlaceholderText("Jean Dupont"), "Jean");
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "securePass123!");
 
     // Do NOT check the checkbox
-    fireEvent.click(screen.getByText("Créer mon compte"));
+    await user.click(screen.getByText("Créer mon compte"));
 
     await waitFor(() => {
       expect(screen.getByText("Vous devez accepter les conditions pour continuer.")).toBeInTheDocument();

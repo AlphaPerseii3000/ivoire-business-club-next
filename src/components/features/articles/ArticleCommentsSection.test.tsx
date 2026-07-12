@@ -1,5 +1,5 @@
 import React, { act } from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ArticleCommentsSection } from "./ArticleCommentsSection";
@@ -196,6 +196,7 @@ describe("ArticleCommentsSection", () => {
   });
 
   it("shows validation error for comments exceeding max length", async () => {
+    const user = userEvent.setup();
     setupFetch({ ok: true, status: 200, json: { comments: [] } });
 
     render(<ArticleCommentsSection articleId="art-1" isAuthorized={true} userId="user-3" />);
@@ -207,7 +208,8 @@ describe("ArticleCommentsSection", () => {
     const textarea = screen.getByTestId("comment-textarea");
     const longContent = "a".repeat(1001);
 
-    fireEvent.change(textarea, { target: { value: longContent } });
+    await user.click(textarea);
+    await user.paste(longContent);
 
     expect(screen.getByTestId("comment-char-count")).toHaveTextContent("1001 / 1000");
 

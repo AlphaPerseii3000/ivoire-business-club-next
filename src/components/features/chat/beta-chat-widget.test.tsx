@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BetaChatWidget from "./beta-chat-widget";
 
@@ -322,7 +322,9 @@ describe("BetaChatWidget", () => {
     });
 
     const textarea = screen.getByPlaceholderText(/décrivez votre demande/i);
-    fireEvent.change(textarea, { target: { value: "a".repeat(5001) } });
+    textarea.removeAttribute("maxLength");
+    await user.click(textarea);
+    await user.paste("a".repeat(5001));
 
     await waitFor(() => {
       expect(screen.getByText("5001/5000")).toBeInTheDocument();

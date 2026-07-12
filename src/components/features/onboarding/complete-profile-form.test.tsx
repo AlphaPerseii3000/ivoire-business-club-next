@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CompleteProfileForm from "./complete-profile-form";
 
@@ -63,6 +63,7 @@ describe("CompleteProfileForm", () => {
   });
 
   it("appelle l'API avec les données du formulaire à la soumission", async () => {
+    const user = userEvent.setup();
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -79,7 +80,7 @@ describe("CompleteProfileForm", () => {
 
     renderForm();
     const submitButton = screen.getByTestId("submit-button");
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -99,6 +100,7 @@ describe("CompleteProfileForm", () => {
   });
 
   it("affiche un toast de succès et redirige vers /dashboard", async () => {
+    const user = userEvent.setup();
     const { toast } = await import("sonner");
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
@@ -115,7 +117,7 @@ describe("CompleteProfileForm", () => {
     });
 
     renderForm();
-    fireEvent.click(screen.getByTestId("submit-button"));
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Profil complété. Bienvenue sur IBC !");
@@ -124,6 +126,7 @@ describe("CompleteProfileForm", () => {
   });
 
   it("affiche un toast d'erreur si l'API retourne une erreur", async () => {
+    const user = userEvent.setup();
     const { toast } = await import("sonner");
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
@@ -132,7 +135,7 @@ describe("CompleteProfileForm", () => {
     });
 
     renderForm();
-    fireEvent.click(screen.getByTestId("submit-button"));
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("Erreur lors de la sauvegarde");
@@ -140,6 +143,7 @@ describe("CompleteProfileForm", () => {
   });
 
   it("redirige vers /auth/signin si l'API retourne 401", async () => {
+    const user = userEvent.setup();
     const assignMock = vi.fn();
     Object.defineProperty(window, "location", {
       writable: true,
@@ -153,7 +157,7 @@ describe("CompleteProfileForm", () => {
     });
 
     renderForm();
-    fireEvent.click(screen.getByTestId("submit-button"));
+    await user.click(screen.getByTestId("submit-button"));
 
     await waitFor(() => {
       expect(window.location.href).toBe("/auth/signin");
@@ -161,10 +165,11 @@ describe("CompleteProfileForm", () => {
   });
 
   it("permet de modifier un champ texte", async () => {
+    const user = userEvent.setup();
     renderForm();
     const fullNameInput = screen.getByLabelText(/Nom/);
-    await userEvent.clear(fullNameInput);
-    await userEvent.type(fullNameInput, "Marie Dubois");
+    await user.clear(fullNameInput);
+    await user.type(fullNameInput, "Marie Dubois");
 
     expect(fullNameInput).toHaveValue("Marie Dubois");
   });

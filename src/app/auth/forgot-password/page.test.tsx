@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import ForgotPasswordPage from "./page";
 
 const mockPush = vi.fn();
@@ -29,10 +30,11 @@ describe("ForgotPasswordPage", () => {
   });
 
   it("shows validation error for invalid email", async () => {
+    const user = userEvent.setup();
     render(<ForgotPasswordPage />);
     const emailInput = screen.getByPlaceholderText("ton@email.com");
-    fireEvent.change(emailInput, { target: { value: "bad-email" } });
-    fireEvent.blur(emailInput);
+    await user.type(emailInput, "bad-email");
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText("Email invalide")).toBeInTheDocument();
@@ -40,11 +42,12 @@ describe("ForgotPasswordPage", () => {
   });
 
   it("displays generic success message after submission", async () => {
+    const user = userEvent.setup();
     global.fetch = mockFetch(200, { message: "Si un compte est associé à cet email, un lien de réinitialisation a été envoyé." });
 
     render(<ForgotPasswordPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.click(screen.getByText("Envoyer le lien"));
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.click(screen.getByText("Envoyer le lien"));
 
     await waitFor(() => {
       expect(
@@ -54,11 +57,12 @@ describe("ForgotPasswordPage", () => {
   });
 
   it("displays error on server failure", async () => {
+    const user = userEvent.setup();
     global.fetch = mockFetch(500, { error: "Erreur interne" });
 
     render(<ForgotPasswordPage />);
-    fireEvent.change(screen.getByPlaceholderText("ton@email.com"), { target: { value: "test@example.com" } });
-    fireEvent.click(screen.getByText("Envoyer le lien"));
+    await user.type(screen.getByPlaceholderText("ton@email.com"), "test@example.com");
+    await user.click(screen.getByText("Envoyer le lien"));
 
     await waitFor(() => {
       expect(screen.getByTestId("auth-error")).toHaveTextContent("Erreur interne");

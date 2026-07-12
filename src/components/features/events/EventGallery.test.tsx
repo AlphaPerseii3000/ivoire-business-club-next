@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { EventGallery, GalleryPhoto } from "./EventGallery";
 
@@ -102,7 +103,8 @@ describe("EventGallery UI Component", () => {
     expect(screen.queryByTitle("Supprimer la photo")).not.toBeInTheDocument();
   });
 
-  it("opens lightbox modal when photo is clicked", () => {
+  it("opens lightbox modal when photo is clicked", async () => {
+    const user = userEvent.setup();
     render(
       <EventGallery
         eventId="evt-1"
@@ -113,7 +115,7 @@ describe("EventGallery UI Component", () => {
     );
 
     const caption = screen.getByText("« Belle soirée de networking »");
-    fireEvent.click(caption.closest("div.group")!);
+    await user.click(caption.closest("div.group")!);
 
     // Lightbox modal should display full caption and uploader name
     expect(screen.getByText("Belle soirée de networking")).toBeInTheDocument();

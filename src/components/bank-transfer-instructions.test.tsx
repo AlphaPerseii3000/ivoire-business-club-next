@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -53,6 +53,8 @@ describe("BankTransferInstructions", () => {
   }
 
   it("renders complete bank-transfer details and allows toggling between EUR and XOF using fallback props", async () => {
+    const user = userEvent.setup();
+    const writeTextSpy = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
     render(<BankTransferInstructions {...defaultPropsPeriodMonthly} />);
 
     // 1. Verify default view (EUR) using fallbacks
@@ -66,36 +68,36 @@ describe("BankTransferInstructions", () => {
     // Verify copy button for transit IBAN in EUR tab
     const copyTransitIbanBtn = screen.getByRole("button", { name: "Copier IBAN Transit" });
     expect(copyTransitIbanBtn).toBeInTheDocument();
-    fireEvent.click(copyTransitIbanBtn);
+    await user.click(copyTransitIbanBtn);
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenCalledWith(defaultProps.iban);
+      expect(writeTextSpy).toHaveBeenCalledWith(defaultProps.iban);
     });
 
     // Verify copy button for final IBAN in EUR tab
     const copyFinalIbanBtn = screen.getByRole("button", { name: "Copier IBAN Final" });
     expect(copyFinalIbanBtn).toBeInTheDocument();
-    fireEvent.click(copyFinalIbanBtn);
+    await user.click(copyFinalIbanBtn);
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenCalledWith("CI93 CI11 2010 0501 8780 4900 0125");
+      expect(writeTextSpy).toHaveBeenCalledWith("CI93 CI11 2010 0501 8780 4900 0125");
     });
 
     // Verify copy all button in EUR tab
     const copyAllEurBtn = screen.getByRole("button", { name: "Copier toutes les informations EUR" });
     expect(copyAllEurBtn).toBeInTheDocument();
-    fireEvent.click(copyAllEurBtn);
+    await user.click(copyAllEurBtn);
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenLastCalledWith(
+      expect(writeTextSpy).toHaveBeenLastCalledWith(
         expect.stringContaining("Banque Domiciliation : SOCIETE GENERALE - PARIS")
       );
     });
-    expect(mockClipboardWriteText).toHaveBeenLastCalledWith(
+    expect(writeTextSpy).toHaveBeenLastCalledWith(
       expect.stringContaining("Bénéficiaire Final : KS Investment")
     );
 
     // 2. Switch to XOF tab
     const xofTabTrigger = screen.getByRole("tab", { name: /Virement en XOF/ });
     expect(xofTabTrigger).toBeInTheDocument();
-    fireEvent.click(xofTabTrigger);
+    await user.click(xofTabTrigger);
 
     // Verify XOF view content
     expect(screen.getByText("39 000 XOF")).toBeInTheDocument(); // 59 EUR rounded is 39000
@@ -105,18 +107,19 @@ describe("BankTransferInstructions", () => {
     // Verify copy all button in XOF tab
     const copyAllXofBtn = screen.getByRole("button", { name: "Copier toutes les informations XOF" });
     expect(copyAllXofBtn).toBeInTheDocument();
-    fireEvent.click(copyAllXofBtn);
+    await user.click(copyAllXofBtn);
     await waitFor(() => {
-      expect(mockClipboardWriteText).toHaveBeenLastCalledWith(
+      expect(writeTextSpy).toHaveBeenLastCalledWith(
         expect.stringContaining("Banque : VERSUS BANK (01005-AGENCE ANGRE)")
       );
     });
-    expect(mockClipboardWriteText).toHaveBeenLastCalledWith(
+    expect(writeTextSpy).toHaveBeenLastCalledWith(
       expect.stringMatching(/Montant Suggéré : 39\s000 XOF/)
     );
   });
 
   it("renders with real production coordinates and verifies EUR and XOF values", async () => {
+    const user = userEvent.setup();
     const details = getBankTransferDetails();
 
     render(
@@ -134,7 +137,7 @@ describe("BankTransferInstructions", () => {
 
     // Switch to XOF tab
     const xofTabTrigger = screen.getByRole("tab", { name: /Virement en XOF/ });
-    fireEvent.click(xofTabTrigger);
+    await user.click(xofTabTrigger);
 
     // Verify XOF view uses real Versus Bank details
     expect(screen.getByText("VERSUS BANK (01005-AGENCE ANGRE)")).toBeInTheDocument();
