@@ -1,0 +1,860 @@
+diff --git a/src/lib/email.test.ts b/src/lib/email.test.ts
+index 15fef31..819e411 100644
+--- a/src/lib/email.test.ts
++++ b/src/lib/email.test.ts
+@@ -37,6 +37,9 @@ describe("email helpers", () => {
+         text: expect.stringContaining(
+           "Votre abonnement IBC Grands Frères est activé. Bienvenue dans le club !"
+         ),
++        html: expect.stringContaining(
++          "Grands Frères"
++        ),
+       })
+     );
+   });
+@@ -60,6 +63,9 @@ describe("email helpers", () => {
+         text: expect.stringContaining(
+           "Votre espace membre : https://ivoirebusinessclub.test/dashboard"
+         ),
++        html: expect.stringContaining(
++          "https://ivoirebusinessclub.test/dashboard"
++        ),
+       })
+     );
+   });
+@@ -115,6 +121,9 @@ describe("email helpers", () => {
+         text: expect.stringContaining(
+           "https://ivoirebusinessclub.test/auth/verify-email?token=secret-token-123"
+         ),
++        html: expect.stringContaining(
++          "https://ivoirebusinessclub.test/auth/verify-email?token=secret-token-123"
++        ),
+       })
+     );
+   });
+@@ -136,7 +145,10 @@ describe("email helpers", () => {
+     });
+ 
+     expect(mockSend).toHaveBeenCalledTimes(1);
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain(
+       "Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier Affranchis (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."
+     );
+@@ -153,6 +165,13 @@ describe("email helpers", () => {
+     expect(text).toContain(
+       "Contrat d'adhésion : https://ivoirebusinessclub.test/contrat-adhesion.pdf"
+     );
++
++    // Verify HTML content
++    expect(html).toContain("Ivoire Business Club");
++    expect(html).toContain("https://ivoirebusinessclub.test/pricing");
++    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
++    expect(html).toContain("https://ivoirebusinessclub.test/contrat-adhesion.pdf");
++    expect(html).not.toContain("Coordonnées de Virement Bancaire");
+   });
+ 
+   it("sends welcome email with bank transfer instructions when paymentProvider is BANK_TRANSFER", async () => {
+@@ -173,7 +192,10 @@ describe("email helpers", () => {
+     });
+ 
+     expect(mockSend).toHaveBeenCalledTimes(1);
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain(
+       "Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée."
+     );
+@@ -185,6 +207,11 @@ describe("email helpers", () => {
+     expect(text).not.toContain(
+       "Choisissez votre formule d'abonnement dans votre espace membre"
+     );
++
++    // Verify HTML content
++    expect(html).toContain("Coordonnées de Virement Bancaire");
++    expect(html).toContain("FR76 3000 3069 9000 1016 1063 363");
++    expect(html).toContain("SOGEFRPPXXX");
+   });
+ 
+   it("sends welcome email with Wave instructions when paymentProvider is WAVE", async () => {
+@@ -210,15 +237,22 @@ describe("email helpers", () => {
+         to: "newmember@example.com",
+         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Wave :"),
++        html: expect.stringContaining("Instructions de Paiement Mobile Money (Wave)"),
+       })
+     );
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+     expect(text).toContain("Numéro marchand Wave : +225****0650");
+     expect(text).toContain("Depuis votre numéro Wave : +225****0405");
+     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
+     expect(text).toContain("- Ouvre ton application Wave.");
+     expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
++
++    expect(html).toContain("+225****0650");
++    expect(html).toContain("IBC-user123-GRAND_FRERE");
+   });
+ 
+   it("sends welcome email with Orange Money instructions when paymentProvider is ORANGE_MONEY", async () => {
+@@ -245,15 +279,22 @@ describe("email helpers", () => {
+         to: "newmember@example.com",
+         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
+         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Orange Money :"),
++        html: expect.stringContaining("Instructions de Paiement Mobile Money (Orange Money)"),
+       })
+     );
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+     expect(text).toContain("Numéro marchand Orange Money : +225****0650");
+     expect(text).toContain("Depuis votre numéro Orange Money : +225****0405");
+     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
+     expect(text).toContain("- Compose le code USSD #144# ou ouvre ton application Orange Money.");
+     expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
++
++    expect(html).toContain("+225****0650");
++    expect(html).toContain("IBC-user123-GRAND_FRERE");
+   });
+ 
+   it("does not include payment section but includes /pricing link when paymentProvider is null", async () => {
+@@ -274,12 +315,17 @@ describe("email helpers", () => {
+     });
+ 
+     expect(mockSend).toHaveBeenCalledTimes(1);
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).not.toContain("Pour finaliser votre adhésion");
+     expect(text).toContain(
+       "Choisissez votre formule d'abonnement dans votre espace membre : https://ivoirebusinessclub.test/pricing"
+     );
+     expect(text).not.toContain("Contrat d'adhésion");
++
++    expect(html).toContain("https://ivoirebusinessclub.test/pricing");
+   });
+ 
+   it("sends reminder EMAIL_VERIFICATION with correct French copy and link", async () => {
+@@ -300,6 +346,9 @@ describe("email helpers", () => {
+         text: expect.stringContaining(
+           "https://ivoirebusinessclub.test/auth/verify-email?resend=1"
+         ),
++        html: expect.stringContaining(
++          "https://ivoirebusinessclub.test/auth/verify-email?resend=1"
++        ),
+       })
+     );
+     const text = mockSend.mock.calls[0][0].text;
+@@ -319,12 +368,17 @@ describe("email helpers", () => {
+     });
+ 
+     expect(mockSend).toHaveBeenCalledTimes(1);
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+     expect(text).toContain("complétez votre profil");
+     expect(text).toContain(
+       "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
+     );
++
++    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+   });
+ 
+   it("sends reminder FINAL_REMINDER with both links and legal mention", async () => {
+@@ -338,12 +392,18 @@ describe("email helpers", () => {
+     });
+ 
+     expect(mockSend).toHaveBeenCalledTimes(1);
+-    const text = mockSend.mock.calls[0][0].text;
++    const callArgs = mockSend.mock.calls[0][0];
++    const text = callArgs.text;
++    const html = callArgs.html;
++
+     expect(text).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
+     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+     expect(text).toContain("finalisé");
+     expect(text).toContain(
+       "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
+     );
++
++    expect(html).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
++    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+   });
+ });
+diff --git a/src/lib/email.ts b/src/lib/email.ts
+index 6151fb9..b79b06c 100644
+--- a/src/lib/email.ts
++++ b/src/lib/email.ts
+@@ -59,14 +59,87 @@ function opportunityLine(opportunityId: string) {
+     : dashboardLine();
+ }
+ 
++function getEmailHtmlWrapper({
++  subject,
++  contentHtml,
++  cta,
++}: {
++  subject: string;
++  contentHtml: string;
++  cta?: { label: string; url: string } | null;
++}) {
++  const ctaHtml = cta
++    ? `
++<table border="0" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
++  <tr>
++    <td align="center" bgcolor="#1E3A5F" style="border-radius: 6px;">
++      <a href="${cta.url}" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 6px; padding: 14px 28px; border: 1px solid #1E3A5F; display: inline-block; font-weight: bold; letter-spacing: 0.5px;">
++        ${cta.label}
++      </a>
++    </td>
++  </tr>
++</table>`
++    : "";
++
++  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
++<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
++<head>
++  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
++  <title>${subject}</title>
++</head>
++<body style="margin: 0; padding: 0; background-color: #F6F5F2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
++  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F6F5F2; padding: 40px 10px;">
++    <tr>
++      <td align="center">
++        <!-- Main Card -->
++        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
++          
++          <!-- Header -->
++          <tr>
++            <td align="center" style="background-color: #1E3A5F; padding: 30px 20px; border-bottom: 3px solid #D4A847;">
++              <span style="color: #ffffff; font-family: 'Times New Roman', Times, serif; font-size: 22px; font-weight: bold; letter-spacing: 4px; text-transform: uppercase;">
++                Ivoire Business Club
++              </span>
++            </td>
++          </tr>
++          
++          <!-- Body Content -->
++          <tr>
++            <td style="padding: 40px 30px; color: #1A2B4C; font-size: 16px; line-height: 1.6;">
++              ${contentHtml}
++              ${ctaHtml}
++            </td>
++          </tr>
++          
++          <!-- Footer -->
++          <tr>
++            <td style="background-color: #F9FAFB; padding: 30px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 12px; line-height: 1.5;">
++              <p style="margin: 0 0 10px 0; font-weight: bold; color: #1E3A5F;">Ivoire Business Club</p>
++              <p style="margin: 0 0 15px 0;">Le réseau élite des décideurs et des investisseurs en Côte d'Ivoire.</p>
++              <p style="margin: 0;">Vous recevez cet e-mail dans le cadre de votre adhésion à IBC.</p>
++              <p style="margin: 5px 0 0 0;">&copy; 2026 Ivoire Business Club. Tous droits réservés.</p>
++            </td>
++          </tr>
++          
++        </table>
++      </td>
++    </tr>
++  </table>
++</body>
++</html>`;
++}
++
+ async function sendEmail({
+   to,
+   subject,
+   text,
++  html,
+ }: {
+   to: string;
+   subject: string;
+   text: string;
++  html?: string;
+ }) {
+   if (!process.env.RESEND_API_KEY || !FROM_EMAIL) {
+     throw new Error(
+@@ -79,6 +152,7 @@ async function sendEmail({
+     to,
+     subject,
+     text,
++    html,
+   });
+ 
+   if (process.env.NODE_ENV !== "test") {
+@@ -99,11 +173,23 @@ export async function sendEmailVerificationEmail({
+ }) {
+   const appUrl = process.env.APP_URL || "";
+   const verifyLink = `${appUrl}/auth/verify-email?token=${token}`;
+-  await sendEmail({
+-    to,
+-    subject: "Vérifiez votre adresse email - Ivoire Business Club",
+-    text: `${greeting(name)}\n\nMerci de vous être inscrit sur Ivoire Business Club. Veuillez vérifier votre adresse email en cliquant sur le lien suivant :\n\n${verifyLink}\n\nCe lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.`,
++  const subject = "Vérifiez votre adresse email - Ivoire Business Club";
++  const text = `${greeting(name)}\n\nMerci de vous être inscrit sur Ivoire Business Club. Veuillez vérifier votre adresse email en cliquant sur le lien suivant :\n\n${verifyLink}\n\nCe lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.`;
++  
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Merci de vous être inscrit sur Ivoire Business Club. Veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
++<p style="color: #6B7280; font-size: 14px;">Ce lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: {
++      label: "Vérifier mon adresse email",
++      url: verifyLink,
++    },
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendSubscriptionActivatedEmail({
+@@ -112,11 +198,23 @@ export async function sendSubscriptionActivatedEmail({
+   tier,
+ }: SubscriptionEmailBase) {
+   const label = tierLabel(tier);
+-  await sendEmail({
+-    to,
+-    subject: "Votre abonnement IBC est activé",
+-    text: `${greeting(name)}\n\nVotre abonnement IBC ${label} est activé. Bienvenue dans le club !${dashboardLine()}`,
++  const subject = "Votre abonnement IBC est activé";
++  const text = `${greeting(name)}\n\nVotre abonnement IBC ${label} est activé. Bienvenue dans le club !${dashboardLine()}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre abonnement IBC <strong>${label}</strong> est activé. Bienvenue dans le club !</p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Accéder à mon espace membre",
++      url: `${appUrl}/dashboard`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendAdminSubscriptionConfirmationEmail({
+@@ -125,11 +223,23 @@ export async function sendAdminSubscriptionConfirmationEmail({
+   tier,
+ }: AdminSubscriptionConfirmationEmailInput) {
+   const label = tierLabel(tier);
+-  await sendEmail({
+-    to,
+-    subject: "Votre abonnement IBC est confirmé",
+-    text: `${greeting(name)}\n\nVotre abonnement IBC ${label} est bien confirmé. Vous pouvez consulter votre espace membre pour accéder aux avantages de votre plan.${dashboardLine()}`,
++  const subject = "Votre abonnement IBC est confirmé";
++  const text = `${greeting(name)}\n\nVotre abonnement IBC ${label} est bien confirmé. Vous pouvez consulter votre espace membre pour accéder aux avantages de votre plan.${dashboardLine()}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre abonnement IBC <strong>${label}</strong> est bien confirmé. Vous pouvez consulter votre espace membre pour accéder aux avantages de votre plan.</p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Accéder à mon espace membre",
++      url: `${appUrl}/dashboard`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendSubscriptionRejectedEmail({
+@@ -139,11 +249,32 @@ export async function sendSubscriptionRejectedEmail({
+   reason,
+ }: SubscriptionRejectedEmailInput) {
+   const label = tierLabel(tier);
+-  await sendEmail({
+-    to,
+-    subject: "Votre demande d'abonnement IBC est refusée",
+-    text: `${greeting(name)}\n\nVotre demande d'abonnement IBC ${label} n'a pas pu être validée.\n\nJustification de l'administration :\n${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, contactez le support IBC.${dashboardLine()}`,
++  const subject = "Votre demande d'abonnement IBC est refusée";
++  const text = `${greeting(name)}\n\nVotre demande d'abonnement IBC ${label} n'a pas pu être validée.\n\nJustification de l'administration :\n${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, contactez le support IBC.${dashboardLine()}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre demande d'abonnement IBC <strong>${label}</strong> n'a pas pu être validée.</p>
++<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px; margin: 25px 0;">
++  <tr>
++    <td style="padding: 16px 20px;">
++      <p style="margin: 0 0 8px 0; font-weight: bold; color: #991B1B; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Motif de rejet</p>
++      <p style="margin: 0; color: #7F1D1D; font-size: 15px; line-height: 1.5;">${reason}</p>
++    </td>
++  </tr>
++</table>
++<p>Si vous pensez qu'il s'agit d'une erreur, contactez le support IBC.</p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Accéder à mon espace",
++      url: `${appUrl}/dashboard`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendOpportunityVerifiedEmail({
+@@ -152,11 +283,23 @@ export async function sendOpportunityVerifiedEmail({
+   opportunityId,
+   title,
+ }: OpportunityEmailBase) {
+-  await sendEmail({
+-    to,
+-    subject: "Votre deal IBC est vérifié",
+-    text: `${greeting(name)}\n\nVotre deal « ${title} » est maintenant vérifié. Il peut apparaître dans les feeds membres selon les règles d'accès IBC.${opportunityLine(opportunityId)}`,
++  const subject = "Votre deal IBC est vérifié";
++  const text = `${greeting(name)}\n\nVotre deal « ${title} » est maintenant vérifié. Il peut apparaître dans les feeds membres selon les règles d'accès IBC.${opportunityLine(opportunityId)}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre deal « <strong>${title}</strong> » est maintenant vérifié. Il peut apparaître dans les feeds membres selon les règles d'accès IBC.</p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Voir le deal",
++      url: `${appUrl}/opportunities/${opportunityId}`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendOpportunityMatchedEmail({
+@@ -165,12 +308,23 @@ export async function sendOpportunityMatchedEmail({
+   opportunityId,
+   title,
+ }: OpportunityEmailBase) {
+-  const message = `Nouvelle opportunité matchée : ${title}`;
+-  await sendEmail({
+-    to,
+-    subject: message,
+-    text: `${greeting(name)}\n\n${message}${opportunityLine(opportunityId)}`,
++  const subject = `Nouvelle opportunité matchée : ${title}`;
++  const text = `${greeting(name)}\n\nNouvelle opportunité matchée : ${title}${opportunityLine(opportunityId)}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Nouvelle opportunité matchée : <strong>${title}</strong></p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Voir le deal",
++      url: `${appUrl}/opportunities/${opportunityId}`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendOpportunityRejectedEmail({
+@@ -180,11 +334,32 @@ export async function sendOpportunityRejectedEmail({
+   title,
+   note,
+ }: OpportunityRejectedEmailInput) {
+-  await sendEmail({
+-    to,
+-    subject: "Votre deal IBC nécessite des corrections",
+-    text: `${greeting(name)}\n\nVotre deal « ${title} » n'a pas pu être validé en l'état.\n\nNote privée de l'administration :\n${note}\n\nVous pouvez corriger votre dossier depuis votre espace membre.${opportunityLine(opportunityId)}`,
++  const subject = "Votre deal IBC nécessite des corrections";
++  const text = `${greeting(name)}\n\nVotre deal « ${title} » n'a pas pu être validé en l'état.\n\nNote privée de l'administration :\n${note}\n\nVous pouvez corriger votre dossier depuis votre espace membre.${opportunityLine(opportunityId)}`;
++
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre deal « <strong>${title}</strong> » n'a pas pu être validé en l'état.</p>
++<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px; margin: 25px 0;">
++  <tr>
++    <td style="padding: 16px 20px;">
++      <p style="margin: 0 0 8px 0; font-weight: bold; color: #991B1B; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Note de l'administration</p>
++      <p style="margin: 0; color: #7F1D1D; font-size: 15px; line-height: 1.5;">${note}</p>
++    </td>
++  </tr>
++</table>
++<p>Vous pouvez corriger votre dossier depuis votre espace membre.</p>`;
++
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Corriger mon deal",
++      url: `${appUrl}/opportunities/${opportunityId}`,
++    } : null,
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendWelcomeEmail({
+@@ -214,6 +389,7 @@ export async function sendWelcomeEmail({
+   const adhesionContractUrl = process.env.ADHESION_CONTRACT_URL;
+ 
+   let paymentInstructions = "";
++  let paymentInstructionsHtml = "";
+   if (paymentProvider === "BANK_TRANSFER") {
+     const lines: string[] = [];
+     lines.push(
+@@ -223,6 +399,35 @@ export async function sendWelcomeEmail({
+     if (bic) lines.push(`BIC : ${bic}`);
+     if (bankAddress) lines.push(`Adresse de la banque : ${bankAddress}`);
+     paymentInstructions = lines.length > 1 ? "\n\n" + lines.join("\n") : "";
++
++    paymentInstructionsHtml = `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FDFBF7; border: 1px solid #EAE3D2; border-radius: 8px; margin: 25px 0; font-size: 15px;">
++  <tr>
++    <td style="padding: 24px 20px; color: #1E3A5F;">
++      <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; border-bottom: 1px solid #EAE3D2; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #D4A847;">
++        Coordonnées de Virement Bancaire
++      </h4>
++      <p style="margin: 0 0 15px 0; color: #4B5563;">Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :</p>
++      <table border="0" cellpadding="0" cellspacing="0" width="100%">
++        <tr>
++          <td style="padding: 6px 0; font-weight: bold; width: 160px; color: #1E3A5F;">Banque :</td>
++          <td style="padding: 6px 0; color: #4B5563;">KS Investment / Société Générale CI</td>
++        </tr>
++        ${iban ? `<tr>
++          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">IBAN :</td>
++          <td style="padding: 6px 0; font-family: monospace; font-size: 14px; color: #111827; background-color: #F3F4F6; padding: 4px 8px; border-radius: 4px; display: inline-block;">${iban}</td>
++        </tr>` : ""}
++        ${bic ? `<tr>
++          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">BIC / SWIFT :</td>
++          <td style="padding: 6px 0; font-family: monospace; font-size: 14px; color: #111827; background-color: #F3F4F6; padding: 4px 8px; border-radius: 4px; display: inline-block;">${bic}</td>
++        </tr>` : ""}
++        ${bankAddress ? `<tr>
++          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">Adresse de la banque :</td>
++          <td style="padding: 6px 0; color: #4B5563;">${bankAddress}</td>
++        </tr>` : ""}
++      </table>
++    </td>
++  </tr>
++</table>`;
+   } else if (paymentProvider === "WAVE" || paymentProvider === "ORANGE_MONEY") {
+     const config = MOBILE_MONEY_CONFIG[paymentProvider];
+     const lines: string[] = [];
+@@ -243,6 +448,35 @@ export async function sendWelcomeEmail({
+       lines.push(`- ${step}`);
+     }
+     paymentInstructions = "\n\n" + lines.join("\n");
++
++    paymentInstructionsHtml = `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FDFBF7; border: 1px solid #EAE3D2; border-radius: 8px; margin: 25px 0; font-size: 15px;">
++  <tr>
++    <td style="padding: 24px 20px; color: #1E3A5F;">
++      <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; border-bottom: 1px solid #EAE3D2; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #D4A847;">
++        Instructions de Paiement Mobile Money (${config.label})
++      </h4>
++      <p style="margin: 0 0 15px 0; color: #4B5563;">Pour finaliser votre adhésion, merci d'effectuer un paiement ${config.label} :</p>
++      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 15px;">
++        <tr>
++          <td style="padding: 6px 0; font-weight: bold; width: 180px; color: #1E3A5F;">Numéro marchand :</td>
++          <td style="padding: 6px 0; font-family: monospace; font-size: 14px; color: #111827; background-color: #F3F4F6; padding: 4px 8px; border-radius: 4px; display: inline-block;">${config.merchantNumber}</td>
++        </tr>
++        ${providerPhone ? `<tr>
++          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">Depuis votre numéro :</td>
++          <td style="padding: 6px 0; color: #4B5563;">${providerPhone}</td>
++        </tr>` : ""}
++        ${userId ? `<tr>
++          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">Référence du transfert :</td>
++          <td style="padding: 6px 0; font-family: monospace; font-size: 14px; color: #111827; background-color: #F3F4F6; padding: 4px 8px; border-radius: 4px; display: inline-block;">${formatMobileMoneyReference(userId, tier)}</td>
++        </tr>` : ""}
++      </table>
++      <p style="margin: 10px 0 5px 0; font-weight: bold; color: #1E3A5F;">Instructions :</p>
++      <ol style="margin: 0; padding-left: 20px; color: #4B5563; line-height: 1.6;">
++        ${config.instructionLines.map(step => `<li style="padding: 3px 0;">${step}</li>`).join("")}
++      </ol>
++    </td>
++  </tr>
++</table>`;
+   }
+ 
+   const contractLine = adhesionContractUrl
+@@ -266,10 +500,46 @@ export async function sendWelcomeEmail({
+ 
+   const body = `${greeting(name)}\n\n${intro}${completeProfileBlock}${pricingBlock}${paymentInstructions}${contractLine}${dashboardLine()}\n\nL'équipe IBC`;
+ 
++  const cta = completeProfileLink
++    ? { label: "Compléter mon profil", url: completeProfileLink }
++    : (pricingLink && !paymentProvider)
++    ? { label: "Choisir mon abonnement", url: pricingLink }
++    : appUrl
++    ? { label: "Accéder à mon espace", url: `${appUrl}/dashboard` }
++    : null;
++
++  const completeProfileBlockHtml = completeProfileLink && cta?.url !== completeProfileLink
++    ? `<p>👉 <a href="${completeProfileLink}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">Complétez votre profil</a></p>`
++    : "";
++
++  const pricingBlockHtml = pricingLink && !paymentProvider && cta?.url !== pricingLink
++    ? `<p>👉 <a href="${pricingLink}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">Choisissez votre formule d'abonnement dans votre espace membre</a></p>`
++    : "";
++
++  const contractLineHtml = adhesionContractUrl
++    ? `<p>📄 <a href="${adhesionContractUrl}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">Contrat d'adhésion</a></p>`
++    : "";
++
++  const subject = "Bienvenue sur Ivoire Business Club — Vos prochaines étapes";
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>${intro}</p>
++${completeProfileBlockHtml}
++${pricingBlockHtml}
++${paymentInstructionsHtml}
++${contractLineHtml}
++<p>L'équipe IBC</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta,
++  });
++
+   await sendEmail({
+     to,
+-    subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
++    subject,
+     text: body,
++    html,
+   });
+ }
+ 
+@@ -295,34 +565,89 @@ export async function sendReminderEmail({
+   const brandSignature = "\n\nL'équipe Ivoire Business Club";
+ 
+   if (type === "EMAIL_VERIFICATION") {
++    const subject = "Vérifiez votre adresse email — Ivoire Business Club";
+     const body = `${greeting(name)}\n\nMerci de vous être inscrit sur Ivoire Business Club. Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur le lien ci-dessous :\n\n${verifyLink}\n\nSi le lien ne fonctionne pas, vous pouvez aussi retourner sur la page de vérification et demander un nouvel email.\n\n${legalMention}${brandSignature}`;
+ 
++    const contentHtml = `<p>${greeting(name)}</p>
++<p>Merci de vous être inscrit sur Ivoire Business Club. Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
++<p style="color: #6B7280; font-size: 14px;">Si le bouton ne fonctionne pas, vous pouvez aussi retourner sur la page de vérification et demander un nouvel e-mail.</p>
++<p>L'équipe Ivoire Business Club</p>
++<p style="color: #6B7280; font-size: 12px; margin-top: 25px; border-top: 1px solid #E5E7EB; padding-top: 15px;">${legalMention}</p>`;
++
++    const html = getEmailHtmlWrapper({
++      subject,
++      contentHtml,
++      cta: {
++        label: "Vérifier mon adresse email",
++        url: verifyLink,
++      },
++    });
++
+     await sendEmail({
+       to,
+-      subject: "Vérifiez votre adresse email — Ivoire Business Club",
++      subject,
+       text: body,
++      html,
+     });
+     return;
+   }
+ 
+   if (type === "PROFILE_COMPLETION") {
++    const subject = "Complétez votre profil IBC";
+     const body = `${greeting(name)}\n\nVotre inscription avance bien. Pour accéder à l'ensemble des opportunités du club, complétez votre profil en cliquant sur le lien ci-dessous :\n\n${profileLink}\n\nUn profil complet vous permet de matcher avec les deals, les membres et les experts IBC.\n\n${legalMention}${brandSignature}`;
+ 
++    const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre inscription avance bien. Pour accéder à l'ensemble des opportunités du club, complétez votre profil en cliquant sur le bouton ci-dessous :</p>
++<p>Un profil complet vous permet de matcher avec les deals, les membres et les experts IBC.</p>
++<p>L'équipe Ivoire Business Club</p>
++<p style="color: #6B7280; font-size: 12px; margin-top: 25px; border-top: 1px solid #E5E7EB; padding-top: 15px;">${legalMention}</p>`;
++
++    const html = getEmailHtmlWrapper({
++      subject,
++      contentHtml,
++      cta: {
++        label: "Compléter mon profil",
++        url: profileLink,
++      },
++    });
++
+     await sendEmail({
+       to,
+-      subject: "Complétez votre profil IBC",
++      subject,
+       text: body,
++      html,
+     });
+     return;
+   }
+ 
+   // FINAL_REMINDER
++  const subject = "Dernier rappel — votre compte IBC n'est pas finalisé";
+   const body = `${greeting(name)}\n\nVotre compte Ivoire Business Club n'est pas encore finalisé. Voici les dernières étapes à compléter :\n\n1. Vérifier votre adresse email : ${verifyLink}\n2. Complétez votre profil : ${profileLink}\n\nAprès cette date, votre accès au club pourra être restreint.\n\n${legalMention}${brandSignature}`;
+ 
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Votre compte Ivoire Business Club n'est pas encore finalisé. Voici les dernières étapes à compléter :</p>
++<ol>
++  <li style="margin-bottom: 8px;"><a href="${verifyLink}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">Vérifier votre adresse email</a></li>
++  <li style="margin-bottom: 8px;"><a href="${profileLink}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">Compléter votre profil</a></li>
++</ol>
++<p style="color: #EF4444; font-weight: bold;">Après cette date, votre accès au club pourra être restreint.</p>
++<p>L'équipe Ivoire Business Club</p>
++<p style="color: #6B7280; font-size: 12px; margin-top: 25px; border-top: 1px solid #E5E7EB; padding-top: 15px;">${legalMention}</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Accéder à mon espace",
++      url: `${appUrl}/dashboard`,
++    } : null,
++  });
++
+   await sendEmail({
+     to,
+-    subject: "Dernier rappel — votre compte IBC n'est pas finalisé",
++    subject,
+     text: body,
++    html,
+   });
+ }
+ 
+@@ -334,10 +659,28 @@ function guideLink() {
+ }
+ 
+ export async function sendGuideEmail({ to }: { to: string }) {
++  const subject = "Votre guide gratuit — Investir en Côte d'Ivoire 2026";
++  const text = `Bonjour,\n\nMerci pour votre intérêt pour Ivoire Business Club.\n\nVoici votre guide gratuit « Investir en Côte d'Ivoire 2026 » :\n\n${guideLink()}\n\nBonne lecture,\nL'équipe IBC`;
++
++  const contentHtml = `<p>Bonjour,</p>
++<p>Merci pour votre intérêt pour Ivoire Business Club.</p>
++<p>Voici votre guide gratuit « <strong>Investir en Côte d'Ivoire 2026</strong> » en cliquant sur le bouton ci-dessous :</p>
++<p>Bonne lecture,<br/>L'équipe IBC</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: {
++      label: "Télécharger le Guide",
++      url: guideLink(),
++    },
++  });
++
+   await sendEmail({
+     to,
+-    subject: "Votre guide gratuit — Investir en Côte d'Ivoire 2026",
+-    text: `Bonjour,\n\nMerci pour votre intérêt pour Ivoire Business Club.\n\nVoici votre guide gratuit « Investir en Côte d'Ivoire 2026 » :\n\n${guideLink()}\n\nBonne lecture,\nL'équipe IBC`,
++    subject,
++    text,
++    html,
+   });
+ }
+ 
+@@ -353,13 +696,24 @@ export async function sendPasswordResetEmail({
+   appUrl?: string;
+ }) {
+   const resetLink = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
+-  const dashboard = dashboardLine();
++  const subject = "Réinitialise ton mot de passe - IBC";
++  const text = `${greeting(name)}\n\nTu as demandé à réinitialiser ton mot de passe IBC. Clique sur le lien ci-dessous pour choisir un nouveau mot de passe :\n\n${resetLink}\n\nCe lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, tu peux ignorer cet email en toute sécurité.${dashboardLine()}\n\nL'équipe IBC`;
+ 
+-  await sendEmail({
+-    to,
+-    subject: "Réinitialise ton mot de passe - IBC",
+-    text: `${greeting(name)}\n\nTu as demandé à réinitialiser ton mot de passe IBC. Clique sur le lien ci-dessous pour choisir un nouveau mot de passe :\n\n${resetLink}\n\nCe lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, tu peux ignorer cet email en toute sécurité.${dashboard}\n\nL'équipe IBC`,
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Vous avez demandé à réinitialiser votre mot de passe Ivoire Business Club. Veuillez cliquer sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
++<p style="color: #6B7280; font-size: 14px;">Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
++<p>L'équipe IBC</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: {
++      label: "Réinitialiser mon mot de passe",
++      url: resetLink,
++    },
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendSetPasswordEmail({
+@@ -377,13 +731,24 @@ export async function sendSetPasswordEmail({
+     throw new Error("APP_URL variable is not configured");
+   }
+   const inviteLink = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}&type=set`;
+-  const dashboard = dashboardLine();
++  const subject = "Définissez votre mot de passe - Ivoire Business Club";
++  const text = `${greeting(name)}\n\nVous avez été invité à rejoindre l'Ivoire Business Club. Veuillez définir votre mot de passe pour activer votre compte et y accéder de manière autonome :\n\n${inviteLink}\n\nCe lien d'invitation expire dans 7 jours. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.\n\nL'équipe IBC`;
+ 
+-  await sendEmail({
+-    to,
+-    subject: "Définissez votre mot de passe - Ivoire Business Club",
+-    text: `${greeting(name)}\n\nVous avez été invité à rejoindre l'Ivoire Business Club. Veuillez définir votre mot de passe pour activer votre compte et y accéder de manière autonome :\n\n${inviteLink}\n\nCe lien d'invitation expire dans 7 jours. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.\n\nL'équipe IBC`,
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Vous avez été invité à rejoindre l'Ivoire Business Club. Veuillez définir votre mot de passe pour activer votre compte et y accéder de manière autonome :</p>
++<p style="color: #6B7280; font-size: 14px;">Ce lien d'invitation expire dans 7 jours. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.</p>
++<p>L'équipe IBC</p>`;
++
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: {
++      label: "Définir mon mot de passe",
++      url: inviteLink,
++    },
+   });
++
++  await sendEmail({ to, subject, text, html });
+ }
+ 
+ export async function sendPasswordChangedEmail({
+@@ -394,17 +759,24 @@ export async function sendPasswordChangedEmail({
+   name?: string | null;
+ }) {
+   const subject = "Votre mot de passe a été modifié";
+-  const text = `${greeting(name)}
+-
+-Nous vous informons que le mot de passe de votre compte Ivoire Business Club a été modifié avec succès.
++  const text = `${greeting(name)}\n\nNous vous informons que le mot de passe de votre compte Ivoire Business Club a été modifié avec succès.\n\nSi vous n'êtes pas à l'origine de cette modification, veuillez contacter immédiatement notre support.${dashboardLine()}\n\nCordialement,\nL'équipe Ivoire Business Club`;
+ 
+-Si vous n'êtes pas à l'origine de cette modification, veuillez contacter immédiatement notre support.
+-${dashboardLine()}
++  const contentHtml = `<p>${greeting(name)}</p>
++<p>Nous vous informons que le mot de passe de votre compte Ivoire Business Club a été modifié avec succès.</p>
++<p>Si vous n'êtes pas à l'origine de cette modification, veuillez contacter immédiatement notre support.</p>
++<p>Cordialement,<br/>L'équipe Ivoire Business Club</p>`;
+ 
+-Cordialement,
+-L'équipe Ivoire Business Club`;
++  const appUrl = process.env.APP_URL;
++  const html = getEmailHtmlWrapper({
++    subject,
++    contentHtml,
++    cta: appUrl ? {
++      label: "Accéder à mon espace",
++      url: `${appUrl}/dashboard`,
++    } : null,
++  });
+ 
+-  return sendEmail({ to, subject, text });
++  return sendEmail({ to, subject, text, html });
+ }
+ 
+ 

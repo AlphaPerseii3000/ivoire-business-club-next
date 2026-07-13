@@ -37,6 +37,9 @@ describe("email helpers", () => {
         text: expect.stringContaining(
           "Votre abonnement IBC Grands Frères est activé. Bienvenue dans le club !"
         ),
+        html: expect.stringContaining(
+          "Grands Frères"
+        ),
       })
     );
   });
@@ -59,6 +62,9 @@ describe("email helpers", () => {
         subject: "Votre abonnement IBC est confirmé",
         text: expect.stringContaining(
           "Votre espace membre : https://ivoirebusinessclub.test/dashboard"
+        ),
+        html: expect.stringContaining(
+          "https://ivoirebusinessclub.test/dashboard"
         ),
       })
     );
@@ -115,17 +121,16 @@ describe("email helpers", () => {
         text: expect.stringContaining(
           "https://ivoirebusinessclub.test/auth/verify-email?token=secret-token-123"
         ),
+        html: expect.stringContaining(
+          "https://ivoirebusinessclub.test/auth/verify-email?token=secret-token-123"
+        ),
       })
     );
   });
 
   it("sends generic welcome email post-signup with /pricing link and no payment instructions", async () => {
     process.env.APP_URL = "https://ivoirebusinessclub.test";
-    process.env.BANK_TRANSFER_IBAN = "FR76 3000 3069 9000 1016 1063 363";
-    process.env.BANK_TRANSFER_BIC = "SOGEFRPPXXX";
-    process.env.BANK_TRANSFER_BANK_ADDRESS = "17 Cours Valmy Tour Granite 92800 Paris La Défense 7 France";
     process.env.ADHESION_CONTRACT_URL = "https://ivoirebusinessclub.test/contrat-adhesion.pdf";
-
     const { sendWelcomeEmail } = await import("./email");
 
     await sendWelcomeEmail({
@@ -136,9 +141,12 @@ describe("email helpers", () => {
     });
 
     expect(mockSend).toHaveBeenCalledTimes(1);
-    const text = mockSend.mock.calls[0][0].text;
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
     expect(text).toContain(
-      "Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tier Affranchis (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."
+      "Votre inscription sur Ivoire Business Club est confirmée. Vous démarrez avec le tiers Affranchis (plan par défaut). Vous pourrez choisir votre abonnement définitif dans votre espace membre."
     );
     expect(text).toContain(
       "https://ivoirebusinessclub.test/onboarding/complete-profile"
@@ -153,6 +161,13 @@ describe("email helpers", () => {
     expect(text).toContain(
       "Contrat d'adhésion : https://ivoirebusinessclub.test/contrat-adhesion.pdf"
     );
+
+    // Verify HTML content
+    expect(html).toContain("Ivoire Business Club");
+    expect(html).toContain("https://ivoirebusinessclub.test/pricing");
+    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+    expect(html).toContain("https://ivoirebusinessclub.test/contrat-adhesion.pdf");
+    expect(html).not.toContain("Coordonnées de Virement Bancaire");
   });
 
   it("sends welcome email with bank transfer instructions when paymentProvider is BANK_TRANSFER", async () => {
@@ -173,9 +188,12 @@ describe("email helpers", () => {
     });
 
     expect(mockSend).toHaveBeenCalledTimes(1);
-    const text = mockSend.mock.calls[0][0].text;
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
     expect(text).toContain(
-      "Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée."
+      "Bienvenue sur Ivoire Business Club. Vous avez choisi le tiers Grands Frères. Votre demande d'abonnement est enregistrée."
     );
     expect(text).toContain(
       "Pour finaliser votre adhésion, merci d'effectuer un virement bancaire :"
@@ -185,6 +203,11 @@ describe("email helpers", () => {
     expect(text).not.toContain(
       "Choisissez votre formule d'abonnement dans votre espace membre"
     );
+
+    // Verify HTML content
+    expect(html).toContain("Coordonnées de Virement Bancaire");
+    expect(html).toContain("FR76 3000 3069 9000 1016 1063 363");
+    expect(html).toContain("SOGEFRPPXXX");
   });
 
   it("sends welcome email with Wave instructions when paymentProvider is WAVE", async () => {
@@ -210,15 +233,22 @@ describe("email helpers", () => {
         to: "newmember@example.com",
         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Wave :"),
+        html: expect.stringContaining("Instructions de Paiement Mobile Money (Wave)"),
       })
     );
-    const text = mockSend.mock.calls[0][0].text;
-    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
+    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tiers Grands Frères. Votre demande d'abonnement est enregistrée.");
     expect(text).toContain("Numéro marchand Wave : +225****0650");
     expect(text).toContain("Depuis votre numéro Wave : +225****0405");
     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
     expect(text).toContain("- Ouvre ton application Wave.");
     expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
+
+    expect(html).toContain("+225****0650");
+    expect(html).toContain("IBC-user123-GRAND_FRERE");
   });
 
   it("sends welcome email with Orange Money instructions when paymentProvider is ORANGE_MONEY", async () => {
@@ -245,15 +275,22 @@ describe("email helpers", () => {
         to: "newmember@example.com",
         subject: "Bienvenue sur Ivoire Business Club — Vos prochaines étapes",
         text: expect.stringContaining("Pour finaliser votre adhésion, merci d'effectuer un paiement Orange Money :"),
+        html: expect.stringContaining("Instructions de Paiement Mobile Money (Orange Money)"),
       })
     );
-    const text = mockSend.mock.calls[0][0].text;
-    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tier Grands Frères. Votre demande d'abonnement est enregistrée.");
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
+    expect(text).toContain("Bienvenue sur Ivoire Business Club. Vous avez choisi le tiers Grands Frères. Votre demande d'abonnement est enregistrée.");
     expect(text).toContain("Numéro marchand Orange Money : +225****0650");
     expect(text).toContain("Depuis votre numéro Orange Money : +225****0405");
     expect(text).toContain("Référence du transfert : IBC-user123-GRAND_FRERE");
     expect(text).toContain("- Compose le code USSD #144# ou ouvre ton application Orange Money.");
     expect(text).not.toContain("Choisissez votre formule d'abonnement dans votre espace membre");
+
+    expect(html).toContain("+225****0650");
+    expect(html).toContain("IBC-user123-GRAND_FRERE");
   });
 
   it("does not include payment section but includes /pricing link when paymentProvider is null", async () => {
@@ -274,12 +311,17 @@ describe("email helpers", () => {
     });
 
     expect(mockSend).toHaveBeenCalledTimes(1);
-    const text = mockSend.mock.calls[0][0].text;
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
     expect(text).not.toContain("Pour finaliser votre adhésion");
     expect(text).toContain(
       "Choisissez votre formule d'abonnement dans votre espace membre : https://ivoirebusinessclub.test/pricing"
     );
     expect(text).not.toContain("Contrat d'adhésion");
+
+    expect(html).toContain("https://ivoirebusinessclub.test/pricing");
   });
 
   it("sends reminder EMAIL_VERIFICATION with correct French copy and link", async () => {
@@ -298,6 +340,9 @@ describe("email helpers", () => {
         to: "newmember@example.com",
         subject: "Vérifiez votre adresse email — Ivoire Business Club",
         text: expect.stringContaining(
+          "https://ivoirebusinessclub.test/auth/verify-email?resend=1"
+        ),
+        html: expect.stringContaining(
           "https://ivoirebusinessclub.test/auth/verify-email?resend=1"
         ),
       })
@@ -319,12 +364,17 @@ describe("email helpers", () => {
     });
 
     expect(mockSend).toHaveBeenCalledTimes(1);
-    const text = mockSend.mock.calls[0][0].text;
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
     expect(text).toContain("complétez votre profil");
     expect(text).toContain(
       "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
     );
+
+    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
   });
 
   it("sends reminder FINAL_REMINDER with both links and legal mention", async () => {
@@ -338,12 +388,135 @@ describe("email helpers", () => {
     });
 
     expect(mockSend).toHaveBeenCalledTimes(1);
-    const text = mockSend.mock.calls[0][0].text;
+    const callArgs = mockSend.mock.calls[0][0];
+    const text = callArgs.text;
+    const html = callArgs.html;
+
     expect(text).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
     expect(text).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
     expect(text).toContain("finalisé");
     expect(text).toContain(
       "Vous recevez cet email car vous avez créé un compte sur Ivoire Business Club."
     );
+
+    expect(html).toContain("https://ivoirebusinessclub.test/auth/verify-email?resend=1");
+    expect(html).toContain("https://ivoirebusinessclub.test/onboarding/complete-profile");
+  });
+
+  describe("additional templates and HTML validation", () => {
+    beforeEach(() => {
+      process.env.APP_URL = "https://ivoirebusinessclub.test";
+    });
+
+    it("sends guide email with download link and verified HTML", async () => {
+      const { sendGuideEmail } = await import("./email");
+      await sendGuideEmail({ to: "member@example.com" });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toContain("Votre guide gratuit");
+      expect(callArgs.text).toContain("https://ivoirebusinessclub.test/guides/Investir");
+      expect(callArgs.html).toContain("Télécharger le Guide");
+      expect(callArgs.html).toContain("https://ivoirebusinessclub.test/guides/Investir");
+    });
+
+    it("sends password reset email with vouvoiement and verified HTML", async () => {
+      const { sendPasswordResetEmail } = await import("./email");
+      await sendPasswordResetEmail({
+        to: "member@example.com",
+        name: "Awa",
+        token: "reset-token-123",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Réinitialiser votre mot de passe - IBC");
+      expect(callArgs.text).toContain("Vous avez demandé à réinitialiser votre mot de passe IBC");
+      expect(callArgs.text).not.toContain("Tu as demandé");
+      expect(callArgs.html).toContain("Réinitialiser mon mot de passe");
+      expect(callArgs.html).toContain("reset-password?token=reset-token-123");
+    });
+
+    it("sends set password email with correct link and verified HTML", async () => {
+      const { sendSetPasswordEmail } = await import("./email");
+      await sendSetPasswordEmail({
+        to: "member@example.com",
+        name: "Awa",
+        token: "invite-token-123",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Définissez votre mot de passe - Ivoire Business Club");
+      expect(callArgs.html).toContain("Définir mon mot de passe");
+      expect(callArgs.html).toContain("invite-token-123");
+    });
+
+    it("sends password changed email with verified HTML and no redundant signature", async () => {
+      const { sendPasswordChangedEmail } = await import("./email");
+      await sendPasswordChangedEmail({
+        to: "member@example.com",
+        name: "Awa",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Votre mot de passe a été modifié");
+      expect(callArgs.html).toContain("modifié avec succès");
+      expect(callArgs.html).not.toContain("Cordialement,<br/>L'équipe");
+      expect(callArgs.html).toContain("Cordialement,</p>"); // verifies clean footer handling
+    });
+
+    it("sends opportunity verified email with Emerald CTA", async () => {
+      const { sendOpportunityVerifiedEmail } = await import("./email");
+      await sendOpportunityVerifiedEmail({
+        to: "member@example.com",
+        name: "Awa",
+        opportunityId: "deal-123",
+        title: "Super Projet Immo",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Votre deal IBC est vérifié");
+      expect(callArgs.html).toContain("Super Projet Immo");
+      expect(callArgs.html).toContain("Voir le deal");
+      expect(callArgs.html).toContain("#2D8B4E"); // Vert Émeraude
+    });
+
+    it("sends opportunity matched email with Emerald CTA and French wording", async () => {
+      const { sendOpportunityMatchedEmail } = await import("./email");
+      await sendOpportunityMatchedEmail({
+        to: "member@example.com",
+        name: "Awa",
+        opportunityId: "deal-123",
+        title: "Super Projet Immo",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Nouvelle opportunité correspondante : Super Projet Immo");
+      expect(callArgs.html).toContain("Nouvelle opportunité correspondante");
+      expect(callArgs.html).not.toContain("matchée");
+      expect(callArgs.html).toContain("#2D8B4E");
+    });
+
+    it("sends opportunity rejected email with correct reason escaping and HTML layout", async () => {
+      const { sendOpportunityRejectedEmail } = await import("./email");
+      await sendOpportunityRejectedEmail({
+        to: "member@example.com",
+        name: "Awa",
+        opportunityId: "deal-123",
+        title: "Projet <Brut>",
+        note: "Manque d'infos & de garanties",
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Votre deal IBC nécessite des corrections");
+      expect(callArgs.html).toContain("Projet &lt;Brut&gt;"); // XSS escaping verification
+      expect(callArgs.html).toContain("Manque d&#039;infos &amp; de garanties"); // Note escaping verification
+      expect(callArgs.html).toContain("Corriger mon deal");
+    });
   });
 });
