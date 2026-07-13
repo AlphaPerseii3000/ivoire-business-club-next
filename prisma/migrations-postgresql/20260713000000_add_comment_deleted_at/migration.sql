@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Comment" ADD COLUMN "deletedAt" TIMESTAMP(3);
+ALTER TABLE "article_comments" ADD COLUMN "deletedAt" TIMESTAMP(3);
