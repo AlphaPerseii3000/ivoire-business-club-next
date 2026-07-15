@@ -233,6 +233,9 @@ development_status:
   28-5-stylisation-des-emails-transactionnels: done
   epic-28-retrospective: optional
 
+  epic-29: done
+  29-1-email-confirmation-inscription-evenement: done
+
 # updated: epic-26, epic-27 → done — 2026-07-11
 # story 28-5: context created, status → ready-for-dev — 2026-07-13
 # updated: 28-1 → done — 2026-07-11
