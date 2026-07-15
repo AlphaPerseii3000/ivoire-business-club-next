@@ -6,6 +6,7 @@ process.env.DATABASE_URL = "file:prisma/dev.db";
 const mockAuth = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn());
 const mockPosthogCapture = vi.hoisted(() => vi.fn());
+const mockSendEventRegistrationEmail = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/prisma", () => ({
@@ -17,6 +18,9 @@ vi.mock("@/lib/posthog-server", () => ({
   posthogServer: {
     capture: mockPosthogCapture,
   },
+}));
+vi.mock("@/lib/email", () => ({
+  sendEventRegistrationEmail: mockSendEventRegistrationEmail,
 }));
 
 function makeRequest(body: unknown) {
@@ -30,6 +34,7 @@ function makeRequest(body: unknown) {
 describe("POST /api/events/[id]/register", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSendEventRegistrationEmail.mockResolvedValue(undefined);
   });
 
   it("returns 400 if visitor doesn't provide an email", async () => {
@@ -57,6 +62,13 @@ describe("POST /api/events/[id]/register", () => {
             visibility: "PUBLIC",
             maxCapacity: 100,
             pricing: { visitor: 10000, affranchi: 5000 },
+            slug: "conference-tech",
+            startDate: new Date("2025-07-25T18:00:00Z"),
+            endDate: null,
+            eventType: "IN_PERSON",
+            location: "Abidjan, Côte d'Ivoire",
+            onlineUrl: null,
+            description: "Une conférence sur la tech",
           }),
         },
         eventRegistration: {
@@ -100,6 +112,13 @@ describe("POST /api/events/[id]/register", () => {
             visibility: "PUBLIC",
             maxCapacity: 50,
             pricing: { visitor: 20000, affranchi: 15000, grand_frere: 10000 },
+            slug: "gala-ibc",
+            startDate: new Date("2025-08-01T19:00:00Z"),
+            endDate: new Date("2025-08-01T23:00:00Z"),
+            eventType: "HYBRID",
+            location: "Sofitel Abidjan",
+            onlineUrl: "https://zoom.us/j/galaibc",
+            description: "Gala annuel IBC",
           }),
         },
         eventRegistration: {
@@ -146,6 +165,13 @@ describe("POST /api/events/[id]/register", () => {
             visibility: "PUBLIC",
             maxCapacity: 10,
             pricing: null,
+            slug: "atelier-restreint",
+            startDate: new Date("2025-09-10T09:00:00Z"),
+            endDate: null,
+            eventType: "IN_PERSON",
+            location: "Cocody",
+            onlineUrl: null,
+            description: "Atelier restreint",
           }),
         },
         eventRegistration: {
@@ -180,6 +206,13 @@ describe("POST /api/events/[id]/register", () => {
             visibility: "PUBLIC",
             maxCapacity: 50,
             pricing: null,
+            slug: "atelier",
+            startDate: new Date("2025-10-05T14:00:00Z"),
+            endDate: null,
+            eventType: "ONLINE",
+            location: null,
+            onlineUrl: "https://zoom.us/j/atelier",
+            description: "Atelier en ligne",
           }),
         },
         eventRegistration: {
@@ -197,5 +230,60 @@ describe("POST /api/events/[id]/register", () => {
     expect(response.status).toBe(400);
     const data = await response.json();
     expect(data.error).toBe("Vous êtes déjà inscrit à cet événement");
+  });
+
+  it("sends event registration email after successful registration", async () => {
+    mockAuth.mockResolvedValue(null);
+    mockSendEventRegistrationEmail.mockResolvedValue(undefined);
+
+    mockTransaction.mockImplementation(async (callback: any) => {
+      const mockTx = {
+        event: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "evt-1",
+            title: "Conférence Tech",
+            status: "PUBLISHED",
+            visibility: "PUBLIC",
+            maxCapacity: 100,
+            pricing: { visitor: 10000, affranchi: 5000 },
+            slug: "conference-tech",
+            startDate: new Date("2025-07-25T18:00:00Z"),
+            endDate: null,
+            eventType: "IN_PERSON",
+            location: "Abidjan, Côte d'Ivoire",
+            onlineUrl: null,
+            description: "Une conférence sur la tech",
+          }),
+        },
+        eventRegistration: {
+          count: vi.fn().mockResolvedValue(10),
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockImplementation(({ data }) => Promise.resolve({ id: "reg-1", ...data })),
+        },
+        payment: { create: vi.fn() },
+      };
+      return callback(mockTx);
+    });
+
+    const response = await POST(
+      makeRequest({ email: "visitor@example.com", payOnSite: true }),
+      { params: Promise.resolve({ id: "evt-1" }) }
+    );
+
+    expect(response.status).toBe(201);
+    // Wait for the fire-and-forget promise to settle
+    await vi.waitFor(() => {
+      expect(mockSendEventRegistrationEmail).toHaveBeenCalledTimes(1);
+    });
+    expect(mockSendEventRegistrationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "visitor@example.com",
+        eventTitle: "Conférence Tech",
+        eventSlug: "conference-tech",
+        eventType: "IN_PERSON",
+        location: "Abidjan, Côte d'Ivoire",
+        payOnSite: true,
+      })
+    );
   });
 });

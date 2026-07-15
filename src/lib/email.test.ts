@@ -519,4 +519,155 @@ describe("email helpers", () => {
       expect(callArgs.html).toContain("Corriger mon deal");
     });
   });
+
+  describe("sendEventRegistrationEmail", () => {
+    beforeEach(() => {
+      process.env.APP_URL = "https://ivoirebusinessclub.test";
+    });
+
+    it("sends event registration email with dual timezone and event details", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "member@example.com",
+        name: "Awa",
+        eventTitle: "Conférence Tech",
+        eventSlug: "conference-tech",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "IN_PERSON",
+        location: "Abidjan, Côte d'Ivoire",
+        onlineUrl: null,
+        amountPaid: null,
+        payOnSite: true,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.subject).toBe("Votre inscription à l'événement — Conférence Tech");
+      expect(callArgs.text).toContain("Conférence Tech");
+      expect(callArgs.text).toContain("Date et heure (Paris) :");
+      expect(callArgs.text).toContain("Date et heure (Abidjan) :");
+      expect(callArgs.text).toContain("Lieu : Abidjan, Côte d'Ivoire");
+      expect(callArgs.text).toContain("https://ivoirebusinessclub.test/events/conference-tech");
+      expect(callArgs.html).toContain("Conférence Tech");
+      expect(callArgs.html).toContain("Lieu : Abidjan");
+    });
+
+    it("shows online URL for ONLINE events", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "member@example.com",
+        name: "Awa",
+        eventTitle: "Webinaire IBC",
+        eventSlug: "webinaire-ibc",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "ONLINE",
+        location: null,
+        onlineUrl: "https://zoom.us/j/webinaire",
+        amountPaid: null,
+        payOnSite: false,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.text).toContain("Lien : https://zoom.us/j/webinaire");
+      expect(callArgs.html).toContain("https://zoom.us/j/webinaire");
+    });
+
+    it("shows 'Paiement sur place' when payOnSite is true", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "visitor@example.com",
+        name: null,
+        eventTitle: "Conférence Tech",
+        eventSlug: "conference-tech",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "IN_PERSON",
+        location: "Abidjan",
+        onlineUrl: null,
+        amountPaid: null,
+        payOnSite: true,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.text).toContain("Paiement sur place");
+      expect(callArgs.html).toContain("Paiement sur place");
+    });
+
+    it("shows 'Gratuit' when amountPaid is 0 and not payOnSite", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "visitor@example.com",
+        name: null,
+        eventTitle: "Atelier gratuit",
+        eventSlug: "atelier-gratuit",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "ONLINE",
+        location: null,
+        onlineUrl: "https://zoom.us/j/atelier",
+        amountPaid: 0,
+        payOnSite: false,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.text).toContain("Gratuit");
+      expect(callArgs.html).toContain("Gratuit");
+    });
+
+    it("shows amount when amountPaid > 0", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "member@example.com",
+        name: "Awa",
+        eventTitle: "Conférence Tech",
+        eventSlug: "conference-tech",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "IN_PERSON",
+        location: "Abidjan",
+        onlineUrl: null,
+        amountPaid: 10000,
+        payOnSite: false,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.text).toContain("Montant : 10000 XOF");
+      expect(callArgs.html).toContain("Montant : 10000 XOF");
+    });
+
+    it("includes CTA button to view event", async () => {
+      const { sendEventRegistrationEmail } = await import("./email");
+
+      await sendEventRegistrationEmail({
+        to: "member@example.com",
+        name: "Awa",
+        eventTitle: "Conférence Tech",
+        eventSlug: "conference-tech",
+        startDate: new Date("2025-07-25T18:00:00Z"),
+        endDate: null,
+        eventType: "IN_PERSON",
+        location: "Abidjan",
+        onlineUrl: null,
+        amountPaid: 10000,
+        payOnSite: false,
+      });
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const callArgs = mockSend.mock.calls[0][0];
+      expect(callArgs.html).toContain("Voir l'événement");
+      expect(callArgs.html).toContain("https://ivoirebusinessclub.test/events/conference-tech");
+      expect(callArgs.html).toContain("#2D8B4E");
+    });
+  });
 });

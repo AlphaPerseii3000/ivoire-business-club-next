@@ -808,4 +808,121 @@ export async function sendPasswordChangedEmail({
   return sendEmail({ to, subject, text, html });
 }
 
+function formatEventDate(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  }).format(new Date(date));
+}
+
+export async function sendEventRegistrationEmail({
+  to,
+  name,
+  eventTitle,
+  eventSlug,
+  startDate,
+  endDate,
+  eventType,
+  location,
+  onlineUrl,
+  amountPaid,
+  payOnSite,
+}: {
+  to: string;
+  name: string | null;
+  eventTitle: string;
+  eventSlug: string;
+  startDate: Date;
+  endDate: Date | null;
+  eventType: string;
+  location: string | null;
+  onlineUrl: string | null;
+  amountPaid: number | null;
+  payOnSite: boolean;
+}) {
+  const appUrl = getAppUrl();
+  const eventUrl = appUrl ? `${appUrl}/events/${eventSlug}` : null;
+
+  const startParis = formatEventDate(startDate, "Europe/Paris");
+  const startAbidjan = formatEventDate(startDate, "Africa/Abidjan");
+
+  const dateLine = endDate
+    ? `Date et heure (Paris) : de ${startParis} à ${formatEventDate(endDate, "Europe/Paris")}\nDate et heure (Abidjan) : de ${startAbidjan} à ${formatEventDate(endDate, "Africa/Abidjan")}`
+    : `Date et heure (Paris) : ${startParis}\nDate et heure (Abidjan) : ${startAbidjan}`;
+
+  const showLocation = eventType === "IN_PERSON" || eventType === "HYBRID";
+  const showOnlineUrl = eventType === "ONLINE" || eventType === "HYBRID";
+
+  let priceText = "";
+  if (payOnSite) {
+    priceText = "Paiement sur place";
+  } else if (amountPaid !== null && amountPaid > 0) {
+    priceText = `Montant : ${amountPaid} XOF`;
+  } else {
+    priceText = "Gratuit";
+  }
+
+  const locationLine = showLocation && location ? `\n\nLieu : ${location}` : "";
+  const onlineLine = showOnlineUrl && onlineUrl ? `\n\nLien : ${onlineUrl}` : "";
+  const priceLine = `\n\n${priceText}`;
+  const eventLinkLine = eventUrl ? `\n\nPage de l'événement : ${eventUrl}` : "";
+  const dashboardLinkLine = name ? `${dashboardLine()}` : "";
+
+  const subject = `Votre inscription à l'événement — ${eventTitle}`;
+  const text = `${greeting(name)}\n\nVotre inscription à l'événement suivante a bien été enregistrée :\n\n${eventTitle}${locationLine}${onlineLine}\n\n${dateLine}${priceLine}${eventLinkLine}${dashboardLinkLine}\n\nL'équipe Ivoire Business Club`;
+
+  const parisDateRow = endDate
+    ? `de ${escapeHtml(startParis)} à ${escapeHtml(formatEventDate(endDate, "Europe/Paris"))}`
+    : escapeHtml(startParis);
+  const abidjanDateRow = endDate
+    ? `de ${escapeHtml(startAbidjan)} à ${escapeHtml(formatEventDate(endDate, "Africa/Abidjan"))}`
+    : escapeHtml(startAbidjan);
+
+  const dateTableHtml = `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FDFBF7; border: 1px solid #EAE3D2; border-radius: 8px; margin: 25px 0; font-size: 15px;">
+  <tr>
+    <td style="padding: 24px 20px; color: #1E3A5F;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; width: 140px; color: #1E3A5F;">Europe/Paris :</td>
+          <td style="padding: 6px 0; color: #4B5563;">${parisDateRow}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #1E3A5F;">Africa/Abidjan :</td>
+          <td style="padding: 6px 0; color: #4B5563;">${abidjanDateRow}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+
+  const locationHtml = showLocation && location ? `<p>Lieu : ${escapeHtml(location)}</p>` : "";
+  const onlineUrlHtml = showOnlineUrl && onlineUrl
+    ? `<p>Lien : <a href="${escapeHtml(onlineUrl)}" style="color: #1E3A5F; font-weight: bold; text-decoration: underline;">${escapeHtml(onlineUrl)}</a></p>`
+    : "";
+
+  const contentHtml = `<p>${greeting(escapeHtml(name))}</p>
+<p>Votre inscription à l'événement suivante a bien été enregistrée :</p>
+<p><strong>${escapeHtml(eventTitle)}</strong></p>
+${dateTableHtml}
+${locationHtml}
+${onlineUrlHtml}
+<p>${priceText}</p>`;
+
+  const html = getEmailHtmlWrapper({
+    subject,
+    contentHtml,
+    ctaColor: "#2D8B4E", // Vert Émeraude pour le succès
+    cta: eventUrl ? {
+      label: "Voir l'événement",
+      url: eventUrl,
+    } : null,
+  });
+
+  await sendEmail({ to, subject, text, html });
+}
 

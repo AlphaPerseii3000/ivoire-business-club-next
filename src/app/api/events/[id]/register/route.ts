@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { eventRegistrationSchema } from "@/lib/validations";
 import { normalizePricing, getPriceForTier } from "@/lib/event-utils";
 import { posthogServer } from "@/lib/posthog-server";
+import { sendEventRegistrationEmail } from "@/lib/email";
 import { Tier } from "@/generated/prisma/client";
 import { getDatabaseProvider } from "@/lib/prisma-runtime";
 
@@ -50,6 +51,13 @@ export async function POST(
         select: {
           id: true,
           title: true,
+          slug: true,
+          startDate: true,
+          endDate: true,
+          eventType: true,
+          location: true,
+          onlineUrl: true,
+          description: true,
           status: true,
           visibility: true,
           maxCapacity: true,
@@ -155,7 +163,7 @@ export async function POST(
         });
       }
 
-      return { registration, payment, eventTitle: event.title };
+      return { registration, payment, event };
     });
 
     // Capture Analytics
@@ -164,12 +172,30 @@ export async function POST(
       event: "event_register",
       properties: {
         eventId: id,
-        eventTitle: result.eventTitle,
+        eventTitle: result.event.title,
         isVisitor: !isMember,
         payOnSite,
         paymentMethod: payOnSite ? "PAY_ON_SITE" : provider,
         amountPaid: result.registration.amountPaid ?? 0,
       },
+    });
+
+    // Fire-and-forget email — must not block the response
+    sendEventRegistrationEmail({
+      to: email,
+      name: isMember ? (session?.user?.name ?? null) : null,
+      eventTitle: result.event.title,
+      eventSlug: result.event.slug,
+      startDate: result.event.startDate,
+      endDate: result.event.endDate,
+      eventType: result.event.eventType,
+      location: result.event.location,
+      onlineUrl: result.event.onlineUrl,
+      amountPaid: result.registration.amountPaid,
+      payOnSite: result.registration.payOnSite,
+      description: result.event.description,
+    }).catch((err) => {
+      console.error(`[email] Failed to send event registration email to ${email}:`, err);
     });
 
     return NextResponse.json(
