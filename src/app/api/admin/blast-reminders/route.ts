@@ -69,6 +69,7 @@ async function getBlastUsers(): Promise<BlastUser[]> {
   return prisma.user.findMany({
     where: {
       createdAt: { lte: CUTOFF_DATE },
+      email: { not: "test-agent-12345@example.com" },
       OR: [{ emailVerified: false }, { onboardingCompletedAt: null }],
     },
     select: {
