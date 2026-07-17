@@ -63,7 +63,7 @@ describe("POST /api/events/[id]/register", () => {
             maxCapacity: 100,
             pricing: { visitor: 10000, affranchi: 5000 },
             slug: "conference-tech",
-            startDate: new Date("2025-07-25T18:00:00Z"),
+            startDate: new Date("2027-07-25T18:00:00Z"),
             endDate: null,
             eventType: "IN_PERSON",
             location: "Abidjan, Côte d'Ivoire",
@@ -113,8 +113,8 @@ describe("POST /api/events/[id]/register", () => {
             maxCapacity: 50,
             pricing: { visitor: 20000, affranchi: 15000, grand_frere: 10000 },
             slug: "gala-ibc",
-            startDate: new Date("2025-08-01T19:00:00Z"),
-            endDate: new Date("2025-08-01T23:00:00Z"),
+            startDate: new Date("2027-08-01T19:00:00Z"),
+            endDate: new Date("2027-08-01T23:00:00Z"),
             eventType: "HYBRID",
             location: "Sofitel Abidjan",
             onlineUrl: "https://zoom.us/j/galaibc",
@@ -166,7 +166,7 @@ describe("POST /api/events/[id]/register", () => {
             maxCapacity: 10,
             pricing: null,
             slug: "atelier-restreint",
-            startDate: new Date("2025-09-10T09:00:00Z"),
+            startDate: new Date("2027-09-10T09:00:00Z"),
             endDate: null,
             eventType: "IN_PERSON",
             location: "Cocody",
@@ -207,7 +207,7 @@ describe("POST /api/events/[id]/register", () => {
             maxCapacity: 50,
             pricing: null,
             slug: "atelier",
-            startDate: new Date("2025-10-05T14:00:00Z"),
+            startDate: new Date("2027-10-05T14:00:00Z"),
             endDate: null,
             eventType: "ONLINE",
             location: null,
@@ -232,6 +232,86 @@ describe("POST /api/events/[id]/register", () => {
     expect(data.error).toBe("Vous êtes déjà inscrit à cet événement");
   });
 
+  it("fails with 400 when event is past (endDate < now)", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    mockTransaction.mockImplementation(async (callback: any) => {
+      const mockTx = {
+        event: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "evt-1",
+            title: "Conférence Passée",
+            status: "PUBLISHED",
+            visibility: "PUBLIC",
+            maxCapacity: 100,
+            pricing: { visitor: 10000, affranchi: 5000 },
+            slug: "conference-passee",
+            startDate: new Date("2025-06-01T10:00:00Z"),
+            endDate: new Date("2025-06-01T16:00:00Z"),
+            eventType: "IN_PERSON",
+            location: "Abidjan",
+            onlineUrl: null,
+            description: "Conférence terminée",
+          }),
+        },
+        eventRegistration: {
+          count: vi.fn().mockResolvedValue(5),
+          findUnique: vi.fn().mockResolvedValue(null),
+        },
+      };
+      return callback(mockTx);
+    });
+
+    const response = await POST(
+      makeRequest({ email: "visitor@example.com", payOnSite: true }),
+      { params: Promise.resolve({ id: "evt-1" }) }
+    );
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe("Les inscriptions pour cet événement sont closes.");
+  });
+
+  it("fails with 400 when event is past (no endDate, startDate < now)", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    mockTransaction.mockImplementation(async (callback: any) => {
+      const mockTx = {
+        event: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "evt-1",
+            title: "Atelier Passé",
+            status: "PUBLISHED",
+            visibility: "PUBLIC",
+            maxCapacity: 50,
+            pricing: null,
+            slug: "atelier-passe",
+            startDate: new Date("2025-03-15T09:00:00Z"),
+            endDate: null,
+            eventType: "ONLINE",
+            location: null,
+            onlineUrl: "https://zoom.us/j/old",
+            description: "Atelier passé",
+          }),
+        },
+        eventRegistration: {
+          count: vi.fn().mockResolvedValue(3),
+          findUnique: vi.fn().mockResolvedValue(null),
+        },
+      };
+      return callback(mockTx);
+    });
+
+    const response = await POST(
+      makeRequest({ email: "visitor@example.com", payOnSite: true }),
+      { params: Promise.resolve({ id: "evt-1" }) }
+    );
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe("Les inscriptions pour cet événement sont closes.");
+  });
+
   it("sends event registration email after successful registration", async () => {
     mockAuth.mockResolvedValue(null);
     mockSendEventRegistrationEmail.mockResolvedValue(undefined);
@@ -247,7 +327,7 @@ describe("POST /api/events/[id]/register", () => {
             maxCapacity: 100,
             pricing: { visitor: 10000, affranchi: 5000 },
             slug: "conference-tech",
-            startDate: new Date("2025-07-25T18:00:00Z"),
+            startDate: new Date("2027-07-25T18:00:00Z"),
             endDate: null,
             eventType: "IN_PERSON",
             location: "Abidjan, Côte d'Ivoire",

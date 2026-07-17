@@ -73,6 +73,13 @@ export async function POST(
         throw new Error("Cet événement est réservé aux membres connectés");
       }
 
+      // Check if event is past — no registration after it has ended (or started if no endDate)
+      const now = new Date();
+      const eventEnd = event.endDate ?? event.startDate;
+      if (eventEnd < now) {
+        throw new Error("Les inscriptions pour cet événement sont closes.");
+      }
+
       // Check capacity
       if (event.maxCapacity !== null && event.maxCapacity !== undefined) {
         const registeredCount = await tx.eventRegistration.count({

@@ -28,6 +28,7 @@ interface EventRegisterButtonProps {
   pricing: Pricing | null;
   remainingSpots: number | null;
   isAlreadyRegistered: boolean;
+  isPastEvent?: boolean;
   className?: string;
 }
 
@@ -43,6 +44,7 @@ export function EventRegisterButton({
   pricing,
   remainingSpots,
   isAlreadyRegistered,
+  isPastEvent,
   className,
 }: EventRegisterButtonProps) {
   const router = useRouter();
@@ -125,6 +127,10 @@ export function EventRegisterButton({
         <Button disabled variant="outline" className={className}>
           <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
           Déjà inscrit
+        </Button>
+      ) : isPastEvent ? (
+        <Button disabled variant="secondary" className={className}>
+          Événement terminé
         </Button>
       ) : isFull ? (
         <Button disabled variant="secondary" className={className}>

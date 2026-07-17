@@ -173,6 +173,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   const startDateFormatted = formatEventDate(event.startDate);
 
+  const eventEnd = event.endDate ?? event.startDate;
+  const isPastEvent = eventEnd < new Date();
+
   const coverUrl = event.coverImagePath ? `/api/media/events/${event.id}/cover` : null;
 
   // JSON-LD GEO for events
@@ -467,6 +470,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 pricing={pricing}
                 remainingSpots={remainingSpots}
                 isAlreadyRegistered={isAlreadyRegistered}
+                isPastEvent={isPastEvent}
               />
             </div>
 
@@ -490,7 +494,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                     eventId={event.id}
                     photos={galleryPhotos}
                     readOnly={true}
-                    isPastEvent={new Date(event.startDate) < new Date()}
+                    isPastEvent={isPastEvent}
                   />
                 </div>
               );
