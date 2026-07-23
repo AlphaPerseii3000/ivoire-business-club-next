@@ -213,6 +213,27 @@ export async function main() {
       sectors: "conseil, finance, strategie",
       isPublished: false,
     },
+    {
+      name: "StartandGrowth",
+      slug: "startandgrowth",
+      description:
+        "StartandGrowth met la technologie au service de la croissance des entreprises. " +
+        "Sa mission : digitaliser les processus, réduire les coûts et booster la productivité. " +
+        "Trois offres d'accompagnement : automatisation des opérations (rationalisation des tâches répétitives, " +
+        "optimisation des flux de travail, réduction des coûts opérationnels), formation en IA pour les entreprises " +
+        "(programmes de formation de pointe pour doter les équipes des compétences IA nécessaires), et " +
+        "audit de performance logicielle (analyse approfondie des systèmes pour identifier les goulots d'étranglement, " +
+        "optimiser les performances et assurer l'évolutivité).",
+      logoUrl: null,
+      contactName: "Aros Fonton",
+      contactPhone: "+33 7 56 86 76 86",
+      contactEmail: "arosf@startandgrowth.net",
+      website: "https://www.startandgrowth.net",
+      location: "France",
+      certifications: null,
+      sectors: "tech, digital, ia, automatisation, formation, audit logicielle, mode, assurance, finance, enseignement, sante, marketing, e-commerce, grande distribution",
+      isPublished: true,
+    },
   ];
 
   for (const data of companiesData) {
