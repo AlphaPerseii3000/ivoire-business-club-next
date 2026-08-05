@@ -151,17 +151,17 @@ export default async function AdminSubscriptionsPage() {
     prisma.subscription.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
-      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
+      include: { user: { select: { name: true, email: true } } },
     }),
     prisma.subscription.findMany({
       where: { status: "ACTIVE" },
       orderBy: { createdAt: "desc" },
-      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
+      include: { user: { select: { name: true, email: true } } },
     }),
     prisma.subscription.findMany({
       where: { status: "TRIAL" },
       orderBy: { createdAt: "asc" },
-      include: { user: { select: { name: true, email: true } }, paymentReceiptUrl: true },
+      include: { user: { select: { name: true, email: true } } },
     }),
   ]);
 
