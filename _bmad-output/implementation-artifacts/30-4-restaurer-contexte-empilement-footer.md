@@ -1,11 +1,11 @@
 ---
 baseline_commit: "feb43ae23c6bc52b244cdc109cf6a07749316cdf"
-Status: ready-for-dev
+Status: review
 ---
 
 # Story 30-4: Rendre le footer visible — restauration du contexte d'empilement (z-10)
 
-## Status: ready-for-dev
+## Status: review
 
 ## Story
 
@@ -144,19 +144,27 @@ La story 30-3 interdisait de modifier `layout.tsx` / `footer.tsx` sur la base de
 
 ### Agent Model Used
 
-(à remplir par le DS)
+deepseek-v4-flash:0731 (Hermes Agent, provider ollama-cloud) — DS subagent via bmad-orchestrator.
 
 ### Debug Log References
 
-(à remplir par le DS)
+- Story .md `baseline_commit`: `feb43ae2` (story creation baseline).
+- HEAD au début de l'implémentation : `cbf4bd9` (clean, synced with origin/main).
+- Fix appliqué : `<Footer />` enveloppé dans `<div className="relative z-10">` dans `src/app/(public)/layout.tsx` (Option 1 recommandée — réplique exacte de la structure REF `fffda29` où le footer fonctionnait). Cause racine non re-diagnostiquée : commit `3d56a4d` avait sorti le footer de son wrapper `relative z-10` (élément statique peint sous la couche fixe `z-0`).
+- 1er run complet `npx vitest run` : 1 échec transitoire (timeout 5000ms) sur `beta-chat-widget.test.tsx` « soumet le formulaire… ». Vérifié non-régression : test passe isolé (12/12), et le diff ne touche que `layout.tsx` (non importé par ce test). 2e run complet : **1374/1374 passent**.
 
 ### Completion Notes List
 
-(à remplir par le DS)
+- AC1 (contexte d'empilement `relative z-10` > couche fixe `z-0`) : ✅ — wrapper `relative z-10` autour du `<Footer />` dans `layout.tsx`.
+- AC2 (footer peint mobile + desktop) : ⚠️ Non vérifié visuellement — le déploiement en production n'était pas dans le scope du DS. La correction CSS garantit l'empilement (le footer passe devant la couche fixe opaque). À valider par screenshot en production au CR/déploiement (Task 4).
+- AC3 (build exit 0) : ✅ — `npm run build` passe.
+- AC4 (tests sans régression) : ✅ — suite complète `npx vitest run` 1374/1374, 185 fichiers.
 
 ### File List
 
-(à remplir par le DS)
+- `src/app/(public)/layout.tsx` — fix : wrapper `relative z-10` autour de `<Footer />` (3 insertions, 1 suppression). Commit `931fd82`.
+- `_bmad-output/implementation-artifacts/30-4-restaurer-contexte-empilement-footer.md` — statut → review + Dev Agent Record.
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — story 30-4 → review.
 
 ## Change Log
 
