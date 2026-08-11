@@ -3056,5 +3056,47 @@ Then ils passent sans régression
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11.*
+## Epic 30: Canonicalisation & Indexation SEO
+
+Résolution du conflit de canonicalisation www / non-www détecté lors de l'audit SEO d'indexation Google (2026-08-10). Le site est servi en non-www en production (www → 301 → non-www), mais `SITE_URL` a pour défaut `https://www.ivoire-business-club.com`. Résultat : double indexation confirmée par GSC (www = 24 impressions, non-www = 599 impressions sur 30 jours), diluant les signaux de ranking.
+
+**FRs couverts :** SEO-FR-01 (canonicalisation), SEO-FR-02 (sitemap cohérent)
+**NFRs couverts :** NFR-S2 (SEO)
+**Source :** Audit SEO 2026-08-10 (conflit canonical www vs non-www)
+
+---
+
+### Story 30-1: Canonicalisation www / non-www — alignement sur non-www
+
+**En tant que** propriétaire du site,
+**Je veux** que toutes les pages déclarent un canonical unique en non-www,
+**Afin que** Google ne double-indexe plus le site et concentre les signaux de ranking sur une seule URL.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given la constante SITE_URL dans src/lib/site-config.ts
+When les variables NEXT_PUBLIC_SITE_URL et NEXT_PUBLIC_APP_URL ne sont pas définies
+Then le défaut de SITE_URL est https://ivoire-business-club.com (non-www)
+
+Given les surfaces SEO (layout.tsx, sitemap.ts, robots.ts)
+When on cherche une référence dure "www.ivoire-business-club.com"
+Then il n'y en a plus — toutes lisent SITE_URL
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+
+Given la production après déploiement
+When on inspecte le canonical de la homepage
+Then il pointe vers https://ivoire-business-club.com/ (non-www)
+
+Given le sitemap en production
+When on inspecte les URLs
+Then elles sont toutes en non-www
+```
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11. Epic 30 Canonicalisation ajouté 2026-08-10.*
 
