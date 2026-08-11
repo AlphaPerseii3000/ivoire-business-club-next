@@ -1,11 +1,11 @@
 ---
-baseline_commit: "77487dc07fbf9d9b5a9a8c1e92b1c0f346935404"
-status: ready-for-dev
+baseline_commit: "581fdc4672f1c26bfd1ddae50a59dabeae62b37d"
+status: done
 ---
 
 # Story 30-2: Réparer les tests events date-sensibles + réconcilier les docs de déploiement
 
-## Status: ready-for-dev
+## Status: done
 
 ## Source
 
@@ -67,3 +67,13 @@ Dans `scripts/DEPLOY.md` et `docs/cron-setup.md` :
 - **Date de découverte** : 2026-08-11 (CR de la Story 30-1).
 - **Tâche 1** : fixture `baseEvent` avec `startDate/endDate = 2026-07-15` (passé) → 2 tests « S'inscrire » cassés (« Événement terminé » au lieu de « S'inscrire à l'événement »). Correction : date future `2027-01-15` + assertions de date alignées.
 - **Tâche 2** : `scripts/DEPLOY.md` (42 occurrences de `www`) et `docs/cron-setup.md` (3 occurrences) documentent `www` comme canonique — inverse de la prod (non-www canonique, `www` → 301 → non-www). Correction des 2 fichiers.
+
+## Verification (2026-08-11)
+
+- **Baseline commit DS** : `581fdc4` (CS commit), commit d'implémentation : `fe62810`.
+- **Fichiers modifiés** (3, conformes guardrails) : `src/app/(public)/events/[slug]/page.test.tsx`, `scripts/DEPLOY.md`, `docs/cron-setup.md`. `src/lib/site-config.ts` NON touché.
+- **AC1** ✅ : `npx vitest run "src/app/(public)/events/[slug]/page.test.tsx"` → 23/23 passed.
+- **AC2** ✅ : `npx vitest run` → 185 files, 1374 tests passed, aucune régression.
+- **AC3** ✅ : plus aucune occurrence de `www` comme canonique dans les 2 docs — les occurrences restantes sont des références légitimes à la redirection `www` → 301 → non-www.
+- **AC4** ✅ : `npm run build` passe (exit 0).
+- **Statut** : story marquée `done` (frontmatter + corps + sprint-status.yaml).
