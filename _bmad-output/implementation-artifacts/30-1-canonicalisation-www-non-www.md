@@ -1,11 +1,11 @@
 ---
 baseline_commit: "77487dc07fbf9d9b5a9a8c1e92b1c0f346935404"
-status: review
+status: done
 ---
 
 # Story 30-1: Canonicalisation www / non-www — alignement sur non-www
 
-## Status: review
+## Status: done
 
 ## Source
 

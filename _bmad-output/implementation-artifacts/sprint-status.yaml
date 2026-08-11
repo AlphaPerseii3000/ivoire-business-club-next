@@ -237,7 +237,7 @@ development_status:
   29-1-email-confirmation-inscription-evenement: done
 
   epic-30: in-progress
-  30-1-canonicalisation-www-non-www: review
+  30-1-canonicalisation-www-non-www: done
 
 # updated: epic-26, epic-27 → done — 2026-07-11
 # story 28-5: context created, status → ready-for-dev — 2026-07-13
