@@ -1,11 +1,11 @@
 ---
 baseline_commit: "feb43ae23c6bc52b244cdc109cf6a07749316cdf"
-Status: review
+Status: done
 ---
 
 # Story 30-4: Rendre le footer visible — restauration du contexte d'empilement (z-10)
 
-## Status: review
+## Status: done
 
 ## Story
 
@@ -169,3 +169,6 @@ deepseek-v4-flash:0731 (Hermes Agent, provider ollama-cloud) — DS subagent via
 ## Change Log
 
 - 2026-08-11: Story 30-4 créée (CS) — correctif définitif du footer invisible. Cause racine = commit `3d56a4d` (footer sorti du contexte `z-10`). Fix : `relative z-10` sur le footer (layout.tsx ou footer.tsx).
+- 2026-08-11 (DS): Fix implémenté (option 1) — wrapper `<div className="relative z-10">` autour de `<Footer />` dans `src/app/(public)/layout.tsx`. Build exit 0, 1374/1374 tests. Commits `931fd82` (code) + `aef975f` (artefacts BMAD).
+- 2026-08-11 (Déploiement + vérification prod): Déployé en production (release `20260811195031`). Incident ENOSPC disque VPS 100% plein contourné (purge cache npm + nettoyage ~11 releases anciennes → 18G libérés). HTTP home/experts 200, API 401, aucun log d'erreur. Vérification Playwright : le hit-test de la zone footer retourne désormais le contenu du footer (position static, wrapper parent z-10). Validé visuellement par Jonathan.
+- 2026-08-11 (CR-lite + done): Fix one-liner CSS, validé par build + suite complète + hit-test prod. Story → `done`. L'incident disque est documenté comme pitfall dans le skill `ibc-app-deploy`.
