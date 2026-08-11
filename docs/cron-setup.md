@@ -18,7 +18,7 @@ Only one email per user per day is sent. The cron uses the `CRON_SECRET` environ
 # Cron secret (must match the value sent by the cron client)
 CRON_SECRET=genera...n
 # Application URL, used in email links
-APP_URL=https://www.ivoire-business-club.com
+APP_URL=https://ivoire-business-club.com
 ```
 
 Add these to `.env` on the application server before starting the Next.js process.
@@ -49,7 +49,7 @@ Add the following line:
 
 ```cron
 # Daily onboarding reminders at 09:00
-0 9 * * * /usr/bin/curl -fsS -X POST https://www.ivoire-business-club.com/api/cron/remind-incomplete-users -H "Authorization: Bearer $(cat /etc/ibc/cron-secret)" >> /var/log/ibc-cron.log 2>&1
+0 9 * * * /usr/bin/curl -fsS -X POST https://ivoire-business-club.com/api/cron/remind-incomplete-users -H "Authorization: Bearer $(cat /etc/ibc/cron-secret)" >> /var/log/ibc-cron.log 2>&1
 ```
 
 Notes:
@@ -64,7 +64,7 @@ Notes:
 To trigger the cron manually from a shell that has access to the secret:
 
 ```bash
-/usr/bin/curl -fsS -X POST https://www.ivoire-business-club.com/api/cron/remind-incomplete-users \
+/usr/bin/curl -fsS -X POST https://ivoire-business-club.com/api/cron/remind-incomplete-users \
   -H "Authorization: Bearer $(cat /etc/ibc/cron-secret)"
 ```
 

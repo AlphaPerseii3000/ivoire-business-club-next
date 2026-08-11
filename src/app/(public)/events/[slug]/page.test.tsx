@@ -33,8 +33,8 @@ const baseEvent = {
   title: "Lancement Réseau IBC",
   slug: "lancement-reseau-ibc",
   description: "Une soirée de networking pour les membres et investisseurs du réseau IBC.",
-  startDate: new Date("2026-07-15T10:00:00Z"),
-  endDate: new Date("2026-07-15T14:00:00Z"),
+  startDate: new Date("2027-01-15T10:00:00Z"),
+  endDate: new Date("2027-01-15T14:00:00Z"),
   location: "Abidjan, Cocody",
   onlineUrl: null,
   coverImagePath: "https://example.com/event.jpg",
@@ -96,8 +96,8 @@ describe("Event Detail Page", () => {
 
     expect(screen.getByText("Lancement Réseau IBC")).toBeInTheDocument();
     expect(screen.getByText("Une soirée de networking pour les membres et investisseurs du réseau IBC.")).toBeInTheDocument();
-    expect(screen.getByText("15 juillet 2026")).toBeInTheDocument();
-    expect(screen.getByText("Jusqu\u2019au 15 juillet 2026")).toBeInTheDocument();
+    expect(screen.getByText("15 janvier 2027")).toBeInTheDocument();
+    expect(screen.getByText("Jusqu\u2019au 15 janvier 2027")).toBeInTheDocument();
     expect(screen.getByText("Abidjan, Cocody")).toBeInTheDocument();
     expect(screen.getByText("100 places restantes")).toBeInTheDocument();
     expect(screen.getByText(/S'inscrire/i)).toBeInTheDocument();
