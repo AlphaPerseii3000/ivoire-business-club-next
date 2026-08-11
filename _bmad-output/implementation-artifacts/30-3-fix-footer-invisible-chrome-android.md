@@ -1,11 +1,11 @@
 ---
 baseline_commit: "25e6410b2c2b5fdafcb374179d29cf5583610957"
-status: review
+status: done
 ---
 
 # Story 30-3: Réparer le footer invisible sur Chrome Android
 
-## Status: review
+## Status: done
 
 ## Story
 
