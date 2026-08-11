@@ -10,7 +10,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main className="flex-1 flex flex-col">
         {children}
       </main>
-      <Footer />
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 }
