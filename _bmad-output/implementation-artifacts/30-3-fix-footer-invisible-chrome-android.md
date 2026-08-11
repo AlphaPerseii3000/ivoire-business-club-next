@@ -1,6 +1,6 @@
 ---
 baseline_commit: "25e6410b2c2b5fdafcb374179d29cf5583610957"
-status: review
+status: done
 ---
 
 # Story 30-3: Réparer le footer invisible sur Chrome Android
@@ -300,3 +300,7 @@ NB : Ceci **contredit la guardrail de la story 30-3** (« ne pas modifier footer
 - Re-déployer en production `ivoire-business-club.com`.
 - Vérifier par screenshot Playwright (profil Galaxy S20 + desktop 1440x900) que le footer est **peint** (pixels texte clair dans la zone footer), pas juste présent dans le DOM.
 - `npm run build` → exit 0 ; `npx vitest run` → pas de régression.
+
+## Clôture (2026-08-11)
+
+Cette story est clôturée en `done` en tant qu'**essai GPU non concluant**. Le fix GPU de cette story (`c3b4b9c`) n'a pas résolu le bug footer invisible ; la **vraie cause racine** a été identifiée par l'amendement ci-dessus (commit `3d56a4d` qui a sorti le Footer du contexte `z-10`) et le **fix définitif a été livré par la Story 30-4** (wrapper `relative z-10` autour de `<Footer />` dans `(public)/layout.tsx`), déployé en production et vérifié par Playwright (hit-test de la zone footer retourne désormais le contenu du footer). Les modifications de `c3b4b9c` (isolate/contain-paint sur hero-shutter, scroll-loop-background, CTA mobile) sont **conservées** : elles sont neutres et n'ont pas causé de régression (build + 1374 tests verts). Aucun revert nécessaire.
