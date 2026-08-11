@@ -3098,5 +3098,37 @@ Then elles sont toutes en non-www
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11. Epic 30 Canonicalisation ajouté 2026-08-10.*
+### Story 30-2: Réparer les tests events date-sensibles + réconcilier les docs de déploiement
+
+**En tant que** mainteneur du site,
+**Je veux** que les tests de la page événement passent (fixture de date future) et que les docs de déploiement reflètent le canonical non-www,
+**Afin que** le CR de la Story 30-1 soit suivi (2 findings defer) et que l'équipe ne soit pas induite en erreur par une doc contradictoire.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given le fixture baseEvent dans src/app/(public)/events/[slug]/page.test.tsx
+When on inspecte startDate/endDate
+Then ils sont dans le futur (ex. 2027-01-15)
+
+Given les assertions de date des tests de la page événement
+When on exécute npx vitest run "src/app/(public)/events/[slug]/page.test.tsx"
+Then les 2 tests « S'inscrire » passent
+
+Given le projet après implémentation
+When npx vitest run est exécuté
+Then la suite complète passe sans régression
+
+Given scripts/DEPLOY.md et docs/cron-setup.md
+When on cherche "www.ivoire-business-club.com" comme canonique
+Then il n'y en a plus — non-www est le canonique, www redirige vers non-www
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur
+```
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11. Epic 30 Canonicalisation ajouté 2026-08-10. Story 30-2 ajoutée 2026-08-11 (follow-up du CR de 30-1).*
 
