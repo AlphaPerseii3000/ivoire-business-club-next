@@ -1,6 +1,6 @@
 ---
 baseline_commit: "25e6410b2c2b5fdafcb374179d29cf5583610957"
-status: done
+status: review
 ---
 
 # Story 30-3: Réparer le footer invisible sur Chrome Android
@@ -235,3 +235,68 @@ glm-5.1 (ollama-cloud)
 ## Change Log
 
 - 2026-08-11: Implemented GPU composition fix for footer invisible on Chrome Android. Removed redundant `will-change-transform`, added `isolate`/`contain-paint` stacking context boundaries on HeroShutter, ScrollLoopBackground, and CTA mobile. Build passes, all 1374 tests pass.
+- 2026-08-11 (AMENDEMENT): Le fix GPU (hero-shutter/scroll-loop/CTA) **n'a pas réglé le bug** — déployé, footer toujours invisible. Nouveau diagnostic par archéologie git (`git log --diff-filter=A`, `git log -S "Footer"`) a identifié la **vraie cause racine** et le **commit coupable** (voir section « Amendement — cause racine » ci-dessous).
+
+## Amendement — Cause racine (diagnostic git post-échec du fix 30-3)
+
+### VRAI coupable identifié : commit `3d56a4d` — « code review 28-5 » (2026-07-12)
+
+La cause racine n'est **pas** dans la composition GPU du hero, mais dans un **refactor de structure** qui a sorti le `<Footer />` de son contexte d'empilement protecteur.
+
+### Mécanique du bug (prouvée par diff)
+
+**Avant (REF `fffda29` — footer fonctionnait) :** le footer était rendu dans `src/app/(public)/page.tsx`, à l'intérieur d'un wrapper positionné :
+```jsx
+<div className="flex min-h-screen flex-col text-white pb-20 md:pb-0 grain-overlay relative">
+  <ScrollLoopBackground threshold={2800} opacity={0.25} />   {/* fixed inset-0 z-0 */}
+  <main className="flex-1 relative z-10">...</main>
+  <div className="relative z-10">
+    <EventPopup ... />
+    <Footer />                    {/* ← PEINT AU-DESSUS de la couche fixe, car z-10 > z-0 */}
+  </div>
+</div>
+```
+Le wrapper `<div className="relative z-10">` donnait au footer `position: relative` + `z-index: 10` > le `z-index: 0` de ScrollLoopBackground → le footer passait devant la couche fixe. **C'est pour ça que le footer marchait encore APRÈS l'ajout du ScrollLoopBackground.**
+
+**Après `3d56a4d` (état actuel, bug) :** le footer a été déplacé vers `src/app/(public)/layout.tsx`, rendu comme élément statique :
+```jsx
+<div className="bg-[#090D16] min-h-screen text-slate-300 flex flex-col font-sans">
+  <LandingMobileNav />
+  <Header />
+  <main className="flex-1 flex flex-col">{children}</main>
+  <Footer />              {/* ← ÉLÉMENT STATIQUE — AUCUN position, AUCUN z-index */}
+</div>
+```
+
+**Règle CSS d'empilement (CSS 2.1 §9.9 / stacking context) :** les éléments **non-positionnés** (le footer, `position: static` par défaut) sont TOUJOURS peints **sous** les éléments **positionnés** avec z-index ≥ 0, quel que soit l'ordre dans le DOM. Or `ScrollLoopBackground` est `position: fixed; z-index: 0; background: #090D16` (opaque) + vidéo → il est peint **au-dessus** du footer statique. La couche fixe recouvre donc le footer. Exactement le symptôme observé (on voit « Guide gratuit » + « CLUB » au lieu du footer).
+
+### Cohérence avec le fait clé de l'utilisateur
+Jonathan a confirmé que le footer fonctionnait encore APRÈS l'implémentation du ScrollLoopBackground. C'est vérifié : REF `fffda29` (qui a introduit ScrollLoopBackground) gardait le footer dans le wrapper `z-10`. Le bug est apparu au refactor POSTÉRIEUR `3d56a4d` qui a déplacé le footer hors de ce contexte. Le diagnostic confirme 100% l'angle de recherche demandé (chercher les commits ultérieurs, PAS celui qui a introduit ScrollLoopBackground).
+
+### Pourquoi le fix 30-3 (c3b4b9c) a échoué
+`c3b4b9c` a attaqué les mauvaises cibles (will-change du mover HeroShutter, isolate du hero, contain-paint du fond). Pire, il a **renforcé la couche fixe** (`contain-paint` sur ScrollLoopBackground) au lieu de remonter le footer. Le problème n'a jamais été dans le hero — il est dans l'empilement footer-vs-fond fixe.
+
+### Le fix correct (à appliquer)
+Donner au footer un contexte d'empilement au-dessus de la couche fixe `z-0`. Deux options équivalentes :
+1. **Dans `(public)/layout.tsx`** (recommandé, minimal) :
+   ```jsx
+   <Footer /> → <div className="relative z-10"><Footer /></div>
+   ```
+2. **Directement dans `footer.tsx`** : ajouter `relative z-10` sur la balise `<footer>` (en gardant `bg-[#090D16]`).
+
+NB : Ceci **contredit la guardrail de la story 30-3** (« ne pas modifier footer.tsx / layout.tsx ») — cette guardrail était basée sur l'hypothèse erronée que le bug était dans la composition GPU. L'amendement la lève : `layout.tsx` (ou `footer.tsx`) DOIT être modifié.
+
+### Fichiers coupables vs corrects
+
+| Fichier | État | Verdict |
+|---------|------|---------|
+| `src/app/(public)/layout.tsx` | bug | **À MODIFIER** (footer statique → `relative z-10`) |
+| `src/components/landing/footer.tsx` | bug | À modifier (ou via layout, option 2) |
+| `src/components/landing/scroll-loop-background.tsx` | `fixed inset-0 z-0` | Correct — a le droit d'être z-0; c'est le footer qui doit monter |
+| `src/components/landing/hero-shutter.tsx` | fixes c3b4b9c | Hors cause — le fix GPU était hors cible (peut être reverté ou laissé, neutre) |
+| `src/app/(public)/page.tsx` | CTA `relative z-10` | Correct — wrapper z-10 déjà présent dans page |
+
+### Validation du fix
+- Re-déployer en production `ivoire-business-club.com`.
+- Vérifier par screenshot Playwright (profil Galaxy S20 + desktop 1440x900) que le footer est **peint** (pixels texte clair dans la zone footer), pas juste présent dans le DOM.
+- `npm run build` → exit 0 ; `npx vitest run` → pas de régression.
