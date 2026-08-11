@@ -247,10 +247,10 @@ export function HeroShutter() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[480vh] bg-[#090D16]"
+      className="relative w-full h-[480vh] bg-[#090D16] isolate"
     >
       {/* Sticky Viewport */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center contain-paint">
         {/* Video Engine */}
         <div className="absolute inset-0 z-0 bg-black">
           {/* Top and Bottom vignettes to blend video with background */}
@@ -289,7 +289,7 @@ export function HeroShutter() {
           <div className="relative h-screen w-full md:w-[45%] flex items-center overflow-hidden">
             <div
               ref={moverRef}
-              className="absolute left-0 w-full flex flex-col will-change-transform"
+              className="absolute left-0 w-full flex flex-col"
             >
               {/* Slide 1 */}
               <div className="h-screen flex flex-col justify-center items-start gap-4">

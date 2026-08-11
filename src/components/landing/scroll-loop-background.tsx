@@ -47,7 +47,7 @@ export function ScrollLoopBackground({
   }, [threshold]);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#090D16]">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#090D16] contain-paint">
       <video
         ref={videoRef}
         src="/Ivoire_business_club_loop_compressed.mp4"

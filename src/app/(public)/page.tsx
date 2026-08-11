@@ -173,7 +173,7 @@ export default async function HomePage() {
 
         
         {/* Sticky Bottom CTA for Mobile */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#090D16]/90 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden isolate">
           <Link
             href="/auth/signup"
             className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#D4A847] text-sm font-semibold text-black hover:bg-[#D4A847]/90 transition-colors"
