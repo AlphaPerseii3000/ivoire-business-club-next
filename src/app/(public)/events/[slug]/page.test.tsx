@@ -128,7 +128,7 @@ describe("Event Detail Page", () => {
       "@type": "Organization",
       "name": "Ivoire Business Club",
     });
-    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/api/media/events/${baseEvent.id}/cover`);
+    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com"}/api/media/events/${baseEvent.id}/cover`);
     expect(eventLd?.location).toEqual({
       "@type": "Place",
       "name": baseEvent.location,
@@ -139,7 +139,7 @@ describe("Event Detail Page", () => {
       "price": 10000,
       "priceCurrency": "XOF",
       "availability": "https://schema.org/InStock",
-      "url": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events/${baseEvent.slug}`,
+      "url": `${process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com"}/events/${baseEvent.slug}`,
     });
   });
 
@@ -161,19 +161,19 @@ describe("Event Detail Page", () => {
       "@type": "ListItem",
       "position": 1,
       "name": "Accueil",
-      "item": process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com",
+      "item": process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com",
     });
     expect(breadcrumbLd?.itemListElement[1]).toEqual({
       "@type": "ListItem",
       "position": 2,
       "name": "Événements",
-      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events`,
+      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com"}/events`,
     });
     expect(breadcrumbLd?.itemListElement[2]).toEqual({
       "@type": "ListItem",
       "position": 3,
       "name": baseEvent.title,
-      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/events/${baseEvent.slug}`,
+      "item": `${process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com"}/events/${baseEvent.slug}`,
     });
   });
 
@@ -275,7 +275,7 @@ describe("Event Detail Page", () => {
     const schemas = parseJsonLd();
     const eventLd = schemas.find((schema) => schema["@type"] === "Event");
 
-    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://www.ivoire-business-club.com"}/logo-ibc.webp`);
+    expect(eventLd?.image).toBe(`${process.env.NEXT_PUBLIC_APP_URL || "https://ivoire-business-club.com"}/logo-ibc.webp`);
   });
 
   it("marks cancelled event status in JSON-LD", async () => {

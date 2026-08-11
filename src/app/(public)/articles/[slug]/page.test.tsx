@@ -189,7 +189,7 @@ describe("Article Detail Page", () => {
     expect(articleLd.image).toBe("https://example.com/cover.jpg");
     expect(articleLd.mainEntityOfPage).toEqual({
       "@type": "WebPage",
-      "@id": "https://www.ivoire-business-club.com/articles/guide-premium-abidjan",
+      "@id": "https://ivoire-business-club.com/articles/guide-premium-abidjan",
     });
     expect(articleLd.wordCount).toBeGreaterThanOrEqual(3);
     expect(articleLd.articleSection).toBe("guide");
@@ -202,13 +202,13 @@ describe("Article Detail Page", () => {
       "@type": "ListItem",
       position: 1,
       name: "Accueil",
-      item: "https://www.ivoire-business-club.com",
+      item: "https://ivoire-business-club.com",
     });
     expect(breadcrumbLd.itemListElement[2]).toMatchObject({
       "@type": "ListItem",
       position: 3,
       name: "Guide Premium Abidjan",
-      item: "https://www.ivoire-business-club.com/articles/guide-premium-abidjan",
+      item: "https://ivoire-business-club.com/articles/guide-premium-abidjan",
     });
   });
 
@@ -227,7 +227,7 @@ describe("Article Detail Page", () => {
     const data = JSON.parse(script?.textContent ?? "[]");
     const articleLd = data.find((item: { '@type': string }) => item["@type"] === "Article");
 
-    expect(articleLd.image).toBe("https://www.ivoire-business-club.com/logo-ibc.webp");
+    expect(articleLd.image).toBe("https://ivoire-business-club.com/logo-ibc.webp");
   });
 
   it("uses excerpt for articleBody and wordCount on gated articles", async () => {
