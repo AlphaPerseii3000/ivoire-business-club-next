@@ -3130,5 +3130,38 @@ Then le build passe sans erreur
 
 ---
 
-*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11. Epic 30 Canonicalisation ajouté 2026-08-10. Story 30-2 ajoutée 2026-08-11 (follow-up du CR de 30-1).*
+### Story 30-4: Rendre le footer visible — restauration du contexte d'empilement (z-10)
+
+**En tant que** visiteur de la landing page (mobile et desktop),
+**Je veux** que le footer soit réellement peint à l'écran en bas de page,
+**Afin que** je puisse accéder aux informations de contact, mentions légales, CGV et newsletter comme attendu.
+
+> **Note de scope :** cette story est le **correctif définitif** de la story 30-3 (qui avait ciblé une fausse hypothèse GPU). La cause racine identifiée par archéologie git est l'empilement CSS, voir story 30-3 amendement.
+
+**Cause racine (résumé) :** le commit `3d56a4d` (code review 28-5) a déplacé `<Footer />` de `page.tsx` (où il était dans `<div className="relative z-10">`) vers `(public)/layout.tsx`, le rendant **statique** (aucun `position`/`z-index`). Or `ScrollLoopBackground` est `position: fixed; z-index: 0; background: #090D16` (opaque). Un élément non-positionné (footer statique) est TOUJOURS peint sous un élément positionné avec z-index ≥ 0 → la couche fixe recouvre le footer.
+
+**Acceptance Criteria :**
+
+```gherkin
+Given la landing page (src/app/(public)/page.tsx + layout.tsx)
+When le footer est rendu
+Then il possède un contexte d'empilement relatif avec z-index > 0 (ex. relative z-10)
+And la couche ScrollLoopBackground (fixed inset-0 z-0) ne le recouvre plus
+
+Given la production après déploiement
+When on screenshot la zone footer (profil Galaxy S20 + desktop 1440x900)
+Then le footer est peint à l'écran (pixels de texte clair présents, pas seulement dans le DOM)
+
+Given le projet après implémentation
+When npm run build est exécuté
+Then le build passe sans erreur (exit 0)
+
+Given le projet après implémentation
+When npx vitest run est exécuté
+Then la suite complète passe sans régression
+```
+
+---
+
+*Fin du document Epic Breakdown — IBC v1.9. Épiques 8, 10-17, 20, 22-28 ajoutés via Sprint Change Proposals. Stories 9-9, 9-10, 19-2b, 26.1-26.7, 27.1-27.3, 28.1-28.4 ajoutées. Audit BMAD 2026-07-08. Epic 27 GEO ajouté 2026-07-09. Epic 28 Consolidation & Hardening ajouté 2026-07-11. Epic 30 Canonicalisation ajouté 2026-08-10. Story 30-2 ajoutée 2026-08-11 (follow-up du CR de 30-1). Story 30-3 ajoutée 2026-08-11. Story 30-4 ajoutée 2026-08-11 (correctif définitif footer).*
 
