@@ -17,8 +17,16 @@ export function MemberSearchInput({ defaultValue }: { defaultValue?: string }) {
   }, [defaultValue]);
 
   useEffect(() => {
+    const currentQ = searchParams.get("q") ?? "";
+    const trimmed = value.trim();
+
+    // Si la recherche n'a pas changé (ex: seul `page` a changé via la
+    // pagination), ne rien faire — ne pas supprimer `page` ni router.replace.
+    if (trimmed === currentQ) {
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
-      const trimmed = value.trim();
       const nextParams = new URLSearchParams(searchParams.toString());
       if (trimmed) {
         nextParams.set("q", trimmed);
