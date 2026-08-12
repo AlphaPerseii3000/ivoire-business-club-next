@@ -242,6 +242,9 @@ development_status:
   30-3-fix-footer-invisible-chrome-android: done
   30-4-restaurer-contexte-empilement-footer: done
 
+  epic-31: done
+  31-1-fix-pagination-page-membres: done
+
 # updated: epic-26, epic-27 → done — 2026-07-11
 # story 28-5: context created, status → ready-for-dev — 2026-07-13
 # updated: 28-1 → done — 2026-07-11
