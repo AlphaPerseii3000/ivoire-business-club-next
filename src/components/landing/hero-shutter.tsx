@@ -262,7 +262,7 @@ export function HeroShutter() {
           {/* Growing Tree Video (Phase 1) */}
           <video
             ref={growingVideoRef}
-            src="/Ivoire_business_club_growing_tree_all-i.mp4"
+            src="/Ivoire_business_club_growing_tree_gcro.mp4"
             muted
             playsInline
             preload="auto"
@@ -273,7 +273,7 @@ export function HeroShutter() {
           {/* Loop Video (Phase 2 - bottom of section) */}
           <video
             ref={loopVideoRef}
-            src="/Ivoire_business_club_loop_all-i.mp4"
+            src="/Ivoire_business_club_loop_gcro.mp4"
             muted
             playsInline
             loop
